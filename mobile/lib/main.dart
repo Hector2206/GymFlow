@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
@@ -28,16 +30,37 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   String estadoBackend = '⚪ Sin verificar';
   String estadoBaseDatos = '⚪ Sin verificar';
+  String versionSistema = '⚪ Sin verificar';
 
   Future<void> verificarConexion() async {
     try {
+      // Verificar Backend
       final health = await http.get(
-        Uri.parse('https://projectgym-t958.onrender.com/health'),
+        Uri.parse(
+          'https://projectgym-t958.onrender.com/health',
+        ),
       );
 
+      // Verificar Base de Datos
       final ping = await http.get(
-        Uri.parse('https://projectgym-t958.onrender.com/ping'),
+        Uri.parse(
+          'https://projectgym-t958.onrender.com/ping',
+        ),
       );
+
+      // Obtener versión almacenada en PostgreSQL
+      final versionResponse = await http.get(
+        Uri.parse(
+          'https://projectgym-t958.onrender.com/version',
+        ),
+      );
+
+      String nuevaVersion = '🔴 Error';
+
+      if (versionResponse.statusCode == 200) {
+        final data = jsonDecode(versionResponse.body);
+        nuevaVersion = data['version'].toString();
+      }
 
       setState(() {
         estadoBackend =
@@ -45,11 +68,14 @@ class _HomePageState extends State<HomePage> {
 
         estadoBaseDatos =
             ping.statusCode == 200 ? '🟢 Conectada' : '🔴 Error';
+
+        versionSistema = nuevaVersion;
       });
     } catch (e) {
       setState(() {
         estadoBackend = '🔴 Sin conexión';
         estadoBaseDatos = '🔴 Sin conexión';
+        versionSistema = '🔴 Sin conexión';
       });
     }
   }
@@ -73,7 +99,9 @@ class _HomePageState extends State<HomePage> {
 
             const Text(
               'Estado del sistema',
-              style: TextStyle(fontSize: 20),
+              style: TextStyle(
+                fontSize: 20,
+              ),
             ),
 
             const SizedBox(height: 30),
@@ -87,14 +115,27 @@ class _HomePageState extends State<HomePage> {
 
             Text(
               'Backend: $estadoBackend',
-              style: const TextStyle(fontSize: 18),
+              style: const TextStyle(
+                fontSize: 18,
+              ),
             ),
 
             const SizedBox(height: 10),
 
             Text(
               'Base de datos: $estadoBaseDatos',
-              style: const TextStyle(fontSize: 18),
+              style: const TextStyle(
+                fontSize: 18,
+              ),
+            ),
+
+            const SizedBox(height: 10),
+
+            Text(
+              'Versión del sistema: $versionSistema',
+              style: const TextStyle(
+                fontSize: 18,
+              ),
             ),
           ],
         ),
