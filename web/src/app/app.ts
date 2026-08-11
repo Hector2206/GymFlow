@@ -10,9 +10,11 @@ import { Component } from '@angular/core';
 export class App {
   estadoBackend = '⚪ Sin verificar';
   estadoBaseDatos = '⚪ Sin verificar';
+  versionSistema = '⚪ Sin verificar';
 
   async verificarConexion() {
     try {
+      // Verificar Backend
       const health = await fetch(
         'https://projectgym-t958.onrender.com/health'
       );
@@ -23,6 +25,7 @@ export class App {
         this.estadoBackend = '🔴 Error';
       }
 
+      // Verificar Base de Datos
       const ping = await fetch(
         'https://projectgym-t958.onrender.com/ping'
       );
@@ -33,9 +36,22 @@ export class App {
         this.estadoBaseDatos = '🔴 Error';
       }
 
+      // Obtener versión desde PostgreSQL
+      const versionResponse = await fetch(
+        'https://projectgym-t958.onrender.com/version'
+      );
+
+      if (versionResponse.ok) {
+        const data = await versionResponse.json();
+        this.versionSistema = data.version;
+      } else {
+        this.versionSistema = '🔴 Error';
+      }
+
     } catch {
       this.estadoBackend = '🔴 Sin conexión';
       this.estadoBaseDatos = '🔴 Sin conexión';
+      this.versionSistema = '🔴 Sin conexión';
     }
   }
 }
