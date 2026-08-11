@@ -69,4 +69,47 @@ app.MapGet("/ping", async (IConfiguration configuration) =>
     }
 });
 
+app.MapGet("/version", async (IConfiguration configuration) =>
+{
+    try
+    {
+        var connectionString =
+            configuration.GetConnectionString("PostgreSQL");
+
+        await using var connection =
+            new NpgsqlConnection(connectionString);
+
+        await connection.OpenAsync();
+
+        await using var command =
+            new NpgsqlCommand(
+                "SELECT version FROM system_versions ORDER BY id DESC LIMIT 1",
+                connection
+            );
+
+        var version = await command.ExecuteScalarAsync();
+
+        if (version == null)
+        {
+            return Results.NotFound(new
+            {
+                message = "No hay una version registrada"
+            });
+        }
+
+        return Results.Ok(new
+        {
+            version = version.ToString()
+        });
+    }
+    catch
+    {
+        return Results.Problem(
+            statusCode: 503,
+            title: "Database unavailable",
+            detail: "No se pudo consultar la version"
+        );
+    }
+});
+
 app.Run();
