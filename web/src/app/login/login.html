@@ -1,0 +1,85 @@
+<div class="login-page">
+
+  <div class="login-container">
+
+    <div class="logo-container">
+      <img
+        src="/logo-gymflow.png"
+        alt="Logo GymFlow"
+        class="logo"
+      >
+    </div>
+
+    <h1>GYMFLOW</h1>
+    <h2>Iniciar sesión</h2>
+
+    <form
+      class="login-form"
+      (ngSubmit)="validarFormulario()"
+    >
+
+      <div class="input-group">
+
+        <span class="icon">✉</span>
+
+        <input
+          type="email"
+          name="correo"
+          placeholder="Correo electrónico"
+          [(ngModel)]="correo"
+        >
+
+      </div>
+
+      <p
+        class="error"
+        *ngIf="errorCorreo"
+      >
+        {{ errorCorreo }}
+      </p>
+
+      <div class="input-group">
+
+        <span class="icon">🔒</span>
+
+        <input
+          type="password"
+          name="password"
+          placeholder="Contraseña"
+          [(ngModel)]="password"
+        >
+
+        <span class="eye">👁</span>
+
+      </div>
+
+      <p
+        class="error"
+        *ngIf="errorPassword"
+      >
+        {{ errorPassword }}
+      </p>
+
+      <p
+        class="error login-error"
+        *ngIf="errorLogin"
+      >
+        {{ errorLogin }}
+      </p>
+
+      <button
+        type="submit"
+        [disabled]="cargando"
+      >
+
+        {{ cargando ? 'Iniciando sesión...' : 'Iniciar sesión' }}
+
+      </button>
+
+    </form>
+
+    <p class="footer">GymFlow</p>
+
+  </div>
+
+</div>
