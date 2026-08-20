@@ -1,8 +1,38 @@
 using Npgsql;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddOpenApi();
+builder.Services.AddControllers();
+
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        var key = builder.Configuration["Jwt:Key"];
+
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+
+            ValidIssuer = builder.Configuration["Jwt:Issuer"],
+            ValidAudience = builder.Configuration["Jwt:Audience"],
+
+            IssuerSigningKey = new SymmetricSecurityKey(
+                Encoding.UTF8.GetBytes(key!)
+            )
+        };
+    });
+
+builder.Services.AddAuthorization();
+
+builder.Services.AddScoped<GymManagement.api.Services.TokenService>();
+builder.Services.AddScoped<GymManagement.api.Services.UsuarioService>();
 
 builder.Services.AddCors(options =>
 {
@@ -23,6 +53,8 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseCors("AllowAll");
+app.UseAuthentication();
+app.UseAuthorization();
 
 app.MapGet("/health", () =>
 {
@@ -111,5 +143,7 @@ app.MapGet("/version", async (IConfiguration configuration) =>
         );
     }
 });
+
+app.MapControllers();
 
 app.Run();
