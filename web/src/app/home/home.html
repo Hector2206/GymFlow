@@ -1,0 +1,60 @@
+<div class="home-page">
+
+  <header class="topbar">
+    <h1>GymFlow</h1>
+
+    <div
+      class="profile-icon"
+      routerLink="/perfil"
+      title="Mi Perfil"
+    >
+      👤
+    </div>
+  </header>
+
+  <main class="content">
+
+    <section class="welcome">
+      <h2>Hola, Cliente</h2>
+      <p>Bienvenido a GymFlow</p>
+    </section>
+
+    <section class="menu-grid">
+
+      <div
+        class="menu-card"
+        routerLink="/perfil"
+      >
+        <div class="menu-icon">👤</div>
+        <h3>Mi Perfil</h3>
+      </div>
+
+      <div
+        class="menu-card"
+        (click)="mostrarProximamente('Membresía')"
+      >
+        <div class="menu-icon">🎫</div>
+        <h3>Membresía</h3>
+      </div>
+
+      <div
+        class="menu-card"
+        (click)="mostrarProximamente('Rutina')"
+      >
+        <div class="menu-icon">🏋️</div>
+        <h3>Rutina</h3>
+      </div>
+
+      <div
+        class="menu-card"
+        (click)="mostrarProximamente('Asistencias')"
+      >
+        <div class="menu-icon">📅</div>
+        <h3>Asistencias</h3>
+      </div>
+
+    </section>
+
+  </main>
+
+</div>
