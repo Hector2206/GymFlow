@@ -1,0 +1,112 @@
+services:
+  - type: web
+    name: gymflow-auth-local
+    runtime: docker
+    region: virginia
+    plan: free
+    dockerContext: ./backend/AuthLocalService
+    dockerfilePath: ./backend/AuthLocalService/Dockerfile
+    healthCheckPath: /health
+    envVars:
+      - key: ASPNETCORE_ENVIRONMENT
+        value: Production
+      - key: ConnectionStrings__PostgreSQL
+        sync: false
+      - key: Jwt__Key
+        sync: false
+      - key: Jwt__Issuer
+        value: GymFlow
+      - key: Jwt__Audience
+        value: GymFlowUsers
+      - key: Cors__AllowedOrigins__2
+        sync: false
+
+  - type: web
+    name: gymflow-auth-google
+    runtime: docker
+    region: virginia
+    plan: free
+    dockerContext: ./backend/AuthGoogleService
+    dockerfilePath: ./backend/AuthGoogleService/Dockerfile
+    healthCheckPath: /health
+    envVars:
+      - key: ASPNETCORE_ENVIRONMENT
+        value: Production
+      - key: ConnectionStrings__PostgreSQL
+        fromService:
+          type: web
+          name: gymflow-auth-local
+          envVarKey: ConnectionStrings__PostgreSQL
+      - key: Jwt__Key
+        fromService:
+          type: web
+          name: gymflow-auth-local
+          envVarKey: Jwt__Key
+      - key: Jwt__Issuer
+        value: GymFlow
+      - key: Jwt__Audience
+        value: GymFlowUsers
+      - key: Google__ClientId
+        sync: false
+      - key: Cors__AllowedOrigins__2
+        fromService:
+          type: web
+          name: gymflow-auth-local
+          envVarKey: Cors__AllowedOrigins__2
+
+  - type: web
+    name: gymflow-cliente-alta
+    runtime: docker
+    region: virginia
+    plan: free
+    dockerContext: ./backend/ClienteAltaService
+    dockerfilePath: ./backend/ClienteAltaService/Dockerfile
+    healthCheckPath: /health
+    envVars:
+      - key: ASPNETCORE_ENVIRONMENT
+        value: Production
+      - key: ConnectionStrings__PostgreSQL
+        fromService:
+          type: web
+          name: gymflow-auth-local
+          envVarKey: ConnectionStrings__PostgreSQL
+      - key: Jwt__Key
+        fromService:
+          type: web
+          name: gymflow-auth-local
+          envVarKey: Jwt__Key
+      - key: Jwt__Issuer
+        value: GymFlow
+      - key: Jwt__Audience
+        value: GymFlowUsers
+      - key: Cors__AllowedOrigins__2
+        fromService:
+          type: web
+          name: gymflow-auth-local
+          envVarKey: Cors__AllowedOrigins__2
+
+  - type: web
+    name: gymflow-usuario-consulta
+    runtime: docker
+    region: virginia
+    plan: free
+    dockerContext: ./backend/UsuarioConsultaService
+    dockerfilePath: ./backend/UsuarioConsultaService/Dockerfile
+    healthCheckPath: /health
+    envVars:
+      - key: ASPNETCORE_ENVIRONMENT
+        value: Production
+      - key: Jwt__Key
+        fromService:
+          type: web
+          name: gymflow-auth-local
+          envVarKey: Jwt__Key
+      - key: Jwt__Issuer
+        value: GymFlow
+      - key: Jwt__Audience
+        value: GymFlowUsers
+      - key: Cors__AllowedOrigins__2
+        fromService:
+          type: web
+          name: gymflow-auth-local
+          envVarKey: Cors__AllowedOrigins__2
