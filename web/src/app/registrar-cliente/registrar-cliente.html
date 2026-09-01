@@ -196,35 +196,33 @@
               Membresía *
             </label>
 
-            <select
-              id="idMembresia"
-              name="idMembresia"
-              [(ngModel)]="idMembresia"
-            >
+           <select
+            id="idMembresia"
+            name="idMembresia"
+            [(ngModel)]="idMembresia"
+          >
+            <option [ngValue]="null">
+              Selecciona una opción
+            </option>
 
-              <option
-                [ngValue]="null"
-              >
-                Selecciona una opción
-              </option>
+            <option [ngValue]="1">
+              BasicFlow
+            </option>
 
-              <option [ngValue]="1">
-                BasicFlow
-              </option>
+            <!--
+            <option [ngValue]="2">
+              Membresía 2
+            </option>
 
-              <option [ngValue]="2">
-                Membresía 2
-              </option>
+            <option [ngValue]="3">
+              Membresía 3
+            </option>
 
-              <option [ngValue]="3">
-                Membresía 3
-              </option>
-
-              <option [ngValue]="4">
-                Membresía 4
-              </option>
-
-            </select>
+            <option [ngValue]="4">
+              Membresía 4
+            </option>
+            -->
+          </select>
 
           </div>
 
