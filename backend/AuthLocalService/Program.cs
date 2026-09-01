@@ -6,26 +6,49 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddOpenApi();
 
-var allowedOrigins =
-    builder.Configuration
-        .GetSection("Cors:AllowedOrigins")
-        .Get<string[]>()
-    ?? [];
-
-builder.Services.AddCors(options =>
-{
-    options.AddPolicy("GymFlowWeb", policy =>
-    {
-        policy
-            .WithOrigins(allowedOrigins)
-            .AllowAnyHeader()
-            .AllowAnyMethod();
-    });
-});
-
 builder.Services.AddScoped<UsuarioService>();
 builder.Services.AddScoped<PasswordService>();
 builder.Services.AddScoped<TokenService>();
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("GymFlowCors", policy =>
+    {
+        policy
+            .SetIsOriginAllowed(origin =>
+            {
+                if (string.IsNullOrWhiteSpace(origin))
+                    return false;
+
+                if (!Uri.TryCreate(origin, UriKind.Absolute, out var uri))
+                    return false;
+
+                // DESARROLLO
+                // Permite Flutter Web y Angular desde cualquier puerto localhost
+                if (uri.Host == "localhost" || uri.Host == "127.0.0.1")
+                    return true;
+
+                // PRODUCCIÓN
+                var allowedOrigins = new[]
+                {
+                    "https://gymflow-web-lkvv.onrender.com"
+                };
+
+                return allowedOrigins.Contains(origin);
+            })
+            .WithMethods(
+                "GET",
+                "POST",
+                "PUT",
+                "DELETE",
+                "OPTIONS"
+            )
+            .WithHeaders(
+                "Content-Type",
+                "Authorization"
+            );
+    });
+});
 
 var app = builder.Build();
 
@@ -34,7 +57,9 @@ if (app.Environment.IsDevelopment())
     app.MapOpenApi();
 }
 
-app.UseCors("GymFlowWeb");
+// IMPORTANTE:
+// CORS debe ejecutarse antes de los endpoints.
+app.UseCors("GymFlowCors");
 
 app.MapGet("/health", () =>
 {
