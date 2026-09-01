@@ -1,104 +1,410 @@
-.home-page {
-  min-height: 100vh;
-  background: #f4f7fb;
-  font-family: Arial, sans-serif;
+:host {
+  display: block;
+
+  --gold: #d4af37;
+  --brass: #b5a642;
+  --coal: #1a1a1d;
+  --graphite: #404040;
+  --silver: #a9a9a9;
+  --crimson: #990000;
+  --dark: #101012;
+  --white: #ffffff;
 }
 
+* {
+  box-sizing: border-box;
+}
+
+.home-page {
+  min-height: 100vh;
+
+  display: flex;
+  flex-direction: column;
+
+  background:
+    radial-gradient(
+      circle at top,
+      #29292e 0%,
+      var(--coal) 36%,
+      #0d0d0f 100%
+    );
+
+  color: var(--white);
+}
+
+
+/* =========================
+   HEADER
+========================= */
+
 .topbar {
-  height: 75px;
-  background: #0b2b55;
-  color: white;
+  min-height: 96px;
 
   display: flex;
   align-items: center;
   justify-content: space-between;
 
-  padding: 0 35px;
+  padding: 12px 42px;
+
+  background: #101012;
+
+  border-bottom:
+    1px solid rgba(212, 175, 55, 0.35);
+
+  box-shadow:
+    0 8px 30px rgba(0, 0, 0, 0.3);
 }
 
-.topbar h1 {
-  font-size: 28px;
-  margin: 0;
+.brand {
+  display: flex;
+  align-items: center;
 }
 
-.profile-icon {
-  font-size: 28px;
+.logo {
+  width: 200px;
+  height: 78px;
+
+  object-fit: contain;
+  display: block;
+}
+
+
+/* =========================
+   USUARIO
+========================= */
+
+.user-header {
+  display: flex;
+  align-items: center;
+
+  gap: 20px;
+}
+
+.user-data {
+  display: flex;
+  flex-direction: column;
+
+  text-align: right;
+}
+
+.user-name {
+  color: var(--white);
+
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.user-role {
+  margin-top: 3px;
+
+  color: var(--gold);
+
+  font-size: 12px;
+}
+
+.logout-button {
+  padding: 10px 18px;
+
+  border:
+    1px solid rgba(212, 175, 55, 0.5);
+
+  border-radius: 9px;
+
+  background: transparent;
+
+  color: var(--gold);
+
   cursor: pointer;
+
+  font-weight: 600;
+
+  transition:
+    background 0.2s ease,
+    color 0.2s ease,
+    transform 0.2s ease;
 }
+
+.logout-button:hover {
+  background: var(--gold);
+
+  color: var(--coal);
+
+  transform: translateY(-1px);
+}
+
+
+/* =========================
+   CONTENIDO
+========================= */
 
 .content {
-  max-width: 1100px;
-  margin: auto;
-  padding: 45px 30px;
+  width: 100%;
+  max-width: 1200px;
+
+  flex: 1;
+
+  margin: 0 auto;
+
+  padding: 55px 35px 70px;
 }
 
-.welcome h2 {
-  color: #0b2b55;
-  font-size: 38px;
-  margin-bottom: 8px;
+
+/* =========================
+   BIENVENIDA
+========================= */
+
+.welcome {
+  margin-bottom: 40px;
 }
 
-.welcome p {
-  color: #999;
-  font-size: 21px;
-  margin-top: 0;
+.welcome-text {
+  margin: 0 0 8px;
+
+  color: var(--silver);
+
+  font-size: 16px;
 }
 
-.menu-grid {
-  margin-top: 45px;
+.welcome h1 {
+  margin: 0;
 
+  color: var(--white);
+
+  font-size:
+    clamp(
+      30px,
+      4vw,
+      45px
+    );
+
+  font-weight: 800;
+}
+
+.role-badge {
+  display: inline-block;
+
+  margin-top: 14px;
+
+  padding: 7px 14px;
+
+  border:
+    1px solid rgba(212, 175, 55, 0.45);
+
+  border-radius: 30px;
+
+  background:
+    rgba(212, 175, 55, 0.08);
+
+  color: var(--gold);
+
+  font-size: 13px;
+  font-weight: 700;
+}
+
+
+/* =========================
+   TARJETAS
+========================= */
+
+.dashboard {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
 
-  gap: 25px;
+  grid-template-columns:
+    repeat(2, minmax(0, 1fr));
+
+  gap: 24px;
 }
 
-.menu-card {
+.dashboard-card {
   min-height: 220px;
-
-  background: white;
-
-  border-radius: 20px;
 
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
 
-  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
+  padding: 30px;
+
+  border:
+    1px solid rgba(212, 175, 55, 0.18);
+
+  border-radius: 20px;
+
+  background:
+    linear-gradient(
+      145deg,
+      #1d1d20,
+      #151517
+    );
+
+  color: var(--white);
 
   cursor: pointer;
 
-  transition: transform 0.2s, box-shadow 0.2s;
+  box-shadow:
+    0 18px 35px rgba(0, 0, 0, 0.28);
+
+  transition:
+    transform 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
-.menu-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 7px 15px rgba(0, 0, 0, 0.18);
+.dashboard-card:hover {
+  transform:
+    translateY(-5px);
+
+  border-color:
+    rgba(212, 175, 55, 0.7);
+
+  box-shadow:
+    0 20px 45px rgba(0, 0, 0, 0.38),
+    0 0 22px rgba(212, 175, 55, 0.08);
 }
 
-.menu-icon {
-  font-size: 48px;
+.card-icon {
+  width: 62px;
+  height: 62px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
   margin-bottom: 18px;
+
+  border:
+    1px solid rgba(212, 175, 55, 0.3);
+
+  border-radius: 18px;
+
+  background:
+    rgba(212, 175, 55, 0.08);
+
+  font-size: 30px;
 }
 
-.menu-card h3 {
-  color: #222;
-  font-size: 24px;
+.dashboard-card h2 {
   margin: 0;
+
+  color: var(--gold);
+
+  font-size: 21px;
 }
 
-@media (max-width: 700px) {
+.dashboard-card p {
+  margin:
+    9px 0 0;
 
-  .content {
-    padding: 30px 20px;
+  max-width: 270px;
+
+  color: var(--silver);
+
+  font-size: 14px;
+
+  line-height: 1.5;
+}
+
+
+/* =========================
+   MENSAJES
+========================= */
+
+.loading {
+  color: var(--gold);
+
+  font-size: 17px;
+}
+
+.error-message {
+  padding: 15px;
+
+  border:
+    1px solid var(--crimson);
+
+  border-radius: 12px;
+
+  background:
+    rgba(153, 0, 0, 0.18);
+
+  color: #ffaaaa;
+}
+
+.notification {
+  margin-bottom: 25px;
+
+  padding: 13px 17px;
+
+  border:
+    1px solid rgba(212, 175, 55, 0.4);
+
+  border-radius: 10px;
+
+  background:
+    rgba(212, 175, 55, 0.08);
+
+  color: var(--gold);
+
+  text-align: center;
+}
+
+
+/* =========================
+   FOOTER
+========================= */
+
+footer {
+  padding: 25px;
+
+  border-top:
+    1px solid rgba(212, 175, 55, 0.12);
+
+  color: #68686c;
+
+  font-size: 12px;
+
+  text-align: center;
+}
+
+
+/* =========================
+   RESPONSIVE
+========================= */
+
+@media (max-width: 750px) {
+
+  .topbar {
+    padding:
+      10px 18px;
   }
 
-  .menu-grid {
+  .logo {
+    width: 145px;
+    height: 58px;
+  }
+
+  .user-data {
+    display: none;
+  }
+
+  .logout-button {
+    padding:
+      8px 12px;
+
+    font-size: 12px;
+  }
+
+  .content {
+    padding:
+      38px 18px
+      55px;
+  }
+
+  .dashboard {
     grid-template-columns: 1fr;
   }
 
-  .welcome h2 {
-    font-size: 30px;
+  .dashboard-card {
+    min-height: 180px;
   }
+
 }

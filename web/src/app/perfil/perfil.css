@@ -1,169 +1,305 @@
-.perfil-page {
-  min-height: 100vh;
-  background: #f4f7fb;
-  font-family: Arial, sans-serif;
+:host {
+  display: block;
+
+  --gold: #d4af37;
+  --brass: #b5a642;
+  --coal: #1a1a1d;
+  --graphite: #404040;
+  --silver: #a9a9a9;
+  --crimson: #990000;
+  --white: #ffffff;
+  --dark: #101012;
 }
 
+* {
+  box-sizing: border-box;
+}
+
+.perfil-page {
+  min-height: 100vh;
+
+  background:
+    radial-gradient(
+      circle at top,
+      #29292e 0%,
+      var(--coal) 38%,
+      #0d0d0f 100%
+    );
+
+  color: var(--white);
+}
+
+
+/* HEADER */
+
 .topbar {
-  height: 75px;
-  background: #0b2b55;
-  color: white;
+  min-height: 88px;
 
   display: flex;
   align-items: center;
 
-  padding: 0 35px;
+  padding: 12px 42px;
+
+  background: var(--dark);
+
+  border-bottom:
+    1px solid rgba(212, 175, 55, 0.35);
+
+  box-shadow:
+    0 8px 30px rgba(0, 0, 0, 0.3);
 }
 
-.topbar h1 {
-  margin: 0;
-  font-size: 28px;
+.header-left {
+  display: flex;
+  align-items: center;
+
+  gap: 18px;
+}
+
+.logo {
+  width: 145px;
+  height: 58px;
+
+  object-fit: contain;
 }
 
 .back-button {
-  color: white;
-  text-decoration: none;
+  width: 42px;
+  height: 42px;
 
-  font-size: 35px;
+  border:
+    1px solid rgba(212, 175, 55, 0.45);
 
-  margin-right: 25px;
+  border-radius: 10px;
+
+  background: transparent;
+
+  color: var(--gold);
+
+  font-size: 23px;
+
+  cursor: pointer;
+
+  transition:
+    background 0.2s ease,
+    color 0.2s ease;
 }
+
+.back-button:hover {
+  background: var(--gold);
+
+  color: var(--coal);
+}
+
+
+/* CONTENIDO */
 
 .perfil-content {
   width: 100%;
   max-width: 900px;
 
-  margin: auto;
+  margin: 0 auto;
 
-  padding: 45px 30px;
+  padding: 55px 30px 70px;
 }
+
+
+/* ENCABEZADO PERFIL */
 
 .perfil-header {
   text-align: center;
-  margin-bottom: 45px;
+
+  margin-bottom: 42px;
 }
 
 .avatar {
-  width: 140px;
-  height: 140px;
+  width: 115px;
+  height: 115px;
 
-  background: #0b2b55;
-  color: white;
+  margin: 0 auto 20px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border:
+    1px solid rgba(212, 175, 55, 0.45);
 
   border-radius: 50%;
 
-  display: flex;
-  justify-content: center;
-  align-items: center;
+  background:
+    rgba(212, 175, 55, 0.08);
 
-  margin: auto;
+  font-size: 52px;
 
-  font-size: 65px;
+  box-shadow:
+    0 0 30px rgba(212, 175, 55, 0.08);
 }
 
-.perfil-header h2 {
-  color: #0b2b55;
+.section-label {
+  margin: 0 0 7px;
 
-  font-size: 32px;
+  color: var(--gold);
 
-  margin-bottom: 5px;
+  font-size: 14px;
+  font-weight: 700;
+
+  text-transform: uppercase;
+
+  letter-spacing: 2px;
 }
 
-.perfil-header p {
-  color: #999;
+.perfil-header h1 {
+  margin: 0;
 
-  font-size: 20px;
+  color: var(--white);
 
-  margin-top: 0;
+  font-size: clamp(
+    28px,
+    4vw,
+    40px
+  );
 }
+
+.role-badge {
+  display: inline-block;
+
+  margin-top: 13px;
+
+  padding: 7px 14px;
+
+  border:
+    1px solid rgba(212, 175, 55, 0.45);
+
+  border-radius: 25px;
+
+  background:
+    rgba(212, 175, 55, 0.08);
+
+  color: var(--gold);
+
+  font-size: 13px;
+  font-weight: 700;
+}
+
+
+/* DATOS */
 
 .datos {
   display: flex;
   flex-direction: column;
 
-  gap: 18px;
+  gap: 17px;
 }
 
 .dato-card {
   min-height: 95px;
 
-  background: white;
-
-  border-radius: 18px;
-
   display: flex;
   align-items: center;
 
-  padding: 15px 25px;
+  padding: 18px 22px;
 
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.12);
+  border:
+    1px solid rgba(212, 175, 55, 0.16);
+
+  border-radius: 17px;
+
+  background:
+    linear-gradient(
+      145deg,
+      #1d1d20,
+      #151517
+    );
+
+  box-shadow:
+    0 15px 32px rgba(0, 0, 0, 0.25);
 }
 
 .dato-icon {
-  width: 60px;
-  height: 60px;
+  width: 58px;
+  height: 58px;
 
-  border-radius: 12px;
-
-  background: #e9edf2;
-
-  color: #0b2b55;
+  flex-shrink: 0;
 
   display: flex;
-  justify-content: center;
   align-items: center;
-
-  font-size: 26px;
+  justify-content: center;
 
   margin-right: 20px;
+
+  border:
+    1px solid rgba(212, 175, 55, 0.3);
+
+  border-radius: 14px;
+
+  background:
+    rgba(212, 175, 55, 0.08);
+
+  color: var(--gold);
+
+  font-size: 24px;
+  font-weight: 800;
 }
 
-.dato-card div:last-child {
+.dato-info {
   display: flex;
   flex-direction: column;
+
+  min-width: 0;
 }
 
-.dato-card span {
-  color: #999;
-
-  font-size: 16px;
-
+.dato-info span {
   margin-bottom: 5px;
+
+  color: var(--silver);
+
+  font-size: 13px;
 }
 
-.dato-card strong {
-  color: #222;
+.dato-info strong {
+  color: var(--white);
 
-  font-size: 21px;
+  font-size: 18px;
+
+  overflow-wrap: anywhere;
 }
 
-/* BOTÓN CERRAR SESIÓN */
+
+/* CERRAR SESIÓN */
 
 .logout-button {
   width: 100%;
-  height: 60px;
+  height: 55px;
 
-  margin-top: 30px;
-  margin-bottom: 40px;
+  margin-top: 28px;
 
-  border: none;
-  border-radius: 15px;
+  border:
+    1px solid rgba(153, 0, 0, 0.8);
 
-  background: #d32f2f;
-  color: white;
+  border-radius: 12px;
 
-  font-size: 20px;
-  font-weight: bold;
+  background:
+    rgba(153, 0, 0, 0.15);
+
+  color: #ff9999;
 
   cursor: pointer;
 
-  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
+  font-size: 15px;
+  font-weight: 700;
 
-  transition: background 0.2s, transform 0.2s;
+  transition:
+    background 0.2s ease,
+    transform 0.2s ease,
+    color 0.2s ease;
 }
 
 .logout-button:hover {
-  background: #b71c1c;
+  background: var(--crimson);
+
+  color: var(--white);
+
   transform: translateY(-2px);
 }
 
@@ -171,35 +307,73 @@
   transform: translateY(0);
 }
 
-/* ADAPTACIÓN PARA PANTALLAS PEQUEÑAS */
+
+/* MENSAJES */
+
+.loading {
+  color: var(--gold);
+
+  text-align: center;
+
+  font-size: 17px;
+}
+
+.error-message {
+  padding: 15px;
+
+  border:
+    1px solid var(--crimson);
+
+  border-radius: 12px;
+
+  background:
+    rgba(153, 0, 0, 0.18);
+
+  color: #ffaaaa;
+
+  text-align: center;
+}
+
+
+/* RESPONSIVE */
 
 @media (max-width: 600px) {
 
+  .topbar {
+    padding: 10px 17px;
+  }
+
+  .logo {
+    width: 110px;
+    height: 48px;
+  }
+
   .perfil-content {
-    padding: 30px 20px;
+    padding:
+      38px 18px
+      55px;
   }
 
   .avatar {
-    width: 110px;
-    height: 110px;
+    width: 95px;
+    height: 95px;
 
-    font-size: 50px;
-  }
-
-  .perfil-header h2 {
-    font-size: 27px;
+    font-size: 42px;
   }
 
   .dato-card {
-    padding: 12px 15px;
+    padding:
+      15px 16px;
   }
 
-  .dato-card strong {
-    font-size: 18px;
+  .dato-icon {
+    width: 50px;
+    height: 50px;
+
+    margin-right: 14px;
   }
 
-  .logout-button {
-    height: 55px;
-    font-size: 18px;
+  .dato-info strong {
+    font-size: 16px;
   }
 }

@@ -1,60 +1,515 @@
 <div class="home-page">
 
   <header class="topbar">
-    <h1>GymFlow</h1>
+
+    <div class="brand">
+
+      <img
+        src="/Logo_GymFlow.png"
+        alt="GymFlow"
+        class="logo"
+      />
+
+    </div>
 
     <div
-      class="profile-icon"
-      routerLink="/perfil"
-      title="Mi Perfil"
+      class="user-header"
+      *ngIf="usuario"
     >
-      👤
+
+      <div class="user-data">
+
+        <span class="user-name">
+          {{ usuario.name }}
+        </span>
+
+        <span class="user-role">
+          {{ usuario.role }}
+        </span>
+
+      </div>
+
+      <button
+        class="logout-button"
+        (click)="cerrarSesion()"
+      >
+        Cerrar sesión
+      </button>
+
     </div>
+
   </header>
+
 
   <main class="content">
 
-    <section class="welcome">
-      <h2>Hola, Cliente</h2>
-      <p>Bienvenido a GymFlow</p>
-    </section>
+    <div
+      *ngIf="cargando"
+      class="loading"
+    >
+      Cargando...
+    </div>
 
-    <section class="menu-grid">
+
+    <div
+      *ngIf="error"
+      class="error-message"
+    >
+      {{ error }}
+    </div>
+
+
+    <ng-container
+      *ngIf="!cargando && usuario"
+    >
+
+      <section class="welcome">
+
+        <p class="welcome-text">
+          Bienvenido a GymFlow
+        </p>
+
+        <h1>
+          Hola, {{ usuario.name }}
+        </h1>
+
+        <div class="role-badge">
+          {{ usuario.role }}
+        </div>
+
+      </section>
+
 
       <div
-        class="menu-card"
-        routerLink="/perfil"
+        *ngIf="mensaje"
+        class="notification"
       >
-        <div class="menu-icon">👤</div>
-        <h3>Mi Perfil</h3>
+        {{ mensaje }}
       </div>
 
-      <div
-        class="menu-card"
-        (click)="mostrarProximamente('Membresía')"
-      >
-        <div class="menu-icon">🎫</div>
-        <h3>Membresía</h3>
-      </div>
 
-      <div
-        class="menu-card"
-        (click)="mostrarProximamente('Rutina')"
-      >
-        <div class="menu-icon">🏋️</div>
-        <h3>Rutina</h3>
-      </div>
+      <!-- RECEPCIONISTA -->
 
-      <div
-        class="menu-card"
-        (click)="mostrarProximamente('Asistencias')"
+      <section
+        class="dashboard"
+        *ngIf="esRecepcionista()"
       >
-        <div class="menu-icon">📅</div>
-        <h3>Asistencias</h3>
-      </div>
 
-    </section>
+        <button
+          class="dashboard-card"
+          (click)="irPerfil()"
+        >
+
+          <div class="card-icon">
+            👤
+          </div>
+
+          <h2>
+            Mi Perfil
+          </h2>
+
+          <p>
+            Consulta tu información de usuario
+          </p>
+
+        </button>
+
+
+        <button
+          class="dashboard-card"
+          (click)="irRegistrarCliente()"
+        >
+
+          <div class="card-icon">
+            ➕
+          </div>
+
+          <h2>
+            Registrar Cliente
+          </h2>
+
+          <p>
+            Dar de alta un nuevo cliente
+          </p>
+
+        </button>
+
+
+        <button
+          class="dashboard-card"
+          (click)="proximamente('Registrar asistencia')"
+        >
+
+          <div class="card-icon">
+            ✅
+          </div>
+
+          <h2>
+            Registrar Asistencia
+          </h2>
+
+          <p>
+            Registrar la asistencia de un cliente
+          </p>
+
+        </button>
+
+
+        <button
+          class="dashboard-card"
+          (click)="proximamente('Administrar clientes')"
+        >
+
+          <div class="card-icon">
+            👥
+          </div>
+
+          <h2>
+            Administrar Clientes
+          </h2>
+
+          <p>
+            Consultar y administrar clientes
+          </p>
+
+        </button>
+
+
+        <button
+          class="dashboard-card"
+          (click)="proximamente('Asignación de entrenadores')"
+        >
+
+          <div class="card-icon">
+            🏋️
+          </div>
+
+          <h2>
+            Asignación de Entrenadores
+          </h2>
+
+          <p>
+            Asignar clientes a entrenadores
+          </p>
+
+        </button>
+
+
+        <button
+          class="dashboard-card"
+          (click)="proximamente('Anuncios')"
+        >
+
+          <div class="card-icon">
+            📢
+          </div>
+
+          <h2>
+            Anuncios
+          </h2>
+
+          <p>
+            Administrar anuncios del gimnasio
+          </p>
+
+        </button>
+
+      </section>
+
+
+      <!-- CLIENTE -->
+
+      <section
+        class="dashboard"
+        *ngIf="esCliente()"
+      >
+
+        <button
+          class="dashboard-card"
+          (click)="irPerfil()"
+        >
+
+          <div class="card-icon">
+            👤
+          </div>
+
+          <h2>
+            Mi Perfil
+          </h2>
+
+          <p>
+            Consulta tu información personal
+          </p>
+
+        </button>
+
+
+        <button
+          class="dashboard-card"
+          (click)="proximamente('Membresía')"
+        >
+
+          <div class="card-icon">
+            🎫
+          </div>
+
+          <h2>
+            Membresía
+          </h2>
+
+          <p>
+            Consulta tu membresía actual
+          </p>
+
+        </button>
+
+
+        <button
+          class="dashboard-card"
+          (click)="proximamente('Rutinas')"
+        >
+
+          <div class="card-icon">
+            🏋️
+          </div>
+
+          <h2>
+            Rutinas
+          </h2>
+
+          <p>
+            Consulta tu rutina de entrenamiento
+          </p>
+
+        </button>
+
+
+        <button
+          class="dashboard-card"
+          (click)="proximamente('Asistencias')"
+        >
+
+          <div class="card-icon">
+            📅
+          </div>
+
+          <h2>
+            Ver Asistencias
+          </h2>
+
+          <p>
+            Consulta tu historial de asistencias
+          </p>
+
+        </button>
+
+
+        <button
+          class="dashboard-card"
+          (click)="proximamente('Anuncios')"
+        >
+
+          <div class="card-icon">
+            📢
+          </div>
+
+          <h2>
+            Anuncios
+          </h2>
+
+          <p>
+            Consulta anuncios y promociones
+          </p>
+
+        </button>
+
+      </section>
+
+
+      <!-- ADMINISTRADOR -->
+
+      <section
+        class="dashboard"
+        *ngIf="esAdministrador()"
+      >
+
+        <button
+          class="dashboard-card"
+          (click)="irPerfil()"
+        >
+
+          <div class="card-icon">
+            👤
+          </div>
+
+          <h2>
+            Mi Perfil
+          </h2>
+
+          <p>
+            Consulta tu información de administrador
+          </p>
+
+        </button>
+
+
+        <button
+          class="dashboard-card"
+          (click)="proximamente('Administrar clientes')"
+        >
+
+          <div class="card-icon">
+            👥
+          </div>
+
+          <h2>
+            Administrar Clientes
+          </h2>
+
+          <p>
+            Consultar y administrar clientes
+          </p>
+
+        </button>
+
+
+        <button
+          class="dashboard-card"
+          (click)="proximamente('Administrar recepcionistas')"
+        >
+
+          <div class="card-icon">
+            🧑‍💼
+          </div>
+
+          <h2>
+            Administrar Recepcionistas
+          </h2>
+
+          <p>
+            Consultar y administrar recepcionistas
+          </p>
+
+        </button>
+
+
+        <button
+          class="dashboard-card"
+          (click)="proximamente('Administrar entrenadores')"
+        >
+
+          <div class="card-icon">
+            🏋️
+          </div>
+
+          <h2>
+            Administrar Entrenadores
+          </h2>
+
+          <p>
+            Consultar y administrar entrenadores
+          </p>
+
+        </button>
+
+
+        <button
+          class="dashboard-card"
+          (click)="proximamente('Ver administradores')"
+        >
+
+          <div class="card-icon">
+            🛡️
+          </div>
+
+          <h2>
+            Ver Administradores
+          </h2>
+
+          <p>
+            Consulta los administradores registrados
+          </p>
+
+        </button>
+
+      </section>
+
+
+      <!-- ENTRENADOR -->
+
+      <section
+        class="dashboard"
+        *ngIf="esEntrenador()"
+      >
+
+        <button
+          class="dashboard-card"
+          (click)="irPerfil()"
+        >
+
+          <div class="card-icon">
+            👤
+          </div>
+
+          <h2>
+            Mi Perfil
+          </h2>
+
+          <p>
+            Consulta tu información de entrenador
+          </p>
+
+        </button>
+
+
+        <button
+          class="dashboard-card"
+          (click)="proximamente('Administrar mis clientes')"
+        >
+
+          <div class="card-icon">
+            👥
+          </div>
+
+          <h2>
+            Administrar mis Clientes
+          </h2>
+
+          <p>
+            Consulta los clientes que tienes asignados
+          </p>
+
+        </button>
+
+
+        <button
+          class="dashboard-card"
+          (click)="proximamente('Rutinas')"
+        >
+
+          <div class="card-icon">
+            🏋️
+          </div>
+
+          <h2>
+            Rutinas
+          </h2>
+
+          <p>
+            Crear y administrar rutinas de entrenamiento
+          </p>
+
+        </button>
+
+      </section>
+
+    </ng-container>
 
   </main>
+
+
+  <footer>
+    GymFlow · Gestión inteligente para gimnasios
+  </footer>
 
 </div>
