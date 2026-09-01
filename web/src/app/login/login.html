@@ -1,84 +1,133 @@
 <div class="login-page">
 
-  <div class="login-container">
+  <div class="login-card">
 
-    <div class="logo-container">
-      <img
-        src="/logo-gymflow.png"
-        alt="Logo GymFlow"
-        class="logo"
-      >
-    </div>
+    <img
+      src="/Logo_GymFlow.png"
+      alt="GymFlow"
+      class="logo"
+    />
 
     <h1>GYMFLOW</h1>
-    <h2>Iniciar sesión</h2>
+
+    <p class="subtitle">
+      Iniciar sesión
+    </p>
+
 
     <form
-      class="login-form"
-      (ngSubmit)="validarFormulario()"
+      autocomplete="off"
+      (ngSubmit)="iniciarSesion()"
     >
 
-      <div class="input-group">
+      <div class="field">
 
-        <span class="icon">✉</span>
+        <label for="correo">
+          Correo electrónico
+        </label>
 
-        <input
-          type="email"
-          name="correo"
-          placeholder="Correo electrónico"
-          [(ngModel)]="correo"
-        >
+        <div class="input-wrapper">
 
-      </div>
+          <span class="icon">
+            ✉
+          </span>
 
-      <p
-        class="error"
-        *ngIf="errorCorreo"
-      >
-        {{ errorCorreo }}
-      </p>
+          <input
+            id="correo"
+            name="correo"
+            type="email"
+            [(ngModel)]="correo"
+            placeholder="correo@gymflow.com"
+            autocomplete="email"
+          />
 
-      <div class="input-group">
-
-        <span class="icon">🔒</span>
-
-        <input
-          type="password"
-          name="password"
-          placeholder="Contraseña"
-          [(ngModel)]="password"
-        >
-
-        <span class="eye">👁</span>
+        </div>
 
       </div>
 
-      <p
-        class="error"
-        *ngIf="errorPassword"
-      >
-        {{ errorPassword }}
-      </p>
 
-      <p
-        class="error login-error"
-        *ngIf="errorLogin"
+      <div class="field">
+
+        <label for="password">
+          Contraseña
+        </label>
+
+        <div class="input-wrapper">
+
+          <span class="icon">
+            🔒
+          </span>
+
+          <input
+            id="password"
+            name="password"
+            type="password"
+            [(ngModel)]="password"
+            placeholder="Ingresa tu contraseña"
+            autocomplete="current-password"
+          />
+
+        </div>
+
+      </div>
+
+
+      <div
+        *ngIf="error"
+        class="login-error"
       >
-        {{ errorLogin }}
-      </p>
+        {{ error }}
+      </div>
+
 
       <button
         type="submit"
-        [disabled]="cargando"
+        class="login-button"
+        [disabled]="cargando || cargandoGoogle"
       >
 
-        {{ cargando ? 'Iniciando sesión...' : 'Iniciar sesión' }}
+        {{
+          cargando
+            ? 'Iniciando sesión...'
+            : 'Iniciar sesión'
+        }}
 
       </button>
 
     </form>
 
-    <p class="footer">GymFlow</p>
+
+    <div class="separator">
+
+      <span></span>
+
+      <p>
+        o continúa con
+      </p>
+
+      <span></span>
+
+    </div>
+
+
+    <div
+      id="google-login-button"
+      class="google-login-container"
+    >
+    </div>
+
+
+    <p
+      *ngIf="cargandoGoogle"
+      class="google-note"
+    >
+      Iniciando sesión con Google...
+    </p>
+
+
+    <p class="footer">
+      GymFlow · Gestión inteligente para gimnasios
+    </p>
 
   </div>
 

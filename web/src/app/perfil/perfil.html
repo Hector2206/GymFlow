@@ -1,78 +1,145 @@
 <div class="perfil-page">
 
   <header class="topbar">
-    <a href="/home" class="back-button">←</a>
-    <h1>Mi Perfil</h1>
+
+    <div class="header-left">
+
+      <button
+        class="back-button"
+        (click)="volver()"
+      >
+        ←
+      </button>
+
+      <img
+        src="/Logo_GymFlow.png"
+        alt="GymFlow"
+        class="logo"
+      />
+
+    </div>
+
   </header>
+
 
   <main class="perfil-content">
 
-    <section class="perfil-header">
-
-      <div class="avatar">
-        👤
-      </div>
-
-      <h2>Carlos Cliente Fit</h2>
-      <p>Cliente</p>
-
-    </section>
-
-    <section class="datos">
-
-      <div class="dato-card">
-        <div class="dato-icon">✉</div>
-
-        <div>
-          <span>Correo electrónico</span>
-          <strong>cliente@gymflow.com</strong>
-        </div>
-      </div>
-
-      <div class="dato-card">
-        <div class="dato-icon">☎</div>
-
-        <div>
-          <span>Teléfono</span>
-          <strong>4422222222</strong>
-        </div>
-      </div>
-
-      <div class="dato-card">
-        <div class="dato-icon">🎫</div>
-
-        <div>
-          <span>Membresía</span>
-          <strong>Mensual</strong>
-        </div>
-      </div>
-
-      <div class="dato-card">
-        <div class="dato-icon">✓</div>
-
-        <div>
-          <span>Estado</span>
-          <strong>Activa</strong>
-        </div>
-      </div>
-
-      <div class="dato-card">
-        <div class="dato-icon">📅</div>
-
-        <div>
-          <span>Fecha de vencimiento</span>
-          <strong>Pendiente de Backend</strong>
-        </div>
-      </div>
-
-    </section>
-
-    <button
-      class="logout-button"
-      (click)="cerrarSesion()"
+    <div
+      *ngIf="cargando"
+      class="loading"
     >
-      Cerrar sesión
-    </button>
+      Cargando perfil...
+    </div>
+
+
+    <div
+      *ngIf="error"
+      class="error-message"
+    >
+      {{ error }}
+    </div>
+
+
+    <ng-container
+      *ngIf="!cargando && usuario"
+    >
+
+      <section class="perfil-header">
+
+        <div class="avatar">
+          👤
+        </div>
+
+        <p class="section-label">
+          Mi Perfil
+        </p>
+
+        <h1>
+          {{ usuario.name }}
+        </h1>
+
+        <div class="role-badge">
+          {{ usuario.role }}
+        </div>
+
+      </section>
+
+
+      <section class="datos">
+
+        <div class="dato-card">
+
+          <div class="dato-icon">
+            ✉
+          </div>
+
+          <div class="dato-info">
+
+            <span>
+              Correo electrónico
+            </span>
+
+            <strong>
+              {{ usuario.correo }}
+            </strong>
+
+          </div>
+
+        </div>
+
+
+        <div class="dato-card">
+
+          <div class="dato-icon">
+            #
+          </div>
+
+          <div class="dato-info">
+
+            <span>
+              ID de usuario
+            </span>
+
+            <strong>
+              {{ usuario.idUsuario }}
+            </strong>
+
+          </div>
+
+        </div>
+
+
+        <div class="dato-card">
+
+          <div class="dato-icon">
+            🛡️
+          </div>
+
+          <div class="dato-info">
+
+            <span>
+              Tipo de usuario
+            </span>
+
+            <strong>
+              {{ usuario.role }}
+            </strong>
+
+          </div>
+
+        </div>
+
+      </section>
+
+
+      <button
+        class="logout-button"
+        (click)="cerrarSesion()"
+      >
+        Cerrar sesión
+      </button>
+
+    </ng-container>
 
   </main>
 

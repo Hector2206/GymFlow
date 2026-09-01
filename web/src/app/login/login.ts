@@ -1,146 +1,341 @@
-import { Component } from '@angular/core';
-import { FormsModule } from '@angular/forms';
-import { CommonModule } from '@angular/common';
-import { Router } from '@angular/router';
+import {
+  AfterViewInit,
+  ChangeDetectorRef,
+  Component
+} from '@angular/core';
+
+import {
+  CommonModule
+} from '@angular/common';
+
+import {
+  FormsModule
+} from '@angular/forms';
+
+import {
+  Router
+} from '@angular/router';
+
+import {
+  HttpClient,
+  HttpErrorResponse
+} from '@angular/common/http';
+
+import {
+  AuthService
+} from '../services/auth.service';
+
+import {
+  environment
+} from '../../environments/environment';
+
+declare const google: any;
 
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [FormsModule, CommonModule],
+  imports: [
+    CommonModule,
+    FormsModule
+  ],
   templateUrl: './login.html',
   styleUrl: './login.css'
 })
-export class Login {
+export class Login implements AfterViewInit {
 
   correo = '';
   password = '';
 
-  errorCorreo = '';
-  errorPassword = '';
-  errorLogin = '';
-
   cargando = false;
+  cargandoGoogle = false;
 
-  constructor(private router: Router) {}
+  error = '';
 
-  async validarFormulario() {
+  private readonly googleClientId =
+    environment.googleClientId;
 
-    this.errorCorreo = '';
-    this.errorPassword = '';
-    this.errorLogin = '';
+  constructor(
+    private authService: AuthService,
+    private http: HttpClient,
+    private router: Router,
+    private changeDetector: ChangeDetectorRef
+  ) {}
 
-    let formularioValido = true;
+  ngAfterViewInit(): void {
+    this.inicializarGoogle();
+  }
 
-    // VALIDAR CORREO
+  iniciarSesion(): void {
+
+    this.error = '';
+
     if (!this.correo.trim()) {
-
-      this.errorCorreo = 'El correo es obligatorio';
-      formularioValido = false;
-
-    } else if (!this.correoValido(this.correo)) {
-
-      this.errorCorreo = 'Ingresa un correo electrónico válido';
-      formularioValido = false;
-    }
-
-    // VALIDAR CONTRASEÑA
-    if (!this.password.trim()) {
-
-      this.errorPassword = 'La contraseña es obligatoria';
-      formularioValido = false;
-
-    } else if (this.password.length < 6) {
-
-      this.errorPassword =
-        'La contraseña debe tener al menos 6 caracteres';
-
-      formularioValido = false;
-    }
-
-    if (!formularioValido) {
+      this.error =
+        'El correo es obligatorio.';
       return;
     }
 
-    await this.iniciarSesion();
-  }
+    if (!this.correoValido(this.correo)) {
+      this.error =
+        'Ingresa un correo electrónico válido.';
+      return;
+    }
 
-  async iniciarSesion() {
+    if (!this.password.trim()) {
+      this.error =
+        'La contraseña es obligatoria.';
+      return;
+    }
+
+    if (this.password.length < 6) {
+      this.error =
+        'La contraseña debe tener al menos 6 caracteres.';
+      return;
+    }
+
+    if (this.cargando) {
+      return;
+    }
 
     this.cargando = true;
-    this.errorLogin = '';
 
-    try {
+    this.authService
+      .login(
+        this.correo.trim(),
+        this.password
+      )
+      .subscribe({
 
-      const response = await fetch(
-        'https://projectgym-5hpt.onrender.com/api/auth/login',
-        {
-          method: 'POST',
+        next: () => {
 
-          headers: {
-            'Content-Type': 'application/json'
-          },
+          this.cargando = false;
 
-          body: JSON.stringify({
-            correo: this.correo.trim(),
-            password: this.password
-          })
+          this.router.navigate([
+            '/home'
+          ]);
+        },
+
+        error: (
+          error: HttpErrorResponse
+        ) => {
+
+          console.error(
+            'Error en login local:',
+            error
+          );
+
+          this.cargando = false;
+
+          if (error.status === 401) {
+
+            this.error =
+              'Correo o contraseña incorrectos.';
+
+          } else if (error.status === 0) {
+
+            this.error =
+              'No se pudo conectar con el servicio de autenticación.';
+
+          } else {
+
+            this.error =
+              'Ocurrió un error al iniciar sesión.';
+          }
+
+          this.changeDetector
+            .detectChanges();
         }
-      );
+      });
+  }
 
-      let data: any = null;
+  inicializarGoogle(): void {
 
-      try {
-        data = await response.json();
-      } catch {
-        data = null;
-      }
+    const intentarInicializar = () => {
 
-      if (!response.ok) {
+      if (typeof google === 'undefined') {
 
-        this.errorLogin =
-          data?.mensaje ||
-          data?.message ||
-          'Correo o contraseña incorrectos';
+        setTimeout(
+          intentarInicializar,
+          300
+        );
 
         return;
       }
 
-      console.log('Respuesta del backend:', data);
+      google.accounts.id.initialize({
 
-      // Guardar token si el backend lo devuelve
-      if (data?.token) {
-        localStorage.setItem('token', data.token);
-      }
+        client_id:
+          this.googleClientId,
 
-      // Guardar usuario si el backend lo devuelve
-      if (data?.usuario) {
-        localStorage.setItem(
-          'usuario',
-          JSON.stringify(data.usuario)
+        callback:
+          (response: any) => {
+
+            this.loginGoogle(
+              response.credential
+            );
+          }
+      });
+
+      const contenedor =
+        document.getElementById(
+          'google-login-button'
         );
+
+      if (!contenedor) {
+        return;
       }
 
-      // Ir al menú principal
-      this.router.navigate(['/home']);
+      google.accounts.id.renderButton(
+        contenedor,
+        {
+          theme:
+            'filled_black',
 
-    } catch (error) {
+          size:
+            'large',
 
-      console.error('Error al conectar con el backend:', error);
+          shape:
+            'pill',
 
-      this.errorLogin =
-        'No se pudo conectar con el servidor';
+          text:
+            'signin_with',
 
-    } finally {
+          width:
+            320
+        }
+      );
+    };
 
-      this.cargando = false;
-    }
+    intentarInicializar();
   }
 
-  correoValido(correo: string): boolean {
+  loginGoogle(
+    credential: string
+  ): void {
+
+    if (!credential) {
+
+      this.error =
+        'Google no devolvió una credencial válida.';
+
+      this.changeDetector
+        .detectChanges();
+
+      return;
+    }
+
+    if (this.cargandoGoogle) {
+      return;
+    }
+
+    this.error = '';
+    this.cargandoGoogle = true;
+
+    const body = {
+      token: credential
+    };
+
+    this.http
+      .post<any>(
+        `${environment.authGoogleUrl}/api/auth/login-google`,
+        body
+      )
+      .subscribe({
+
+        next: (response) => {
+
+          this.cargandoGoogle = false;
+
+          const token =
+            response?.token;
+
+          if (!token) {
+
+            this.error =
+              'El servidor no devolvió un token válido.';
+
+            this.changeDetector
+              .detectChanges();
+
+            return;
+          }
+
+          localStorage.setItem(
+            'token',
+            token
+          );
+
+          if (response?.usuario) {
+
+            localStorage.setItem(
+              'usuario',
+              JSON.stringify(
+                response.usuario
+              )
+            );
+          }
+
+          this.router.navigate([
+            '/home'
+          ]);
+        },
+
+        error: (
+          error: HttpErrorResponse
+        ) => {
+
+          console.error(
+            'Error en login con Google:',
+            error
+          );
+
+          this.cargandoGoogle = false;
+
+          if (error.status === 400) {
+
+            this.error =
+              error.error?.mensaje ||
+              'La credencial de Google no es válida.';
+
+          } else if (error.status === 401) {
+
+            this.error =
+              error.error?.mensaje ||
+              'Esta cuenta de Google no está registrada en GymFlow.';
+
+          } else if (error.status === 403) {
+
+            this.error =
+              error.error?.mensaje ||
+              'La cuenta de Google no coincide con la registrada.';
+
+          } else if (error.status === 0) {
+
+            this.error =
+              'No se pudo conectar con el servicio de Google.';
+
+          } else {
+
+            this.error =
+              error.error?.detail ||
+              'No fue posible iniciar sesión con Google.';
+          }
+
+          this.changeDetector
+            .detectChanges();
+        }
+      });
+  }
+
+  correoValido(
+    correo: string
+  ): boolean {
 
     const expresion =
-      /^[^\s@]+@[a-zA-Z]+\.com$/;
+      /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-    return expresion.test(correo.trim());
+    return expresion.test(
+      correo.trim()
+    );
   }
 }

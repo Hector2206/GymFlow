@@ -1,0 +1,290 @@
+<div class="registro-page">
+
+  <header class="topbar">
+
+    <div class="header-left">
+
+      <button
+        type="button"
+        class="back-button"
+        (click)="volver()"
+      >
+        ←
+      </button>
+
+      <img
+        src="/Logo_GymFlow.png"
+        alt="GymFlow"
+        class="logo"
+      />
+
+    </div>
+
+  </header>
+
+
+  <main class="content">
+
+    <section class="page-header">
+
+      <p class="section-label">
+        Recepción
+      </p>
+
+      <h1>
+        Registrar Cliente
+      </h1>
+
+      <p class="subtitle">
+        Ingresa los datos del nuevo cliente
+      </p>
+
+    </section>
+
+
+    <div
+      *ngIf="error"
+      class="message error-message"
+    >
+      {{ error }}
+    </div>
+
+
+    <div
+      *ngIf="exito"
+      class="message success-message"
+    >
+      {{ exito }}
+    </div>
+
+
+    <form
+      class="registro-form"
+      autocomplete="off"
+      (ngSubmit)="registrarCliente()"
+    >
+
+      <section class="form-section">
+
+        <h2>
+          Datos personales
+        </h2>
+
+        <div class="form-grid">
+
+          <div class="field full-width">
+
+            <label for="nombreCompleto">
+              Nombre completo *
+            </label>
+
+            <input
+              id="nombreCompleto"
+              name="nombreCompletoCliente"
+              type="text"
+              [(ngModel)]="nombreCompleto"
+              placeholder="Nombre completo del cliente"
+              autocomplete="off"
+            />
+
+          </div>
+
+
+          <div class="field">
+
+            <label for="correo">
+              Correo electrónico *
+            </label>
+
+            <input
+              id="correo"
+              name="correoNuevoCliente"
+              type="email"
+              [(ngModel)]="correo"
+              placeholder="cliente@gymflow.com"
+              autocomplete="off"
+            />
+
+          </div>
+
+
+          <div class="field">
+
+            <label for="telefono">
+              Teléfono
+            </label>
+
+            <input
+              id="telefono"
+              name="telefonoNuevoCliente"
+              type="tel"
+              [(ngModel)]="telefono"
+              placeholder="4421234567"
+              autocomplete="off"
+            />
+
+          </div>
+
+        </div>
+
+      </section>
+
+
+      <section class="form-section">
+
+        <h2>
+          Acceso
+        </h2>
+
+        <div class="form-grid">
+
+          <div class="field full-width">
+
+            <label for="password">
+              Contraseña *
+            </label>
+
+            <input
+              id="password"
+              name="passwordNuevoCliente"
+              type="password"
+              [(ngModel)]="password"
+              placeholder="Mínimo 6 caracteres"
+              autocomplete="new-password"
+            />
+
+            <small>
+              La contraseña será cifrada por el backend.
+            </small>
+
+          </div>
+
+        </div>
+
+      </section>
+
+
+      <section class="form-section">
+
+        <h2>
+          Membresía y asistencia
+        </h2>
+
+        <div class="form-grid">
+
+          <div class="field">
+
+            <label for="idAsistencia">
+              ID de asistencia *
+            </label>
+
+            <input
+              id="idAsistencia"
+              name="idAsistenciaCliente"
+              type="text"
+              [(ngModel)]="idAsistencia"
+              placeholder="Ej. ASIS-001"
+              autocomplete="off"
+            />
+
+          </div>
+
+
+          <div class="field">
+
+            <label for="idMembresia">
+              Membresía *
+            </label>
+
+            <select
+              id="idMembresia"
+              name="idMembresia"
+              [(ngModel)]="idMembresia"
+            >
+
+              <option
+                [ngValue]="null"
+              >
+                Selecciona una opción
+              </option>
+
+              <option [ngValue]="1">
+                Membresía 1
+              </option>
+
+              <option [ngValue]="2">
+                Membresía 2
+              </option>
+
+              <option [ngValue]="3">
+                Membresía 3
+              </option>
+
+              <option [ngValue]="4">
+                Membresía 4
+              </option>
+
+            </select>
+
+          </div>
+
+
+          <div class="field">
+
+            <label for="costoMensual">
+              Costo mensual *
+            </label>
+
+            <input
+              id="costoMensual"
+              name="costoMensual"
+              type="number"
+              min="0"
+              step="0.01"
+              [(ngModel)]="costoMensual"
+              placeholder="0.00"
+            />
+
+          </div>
+
+
+          <div class="field">
+
+            <label for="costoAnual">
+              Costo anual *
+            </label>
+
+            <input
+              id="costoAnual"
+              name="costoAnual"
+              type="number"
+              min="0"
+              step="0.01"
+              [(ngModel)]="costoAnual"
+              placeholder="0.00"
+            />
+
+          </div>
+
+        </div>
+
+      </section>
+
+
+      <button
+        type="submit"
+        class="submit-button"
+        [disabled]="cargando"
+      >
+        {{
+          cargando
+            ? 'Registrando...'
+            : 'Registrar cliente'
+        }}
+      </button>
+
+    </form>
+
+  </main>
+
+</div>
