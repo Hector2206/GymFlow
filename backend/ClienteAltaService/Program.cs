@@ -14,20 +14,48 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddOpenApi();
 
-var allowedOrigins =
-    builder.Configuration
-        .GetSection("Cors:AllowedOrigins")
-        .Get<string[]>()
-    ?? [];
+
+// ===============================
+// CORS
+// ===============================
 
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("GymFlowWeb", policy =>
+    options.AddPolicy("GymFlowCors", policy =>
     {
         policy
-            .WithOrigins(allowedOrigins)
-            .AllowAnyHeader()
-            .AllowAnyMethod();
+            .SetIsOriginAllowed(origin =>
+            {
+                if (string.IsNullOrWhiteSpace(origin))
+                    return false;
+
+                if (!Uri.TryCreate(origin, UriKind.Absolute, out var uri))
+                    return false;
+
+                // DESARROLLO
+                // Permite Flutter Web y Angular desde cualquier puerto localhost
+                if (uri.Host == "localhost" || uri.Host == "127.0.0.1")
+                    return true;
+
+                // PRODUCCIÓN
+                var allowedOrigins = new[]
+                {
+                    "https://gymflow-web-lkvv.onrender.com"
+                };
+
+                return allowedOrigins.Contains(origin);
+            })
+            .WithMethods(
+                "GET",
+                "POST",
+                "PUT",
+                "DELETE",
+                "OPTIONS"
+            )
+            .WithHeaders(
+                "Content-Type",
+                "Authorization"
+            );
     });
 });
 
@@ -62,6 +90,7 @@ builder.Services
     .AddJwtBearer(options =>
     {
         options.MapInboundClaims = false;
+
         options.TokenValidationParameters =
             new TokenValidationParameters
             {
@@ -78,7 +107,6 @@ builder.Services
                         Encoding.UTF8.GetBytes(jwtKey)
                     ),
 
-                // Nuestros JWT tendrán estos claims
                 RoleClaimType = "role",
                 NameClaimType = "name",
 
@@ -100,7 +128,9 @@ if (app.Environment.IsDevelopment())
     app.MapOpenApi();
 }
 
-app.UseCors("GymFlowWeb");
+// CORS antes de autenticación y autorización
+app.UseCors("GymFlowCors");
+
 app.UseAuthentication();
 app.UseAuthorization();
 
@@ -320,9 +350,9 @@ app.MapPost(
         catch (Exception)
         {
             return Results.Problem(
-                title : "Error al registrar cliente",
-                detail : "Ocurrió un error interno.",
-                statusCode : 500
+                title: "Error al registrar cliente",
+                detail: "Ocurrió un error interno.",
+                statusCode: 500
             );
         }
     }
@@ -331,6 +361,5 @@ app.MapPost(
 {
     policy.RequireRole("Recepcionista");
 });
-
 
 app.Run();

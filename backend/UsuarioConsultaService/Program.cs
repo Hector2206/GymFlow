@@ -7,22 +7,55 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddOpenApi();
 
-var allowedOrigins =
-    builder.Configuration
-        .GetSection("Cors:AllowedOrigins")
-        .Get<string[]>()
-    ?? [];
+
+// ===============================
+// CORS
+// ===============================
 
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("GymFlowWeb", policy =>
+    options.AddPolicy("GymFlowCors", policy =>
     {
         policy
-            .WithOrigins(allowedOrigins)
-            .AllowAnyHeader()
-            .AllowAnyMethod();
+            .SetIsOriginAllowed(origin =>
+            {
+                if (string.IsNullOrWhiteSpace(origin))
+                    return false;
+
+                if (!Uri.TryCreate(origin, UriKind.Absolute, out var uri))
+                    return false;
+
+                // DESARROLLO
+                // Permite Flutter Web y Angular desde cualquier puerto localhost
+                if (uri.Host == "localhost" || uri.Host == "127.0.0.1")
+                    return true;
+
+                // PRODUCCIÓN
+                var allowedOrigins = new[]
+                {
+                    "https://gymflow-web-lkvv.onrender.com"
+                };
+
+                return allowedOrigins.Contains(origin);
+            })
+            .WithMethods(
+                "GET",
+                "POST",
+                "PUT",
+                "DELETE",
+                "OPTIONS"
+            )
+            .WithHeaders(
+                "Content-Type",
+                "Authorization"
+            );
     });
 });
+
+
+// ===============================
+// JWT
+// ===============================
 
 var jwtKey = builder.Configuration["Jwt:Key"];
 var jwtIssuer = builder.Configuration["Jwt:Issuer"];
@@ -41,7 +74,8 @@ builder.Services
     )
     .AddJwtBearer(options =>
     {
-         options.MapInboundClaims = false;
+        options.MapInboundClaims = false;
+
         options.TokenValidationParameters =
             new TokenValidationParameters
             {
@@ -67,6 +101,11 @@ builder.Services
 
 builder.Services.AddAuthorization();
 
+
+// ===============================
+// APP
+// ===============================
+
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
@@ -74,9 +113,16 @@ if (app.Environment.IsDevelopment())
     app.MapOpenApi();
 }
 
-app.UseCors("GymFlowWeb");
+// CORS antes de autenticación y autorización
+app.UseCors("GymFlowCors");
+
 app.UseAuthentication();
 app.UseAuthorization();
+
+
+// ===============================
+// HEALTH
+// ===============================
 
 app.MapGet("/health", () =>
 {
@@ -87,6 +133,11 @@ app.MapGet("/health", () =>
         timestamp = DateTime.UtcNow
     });
 });
+
+
+// ===============================
+// USUARIO ACTUAL
+// ===============================
 
 app.MapGet(
     "/api/usuarios/me",
