@@ -36,11 +36,13 @@ class _GoogleLoginButtonState
     });
 
     try {
-      final googleSignIn =
+        final googleSignIn =
           GoogleSignIn(
         scopes: const [
           'email',
         ],
+        serverClientId:
+            '403800585371-gvse8f49bhq6gqh1tmvmk1t8sebg6rvs.apps.googleusercontent.com',
       );
 
       final account =
