@@ -33,7 +33,7 @@ export class RegistrarCliente {
   correo = '';
   password = '';
   telefono = '';
-  idAsistencia = '';
+
 
   idMembresia: number | null = null;
 
@@ -100,14 +100,6 @@ export class RegistrarCliente {
       return;
     }
 
-    if (!this.idAsistencia.trim()) {
-
-      this.error =
-        'El ID de asistencia es obligatorio.';
-
-      return;
-    }
-
     if (
       this.idMembresia === null ||
       this.idMembresia <= 0
@@ -155,8 +147,7 @@ export class RegistrarCliente {
       password:
         this.password,
 
-      idAsistencia:
-        this.idAsistencia.trim(),
+
 
       nombreCompleto:
         this.nombreCompleto.trim(),
@@ -256,7 +247,7 @@ export class RegistrarCliente {
     this.correo = '';
     this.password = '';
     this.telefono = '';
-    this.idAsistencia = '';
+    
 
     this.idMembresia = null;
 
