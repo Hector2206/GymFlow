@@ -73,7 +73,6 @@ public class ClienteService
                     CALL sp_alta_cliente(
                         @p_correo,
                         @p_contrasena_hash,
-                        @p_id_asistencia,
                         @p_nombre_completo,
                         @p_telefono,
                         @p_id_membresia,
@@ -94,11 +93,6 @@ public class ClienteService
                 command.Parameters.AddWithValue(
                     "p_contrasena_hash",
                     passwordHash
-                );
-
-                command.Parameters.AddWithValue(
-                    "p_id_asistencia",
-                    request.IdAsistencia
                 );
 
                 command.Parameters.AddWithValue(

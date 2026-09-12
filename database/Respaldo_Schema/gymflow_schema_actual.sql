@@ -546,4 +546,65 @@ $$;
 
 alter procedure sp_vincular_google(varchar, varchar) owner to gymflow_app;
 
+create function fn_generar_codigo_acceso() returns trigger
+    language plpgsql
+as
+$$
+BEGIN
+    IF NEW.id_asistencia IS NULL OR NEW.id_asistencia = '' THEN
+        NEW.id_asistencia :=
+            'GF' || LPAD(NEW.id_cliente::TEXT, 6, '0');
+    END IF;
+
+    RETURN NEW;
+END;
+$$;
+
+alter function fn_generar_codigo_acceso() owner to gymflow_app;
+
+create trigger trg_generar_codigo_acceso
+    before insert
+    on clientes
+    for each row
+execute procedure fn_generar_codigo_acceso();
+
+create procedure sp_alta_cliente(IN p_correo character varying, IN p_contrasena_hash character varying, IN p_nombre_completo character varying, IN p_telefono character varying, IN p_id_membresia integer, IN p_costo_mensual numeric, IN p_costo_anual numeric)
+    language plpgsql
+as
+$$
+DECLARE
+    v_id_usuario INTEGER;
+BEGIN
+    INSERT INTO usuarios (
+        correo,
+        contrasena_hash,
+        id_rol
+    )
+    VALUES (
+        p_correo,
+        p_contrasena_hash,
+        4
+    )
+    RETURNING id_usuario INTO v_id_usuario;
+
+    INSERT INTO clientes (
+        id_usuario,
+        nombre_completo,
+        telefono,
+        id_membresia,
+        costo_mensual_acordado,
+        costo_anual_acordado
+    )
+    VALUES (
+        v_id_usuario,
+        p_nombre_completo,
+        p_telefono,
+        p_id_membresia,
+        p_costo_mensual,
+        p_costo_anual
+    );
+END;
+$$;
+
+alter procedure sp_alta_cliente(varchar, varchar, varchar, varchar, integer, numeric, numeric) owner to gymflow_app;
 

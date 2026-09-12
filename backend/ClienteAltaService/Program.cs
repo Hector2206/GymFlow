@@ -277,19 +277,6 @@ app.MapPost(
             });
         }
 
-        if (
-            string.IsNullOrWhiteSpace(
-                request.IdAsistencia
-            )
-        )
-        {
-            return Results.BadRequest(new
-            {
-                mensaje =
-                    "El ID de asistencia es obligatorio"
-            });
-        }
-
         if (request.IdMembresia <= 0)
         {
             return Results.BadRequest(new
