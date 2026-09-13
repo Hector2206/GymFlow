@@ -749,4 +749,100 @@ app.MapGet(
     policy.RequireRole("Recepcionista");
 });
 
+// ===============================
+// MIS ASISTENCIAS
+// ===============================
+
+app.MapGet(
+    "/api/asistencias/mis-asistencias",
+    async (
+        ClaimsPrincipal usuario,
+        IConfiguration configuration
+    ) =>
+    {
+        var idUsuario =
+            usuario.FindFirst("sub")?.Value
+            ?? usuario.FindFirst(
+                ClaimTypes.NameIdentifier
+            )?.Value;
+
+        if (string.IsNullOrWhiteSpace(idUsuario))
+        {
+            return Results.Unauthorized();
+        }
+
+        var connectionString =
+            configuration.GetConnectionString(
+                "PostgreSQL"
+            );
+
+        if (string.IsNullOrWhiteSpace(connectionString))
+        {
+            return Results.Problem(
+                title: "Configuración faltante",
+                detail:
+                    "No existe la cadena de conexión PostgreSQL.",
+                statusCode: 500
+            );
+        }
+
+        await using var connection =
+            new NpgsqlConnection(connectionString);
+
+        await connection.OpenAsync();
+
+        await using var command =
+            new NpgsqlCommand(
+                """
+                SELECT
+                    a.id_asistencia_registro,
+                    a.fecha_hora,
+                    a.estado_acceso,
+                    a.origen_registro
+                FROM asistencias a
+                INNER JOIN clientes c
+                    ON a.id_cliente = c.id_cliente
+                WHERE c.id_usuario = @id_usuario
+                ORDER BY a.fecha_hora DESC;
+                """,
+                connection
+            );
+
+        command.Parameters.AddWithValue(
+            "id_usuario",
+            int.Parse(idUsuario)
+        );
+
+        await using var reader =
+            await command.ExecuteReaderAsync();
+
+        var asistencias =
+            new List<object>();
+
+        while (await reader.ReadAsync())
+        {
+            asistencias.Add(new
+            {
+                idAsistencia =
+                    reader.GetInt32(0),
+                fechaHora =
+                    reader.GetDateTime(1),
+                estadoAcceso =
+                    reader.GetString(2),
+                origenRegistro =
+                    reader.GetString(3)
+            });
+        }
+
+        return Results.Ok(new
+        {
+            asistencias
+        });
+    }
+)
+.RequireAuthorization(policy =>
+{
+    policy.RequireRole("Cliente");
+});
+
 app.Run();
