@@ -1042,4 +1042,96 @@ app.MapPost(
     policy.RequireRole("Recepcionista");
 });
 
+// ===============================
+// PAGOS POR CLIENTE
+// ===============================
+
+app.MapGet(
+    "/api/pagos/cliente/{idCliente:int}",
+    async (
+        int idCliente,
+        IConfiguration configuration
+    ) =>
+    {
+        if (idCliente <= 0)
+        {
+            return Results.BadRequest(new
+            {
+                mensaje = "El id del cliente no es válido."
+            });
+        }
+
+        var connectionString =
+            configuration.GetConnectionString(
+                "PostgreSQL"
+            );
+
+        if (string.IsNullOrWhiteSpace(connectionString))
+        {
+            return Results.Problem(
+                title: "Configuración faltante",
+                detail:
+                    "No existe la cadena de conexión PostgreSQL.",
+                statusCode: 500
+            );
+        }
+
+        await using var connection =
+            new NpgsqlConnection(connectionString);
+
+        await connection.OpenAsync();
+
+        await using var command =
+            new NpgsqlCommand(
+                """
+                SELECT
+                    id_pago,
+                    monto_pagado,
+                    tipo_pago,
+                    fecha_transaccion
+                FROM historial_pagos
+                WHERE id_cliente = @id_cliente
+                ORDER BY fecha_transaccion DESC;
+                """,
+                connection
+            );
+
+        command.Parameters.AddWithValue(
+            "id_cliente",
+            idCliente
+        );
+
+        await using var reader =
+            await command.ExecuteReaderAsync();
+
+        var pagos =
+            new List<object>();
+
+        while (await reader.ReadAsync())
+        {
+            pagos.Add(new
+            {
+                idPago =
+                    reader.GetInt32(0),
+                monto =
+                    reader.GetDecimal(1),
+                tipoPago =
+                    reader.GetString(2),
+                fechaTransaccion =
+                    reader.GetDateTime(3)
+            });
+        }
+
+        return Results.Ok(new
+        {
+            idCliente,
+            pagos
+        });
+    }
+)
+.RequireAuthorization(policy =>
+{
+    policy.RequireRole("Recepcionista");
+});
+
 app.Run();
