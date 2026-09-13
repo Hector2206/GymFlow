@@ -592,22 +592,35 @@ app.MapGet(
             await reader.CloseAsync();
 
             await using var asistenciaCommand =
-                new NpgsqlCommand(
-                    """
-                    INSERT INTO asistencias (
-                        id_cliente
-                    )
-                    VALUES (
-                        @id_cliente
-                    )
-                    RETURNING fecha_hora;
-                    """,
-                    connection
-                );
+            new NpgsqlCommand(
+                """
+                INSERT INTO asistencias (
+                    id_cliente,
+                    estado_acceso,
+                    origen_registro
+                )
+                VALUES (
+                    @id_cliente,
+                    @estado_acceso,
+                    @origen_registro
+                )
+                RETURNING fecha_hora;
+                """,
+                connection
+            );
 
             asistenciaCommand.Parameters.AddWithValue(
                 "id_cliente",
                 idCliente
+            );
+            asistenciaCommand.Parameters.AddWithValue(
+                "estado_acceso",
+                "Aprobado"
+            );
+
+            asistenciaCommand.Parameters.AddWithValue(
+                "origen_registro",
+                "LectorCodigo"
             );
 
             var fechaHoraAsistencia =
