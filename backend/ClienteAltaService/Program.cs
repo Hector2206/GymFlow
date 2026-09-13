@@ -472,10 +472,56 @@ app.MapGet(
 
             await connection.OpenAsync();
 
+           var codigoAcceso =
+                request.CodigoAcceso.Trim();
+
+            await using var command =
+                new NpgsqlCommand(
+                    """
+                    SELECT
+                        c.id_cliente,
+                        c.nombre_completo,
+                        u.estatus
+                    FROM clientes c
+                    INNER JOIN usuarios u
+                        ON c.id_usuario = u.id_usuario
+                    WHERE c.id_asistencia = @codigo_acceso;
+                    """,
+                    connection
+                );
+
+            command.Parameters.AddWithValue(
+                "codigo_acceso",
+                codigoAcceso
+            );
+
+            await using var reader =
+                await command.ExecuteReaderAsync();
+
+            if (!await reader.ReadAsync())
+            {
+                return Results.NotFound(new
+                {
+                    mensaje = "Código de acceso no encontrado."
+                });
+            }
+
+            var idCliente =
+                reader.GetInt32(0);
+
+            var nombreCompleto =
+                reader.GetString(1);
+
+            var estatus =
+                reader.GetString(2);
+
             return Results.Ok(new
             {
-                codigoAcceso = request.CodigoAcceso.Trim(),
-                mensaje = "Código recibido correctamente."
+                idCliente,
+                nombreCompleto,
+                estatus,
+                codigoAcceso,
+                mensaje = "Cliente encontrado."
             });
         }
     )
