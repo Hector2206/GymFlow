@@ -657,4 +657,96 @@ app.MapGet(
         policy.RequireRole("Recepcionista");
     });
 
+// ===============================
+// ASISTENCIAS POR CLIENTE
+// ===============================
+
+app.MapGet(
+    "/api/asistencias/cliente/{idCliente:int}",
+    async (
+        int idCliente,
+        IConfiguration configuration
+    ) =>
+    {
+        if (idCliente <= 0)
+        {
+            return Results.BadRequest(new
+            {
+                mensaje = "El id del cliente no es válido."
+            });
+        }
+
+        var connectionString =
+            configuration.GetConnectionString(
+                "PostgreSQL"
+            );
+
+        if (string.IsNullOrWhiteSpace(connectionString))
+        {
+            return Results.Problem(
+                title: "Configuración faltante",
+                detail:
+                    "No existe la cadena de conexión PostgreSQL.",
+                statusCode: 500
+            );
+        }
+
+        await using var connection =
+            new NpgsqlConnection(connectionString);
+
+        await connection.OpenAsync();
+
+        await using var command =
+            new NpgsqlCommand(
+                """
+                SELECT
+                    id_asistencia_registro,
+                    fecha_hora,
+                    estado_acceso,
+                    origen_registro
+                FROM asistencias
+                WHERE id_cliente = @id_cliente
+                ORDER BY fecha_hora DESC;
+                """,
+                connection
+            );
+
+        command.Parameters.AddWithValue(
+            "id_cliente",
+            idCliente
+        );
+
+        await using var reader =
+            await command.ExecuteReaderAsync();
+
+        var asistencias =
+            new List<object>();
+
+        while (await reader.ReadAsync())
+        {
+            asistencias.Add(new
+            {
+                idAsistencia =
+                    reader.GetInt32(0),
+                fechaHora =
+                    reader.GetDateTime(1),
+                estadoAcceso =
+                    reader.GetString(2),
+                origenRegistro =
+                    reader.GetString(3)
+            });
+        }
+
+        return Results.Ok(new
+        {
+            idCliente,
+            asistencias
+        });
+    }
+)
+.RequireAuthorization(policy =>
+{
+    policy.RequireRole("Recepcionista");
+});
+
 app.Run();
