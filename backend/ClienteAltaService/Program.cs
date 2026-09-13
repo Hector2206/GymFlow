@@ -589,6 +589,34 @@ app.MapGet(
                         fechaVencimiento.Value.Date
                 });
             }
+            await reader.CloseAsync();
+
+            await using var asistenciaCommand =
+                new NpgsqlCommand(
+                    """
+                    INSERT INTO asistencias (
+                        id_cliente
+                    )
+                    VALUES (
+                        @id_cliente
+                    )
+                    RETURNING fecha_hora;
+                    """,
+                    connection
+                );
+
+            asistenciaCommand.Parameters.AddWithValue(
+                "id_cliente",
+                idCliente
+            );
+
+            var fechaHoraAsistencia =
+                (DateTime)(
+                    await asistenciaCommand.ExecuteScalarAsync()
+                    ?? throw new Exception(
+                        "No se pudo obtener la fecha de asistencia."
+                    )
+                );
 
           return Results.Ok(new
             {
@@ -602,6 +630,7 @@ app.MapGet(
                 fechaPagoAnualidad,
                 fechaVencimiento,
                 membresiaActiva = true,
+                fechaHoraAsistencia,
                 mensaje = "Cliente encontrado."
             });
         }
