@@ -433,5 +433,55 @@ app.MapGet(
 {
     policy.RequireRole("Cliente");
 });
+    // ===============================
+    // REGISTRAR ASISTENCIA POR CODIGO
+    // ===============================
+
+    app.MapPost(
+        "/api/asistencias/codigo",
+        async (
+            RegistroAsistenciaPorCodigo request,
+            IConfiguration configuration
+        ) =>
+        {
+            if (string.IsNullOrWhiteSpace(request.CodigoAcceso))
+            {
+                return Results.BadRequest(new
+                {
+                    mensaje = "El código de acceso es obligatorio."
+                });
+            }
+
+            var connectionString =
+                configuration.GetConnectionString(
+                    "PostgreSQL"
+                );
+
+            if (string.IsNullOrWhiteSpace(connectionString))
+            {
+                return Results.Problem(
+                    title: "Configuración faltante",
+                    detail:
+                    "No existe la cadena de conexión PostgreSQL.",
+                    statusCode: 500
+                );
+            }
+
+            await using var connection =
+                new NpgsqlConnection(connectionString);
+
+            await connection.OpenAsync();
+
+            return Results.Ok(new
+            {
+                codigoAcceso = request.CodigoAcceso.Trim(),
+                mensaje = "Código recibido correctamente."
+            });
+        }
+    )
+    .RequireAuthorization(policy =>
+    {
+        policy.RequireRole("Recepcionista");
+    });
 
 app.Run();
