@@ -1084,6 +1084,24 @@ app.MapPost(
 
         await pagoCommand.ExecuteNonQueryAsync();
 
+        DateTime fechaVencimiento;
+
+        if (
+            tipoPagoNormalizado.Equals(
+                "Mensualidad",
+                StringComparison.OrdinalIgnoreCase
+            )
+        )
+        {
+            fechaVencimiento =
+                DateTime.Today.AddMonths(1);
+        }
+        else
+        {
+            fechaVencimiento =
+                DateTime.Today.AddYears(1);
+        }
+
         return Results.Ok(new
         {
             pagoRegistrado = true,
@@ -1091,6 +1109,8 @@ app.MapPost(
             idCliente = request.IdCliente,
             monto = request.Monto,
             tipoPago = tipoPagoNormalizado,
+            fechaVencimiento,
+            membresiaActiva = true,
             mensaje = esRenovacion
                 ? "Renovación registrada correctamente."
                 : "Pago registrado correctamente."
