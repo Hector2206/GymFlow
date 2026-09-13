@@ -546,6 +546,50 @@ app.MapGet(
                     ? null
                     : reader.GetDateTime(6);
 
+            DateTime? vencimientoMensual =
+                fechaPagoMensual?.AddMonths(1);
+
+            DateTime? vencimientoAnual =
+                fechaPagoAnualidad?.AddYears(1);
+
+            DateTime? fechaVencimiento = null;
+
+            if (vencimientoMensual.HasValue)
+            {
+                fechaVencimiento = vencimientoMensual;
+            }
+
+            if (
+                vencimientoAnual.HasValue &&
+                (
+                    !fechaVencimiento.HasValue ||
+                    vencimientoAnual.Value > fechaVencimiento.Value
+                )
+            )
+            {
+                fechaVencimiento = vencimientoAnual;
+            }
+
+            if (!fechaVencimiento.HasValue)
+            {
+                return Results.BadRequest(new
+                {
+                    mensaje =
+                        "El cliente no tiene una membresía vigente."
+                });
+            }
+
+            if (fechaVencimiento.Value.Date < DateTime.Today)
+            {
+                return Results.BadRequest(new
+                {
+                    mensaje =
+                        "La membresía del cliente está vencida.",
+                    fechaVencimiento =
+                        fechaVencimiento.Value.Date
+                });
+            }
+
           return Results.Ok(new
             {
                 idCliente,
@@ -556,6 +600,8 @@ app.MapGet(
                 nombrePlan,
                 fechaPagoMensual,
                 fechaPagoAnualidad,
+                fechaVencimiento,
+                membresiaActiva = true,
                 mensaje = "Cliente encontrado."
             });
         }
