@@ -952,9 +952,88 @@ app.MapPost(
             });
         }
 
+        // OBTENER RECEPCIONISTA DESDE EL USUARIO AUTENTICADO
+        await using var recepcionistaCommand =
+            new NpgsqlCommand(
+                """
+                SELECT id_personal
+                FROM personal
+                WHERE id_usuario = @id_usuario;
+                """,
+                connection
+            );
+
+        recepcionistaCommand.Parameters.AddWithValue(
+            "id_usuario",
+            int.Parse(idUsuario)
+        );
+
+        var idRecepcionistaObj =
+            await recepcionistaCommand.ExecuteScalarAsync();
+
+        if (idRecepcionistaObj is null)
+        {
+            return Results.BadRequest(new
+            {
+                mensaje =
+                    "No se encontró el perfil de recepcionista."
+            });
+        }
+
+        var idRecepcionista =
+            Convert.ToInt32(idRecepcionistaObj);
+
+        var tipoPagoNormalizado =
+            request.TipoPago.Equals(
+                "Mensualidad",
+                StringComparison.OrdinalIgnoreCase
+            )
+                ? "Mensualidad"
+                : "Anualidad";
+
+        // REGISTRAR PAGO
+        await using var pagoCommand =
+            new NpgsqlCommand(
+                """
+                CALL sp_registrar_pago(
+                    @p_id_cliente,
+                    @p_id_recepcionista,
+                    @p_monto,
+                    @p_tipo
+                );
+                """,
+                connection
+            );
+
+        pagoCommand.Parameters.AddWithValue(
+            "p_id_cliente",
+            request.IdCliente
+        );
+
+        pagoCommand.Parameters.AddWithValue(
+            "p_id_recepcionista",
+            idRecepcionista
+        );
+
+        pagoCommand.Parameters.AddWithValue(
+            "p_monto",
+            request.Monto
+        );
+
+        pagoCommand.Parameters.AddWithValue(
+            "p_tipo",
+            tipoPagoNormalizado
+        );
+
+        await pagoCommand.ExecuteNonQueryAsync();
+
         return Results.Ok(new
         {
-            mensaje = "Datos del pago válidos."
+            pagoRegistrado = true,
+            idCliente = request.IdCliente,
+            monto = request.Monto,
+            tipoPago = tipoPagoNormalizado,
+            mensaje = "Pago registrado correctamente."
         });
     }
 )
