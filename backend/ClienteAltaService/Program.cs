@@ -845,4 +845,122 @@ app.MapGet(
     policy.RequireRole("Cliente");
 });
 
+// ===============================
+// REGISTRAR PAGO
+// ===============================
+
+app.MapPost(
+    "/api/pagos",
+    async (
+        RegistrarPagoRequest request,
+        ClaimsPrincipal usuario,
+        IConfiguration configuration
+    ) =>
+    {
+        if (request.IdCliente <= 0)
+        {
+            return Results.BadRequest(new
+            {
+                mensaje = "El cliente no es válido."
+            });
+        }
+
+        if (request.Monto <= 0)
+        {
+            return Results.BadRequest(new
+            {
+                mensaje = "El monto debe ser mayor a cero."
+            });
+        }
+
+        if (
+            !request.TipoPago.Equals(
+                "Mensualidad",
+                StringComparison.OrdinalIgnoreCase
+            )
+            &&
+            !request.TipoPago.Equals(
+                "Anualidad",
+                StringComparison.OrdinalIgnoreCase
+            )
+        )
+        {
+            return Results.BadRequest(new
+            {
+                mensaje =
+                    "El tipo de pago debe ser Mensualidad o Anualidad."
+            });
+        }
+
+        var idUsuario =
+            usuario.FindFirst("sub")?.Value
+            ?? usuario.FindFirst(
+                ClaimTypes.NameIdentifier
+            )?.Value;
+
+        if (string.IsNullOrWhiteSpace(idUsuario))
+        {
+            return Results.Unauthorized();
+        }
+
+        var connectionString =
+            configuration.GetConnectionString(
+                "PostgreSQL"
+            );
+
+        if (string.IsNullOrWhiteSpace(connectionString))
+        {
+            return Results.Problem(
+                title: "Configuración faltante",
+                detail:
+                    "No existe la cadena de conexión PostgreSQL.",
+                statusCode: 500
+            );
+        }
+
+        await using var connection =
+            new NpgsqlConnection(connectionString);
+
+        await connection.OpenAsync();
+
+        // VALIDAR QUE EL CLIENTE EXISTA
+        await using var validarClienteCommand =
+            new NpgsqlCommand(
+                """
+                SELECT COUNT(*)
+                FROM clientes
+                WHERE id_cliente = @id_cliente;
+                """,
+                connection
+            );
+
+        validarClienteCommand.Parameters.AddWithValue(
+            "id_cliente",
+            request.IdCliente
+        );
+
+        var clienteExiste =
+            Convert.ToInt32(
+                await validarClienteCommand.ExecuteScalarAsync()
+            ) > 0;
+
+        if (!clienteExiste)
+        {
+            return Results.NotFound(new
+            {
+                mensaje = "El cliente no existe."
+            });
+        }
+
+        return Results.Ok(new
+        {
+            mensaje = "Datos del pago válidos."
+        });
+    }
+)
+.RequireAuthorization(policy =>
+{
+    policy.RequireRole("Recepcionista");
+});
+
 app.Run();
