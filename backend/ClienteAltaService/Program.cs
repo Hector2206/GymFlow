@@ -952,6 +952,63 @@ app.MapPost(
             });
         }
 
+        // DETECTAR SI EL PAGO ES UNA RENOVACION
+    await using var membresiaCommand =
+        new NpgsqlCommand(
+            """
+            SELECT
+                fecha_pago_mensual,
+                fecha_pago_anualidad
+            FROM clientes
+            WHERE id_cliente = @id_cliente;
+            """,
+            connection
+        );
+
+    membresiaCommand.Parameters.AddWithValue(
+        "id_cliente",
+        request.IdCliente
+    );
+
+    await using var membresiaReader =
+        await membresiaCommand.ExecuteReaderAsync();
+
+    DateTime? fechaPagoAnterior = null;
+
+    if (await membresiaReader.ReadAsync())
+    {
+        if (
+            request.TipoPago.Equals(
+                "Mensualidad",
+                StringComparison.OrdinalIgnoreCase
+            )
+            &&
+            !membresiaReader.IsDBNull(0)
+        )
+        {
+            fechaPagoAnterior =
+                membresiaReader.GetDateTime(0);
+        }
+
+        if (
+            request.TipoPago.Equals(
+                "Anualidad",
+                StringComparison.OrdinalIgnoreCase
+            )
+            &&
+            !membresiaReader.IsDBNull(1)
+        )
+        {
+            fechaPagoAnterior =
+                membresiaReader.GetDateTime(1);
+        }
+    }
+
+    await membresiaReader.CloseAsync();
+
+    var esRenovacion =
+        fechaPagoAnterior.HasValue;
+
         // OBTENER RECEPCIONISTA DESDE EL USUARIO AUTENTICADO
         await using var recepcionistaCommand =
             new NpgsqlCommand(
@@ -1030,10 +1087,13 @@ app.MapPost(
         return Results.Ok(new
         {
             pagoRegistrado = true,
+            esRenovacion,
             idCliente = request.IdCliente,
             monto = request.Monto,
             tipoPago = tipoPagoNormalizado,
-            mensaje = "Pago registrado correctamente."
+            mensaje = esRenovacion
+                ? "Renovación registrada correctamente."
+                : "Pago registrado correctamente."
         });
     }
 )
