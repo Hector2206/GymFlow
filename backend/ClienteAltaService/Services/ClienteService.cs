@@ -22,6 +22,9 @@ public class ClienteService
     {
         var passwordHash =
             _passwordService.GenerarHash(request.Password);
+        
+        var codigoAcceso =
+            $"GF{Guid.NewGuid().ToString("N")[..8].ToUpper()}";
 
         var connectionString =
             _configuration.GetConnectionString("PostgreSQL");
@@ -71,13 +74,14 @@ public class ClienteService
                 var command = new NpgsqlCommand(
                     """
                     CALL sp_alta_cliente(
-                        @p_correo,
-                        @p_contrasena_hash,
-                        @p_nombre_completo,
-                        @p_telefono,
-                        @p_id_membresia,
-                        @p_costo_mensual,
-                        @p_costo_anual
+                    @p_correo,
+                    @p_contrasena_hash,
+                    @p_id_asistencia,
+                    @p_nombre_completo,
+                    @p_telefono,
+                    @p_id_membresia,
+                    @p_costo_mensual,
+                    @p_costo_anual
                     );
                     """,
                     connection,
@@ -93,6 +97,10 @@ public class ClienteService
                 command.Parameters.AddWithValue(
                     "p_contrasena_hash",
                     passwordHash
+                );
+                command.Parameters.AddWithValue(
+                    "p_id_asistencia",
+                    codigoAcceso
                 );
 
                 command.Parameters.AddWithValue(
