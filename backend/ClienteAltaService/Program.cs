@@ -1134,4 +1134,100 @@ app.MapGet(
     policy.RequireRole("Recepcionista");
 });
 
+// ===============================
+// MIS PAGOS
+// ===============================
+
+app.MapGet(
+    "/api/pagos/mis-pagos",
+    async (
+        ClaimsPrincipal usuario,
+        IConfiguration configuration
+    ) =>
+    {
+        var idUsuario =
+            usuario.FindFirst("sub")?.Value
+            ?? usuario.FindFirst(
+                ClaimTypes.NameIdentifier
+            )?.Value;
+
+        if (string.IsNullOrWhiteSpace(idUsuario))
+        {
+            return Results.Unauthorized();
+        }
+
+        var connectionString =
+            configuration.GetConnectionString(
+                "PostgreSQL"
+            );
+
+        if (string.IsNullOrWhiteSpace(connectionString))
+        {
+            return Results.Problem(
+                title: "Configuración faltante",
+                detail:
+                    "No existe la cadena de conexión PostgreSQL.",
+                statusCode: 500
+            );
+        }
+
+        await using var connection =
+            new NpgsqlConnection(connectionString);
+
+        await connection.OpenAsync();
+
+        await using var command =
+            new NpgsqlCommand(
+                """
+                SELECT
+                    p.id_pago,
+                    p.monto_pagado,
+                    p.tipo_pago,
+                    p.fecha_transaccion
+                FROM historial_pagos p
+                INNER JOIN clientes c
+                    ON p.id_cliente = c.id_cliente
+                WHERE c.id_usuario = @id_usuario
+                ORDER BY p.fecha_transaccion DESC;
+                """,
+                connection
+            );
+
+        command.Parameters.AddWithValue(
+            "id_usuario",
+            int.Parse(idUsuario)
+        );
+
+        await using var reader =
+            await command.ExecuteReaderAsync();
+
+        var pagos =
+            new List<object>();
+
+        while (await reader.ReadAsync())
+        {
+            pagos.Add(new
+            {
+                idPago =
+                    reader.GetInt32(0),
+                monto =
+                    reader.GetDecimal(1),
+                tipoPago =
+                    reader.GetString(2),
+                fechaTransaccion =
+                    reader.GetDateTime(3)
+            });
+        }
+
+        return Results.Ok(new
+        {
+            pagos
+        });
+    }
+)
+.RequireAuthorization(policy =>
+{
+    policy.RequireRole("Cliente");
+});
+
 app.Run();
