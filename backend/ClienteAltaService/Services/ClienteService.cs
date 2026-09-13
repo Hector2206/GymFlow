@@ -41,6 +41,34 @@ public class ClienteService
 
         await connection.OpenAsync();
 
+        // VALIDAR QUE EL CÓDIGO NO EXISTA
+        await using (var validarCodigoCommand = new NpgsqlCommand(
+            """
+            SELECT COUNT(*)
+            FROM clientes
+            WHERE id_asistencia = @codigo_acceso;
+            """,
+            connection
+        ))
+        {
+            validarCodigoCommand.Parameters.AddWithValue(
+                "codigo_acceso",
+                codigoAcceso
+            );
+
+            var cantidad =
+                Convert.ToInt32(
+                    await validarCodigoCommand.ExecuteScalarAsync()
+                );
+
+            if (cantidad > 0)
+            {
+                throw new Exception(
+                    "El código de acceso generado ya existe."
+                );
+            }
+        }
+
         await using var transaction =
             await connection.BeginTransactionAsync();
 
