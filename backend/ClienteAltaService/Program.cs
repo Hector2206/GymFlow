@@ -349,4 +349,944 @@ app.MapPost(
     policy.RequireRole("Recepcionista");
 });
 
+// ===============================
+// MI CODIGO DE ACCESO
+// ===============================
+
+app.MapGet(
+    "/api/clientes/mi-codigo-acceso",
+    async (
+        ClaimsPrincipal usuario,
+        IConfiguration configuration
+    ) =>
+    {
+        var idUsuario =
+            usuario.FindFirst("sub")?.Value
+            ?? usuario.FindFirst(
+                ClaimTypes.NameIdentifier
+            )?.Value;
+
+        if (string.IsNullOrWhiteSpace(idUsuario))
+        {
+            return Results.Unauthorized();
+        }
+
+        var connectionString =
+            configuration.GetConnectionString(
+                "PostgreSQL"
+            );
+
+        if (string.IsNullOrWhiteSpace(connectionString))
+        {
+            return Results.Problem(
+                title: "Configuración faltante",
+                detail:
+                "No existe la cadena de conexión PostgreSQL.",
+                statusCode: 500
+            );
+        }
+
+        await using var connection =
+            new NpgsqlConnection(connectionString);
+
+        await connection.OpenAsync();
+
+        await using var command =
+        new NpgsqlCommand(
+            """
+            SELECT
+                id_cliente,
+                id_asistencia,
+                nombre_completo
+            FROM clientes
+            WHERE id_usuario = @id_usuario;
+            """,
+            connection
+        );
+
+        command.Parameters.AddWithValue(
+            "id_usuario",
+            int.Parse(idUsuario)
+        );
+
+        await using var reader =
+            await command.ExecuteReaderAsync();
+
+        if (!await reader.ReadAsync())
+        {
+           return Results.NotFound(new
+            {
+                accesoAprobado = false,
+                motivo = "CodigoNoEncontrado",
+                mensaje = "Código de acceso no encontrado."
+            });
+        }
+
+        return Results.Ok(new
+        {
+            idCliente = reader.GetInt32(0),
+            codigoAcceso = reader.GetString(1),
+            nombreCompleto = reader.GetString(2)
+        });
+    }
+)
+.RequireAuthorization(policy =>
+{
+    policy.RequireRole("Cliente");
+});
+    // ===============================
+    // REGISTRAR ASISTENCIA POR CODIGO
+    // ===============================
+
+    app.MapPost(
+        "/api/asistencias/codigo",
+        async (
+            RegistroAsistenciaPorCodigo request,
+            IConfiguration configuration
+        ) =>
+        {
+            if (string.IsNullOrWhiteSpace(request.CodigoAcceso))
+            {
+                return Results.BadRequest(new
+                {
+                    mensaje = "El código de acceso es obligatorio."
+                });
+            }
+
+            var connectionString =
+                configuration.GetConnectionString(
+                    "PostgreSQL"
+                );
+
+            if (string.IsNullOrWhiteSpace(connectionString))
+            {
+                return Results.Problem(
+                    title: "Configuración faltante",
+                    detail:
+                    "No existe la cadena de conexión PostgreSQL.",
+                    statusCode: 500
+                );
+            }
+
+            await using var connection =
+                new NpgsqlConnection(connectionString);
+
+            await connection.OpenAsync();
+
+           var codigoAcceso =
+                request.CodigoAcceso.Trim();
+
+            await using var command =
+                new NpgsqlCommand(
+                    """
+                    SELECT
+                        c.id_cliente,
+                        c.nombre_completo,
+                        u.estatus,
+                        c.id_membresia,
+                        m.nombre_plan,
+                        c.fecha_pago_mensual,
+                        c.fecha_pago_anualidad
+                    FROM clientes c
+                    INNER JOIN usuarios u
+                        ON c.id_usuario = u.id_usuario
+                    INNER JOIN membresias m
+                        ON c.id_membresia = m.id_membresia
+                    WHERE c.id_asistencia = @codigo_acceso;
+                    """,
+                    connection
+                );
+
+            command.Parameters.AddWithValue(
+                "codigo_acceso",
+                codigoAcceso
+            );
+
+            await using var reader =
+                await command.ExecuteReaderAsync();
+
+            if (!await reader.ReadAsync())
+            {
+                return Results.NotFound(new
+                {
+                    mensaje = "Código de acceso no encontrado."
+                });
+            }
+
+            var idCliente =
+                reader.GetInt32(0);
+
+            var nombreCompleto =
+                reader.GetString(1);
+
+            var estatus =
+                reader.GetString(2);
+                if (!estatus.Equals(
+                    "Activo",
+                    StringComparison.OrdinalIgnoreCase
+                ))
+            {
+                return Results.BadRequest(new
+                {
+                    accesoAprobado = false,
+                    motivo = "ClienteInactivo",
+                    mensaje = "El cliente está inactivo."
+                });
+            }
+            var idMembresia =
+                reader.GetInt32(3);
+
+            var nombrePlan =
+                reader.GetString(4);
+
+            DateTime? fechaPagoMensual =
+                reader.IsDBNull(5)
+                    ? null
+                    : reader.GetDateTime(5);
+
+            DateTime? fechaPagoAnualidad =
+                reader.IsDBNull(6)
+                    ? null
+                    : reader.GetDateTime(6);
+
+            DateTime? vencimientoMensual =
+                fechaPagoMensual?.AddMonths(1);
+
+            DateTime? vencimientoAnual =
+                fechaPagoAnualidad?.AddYears(1);
+
+            DateTime? fechaVencimiento = null;
+
+            if (vencimientoMensual.HasValue)
+            {
+                fechaVencimiento = vencimientoMensual;
+            }
+
+            if (
+                vencimientoAnual.HasValue &&
+                (
+                    !fechaVencimiento.HasValue ||
+                    vencimientoAnual.Value > fechaVencimiento.Value
+                )
+            )
+            {
+                fechaVencimiento = vencimientoAnual;
+            }
+
+            if (!fechaVencimiento.HasValue)
+            {
+                return Results.BadRequest(new
+                {
+                    accesoAprobado = false,
+                    motivo = "SinMembresiaVigente",
+                    mensaje =
+                        "El cliente no tiene una membresía vigente."
+                });
+            }
+
+            if (fechaVencimiento.Value.Date < DateTime.Today)
+            {
+                return Results.BadRequest(new
+                {
+                    accesoAprobado = false,
+                    motivo = "MembresiaVencida",
+                    mensaje =
+                        "La membresía del cliente está vencida.",
+                    fechaVencimiento =
+                        fechaVencimiento.Value.Date
+                });
+            }
+            await reader.CloseAsync();
+
+            await using var asistenciaCommand =
+            new NpgsqlCommand(
+                """
+                INSERT INTO asistencias (
+                    id_cliente,
+                    estado_acceso,
+                    origen_registro
+                )
+                VALUES (
+                    @id_cliente,
+                    @estado_acceso,
+                    @origen_registro
+                )
+                RETURNING fecha_hora;
+                """,
+                connection
+            );
+
+            asistenciaCommand.Parameters.AddWithValue(
+                "id_cliente",
+                idCliente
+            );
+            asistenciaCommand.Parameters.AddWithValue(
+                "estado_acceso",
+                "Aprobado"
+            );
+
+            asistenciaCommand.Parameters.AddWithValue(
+                "origen_registro",
+                "LectorCodigo"
+            );
+
+            var fechaHoraAsistencia =
+                (DateTime)(
+                    await asistenciaCommand.ExecuteScalarAsync()
+                    ?? throw new Exception(
+                        "No se pudo obtener la fecha de asistencia."
+                    )
+                );
+
+          return Results.Ok(new
+            {
+                accesoAprobado = true,
+                idCliente,
+                nombreCompleto,
+                codigoAcceso,
+                idMembresia,
+                nombrePlan,
+                fechaVencimiento,
+                fechaHoraAsistencia,
+                mensaje = "Acceso aprobado."
+            });
+        }
+    )
+    .RequireAuthorization(policy =>
+    {
+        policy.RequireRole("Recepcionista");
+    });
+
+// ===============================
+// ASISTENCIAS POR CLIENTE
+// ===============================
+
+app.MapGet(
+    "/api/asistencias/cliente/{idCliente:int}",
+    async (
+        int idCliente,
+        IConfiguration configuration
+    ) =>
+    {
+        if (idCliente <= 0)
+        {
+            return Results.BadRequest(new
+            {
+                mensaje = "El id del cliente no es válido."
+            });
+        }
+
+        var connectionString =
+            configuration.GetConnectionString(
+                "PostgreSQL"
+            );
+
+        if (string.IsNullOrWhiteSpace(connectionString))
+        {
+            return Results.Problem(
+                title: "Configuración faltante",
+                detail:
+                    "No existe la cadena de conexión PostgreSQL.",
+                statusCode: 500
+            );
+        }
+
+        await using var connection =
+            new NpgsqlConnection(connectionString);
+
+        await connection.OpenAsync();
+
+        await using var command =
+            new NpgsqlCommand(
+                """
+                SELECT
+                    id_asistencia_registro,
+                    fecha_hora,
+                    estado_acceso,
+                    origen_registro
+                FROM asistencias
+                WHERE id_cliente = @id_cliente
+                ORDER BY fecha_hora DESC;
+                """,
+                connection
+            );
+
+        command.Parameters.AddWithValue(
+            "id_cliente",
+            idCliente
+        );
+
+        await using var reader =
+            await command.ExecuteReaderAsync();
+
+        var asistencias =
+            new List<object>();
+
+        while (await reader.ReadAsync())
+        {
+            asistencias.Add(new
+            {
+                idAsistencia =
+                    reader.GetInt32(0),
+                fechaHora =
+                    reader.GetDateTime(1),
+                estadoAcceso =
+                    reader.GetString(2),
+                origenRegistro =
+                    reader.GetString(3)
+            });
+        }
+
+        return Results.Ok(new
+        {
+            idCliente,
+            asistencias
+        });
+    }
+)
+.RequireAuthorization(policy =>
+{
+    policy.RequireRole("Recepcionista");
+});
+
+// ===============================
+// MIS ASISTENCIAS
+// ===============================
+
+app.MapGet(
+    "/api/asistencias/mis-asistencias",
+    async (
+        ClaimsPrincipal usuario,
+        IConfiguration configuration
+    ) =>
+    {
+        var idUsuario =
+            usuario.FindFirst("sub")?.Value
+            ?? usuario.FindFirst(
+                ClaimTypes.NameIdentifier
+            )?.Value;
+
+        if (string.IsNullOrWhiteSpace(idUsuario))
+        {
+            return Results.Unauthorized();
+        }
+
+        var connectionString =
+            configuration.GetConnectionString(
+                "PostgreSQL"
+            );
+
+        if (string.IsNullOrWhiteSpace(connectionString))
+        {
+            return Results.Problem(
+                title: "Configuración faltante",
+                detail:
+                    "No existe la cadena de conexión PostgreSQL.",
+                statusCode: 500
+            );
+        }
+
+        await using var connection =
+            new NpgsqlConnection(connectionString);
+
+        await connection.OpenAsync();
+
+        await using var command =
+            new NpgsqlCommand(
+                """
+                SELECT
+                    a.id_asistencia_registro,
+                    a.fecha_hora,
+                    a.estado_acceso,
+                    a.origen_registro
+                FROM asistencias a
+                INNER JOIN clientes c
+                    ON a.id_cliente = c.id_cliente
+                WHERE c.id_usuario = @id_usuario
+                ORDER BY a.fecha_hora DESC;
+                """,
+                connection
+            );
+
+        command.Parameters.AddWithValue(
+            "id_usuario",
+            int.Parse(idUsuario)
+        );
+
+        await using var reader =
+            await command.ExecuteReaderAsync();
+
+        var asistencias =
+            new List<object>();
+
+        while (await reader.ReadAsync())
+        {
+            asistencias.Add(new
+            {
+                idAsistencia =
+                    reader.GetInt32(0),
+                fechaHora =
+                    reader.GetDateTime(1),
+                estadoAcceso =
+                    reader.GetString(2),
+                origenRegistro =
+                    reader.GetString(3)
+            });
+        }
+
+        return Results.Ok(new
+        {
+            asistencias
+        });
+    }
+)
+.RequireAuthorization(policy =>
+{
+    policy.RequireRole("Cliente");
+});
+
+// ===============================
+// REGISTRAR PAGO
+// ===============================
+
+app.MapPost(
+    "/api/pagos",
+    async (
+        RegistrarPagoRequest request,
+        ClaimsPrincipal usuario,
+        IConfiguration configuration
+    ) =>
+    {
+        if (request.IdCliente <= 0)
+        {
+            return Results.BadRequest(new
+            {
+                mensaje = "El cliente no es válido."
+            });
+        }
+
+        if (request.Monto <= 0)
+        {
+            return Results.BadRequest(new
+            {
+                mensaje = "El monto debe ser mayor a cero."
+            });
+        }
+
+        if (
+            !request.TipoPago.Equals(
+                "Mensualidad",
+                StringComparison.OrdinalIgnoreCase
+            )
+            &&
+            !request.TipoPago.Equals(
+                "Anualidad",
+                StringComparison.OrdinalIgnoreCase
+            )
+        )
+        {
+            return Results.BadRequest(new
+            {
+                mensaje =
+                    "El tipo de pago debe ser Mensualidad o Anualidad."
+            });
+        }
+
+        var idUsuario =
+            usuario.FindFirst("sub")?.Value
+            ?? usuario.FindFirst(
+                ClaimTypes.NameIdentifier
+            )?.Value;
+
+        if (string.IsNullOrWhiteSpace(idUsuario))
+        {
+            return Results.Unauthorized();
+        }
+
+        var connectionString =
+            configuration.GetConnectionString(
+                "PostgreSQL"
+            );
+
+        if (string.IsNullOrWhiteSpace(connectionString))
+        {
+            return Results.Problem(
+                title: "Configuración faltante",
+                detail:
+                    "No existe la cadena de conexión PostgreSQL.",
+                statusCode: 500
+            );
+        }
+
+        await using var connection =
+            new NpgsqlConnection(connectionString);
+
+        await connection.OpenAsync();
+
+        await using var transaction =
+            await connection.BeginTransactionAsync();
+
+        try
+        {
+            // VALIDAR QUE EL CLIENTE EXISTA
+            await using var validarClienteCommand =
+                new NpgsqlCommand(
+                    """
+                    SELECT COUNT(*)
+                    FROM clientes
+                    WHERE id_cliente = @id_cliente;
+                    """,
+                    connection,
+                    transaction
+                );
+
+            validarClienteCommand.Parameters.AddWithValue(
+                "id_cliente",
+                request.IdCliente
+            );
+
+            var clienteExiste =
+                Convert.ToInt32(
+                    await validarClienteCommand.ExecuteScalarAsync()
+                ) > 0;
+
+            if (!clienteExiste)
+            {
+                await transaction.RollbackAsync();
+
+                return Results.NotFound(new
+                {
+                    mensaje = "El cliente no existe."
+                });
+            }
+
+            // DETECTAR SI ES RENOVACION
+            await using var membresiaCommand =
+                new NpgsqlCommand(
+                    """
+                    SELECT
+                        fecha_pago_mensual,
+                        fecha_pago_anualidad
+                    FROM clientes
+                    WHERE id_cliente = @id_cliente;
+                    """,
+                    connection,
+                    transaction
+                );
+
+            membresiaCommand.Parameters.AddWithValue(
+                "id_cliente",
+                request.IdCliente
+            );
+
+            await using var membresiaReader =
+                await membresiaCommand.ExecuteReaderAsync();
+
+            DateTime? fechaPagoAnterior = null;
+
+            if (await membresiaReader.ReadAsync())
+            {
+                if (
+                    request.TipoPago.Equals(
+                        "Mensualidad",
+                        StringComparison.OrdinalIgnoreCase
+                    )
+                    &&
+                    !membresiaReader.IsDBNull(0)
+                )
+                {
+                    fechaPagoAnterior =
+                        membresiaReader.GetDateTime(0);
+                }
+
+                if (
+                    request.TipoPago.Equals(
+                        "Anualidad",
+                        StringComparison.OrdinalIgnoreCase
+                    )
+                    &&
+                    !membresiaReader.IsDBNull(1)
+                )
+                {
+                    fechaPagoAnterior =
+                        membresiaReader.GetDateTime(1);
+                }
+            }
+
+            await membresiaReader.CloseAsync();
+
+            var esRenovacion =
+                fechaPagoAnterior.HasValue;
+
+            // OBTENER RECEPCIONISTA
+            await using var recepcionistaCommand =
+                new NpgsqlCommand(
+                    """
+                    SELECT id_personal
+                    FROM personal
+                    WHERE id_usuario = @id_usuario;
+                    """,
+                    connection,
+                    transaction
+                );
+
+            recepcionistaCommand.Parameters.AddWithValue(
+                "id_usuario",
+                int.Parse(idUsuario)
+            );
+
+            var idRecepcionistaObj =
+                await recepcionistaCommand.ExecuteScalarAsync();
+
+            if (idRecepcionistaObj is null)
+            {
+                await transaction.RollbackAsync();
+
+                return Results.BadRequest(new
+                {
+                    mensaje =
+                        "No se encontró el perfil de recepcionista."
+                });
+            }
+
+            var idRecepcionista =
+                Convert.ToInt32(idRecepcionistaObj);
+
+            var tipoPagoNormalizado =
+                request.TipoPago.Equals(
+                    "Mensualidad",
+                    StringComparison.OrdinalIgnoreCase
+                )
+                    ? "Mensualidad"
+                    : "Anualidad";
+
+            // REGISTRAR PAGO Y RENOVACION
+            await using var pagoCommand =
+                new NpgsqlCommand(
+                    """
+                    CALL sp_registrar_pago(
+                        @p_id_cliente,
+                        @p_id_recepcionista,
+                        @p_monto,
+                        @p_tipo
+                    );
+                    """,
+                    connection,
+                    transaction
+                );
+
+            pagoCommand.Parameters.AddWithValue(
+                "p_id_cliente",
+                request.IdCliente
+            );
+
+            pagoCommand.Parameters.AddWithValue(
+                "p_id_recepcionista",
+                idRecepcionista
+            );
+
+            pagoCommand.Parameters.AddWithValue(
+                "p_monto",
+                request.Monto
+            );
+
+            pagoCommand.Parameters.AddWithValue(
+                "p_tipo",
+                tipoPagoNormalizado
+            );
+
+            await pagoCommand.ExecuteNonQueryAsync();
+            
+
+            // OBTENER NUEVA VIGENCIA
+            await using var vigenciaCommand =
+                new NpgsqlCommand(
+                    """
+                    SELECT
+                        fecha_pago_mensual,
+                        fecha_pago_anualidad
+                    FROM clientes
+                    WHERE id_cliente = @id_cliente;
+                    """,
+                    connection,
+                    transaction
+                );
+
+            vigenciaCommand.Parameters.AddWithValue(
+                "id_cliente",
+                request.IdCliente
+            );
+
+            await using var vigenciaReader =
+                await vigenciaCommand.ExecuteReaderAsync();
+
+            DateTime? fechaPagoActualizada = null;
+
+            if (await vigenciaReader.ReadAsync())
+            {
+                if (
+                    tipoPagoNormalizado == "Mensualidad"
+                    &&
+                    !vigenciaReader.IsDBNull(0)
+                )
+                {
+                    fechaPagoActualizada =
+                        vigenciaReader.GetDateTime(0);
+                }
+
+                if (
+                    tipoPagoNormalizado == "Anualidad"
+                    &&
+                    !vigenciaReader.IsDBNull(1)
+                )
+                {
+                    fechaPagoActualizada =
+                        vigenciaReader.GetDateTime(1);
+                }
+            }
+
+            await vigenciaReader.CloseAsync();
+
+            if (!fechaPagoActualizada.HasValue)
+            {
+                throw new Exception(
+                    "No se pudo obtener la nueva vigencia."
+                );
+            }
+
+            var fechaVencimiento =
+                tipoPagoNormalizado == "Mensualidad"
+                    ? fechaPagoActualizada.Value.AddMonths(1)
+                    : fechaPagoActualizada.Value.AddYears(1);
+
+            // TODO SALIO BIEN
+            await transaction.CommitAsync();
+
+            return Results.Ok(new
+            {
+                pagoRegistrado = true,
+                esRenovacion,
+                idCliente = request.IdCliente,
+                monto = request.Monto,
+                tipoPago = tipoPagoNormalizado,
+                fechaVencimiento,
+                membresiaActiva = true,
+                mensaje = esRenovacion
+                    ? "Renovación registrada correctamente."
+                    : "Pago registrado correctamente."
+            });
+        }
+        catch (Exception ex)
+        {
+            await transaction.RollbackAsync();
+
+            return Results.Problem(
+                title: "Error al registrar pago",
+                detail: ex.Message,
+                statusCode: 500
+            );
+        }
+    }
+)
+.RequireAuthorization(policy =>
+{
+    policy.RequireRole("Recepcionista");
+});
+
+// ===============================
+// MIS PAGOS
+// ===============================
+
+app.MapGet(
+    "/api/pagos/mis-pagos",
+    async (
+        ClaimsPrincipal usuario,
+        IConfiguration configuration
+    ) =>
+    {
+        var idUsuario =
+            usuario.FindFirst("sub")?.Value
+            ?? usuario.FindFirst(
+                ClaimTypes.NameIdentifier
+            )?.Value;
+
+        if (string.IsNullOrWhiteSpace(idUsuario))
+        {
+            return Results.Unauthorized();
+        }
+
+        var connectionString =
+            configuration.GetConnectionString(
+                "PostgreSQL"
+            );
+
+        if (string.IsNullOrWhiteSpace(connectionString))
+        {
+            return Results.Problem(
+                title: "Configuración faltante",
+                detail:
+                    "No existe la cadena de conexión PostgreSQL.",
+                statusCode: 500
+            );
+        }
+
+        await using var connection =
+            new NpgsqlConnection(connectionString);
+
+        await connection.OpenAsync();
+
+        await using var command =
+            new NpgsqlCommand(
+                """
+                SELECT
+                    p.id_pago,
+                    p.monto_pagado,
+                    p.tipo_pago,
+                    p.fecha_transaccion
+                FROM historial_pagos p
+                INNER JOIN clientes c
+                    ON p.id_cliente = c.id_cliente
+                WHERE c.id_usuario = @id_usuario
+                ORDER BY p.fecha_transaccion DESC;
+                """,
+                connection
+            );
+
+        command.Parameters.AddWithValue(
+            "id_usuario",
+            int.Parse(idUsuario)
+        );
+
+        await using var reader =
+            await command.ExecuteReaderAsync();
+
+        var pagos =
+            new List<object>();
+
+        while (await reader.ReadAsync())
+        {
+            pagos.Add(new
+            {
+                idPago =
+                    reader.GetInt32(0),
+                monto =
+                    reader.GetDecimal(1),
+                tipoPago =
+                    reader.GetString(2),
+                fechaTransaccion =
+                    reader.GetDateTime(3)
+            });
+        }
+
+        return Results.Ok(new
+        {
+            pagos
+        });
+    }
+)
+.RequireAuthorization(policy =>
+{
+    policy.RequireRole("Cliente");
+});
+
 app.Run();

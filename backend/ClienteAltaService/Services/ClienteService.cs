@@ -22,6 +22,9 @@ public class ClienteService
     {
         var passwordHash =
             _passwordService.GenerarHash(request.Password);
+        
+        var codigoAcceso =
+            $"GF{Guid.NewGuid().ToString("N")[..8].ToUpper()}";
 
         var connectionString =
             _configuration.GetConnectionString("PostgreSQL");
@@ -37,6 +40,34 @@ public class ClienteService
             new NpgsqlConnection(connectionString);
 
         await connection.OpenAsync();
+
+        // VALIDAR QUE EL CÓDIGO NO EXISTA
+        await using (var validarCodigoCommand = new NpgsqlCommand(
+            """
+            SELECT COUNT(*)
+            FROM clientes
+            WHERE id_asistencia = @codigo_acceso;
+            """,
+            connection
+        ))
+        {
+            validarCodigoCommand.Parameters.AddWithValue(
+                "codigo_acceso",
+                codigoAcceso
+            );
+
+            var cantidad =
+                Convert.ToInt32(
+                    await validarCodigoCommand.ExecuteScalarAsync()
+                );
+
+            if (cantidad > 0)
+            {
+                throw new Exception(
+                    "El código de acceso generado ya existe."
+                );
+            }
+        }
 
         await using var transaction =
             await connection.BeginTransactionAsync();
@@ -71,13 +102,14 @@ public class ClienteService
                 var command = new NpgsqlCommand(
                     """
                     CALL sp_alta_cliente(
-                        @p_correo,
-                        @p_contrasena_hash,
-                        @p_nombre_completo,
-                        @p_telefono,
-                        @p_id_membresia,
-                        @p_costo_mensual,
-                        @p_costo_anual
+                    @p_correo,
+                    @p_contrasena_hash,
+                    @p_id_asistencia,
+                    @p_nombre_completo,
+                    @p_telefono,
+                    @p_id_membresia,
+                    @p_costo_mensual,
+                    @p_costo_anual
                     );
                     """,
                     connection,
@@ -93,6 +125,10 @@ public class ClienteService
                 command.Parameters.AddWithValue(
                     "p_contrasena_hash",
                     passwordHash
+                );
+                command.Parameters.AddWithValue(
+                    "p_id_asistencia",
+                    codigoAcceso
                 );
 
                 command.Parameters.AddWithValue(
