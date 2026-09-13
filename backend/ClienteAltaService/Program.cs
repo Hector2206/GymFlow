@@ -923,341 +923,269 @@ app.MapPost(
 
         await connection.OpenAsync();
 
-        // VALIDAR QUE EL CLIENTE EXISTA
-        await using var validarClienteCommand =
-            new NpgsqlCommand(
-                """
-                SELECT COUNT(*)
-                FROM clientes
-                WHERE id_cliente = @id_cliente;
-                """,
-                connection
-            );
+        await using var transaction =
+            await connection.BeginTransactionAsync();
 
-        validarClienteCommand.Parameters.AddWithValue(
-            "id_cliente",
-            request.IdCliente
-        );
-
-        var clienteExiste =
-            Convert.ToInt32(
-                await validarClienteCommand.ExecuteScalarAsync()
-            ) > 0;
-
-        if (!clienteExiste)
+        try
         {
-            return Results.NotFound(new
-            {
-                mensaje = "El cliente no existe."
-            });
-        }
-
-        // DETECTAR SI EL PAGO ES UNA RENOVACION
-    await using var membresiaCommand =
-        new NpgsqlCommand(
-            """
-            SELECT
-                fecha_pago_mensual,
-                fecha_pago_anualidad
-            FROM clientes
-            WHERE id_cliente = @id_cliente;
-            """,
-            connection
-        );
-
-    membresiaCommand.Parameters.AddWithValue(
-        "id_cliente",
-        request.IdCliente
-    );
-
-    await using var membresiaReader =
-        await membresiaCommand.ExecuteReaderAsync();
-
-    DateTime? fechaPagoAnterior = null;
-
-    if (await membresiaReader.ReadAsync())
-    {
-        if (
-            request.TipoPago.Equals(
-                "Mensualidad",
-                StringComparison.OrdinalIgnoreCase
-            )
-            &&
-            !membresiaReader.IsDBNull(0)
-        )
-        {
-            fechaPagoAnterior =
-                membresiaReader.GetDateTime(0);
-        }
-
-        if (
-            request.TipoPago.Equals(
-                "Anualidad",
-                StringComparison.OrdinalIgnoreCase
-            )
-            &&
-            !membresiaReader.IsDBNull(1)
-        )
-        {
-            fechaPagoAnterior =
-                membresiaReader.GetDateTime(1);
-        }
-    }
-
-    await membresiaReader.CloseAsync();
-
-    var esRenovacion =
-        fechaPagoAnterior.HasValue;
-
-        // OBTENER RECEPCIONISTA DESDE EL USUARIO AUTENTICADO
-        await using var recepcionistaCommand =
-            new NpgsqlCommand(
-                """
-                SELECT id_personal
-                FROM personal
-                WHERE id_usuario = @id_usuario;
-                """,
-                connection
-            );
-
-        recepcionistaCommand.Parameters.AddWithValue(
-            "id_usuario",
-            int.Parse(idUsuario)
-        );
-
-        var idRecepcionistaObj =
-            await recepcionistaCommand.ExecuteScalarAsync();
-
-        if (idRecepcionistaObj is null)
-        {
-            return Results.BadRequest(new
-            {
-                mensaje =
-                    "No se encontró el perfil de recepcionista."
-            });
-        }
-
-        var idRecepcionista =
-            Convert.ToInt32(idRecepcionistaObj);
-
-        var tipoPagoNormalizado =
-            request.TipoPago.Equals(
-                "Mensualidad",
-                StringComparison.OrdinalIgnoreCase
-            )
-                ? "Mensualidad"
-                : "Anualidad";
-
-        // REGISTRAR PAGO
-        await using var pagoCommand =
-            new NpgsqlCommand(
-                """
-                CALL sp_registrar_pago(
-                    @p_id_cliente,
-                    @p_id_recepcionista,
-                    @p_monto,
-                    @p_tipo
+            // VALIDAR QUE EL CLIENTE EXISTA
+            await using var validarClienteCommand =
+                new NpgsqlCommand(
+                    """
+                    SELECT COUNT(*)
+                    FROM clientes
+                    WHERE id_cliente = @id_cliente;
+                    """,
+                    connection,
+                    transaction
                 );
-                """,
-                connection
+
+            validarClienteCommand.Parameters.AddWithValue(
+                "id_cliente",
+                request.IdCliente
             );
 
-        pagoCommand.Parameters.AddWithValue(
-            "p_id_cliente",
-            request.IdCliente
-        );
+            var clienteExiste =
+                Convert.ToInt32(
+                    await validarClienteCommand.ExecuteScalarAsync()
+                ) > 0;
 
-        pagoCommand.Parameters.AddWithValue(
-            "p_id_recepcionista",
-            idRecepcionista
-        );
+            if (!clienteExiste)
+            {
+                await transaction.RollbackAsync();
 
-        pagoCommand.Parameters.AddWithValue(
-            "p_monto",
-            request.Monto
-        );
+                return Results.NotFound(new
+                {
+                    mensaje = "El cliente no existe."
+                });
+            }
 
-        pagoCommand.Parameters.AddWithValue(
-            "p_tipo",
-            tipoPagoNormalizado
-        );
+            // DETECTAR SI ES RENOVACION
+            await using var membresiaCommand =
+                new NpgsqlCommand(
+                    """
+                    SELECT
+                        fecha_pago_mensual,
+                        fecha_pago_anualidad
+                    FROM clientes
+                    WHERE id_cliente = @id_cliente;
+                    """,
+                    connection,
+                    transaction
+                );
 
-        await pagoCommand.ExecuteNonQueryAsync();
-
-       // OBTENER LA VIGENCIA ACTUALIZADA DESDE LA BD
-        await using var vigenciaCommand =
-            new NpgsqlCommand(
-                """
-                SELECT
-                    fecha_pago_mensual,
-                    fecha_pago_anualidad
-                FROM clientes
-                WHERE id_cliente = @id_cliente;
-                """,
-                connection
+            membresiaCommand.Parameters.AddWithValue(
+                "id_cliente",
+                request.IdCliente
             );
 
-        vigenciaCommand.Parameters.AddWithValue(
-            "id_cliente",
-            request.IdCliente
-        );
+            await using var membresiaReader =
+                await membresiaCommand.ExecuteReaderAsync();
 
-        await using var vigenciaReader =
-            await vigenciaCommand.ExecuteReaderAsync();
+            DateTime? fechaPagoAnterior = null;
 
-        DateTime? fechaPagoActualizada = null;
+            if (await membresiaReader.ReadAsync())
+            {
+                if (
+                    request.TipoPago.Equals(
+                        "Mensualidad",
+                        StringComparison.OrdinalIgnoreCase
+                    )
+                    &&
+                    !membresiaReader.IsDBNull(0)
+                )
+                {
+                    fechaPagoAnterior =
+                        membresiaReader.GetDateTime(0);
+                }
 
-        if (await vigenciaReader.ReadAsync())
-        {
-            if (
-                tipoPagoNormalizado.Equals(
+                if (
+                    request.TipoPago.Equals(
+                        "Anualidad",
+                        StringComparison.OrdinalIgnoreCase
+                    )
+                    &&
+                    !membresiaReader.IsDBNull(1)
+                )
+                {
+                    fechaPagoAnterior =
+                        membresiaReader.GetDateTime(1);
+                }
+            }
+
+            await membresiaReader.CloseAsync();
+
+            var esRenovacion =
+                fechaPagoAnterior.HasValue;
+
+            // OBTENER RECEPCIONISTA
+            await using var recepcionistaCommand =
+                new NpgsqlCommand(
+                    """
+                    SELECT id_personal
+                    FROM personal
+                    WHERE id_usuario = @id_usuario;
+                    """,
+                    connection,
+                    transaction
+                );
+
+            recepcionistaCommand.Parameters.AddWithValue(
+                "id_usuario",
+                int.Parse(idUsuario)
+            );
+
+            var idRecepcionistaObj =
+                await recepcionistaCommand.ExecuteScalarAsync();
+
+            if (idRecepcionistaObj is null)
+            {
+                await transaction.RollbackAsync();
+
+                return Results.BadRequest(new
+                {
+                    mensaje =
+                        "No se encontró el perfil de recepcionista."
+                });
+            }
+
+            var idRecepcionista =
+                Convert.ToInt32(idRecepcionistaObj);
+
+            var tipoPagoNormalizado =
+                request.TipoPago.Equals(
                     "Mensualidad",
                     StringComparison.OrdinalIgnoreCase
                 )
-                &&
-                !vigenciaReader.IsDBNull(0)
-            )
-            {
-                fechaPagoActualizada =
-                    vigenciaReader.GetDateTime(0);
-            }
+                    ? "Mensualidad"
+                    : "Anualidad";
 
-            if (
-                tipoPagoNormalizado.Equals(
-                    "Anualidad",
-                    StringComparison.OrdinalIgnoreCase
+            // REGISTRAR PAGO Y RENOVACION
+            await using var pagoCommand =
+                new NpgsqlCommand(
+                    """
+                    CALL sp_registrar_pago(
+                        @p_id_cliente,
+                        @p_id_recepcionista,
+                        @p_monto,
+                        @p_tipo
+                    );
+                    """,
+                    connection,
+                    transaction
+                );
+
+            pagoCommand.Parameters.AddWithValue(
+                "p_id_cliente",
+                request.IdCliente
+            );
+
+            pagoCommand.Parameters.AddWithValue(
+                "p_id_recepcionista",
+                idRecepcionista
+            );
+
+            pagoCommand.Parameters.AddWithValue(
+                "p_monto",
+                request.Monto
+            );
+
+            pagoCommand.Parameters.AddWithValue(
+                "p_tipo",
+                tipoPagoNormalizado
+            );
+
+            await pagoCommand.ExecuteNonQueryAsync();
+            
+
+            // OBTENER NUEVA VIGENCIA
+            await using var vigenciaCommand =
+                new NpgsqlCommand(
+                    """
+                    SELECT
+                        fecha_pago_mensual,
+                        fecha_pago_anualidad
+                    FROM clientes
+                    WHERE id_cliente = @id_cliente;
+                    """,
+                    connection,
+                    transaction
+                );
+
+            vigenciaCommand.Parameters.AddWithValue(
+                "id_cliente",
+                request.IdCliente
+            );
+
+            await using var vigenciaReader =
+                await vigenciaCommand.ExecuteReaderAsync();
+
+            DateTime? fechaPagoActualizada = null;
+
+            if (await vigenciaReader.ReadAsync())
+            {
+                if (
+                    tipoPagoNormalizado == "Mensualidad"
+                    &&
+                    !vigenciaReader.IsDBNull(0)
                 )
-                &&
-                !vigenciaReader.IsDBNull(1)
-            )
-            {
-                fechaPagoActualizada =
-                    vigenciaReader.GetDateTime(1);
+                {
+                    fechaPagoActualizada =
+                        vigenciaReader.GetDateTime(0);
+                }
+
+                if (
+                    tipoPagoNormalizado == "Anualidad"
+                    &&
+                    !vigenciaReader.IsDBNull(1)
+                )
+                {
+                    fechaPagoActualizada =
+                        vigenciaReader.GetDateTime(1);
+                }
             }
+
+            await vigenciaReader.CloseAsync();
+
+            if (!fechaPagoActualizada.HasValue)
+            {
+                throw new Exception(
+                    "No se pudo obtener la nueva vigencia."
+                );
+            }
+
+            var fechaVencimiento =
+                tipoPagoNormalizado == "Mensualidad"
+                    ? fechaPagoActualizada.Value.AddMonths(1)
+                    : fechaPagoActualizada.Value.AddYears(1);
+
+            // TODO SALIO BIEN
+            await transaction.CommitAsync();
+
+            return Results.Ok(new
+            {
+                pagoRegistrado = true,
+                esRenovacion,
+                idCliente = request.IdCliente,
+                monto = request.Monto,
+                tipoPago = tipoPagoNormalizado,
+                fechaVencimiento,
+                membresiaActiva = true,
+                mensaje = esRenovacion
+                    ? "Renovación registrada correctamente."
+                    : "Pago registrado correctamente."
+            });
         }
-
-        await vigenciaReader.CloseAsync();
-
-        if (!fechaPagoActualizada.HasValue)
+        catch (Exception ex)
         {
+            await transaction.RollbackAsync();
+
             return Results.Problem(
-                title: "Error al calcular vigencia",
-                detail:
-                    "No se pudo obtener la nueva fecha de pago.",
+                title: "Error al registrar pago",
+                detail: ex.Message,
                 statusCode: 500
             );
         }
-
-        var fechaVencimiento =
-            tipoPagoNormalizado == "Mensualidad"
-                ? fechaPagoActualizada.Value.AddMonths(1)
-                : fechaPagoActualizada.Value.AddYears(1);
-
-        return Results.Ok(new
-        {
-            pagoRegistrado = true,
-            esRenovacion,
-            idCliente = request.IdCliente,
-            monto = request.Monto,
-            tipoPago = tipoPagoNormalizado,
-            fechaVencimiento,
-            membresiaActiva = true,
-            mensaje = esRenovacion
-                ? "Renovación registrada correctamente."
-                : "Pago registrado correctamente."
-        });
-    }
-)
-.RequireAuthorization(policy =>
-{
-    policy.RequireRole("Recepcionista");
-});
-
-// ===============================
-// PAGOS POR CLIENTE
-// ===============================
-
-app.MapGet(
-    "/api/pagos/cliente/{idCliente:int}",
-    async (
-        int idCliente,
-        IConfiguration configuration
-    ) =>
-    {
-        if (idCliente <= 0)
-        {
-            return Results.BadRequest(new
-            {
-                mensaje = "El id del cliente no es válido."
-            });
-        }
-
-        var connectionString =
-            configuration.GetConnectionString(
-                "PostgreSQL"
-            );
-
-        if (string.IsNullOrWhiteSpace(connectionString))
-        {
-            return Results.Problem(
-                title: "Configuración faltante",
-                detail:
-                    "No existe la cadena de conexión PostgreSQL.",
-                statusCode: 500
-            );
-        }
-
-        await using var connection =
-            new NpgsqlConnection(connectionString);
-
-        await connection.OpenAsync();
-
-        await using var command =
-            new NpgsqlCommand(
-                """
-                SELECT
-                    id_pago,
-                    monto_pagado,
-                    tipo_pago,
-                    fecha_transaccion
-                FROM historial_pagos
-                WHERE id_cliente = @id_cliente
-                ORDER BY fecha_transaccion DESC;
-                """,
-                connection
-            );
-
-        command.Parameters.AddWithValue(
-            "id_cliente",
-            idCliente
-        );
-
-        await using var reader =
-            await command.ExecuteReaderAsync();
-
-        var pagos =
-            new List<object>();
-
-        while (await reader.ReadAsync())
-        {
-            pagos.Add(new
-            {
-                idPago =
-                    reader.GetInt32(0),
-                monto =
-                    reader.GetDecimal(1),
-                tipoPago =
-                    reader.GetString(2),
-                fechaTransaccion =
-                    reader.GetDateTime(3)
-            });
-        }
-
-        return Results.Ok(new
-        {
-            idCliente,
-            pagos
-        });
     }
 )
 .RequireAuthorization(policy =>
