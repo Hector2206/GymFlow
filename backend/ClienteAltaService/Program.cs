@@ -349,4 +349,89 @@ app.MapPost(
     policy.RequireRole("Recepcionista");
 });
 
+// ===============================
+// MI CODIGO DE ACCESO
+// ===============================
+
+app.MapGet(
+    "/api/clientes/mi-codigo-acceso",
+    async (
+        ClaimsPrincipal usuario,
+        IConfiguration configuration
+    ) =>
+    {
+        var idUsuario =
+            usuario.FindFirst("sub")?.Value
+            ?? usuario.FindFirst(
+                ClaimTypes.NameIdentifier
+            )?.Value;
+
+        if (string.IsNullOrWhiteSpace(idUsuario))
+        {
+            return Results.Unauthorized();
+        }
+
+        var connectionString =
+            configuration.GetConnectionString(
+                "PostgreSQL"
+            );
+
+        if (string.IsNullOrWhiteSpace(connectionString))
+        {
+            return Results.Problem(
+                title: "Configuración faltante",
+                detail:
+                "No existe la cadena de conexión PostgreSQL.",
+                statusCode: 500
+            );
+        }
+
+        await using var connection =
+            new NpgsqlConnection(connectionString);
+
+        await connection.OpenAsync();
+
+        await using var command =
+            new NpgsqlCommand(
+                """
+                SELECT
+                    id_cliente,
+                    id_asistencia,
+                    nombre_completo
+                FROM clientes
+                WHERE id_usuario = @id_usuario;
+                """,
+                connection
+            );
+
+        command.Parameters.AddWithValue(
+            "id_usuario",
+            int.Parse(idUsuario)
+        );
+
+        await using var reader =
+            await command.ExecuteReaderAsync();
+
+        if (!await reader.ReadAsync())
+        {
+            return Results.NotFound(new
+            {
+                mensaje =
+                    "No se encontró el cliente."
+            });
+        }
+
+        return Results.Ok(new
+        {
+            idCliente = reader.GetInt32(0),
+            codigoAcceso = reader.GetString(1),
+            nombreCompleto = reader.GetString(2)
+        });
+    }
+)
+.RequireAuthorization(policy =>
+{
+    policy.RequireRole("Cliente");
+});
+
 app.Run();
