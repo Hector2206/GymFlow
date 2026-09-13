@@ -392,17 +392,17 @@ app.MapGet(
         await connection.OpenAsync();
 
         await using var command =
-            new NpgsqlCommand(
-                """
-                SELECT
-                    id_cliente,
-                    id_asistencia,
-                    nombre_completo
-                FROM clientes
-                WHERE id_usuario = @id_usuario;
-                """,
-                connection
-            );
+        new NpgsqlCommand(
+            """
+            SELECT
+                id_cliente,
+                id_asistencia,
+                nombre_completo
+            FROM clientes
+            WHERE id_usuario = @id_usuario;
+            """,
+            connection
+        );
 
         command.Parameters.AddWithValue(
             "id_usuario",
@@ -481,10 +481,16 @@ app.MapGet(
                     SELECT
                         c.id_cliente,
                         c.nombre_completo,
-                        u.estatus
+                        u.estatus,
+                        c.id_membresia,
+                        m.nombre_plan,
+                        c.fecha_pago_mensual,
+                        c.fecha_pago_anualidad
                     FROM clientes c
                     INNER JOIN usuarios u
                         ON c.id_usuario = u.id_usuario
+                    INNER JOIN membresias m
+                        ON c.id_membresia = m.id_membresia
                     WHERE c.id_asistencia = @codigo_acceso;
                     """,
                     connection
@@ -524,13 +530,32 @@ app.MapGet(
                     mensaje = "El cliente está inactivo."
                 });
             }
+            var idMembresia =
+                reader.GetInt32(3);
 
-            return Results.Ok(new
+            var nombrePlan =
+                reader.GetString(4);
+
+            DateTime? fechaPagoMensual =
+                reader.IsDBNull(5)
+                    ? null
+                    : reader.GetDateTime(5);
+
+            DateTime? fechaPagoAnualidad =
+                reader.IsDBNull(6)
+                    ? null
+                    : reader.GetDateTime(6);
+
+          return Results.Ok(new
             {
                 idCliente,
                 nombreCompleto,
                 estatus,
                 codigoAcceso,
+                idMembresia,
+                nombrePlan,
+                fechaPagoMensual,
+                fechaPagoAnualidad,
                 mensaje = "Cliente encontrado."
             });
         }
