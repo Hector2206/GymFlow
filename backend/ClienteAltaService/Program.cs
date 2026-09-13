@@ -414,10 +414,11 @@ app.MapGet(
 
         if (!await reader.ReadAsync())
         {
-            return Results.NotFound(new
+           return Results.NotFound(new
             {
-                mensaje =
-                    "No se encontró el cliente."
+                accesoAprobado = false,
+                motivo = "CodigoNoEncontrado",
+                mensaje = "Código de acceso no encontrado."
             });
         }
 
@@ -527,6 +528,8 @@ app.MapGet(
             {
                 return Results.BadRequest(new
                 {
+                    accesoAprobado = false,
+                    motivo = "ClienteInactivo",
                     mensaje = "El cliente está inactivo."
                 });
             }
@@ -574,6 +577,8 @@ app.MapGet(
             {
                 return Results.BadRequest(new
                 {
+                    accesoAprobado = false,
+                    motivo = "SinMembresiaVigente",
                     mensaje =
                         "El cliente no tiene una membresía vigente."
                 });
@@ -583,6 +588,8 @@ app.MapGet(
             {
                 return Results.BadRequest(new
                 {
+                    accesoAprobado = false,
+                    motivo = "MembresiaVencida",
                     mensaje =
                         "La membresía del cliente está vencida.",
                     fechaVencimiento =
@@ -633,18 +640,15 @@ app.MapGet(
 
           return Results.Ok(new
             {
+                accesoAprobado = true,
                 idCliente,
                 nombreCompleto,
-                estatus,
                 codigoAcceso,
                 idMembresia,
                 nombrePlan,
-                fechaPagoMensual,
-                fechaPagoAnualidad,
                 fechaVencimiento,
-                membresiaActiva = true,
                 fechaHoraAsistencia,
-                mensaje = "Cliente encontrado."
+                mensaje = "Acceso aprobado."
             });
         }
     )
