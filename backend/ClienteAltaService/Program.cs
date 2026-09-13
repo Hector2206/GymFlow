@@ -1084,23 +1084,74 @@ app.MapPost(
 
         await pagoCommand.ExecuteNonQueryAsync();
 
-        DateTime fechaVencimiento;
+       // OBTENER LA VIGENCIA ACTUALIZADA DESDE LA BD
+        await using var vigenciaCommand =
+            new NpgsqlCommand(
+                """
+                SELECT
+                    fecha_pago_mensual,
+                    fecha_pago_anualidad
+                FROM clientes
+                WHERE id_cliente = @id_cliente;
+                """,
+                connection
+            );
 
-        if (
-            tipoPagoNormalizado.Equals(
-                "Mensualidad",
-                StringComparison.OrdinalIgnoreCase
+        vigenciaCommand.Parameters.AddWithValue(
+            "id_cliente",
+            request.IdCliente
+        );
+
+        await using var vigenciaReader =
+            await vigenciaCommand.ExecuteReaderAsync();
+
+        DateTime? fechaPagoActualizada = null;
+
+        if (await vigenciaReader.ReadAsync())
+        {
+            if (
+                tipoPagoNormalizado.Equals(
+                    "Mensualidad",
+                    StringComparison.OrdinalIgnoreCase
+                )
+                &&
+                !vigenciaReader.IsDBNull(0)
             )
-        )
-        {
-            fechaVencimiento =
-                DateTime.Today.AddMonths(1);
+            {
+                fechaPagoActualizada =
+                    vigenciaReader.GetDateTime(0);
+            }
+
+            if (
+                tipoPagoNormalizado.Equals(
+                    "Anualidad",
+                    StringComparison.OrdinalIgnoreCase
+                )
+                &&
+                !vigenciaReader.IsDBNull(1)
+            )
+            {
+                fechaPagoActualizada =
+                    vigenciaReader.GetDateTime(1);
+            }
         }
-        else
+
+        await vigenciaReader.CloseAsync();
+
+        if (!fechaPagoActualizada.HasValue)
         {
-            fechaVencimiento =
-                DateTime.Today.AddYears(1);
+            return Results.Problem(
+                title: "Error al calcular vigencia",
+                detail:
+                    "No se pudo obtener la nueva fecha de pago.",
+                statusCode: 500
+            );
         }
+
+        var fechaVencimiento =
+            tipoPagoNormalizado == "Mensualidad"
+                ? fechaPagoActualizada.Value.AddMonths(1)
+                : fechaPagoActualizada.Value.AddYears(1);
 
         return Results.Ok(new
         {
