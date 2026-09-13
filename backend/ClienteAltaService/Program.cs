@@ -514,6 +514,16 @@ app.MapGet(
 
             var estatus =
                 reader.GetString(2);
+                if (!estatus.Equals(
+                    "Activo",
+                    StringComparison.OrdinalIgnoreCase
+                ))
+            {
+                return Results.BadRequest(new
+                {
+                    mensaje = "El cliente está inactivo."
+                });
+            }
 
             return Results.Ok(new
             {
