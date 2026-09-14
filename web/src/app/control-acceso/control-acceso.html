@@ -74,6 +74,7 @@
           class="scanner-input"
           placeholder="Escanea o escribe el código"
           autocomplete="off"
+          spellcheck="false"
           [value]="codigoAcceso"
           (input)="capturarCodigo($event)"
           (keydown.enter)="detectarEnter()"
@@ -107,13 +108,24 @@
         *ngIf="accesoRechazado"
       >
 
-        <span class="rechazo-icono">
-          ✕
-        </span>
+        <div class="rechazo-titulo">
 
-        <span class="rechazo-texto">
-          ACCESO RECHAZADO
-        </span>
+          <span class="rechazo-icono">
+            ✕
+          </span>
+
+          <span class="rechazo-texto">
+            ACCESO RECHAZADO
+          </span>
+
+        </div>
+
+        <p
+          class="rechazo-motivo"
+          *ngIf="mensajeRechazo"
+        >
+          {{ mensajeRechazo }}
+        </p>
 
       </div>
 
@@ -130,6 +142,7 @@
         <strong class="resultado-nombre">
           {{ clienteIdentificado }}
         </strong>
+
 
         <div
           class="membresia-info"

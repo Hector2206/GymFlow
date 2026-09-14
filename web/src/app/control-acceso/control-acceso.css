@@ -247,108 +247,11 @@
   font-size: 13px;
 }
 
-footer {
-  padding: 22px;
-
-  text-align: center;
-
-  color: #777;
-
-  border-top:
-    1px solid rgba(212, 175, 55, 0.12);
-}
-
-@media (max-width: 700px) {
-
-  .topbar {
-    padding:
-      12px 20px;
-  }
-
-  .logo {
-    height: 40px;
-  }
-
-  .content {
-    padding:
-      38px 20px;
-  }
-
-  .welcome h1 {
-    font-size: 34px;
-  }
-
-  .control-card {
-    padding:
-      30px 20px;
-  }
-}
-.cliente-identificado {
-  width: 100%;
-  max-width: 520px;
-
-  margin-top: 24px;
-  padding: 18px;
-
-  display: flex;
-  flex-direction: column;
-
-  background: rgba(212, 175, 55, 0.07);
-
-  border:
-    1px solid rgba(212, 175, 55, 0.25);
-
-  border-radius: 12px;
-
-  text-align: left;
-}
-
-.resultado-label {
-  margin-bottom: 6px;
-
-  color: var(--text-secondary);
-
-  font-size: 13px;
-}
-
-.resultado-nombre {
-  color: var(--gold);
-
-  font-size: 20px;
-}
-.membresia-info {
-  width: 100%;
-
-  margin-top: 18px;
-  padding-top: 16px;
-
-  border-top:
-    1px solid rgba(212, 175, 55, 0.18);
-}
-
-.membresia-fila {
-  display: flex;
-  justify-content: space-between;
-  gap: 20px;
-
-  padding: 6px 0;
-}
-
-.membresia-label {
-  color: var(--text-secondary);
-
-  font-size: 14px;
-}
-
-.membresia-valor {
-  color: var(--text-main);
-
-  font-size: 14px;
-  font-weight: 600;
-}
 .acceso-aprobado {
   width: 100%;
   max-width: 520px;
+
+  box-sizing: border-box;
 
   margin-top: 24px;
   padding: 18px;
@@ -393,17 +296,15 @@ footer {
 
   letter-spacing: 0.5px;
 }
+
 .acceso-rechazado {
   width: 100%;
   max-width: 520px;
 
+  box-sizing: border-box;
+
   margin-top: 24px;
   padding: 18px;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 12px;
 
   background:
     rgba(220, 53, 69, 0.12);
@@ -412,6 +313,13 @@ footer {
     1px solid rgba(220, 53, 69, 0.45);
 
   border-radius: 12px;
+}
+
+.rechazo-titulo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
 }
 
 .rechazo-icono {
@@ -439,4 +347,126 @@ footer {
   font-weight: 700;
 
   letter-spacing: 0.5px;
+}
+
+.rechazo-motivo {
+  margin:
+    14px 0 0;
+
+  color: #ffb0b7;
+
+  text-align: center;
+
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.cliente-identificado {
+  width: 100%;
+  max-width: 520px;
+
+  box-sizing: border-box;
+
+  margin-top: 24px;
+  padding: 18px;
+
+  display: flex;
+  flex-direction: column;
+
+  background:
+    rgba(212, 175, 55, 0.07);
+
+  border:
+    1px solid rgba(212, 175, 55, 0.25);
+
+  border-radius: 12px;
+
+  text-align: left;
+}
+
+.resultado-label {
+  margin-bottom: 6px;
+
+  color: var(--text-secondary);
+
+  font-size: 13px;
+}
+
+.resultado-nombre {
+  color: var(--gold);
+
+  font-size: 20px;
+}
+
+.membresia-info {
+  width: 100%;
+
+  margin-top: 18px;
+  padding-top: 16px;
+
+  border-top:
+    1px solid rgba(212, 175, 55, 0.18);
+}
+
+.membresia-fila {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+
+  padding: 6px 0;
+}
+
+.membresia-label {
+  color: var(--text-secondary);
+
+  font-size: 14px;
+}
+
+.membresia-valor {
+  color: var(--text-main);
+
+  font-size: 14px;
+  font-weight: 600;
+}
+
+footer {
+  padding: 22px;
+
+  text-align: center;
+
+  color: #777;
+
+  border-top:
+    1px solid rgba(212, 175, 55, 0.12);
+}
+
+@media (max-width: 700px) {
+
+  .topbar {
+    padding:
+      12px 20px;
+  }
+
+  .logo {
+    height: 40px;
+  }
+
+  .content {
+    padding:
+      38px 20px;
+  }
+
+  .welcome h1 {
+    font-size: 34px;
+  }
+
+  .control-card {
+    padding:
+      30px 20px;
+  }
+
+  .membresia-fila {
+    flex-direction: column;
+    gap: 3px;
+  }
 }

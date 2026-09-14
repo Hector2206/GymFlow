@@ -38,6 +38,8 @@ export class ControlAcceso implements AfterViewInit {
   accesoAprobado = false;
   accesoRechazado = false;
 
+  mensajeRechazo = '';
+
   constructor(
     private router: Router,
     private asistenciaService: AsistenciaService,
@@ -46,9 +48,7 @@ export class ControlAcceso implements AfterViewInit {
 
   ngAfterViewInit(): void {
 
-    this.codigoInput
-      .nativeElement
-      .focus();
+    this.enfocarCampo();
   }
 
   capturarCodigo(
@@ -67,10 +67,26 @@ export class ControlAcceso implements AfterViewInit {
     this.codigoAcceso =
       this.codigoAcceso.trim();
 
+    this.limpiarResultadoAnterior();
+
     if (!this.codigoAcceso) {
 
-      console.log(
-        'No se ingresó un código de acceso.'
+      this.mostrarRechazo(
+        'Ingresa un código de acceso.'
+      );
+
+      return;
+    }
+
+    const formatoValido =
+      /^[A-Za-z0-9-]+$/.test(
+        this.codigoAcceso
+      );
+
+    if (!formatoValido) {
+
+      this.mostrarRechazo(
+        'El código solo puede contener letras, números y guiones.'
       );
 
       return;
@@ -85,16 +101,6 @@ export class ControlAcceso implements AfterViewInit {
       'Enviando código al backend:',
       this.codigoAcceso
     );
-
-    this.accesoAprobado = false;
-    this.accesoRechazado = false;
-
-    this.clienteIdentificado = '';
-    this.nombrePlan = '';
-    this.fechaVencimiento = '';
-
-    this.changeDetector
-      .detectChanges();
 
     this.asistenciaService
       .registrarPorCodigo(
@@ -111,20 +117,42 @@ export class ControlAcceso implements AfterViewInit {
             respuesta
           );
 
-          this.accesoAprobado =
-            respuesta.accesoAprobado === true;
+          if (
+            respuesta.accesoAprobado === true
+          ) {
 
-          this.accesoRechazado =
-            respuesta.accesoAprobado === false;
+            this.accesoAprobado = true;
+            this.accesoRechazado = false;
 
-          this.clienteIdentificado =
-            respuesta.nombreCompleto ?? '';
+            this.clienteIdentificado =
+              respuesta.nombreCompleto ?? '';
 
-          this.nombrePlan =
-            respuesta.nombrePlan ?? '';
+            this.nombrePlan =
+              respuesta.nombrePlan ?? '';
 
-          this.fechaVencimiento =
-            respuesta.fechaVencimiento ?? '';
+            this.fechaVencimiento =
+              respuesta.fechaVencimiento ?? '';
+
+            this.mensajeRechazo = '';
+
+          } else {
+
+            this.accesoAprobado = false;
+            this.accesoRechazado = true;
+
+            this.clienteIdentificado =
+              respuesta.nombreCompleto ?? '';
+
+            this.nombrePlan =
+              respuesta.nombrePlan ?? '';
+
+            this.fechaVencimiento =
+              respuesta.fechaVencimiento ?? '';
+
+            this.mensajeRechazo =
+              respuesta.mensaje ??
+              'El acceso fue rechazado.';
+          }
 
           this.changeDetector
             .detectChanges();
@@ -144,10 +172,95 @@ export class ControlAcceso implements AfterViewInit {
           this.nombrePlan = '';
           this.fechaVencimiento = '';
 
+          if (
+            error.error &&
+            typeof error.error === 'object' &&
+            error.error.mensaje
+          ) {
+
+            this.mensajeRechazo =
+              error.error.mensaje;
+
+          } else if (
+            error.status === 404
+          ) {
+
+            this.mensajeRechazo =
+              'Código de acceso no encontrado.';
+
+          } else if (
+            error.status === 401
+          ) {
+
+            this.mensajeRechazo =
+              'Tu sesión no es válida. Inicia sesión nuevamente.';
+
+          } else if (
+            error.status === 403
+          ) {
+
+            this.mensajeRechazo =
+              'No tienes permiso para registrar asistencias.';
+
+          } else if (
+            error.status === 0
+          ) {
+
+            this.mensajeRechazo =
+              'No fue posible conectar con el servidor.';
+
+          } else {
+
+            this.mensajeRechazo =
+              'No fue posible validar el acceso. Intenta nuevamente.';
+          }
+
           this.changeDetector
             .detectChanges();
         }
       });
+  }
+
+  limpiarResultadoAnterior(): void {
+
+    this.accesoAprobado = false;
+    this.accesoRechazado = false;
+
+    this.mensajeRechazo = '';
+
+    this.clienteIdentificado = '';
+    this.nombrePlan = '';
+    this.fechaVencimiento = '';
+
+    this.changeDetector
+      .detectChanges();
+  }
+
+  mostrarRechazo(
+    mensaje: string
+  ): void {
+
+    this.accesoAprobado = false;
+    this.accesoRechazado = true;
+
+    this.mensajeRechazo =
+      mensaje;
+
+    this.changeDetector
+      .detectChanges();
+
+    this.enfocarCampo();
+  }
+
+  enfocarCampo(): void {
+
+    setTimeout(() => {
+
+      this.codigoInput
+        ?.nativeElement
+        .focus();
+
+    });
   }
 
   formatearFecha(
