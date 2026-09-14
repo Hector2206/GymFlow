@@ -268,6 +268,8 @@ export class ControlAcceso implements AfterViewInit {
         .nativeElement
         .value = '';
     }
+
+    this.enfocarCampo();
   }
 
   enfocarCampo(): void {
