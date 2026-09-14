@@ -87,6 +87,22 @@
 
 
       <div
+        class="acceso-aprobado"
+        *ngIf="accesoAprobado"
+      >
+
+        <span class="acceso-icono">
+          ✓
+        </span>
+
+        <span class="acceso-texto">
+          ACCESO APROBADO
+        </span>
+
+      </div>
+
+
+      <div
         class="cliente-identificado"
         *ngIf="clienteIdentificado"
       >

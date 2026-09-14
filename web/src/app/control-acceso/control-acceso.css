@@ -346,3 +346,50 @@ footer {
   font-size: 14px;
   font-weight: 600;
 }
+.acceso-aprobado {
+  width: 100%;
+  max-width: 520px;
+
+  margin-top: 24px;
+  padding: 18px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+
+  background:
+    rgba(46, 160, 67, 0.12);
+
+  border:
+    1px solid rgba(46, 160, 67, 0.45);
+
+  border-radius: 12px;
+}
+
+.acceso-icono {
+  width: 34px;
+  height: 34px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 50%;
+
+  background: #2ea043;
+
+  color: white;
+
+  font-size: 20px;
+  font-weight: bold;
+}
+
+.acceso-texto {
+  color: #5dd879;
+
+  font-size: 18px;
+  font-weight: 700;
+
+  letter-spacing: 0.5px;
+}

@@ -34,6 +34,8 @@ export class ControlAcceso implements AfterViewInit {
   nombrePlan = '';
   fechaVencimiento = '';
 
+  accesoAprobado = false;
+
   constructor(
     private router: Router,
     private asistenciaService: AsistenciaService
@@ -96,6 +98,9 @@ export class ControlAcceso implements AfterViewInit {
             respuesta
           );
 
+          this.accesoAprobado =
+            respuesta.accesoAprobado === true;
+
           this.clienteIdentificado =
             respuesta.nombreCompleto ?? '';
 
@@ -112,6 +117,8 @@ export class ControlAcceso implements AfterViewInit {
             'Error al registrar asistencia:',
             error
           );
+
+          this.accesoAprobado = false;
 
           this.clienteIdentificado = '';
           this.nombrePlan = '';
