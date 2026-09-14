@@ -11,6 +11,10 @@ import { Perfil } from './perfil/perfil';
 import { ControlAcceso } from './control-acceso/control-acceso';
 
 import {
+  HistorialAsistencias
+} from './historial-asistencias/historial-asistencias';
+
+import {
   RegistrarCliente
 } from './registrar-cliente/registrar-cliente';
 
@@ -62,6 +66,15 @@ export const routes: Routes = [
   {
     path: 'control-acceso',
     component: ControlAcceso,
+    canActivate: [
+      authGuard,
+      recepcionistaGuard
+    ]
+  },
+
+  {
+    path: 'historial-asistencias',
+    component: HistorialAsistencias,
     canActivate: [
       authGuard,
       recepcionistaGuard

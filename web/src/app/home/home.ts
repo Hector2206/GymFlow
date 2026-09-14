@@ -172,6 +172,24 @@ export class Home implements OnInit {
     ]);
   }
 
+  irHistorialAsistencias(): void {
+
+    if (!this.esRecepcionista()) {
+
+      this.mensaje =
+        'No tienes permisos para consultar asistencias.';
+
+      this.changeDetector
+        .detectChanges();
+
+      return;
+    }
+
+    this.router.navigate([
+      '/historial-asistencias'
+    ]);
+  }
+
   proximamente(
     opcion: string
   ): void {
