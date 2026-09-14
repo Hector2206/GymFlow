@@ -1,5 +1,6 @@
 import {
   AfterViewInit,
+  ChangeDetectorRef,
   Component,
   ElementRef,
   ViewChild
@@ -35,10 +36,12 @@ export class ControlAcceso implements AfterViewInit {
   fechaVencimiento = '';
 
   accesoAprobado = false;
+  accesoRechazado = false;
 
   constructor(
     private router: Router,
-    private asistenciaService: AsistenciaService
+    private asistenciaService: AsistenciaService,
+    private changeDetector: ChangeDetectorRef
   ) {}
 
   ngAfterViewInit(): void {
@@ -83,6 +86,16 @@ export class ControlAcceso implements AfterViewInit {
       this.codigoAcceso
     );
 
+    this.accesoAprobado = false;
+    this.accesoRechazado = false;
+
+    this.clienteIdentificado = '';
+    this.nombrePlan = '';
+    this.fechaVencimiento = '';
+
+    this.changeDetector
+      .detectChanges();
+
     this.asistenciaService
       .registrarPorCodigo(
         this.codigoAcceso
@@ -101,6 +114,9 @@ export class ControlAcceso implements AfterViewInit {
           this.accesoAprobado =
             respuesta.accesoAprobado === true;
 
+          this.accesoRechazado =
+            respuesta.accesoAprobado === false;
+
           this.clienteIdentificado =
             respuesta.nombreCompleto ?? '';
 
@@ -109,6 +125,9 @@ export class ControlAcceso implements AfterViewInit {
 
           this.fechaVencimiento =
             respuesta.fechaVencimiento ?? '';
+
+          this.changeDetector
+            .detectChanges();
         },
 
         error: (error) => {
@@ -119,10 +138,14 @@ export class ControlAcceso implements AfterViewInit {
           );
 
           this.accesoAprobado = false;
+          this.accesoRechazado = true;
 
           this.clienteIdentificado = '';
           this.nombrePlan = '';
           this.fechaVencimiento = '';
+
+          this.changeDetector
+            .detectChanges();
         }
       });
   }

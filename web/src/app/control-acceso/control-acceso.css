@@ -393,3 +393,50 @@ footer {
 
   letter-spacing: 0.5px;
 }
+.acceso-rechazado {
+  width: 100%;
+  max-width: 520px;
+
+  margin-top: 24px;
+  padding: 18px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+
+  background:
+    rgba(220, 53, 69, 0.12);
+
+  border:
+    1px solid rgba(220, 53, 69, 0.45);
+
+  border-radius: 12px;
+}
+
+.rechazo-icono {
+  width: 34px;
+  height: 34px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 50%;
+
+  background: #dc3545;
+
+  color: white;
+
+  font-size: 20px;
+  font-weight: bold;
+}
+
+.rechazo-texto {
+  color: #ff6b78;
+
+  font-size: 18px;
+  font-weight: 700;
+
+  letter-spacing: 0.5px;
+}

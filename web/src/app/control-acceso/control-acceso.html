@@ -103,6 +103,22 @@
 
 
       <div
+        class="acceso-rechazado"
+        *ngIf="accesoRechazado"
+      >
+
+        <span class="rechazo-icono">
+          ✕
+        </span>
+
+        <span class="rechazo-texto">
+          ACCESO RECHAZADO
+        </span>
+
+      </div>
+
+
+      <div
         class="cliente-identificado"
         *ngIf="clienteIdentificado"
       >
