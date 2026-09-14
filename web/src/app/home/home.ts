@@ -154,6 +154,24 @@ export class Home implements OnInit {
     ]);
   }
 
+  irControlAcceso(): void {
+
+    if (!this.esRecepcionista()) {
+
+      this.mensaje =
+        'No tienes permisos para registrar asistencias.';
+
+      this.changeDetector
+        .detectChanges();
+
+      return;
+    }
+
+    this.router.navigate([
+      '/control-acceso'
+    ]);
+  }
+
   proximamente(
     opcion: string
   ): void {

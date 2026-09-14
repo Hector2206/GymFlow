@@ -1,9 +1,14 @@
 import { Routes } from '@angular/router';
 
 import { Splash } from './splash/splash';
+
 import { Login } from './login/login';
+
 import { Home } from './home/home';
+
 import { Perfil } from './perfil/perfil';
+
+import { ControlAcceso } from './control-acceso/control-acceso';
 
 import {
   RegistrarCliente
@@ -48,6 +53,15 @@ export const routes: Routes = [
   {
     path: 'registrar-cliente',
     component: RegistrarCliente,
+    canActivate: [
+      authGuard,
+      recepcionistaGuard
+    ]
+  },
+
+  {
+    path: 'control-acceso',
+    component: ControlAcceso,
     canActivate: [
       authGuard,
       recepcionistaGuard
