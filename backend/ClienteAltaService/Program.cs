@@ -1360,4 +1360,129 @@ app.MapGet(
     policy.RequireRole("Recepcionista");
 });
 
+// ===============================
+// HISTORIAL DE PAGOS POR CLIENTE
+// ===============================
+
+app.MapGet(
+    "/api/pagos/cliente/{idCliente:int}",
+    async (
+        int idCliente,
+        IConfiguration configuration
+    ) =>
+    {
+        if (idCliente <= 0)
+        {
+            return Results.BadRequest(new
+            {
+                mensaje = "El id del cliente no es válido."
+            });
+        }
+
+        var connectionString =
+            configuration.GetConnectionString(
+                "PostgreSQL"
+            );
+
+        if (string.IsNullOrWhiteSpace(connectionString))
+        {
+            return Results.Problem(
+                title: "Configuración faltante",
+                detail:
+                    "No existe la cadena de conexión PostgreSQL.",
+                statusCode: 500
+            );
+        }
+
+        await using var connection =
+            new NpgsqlConnection(connectionString);
+
+        await connection.OpenAsync();
+
+        // Primero comprobar que el cliente sí exista
+        await using var clienteCommand =
+            new NpgsqlCommand(
+                """
+                SELECT COUNT(*)
+                FROM clientes
+                WHERE id_cliente = @id_cliente;
+                """,
+                connection
+            );
+
+        clienteCommand.Parameters.AddWithValue(
+            "id_cliente",
+            idCliente
+        );
+
+        var clienteExiste =
+            Convert.ToInt32(
+                await clienteCommand.ExecuteScalarAsync()
+            ) > 0;
+
+        if (!clienteExiste)
+        {
+            return Results.NotFound(new
+            {
+                mensaje = "El cliente no existe."
+            });
+        }
+
+        // Obtener historial de pagos
+        await using var pagosCommand =
+            new NpgsqlCommand(
+                """
+                SELECT
+                    id_pago,
+                    monto_pagado,
+                    tipo_pago,
+                    fecha_transaccion
+                FROM historial_pagos
+                WHERE id_cliente = @id_cliente
+                ORDER BY fecha_transaccion DESC;
+                """,
+                connection
+            );
+
+        pagosCommand.Parameters.AddWithValue(
+            "id_cliente",
+            idCliente
+        );
+
+        await using var reader =
+            await pagosCommand.ExecuteReaderAsync();
+
+        var pagos =
+            new List<object>();
+
+        while (await reader.ReadAsync())
+        {
+            pagos.Add(new
+            {
+                idPago =
+                    reader.GetInt32(0),
+
+                monto =
+                    reader.GetDecimal(1),
+
+                tipoPago =
+                    reader.GetString(2),
+
+                fechaTransaccion =
+                    reader.GetDateTime(3)
+            });
+        }
+
+        return Results.Ok(new
+        {
+            idCliente,
+            pagos
+        });
+    }
+)
+.RequireAuthorization(policy =>
+{
+    policy.RequireRole("Recepcionista");
+});
+
 app.Run();
