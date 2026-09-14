@@ -168,6 +168,27 @@ export class HistorialAsistencias {
     );
   }
 
+  formatearHora(
+    fechaHora: string
+  ): string {
+
+    if (!fechaHora) {
+      return 'Sin hora';
+    }
+
+    const fecha =
+      new Date(fechaHora);
+
+    return fecha.toLocaleTimeString(
+      'es-MX',
+      {
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: true
+      }
+    );
+  }
+
   volverInicio(): void {
 
     this.router.navigate([
