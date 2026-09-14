@@ -40,6 +40,8 @@ export class ControlAcceso implements AfterViewInit {
 
   mensajeRechazo = '';
 
+  procesando = false;
+
   constructor(
     private router: Router,
     private asistenciaService: AsistenciaService,
@@ -55,6 +57,10 @@ export class ControlAcceso implements AfterViewInit {
     event: Event
   ): void {
 
+    if (this.procesando) {
+      return;
+    }
+
     const input =
       event.target as HTMLInputElement;
 
@@ -63,6 +69,15 @@ export class ControlAcceso implements AfterViewInit {
   }
 
   detectarEnter(): void {
+
+    if (this.procesando) {
+
+      console.log(
+        'Escaneo ignorado: ya existe una solicitud en proceso.'
+      );
+
+      return;
+    }
 
     this.codigoAcceso =
       this.codigoAcceso.trim();
@@ -100,6 +115,15 @@ export class ControlAcceso implements AfterViewInit {
   }
 
   enviarCodigo(): void {
+
+    if (this.procesando) {
+      return;
+    }
+
+    this.procesando = true;
+
+    this.changeDetector
+      .detectChanges();
 
     console.log(
       'Enviando código al backend:',
@@ -157,6 +181,8 @@ export class ControlAcceso implements AfterViewInit {
               respuesta.mensaje ??
               'El acceso fue rechazado.';
           }
+
+          this.procesando = false;
 
           this.limpiarCampo();
 
@@ -220,6 +246,8 @@ export class ControlAcceso implements AfterViewInit {
             this.mensajeRechazo =
               'No fue posible validar el acceso. Intenta nuevamente.';
           }
+
+          this.procesando = false;
 
           this.limpiarCampo();
 

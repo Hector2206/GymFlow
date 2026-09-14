@@ -76,12 +76,23 @@
           autocomplete="off"
           spellcheck="false"
           [value]="codigoAcceso"
+          [disabled]="procesando"
           (input)="capturarCodigo($event)"
           (keydown.enter)="detectarEnter()"
         />
 
-        <p class="scanner-help">
+        <p
+          class="scanner-help"
+          *ngIf="!procesando"
+        >
           El lector de código de barras escribirá el código en este campo.
+        </p>
+
+        <p
+          class="scanner-help procesando-texto"
+          *ngIf="procesando"
+        >
+          Validando acceso...
         </p>
 
       </div>
