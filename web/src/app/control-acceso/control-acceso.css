@@ -120,7 +120,7 @@
 }
 
 .control-card {
-  min-height: 260px;
+  min-height: 330px;
 
   display: flex;
   flex-direction: column;
@@ -176,12 +176,75 @@
   font-size: 25px;
 }
 
-.control-card p {
-  margin: 0;
+.card-description {
+  margin: 0 0 28px;
 
   color: var(--text-secondary);
 
   font-size: 16px;
+}
+
+.scanner-container {
+  width: 100%;
+  max-width: 520px;
+
+  display: flex;
+  flex-direction: column;
+
+  text-align: left;
+}
+
+.scanner-label {
+  margin-bottom: 9px;
+
+  color: var(--text-main);
+
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.scanner-input {
+  width: 100%;
+
+  box-sizing: border-box;
+
+  padding: 15px 16px;
+
+  background: #101113;
+
+  color: var(--text-main);
+
+  border:
+    1px solid rgba(212, 175, 55, 0.35);
+
+  border-radius: 10px;
+
+  outline: none;
+
+  font-size: 17px;
+
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.scanner-input::placeholder {
+  color: #777;
+}
+
+.scanner-input:focus {
+  border-color: var(--gold);
+
+  box-shadow:
+    0 0 0 3px rgba(212, 175, 55, 0.12);
+}
+
+.scanner-help {
+  margin: 10px 0 0;
+
+  color: #858585;
+
+  font-size: 13px;
 }
 
 footer {
@@ -213,5 +276,10 @@ footer {
 
   .welcome h1 {
     font-size: 34px;
+  }
+
+  .control-card {
+    padding:
+      30px 20px;
   }
 }

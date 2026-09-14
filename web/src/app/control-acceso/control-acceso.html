@@ -52,9 +52,34 @@
         Registrar Asistencia
       </h2>
 
-      <p>
-        Aquí podrás ingresar o escanear el código de acceso del cliente.
+      <p class="card-description">
+        Ingresa o escanea el código de acceso del cliente.
       </p>
+
+
+      <div class="scanner-container">
+
+        <label
+          for="codigoAcceso"
+          class="scanner-label"
+        >
+          Código de acceso
+        </label>
+
+        <input
+          id="codigoAcceso"
+          name="codigoAcceso"
+          type="text"
+          class="scanner-input"
+          placeholder="Escanea o escribe el código"
+          autocomplete="off"
+        />
+
+        <p class="scanner-help">
+          El lector de código de barras escribirá el código en este campo.
+        </p>
+
+      </div>
 
     </section>
 
