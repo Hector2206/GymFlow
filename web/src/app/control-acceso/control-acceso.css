@@ -316,3 +316,33 @@ footer {
 
   font-size: 20px;
 }
+.membresia-info {
+  width: 100%;
+
+  margin-top: 18px;
+  padding-top: 16px;
+
+  border-top:
+    1px solid rgba(212, 175, 55, 0.18);
+}
+
+.membresia-fila {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+
+  padding: 6px 0;
+}
+
+.membresia-label {
+  color: var(--text-secondary);
+
+  font-size: 14px;
+}
+
+.membresia-valor {
+  color: var(--text-main);
+
+  font-size: 14px;
+  font-weight: 600;
+}

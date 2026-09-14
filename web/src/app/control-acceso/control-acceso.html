@@ -99,6 +99,41 @@
           {{ clienteIdentificado }}
         </strong>
 
+        <div
+          class="membresia-info"
+          *ngIf="nombrePlan"
+        >
+
+          <div class="membresia-fila">
+
+            <span class="membresia-label">
+              Membresía
+            </span>
+
+            <span class="membresia-valor">
+              {{ nombrePlan }}
+            </span>
+
+          </div>
+
+
+          <div
+            class="membresia-fila"
+            *ngIf="fechaVencimiento"
+          >
+
+            <span class="membresia-label">
+              Vencimiento
+            </span>
+
+            <span class="membresia-valor">
+              {{ formatearFecha(fechaVencimiento) }}
+            </span>
+
+          </div>
+
+        </div>
+
       </div>
 
     </section>

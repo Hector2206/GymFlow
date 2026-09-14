@@ -31,6 +31,9 @@ export class ControlAcceso implements AfterViewInit {
 
   clienteIdentificado = '';
 
+  nombrePlan = '';
+  fechaVencimiento = '';
+
   constructor(
     private router: Router,
     private asistenciaService: AsistenciaService
@@ -95,6 +98,12 @@ export class ControlAcceso implements AfterViewInit {
 
           this.clienteIdentificado =
             respuesta.nombreCompleto ?? '';
+
+          this.nombrePlan =
+            respuesta.nombrePlan ?? '';
+
+          this.fechaVencimiento =
+            respuesta.fechaVencimiento ?? '';
         },
 
         error: (error) => {
@@ -105,8 +114,25 @@ export class ControlAcceso implements AfterViewInit {
           );
 
           this.clienteIdentificado = '';
+          this.nombrePlan = '';
+          this.fechaVencimiento = '';
         }
       });
+  }
+
+  formatearFecha(
+    fecha: string
+  ): string {
+
+    if (!fecha) {
+      return '';
+    }
+
+    const fechaConvertida =
+      new Date(fecha);
+
+    return fechaConvertida
+      .toLocaleDateString('es-MX');
   }
 
   volverInicio(): void {
