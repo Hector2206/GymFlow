@@ -75,6 +75,8 @@ export class ControlAcceso implements AfterViewInit {
         'Ingresa un código de acceso.'
       );
 
+      this.limpiarCampo();
+
       return;
     }
 
@@ -88,6 +90,8 @@ export class ControlAcceso implements AfterViewInit {
       this.mostrarRechazo(
         'El código solo puede contener letras, números y guiones.'
       );
+
+      this.limpiarCampo();
 
       return;
     }
@@ -154,6 +158,8 @@ export class ControlAcceso implements AfterViewInit {
               'El acceso fue rechazado.';
           }
 
+          this.limpiarCampo();
+
           this.changeDetector
             .detectChanges();
         },
@@ -215,6 +221,8 @@ export class ControlAcceso implements AfterViewInit {
               'No fue posible validar el acceso. Intenta nuevamente.';
           }
 
+          this.limpiarCampo();
+
           this.changeDetector
             .detectChanges();
         }
@@ -248,8 +256,18 @@ export class ControlAcceso implements AfterViewInit {
 
     this.changeDetector
       .detectChanges();
+  }
 
-    this.enfocarCampo();
+  limpiarCampo(): void {
+
+    this.codigoAcceso = '';
+
+    if (this.codigoInput) {
+
+      this.codigoInput
+        .nativeElement
+        .value = '';
+    }
   }
 
   enfocarCampo(): void {
