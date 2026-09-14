@@ -8,6 +8,7 @@
   --silver: #a9a9a9;
   --white: #ffffff;
   --dark: #101012;
+  --red: #dc3545;
 }
 
 * {
@@ -259,6 +260,23 @@
   color: #77777c;
 
   font-size: 11px;
+}
+
+
+/* VALIDACIÓN */
+
+.field input.input-error {
+  border-color:
+    rgba(220, 53, 69, 0.9);
+
+  box-shadow:
+    0 0 0 3px
+    rgba(220, 53, 69, 0.08);
+}
+
+.field-error {
+  color:
+    #ff8b95 !important;
 }
 
 

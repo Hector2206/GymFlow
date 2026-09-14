@@ -65,15 +65,27 @@
             id="monto"
             name="monto"
             type="number"
-            min="0"
+            min="0.01"
+            max="100000"
             step="0.01"
             [(ngModel)]="monto"
+            (ngModelChange)="montoCambio()"
             placeholder="Ejemplo: 500.00"
             autocomplete="off"
+            [class.input-error]="errorMonto"
           />
 
-          <small>
+          <small
+            *ngIf="!errorMonto"
+          >
             Ingresa el monto pagado por el cliente.
+          </small>
+
+          <small
+            class="field-error"
+            *ngIf="errorMonto"
+          >
+            {{ errorMonto }}
           </small>
 
         </div>
