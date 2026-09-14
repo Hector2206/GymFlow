@@ -64,8 +64,15 @@ export class ControlAcceso implements AfterViewInit {
     const input =
       event.target as HTMLInputElement;
 
+    const valorNormalizado =
+      input.value
+        .toUpperCase();
+
     this.codigoAcceso =
-      input.value;
+      valorNormalizado;
+
+    input.value =
+      valorNormalizado;
   }
 
   detectarEnter(): void {
@@ -80,7 +87,9 @@ export class ControlAcceso implements AfterViewInit {
     }
 
     this.codigoAcceso =
-      this.codigoAcceso.trim();
+      this.codigoAcceso
+        .trim()
+        .toUpperCase();
 
     this.limpiarResultadoAnterior();
 
@@ -96,7 +105,7 @@ export class ControlAcceso implements AfterViewInit {
     }
 
     const formatoValido =
-      /^[A-Za-z0-9-]+$/.test(
+      /^[A-Z0-9-]+$/.test(
         this.codigoAcceso
       );
 
