@@ -45,8 +45,11 @@ export class ControlAcceso implements AfterViewInit {
 
   detectarEnter(): void {
 
+    this.codigoAcceso =
+      this.codigoAcceso.trim();
+
     console.log(
-      'Enter detectado. Código:',
+      'Enter detectado. Código limpio:',
       this.codigoAcceso
     );
   }
