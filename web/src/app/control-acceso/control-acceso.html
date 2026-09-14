@@ -2,7 +2,15 @@
 
   <header class="topbar">
 
-    <div class="brand">
+    <div class="header-left">
+
+      <button
+        type="button"
+        class="back-button"
+        (click)="volverInicio()"
+      >
+        ←
+      </button>
 
       <img
         src="/Logo_GymFlow.png"
@@ -12,22 +20,14 @@
 
     </div>
 
-    <button
-      class="back-button"
-      type="button"
-      (click)="volverInicio()"
-    >
-      Volver al inicio
-    </button>
-
   </header>
 
 
   <main class="content">
 
-    <section class="welcome">
+    <section class="page-header">
 
-      <p class="welcome-text">
+      <p class="section-label">
         Recepción
       </p>
 
@@ -35,34 +35,27 @@
         Control de Acceso
       </h1>
 
-      <p class="description">
+      <p class="subtitle">
         Registra la entrada de los clientes mediante su código personal.
       </p>
 
     </section>
 
 
-    <section class="control-card">
-
-      <div class="card-icon">
-        ✅
-      </div>
+    <section class="control-section">
 
       <h2>
         Registrar Asistencia
       </h2>
 
-      <p class="card-description">
+      <p class="section-description">
         Ingresa o escanea el código de acceso del cliente.
       </p>
 
 
-      <div class="scanner-container">
+      <div class="field">
 
-        <label
-          for="codigoAcceso"
-          class="scanner-label"
-        >
+        <label for="codigoAcceso">
           Código de acceso
         </label>
 
@@ -71,7 +64,6 @@
           id="codigoAcceso"
           name="codigoAcceso"
           type="text"
-          class="scanner-input"
           placeholder="Escanea o escribe el código"
           autocomplete="off"
           spellcheck="false"
@@ -81,19 +73,16 @@
           (keydown.enter)="detectarEnter()"
         />
 
-        <p
-          class="scanner-help"
-          *ngIf="!procesando"
-        >
+        <small *ngIf="!procesando">
           El lector de código de barras escribirá el código en este campo.
-        </p>
+        </small>
 
-        <p
-          class="scanner-help procesando-texto"
+        <small
+          class="procesando-texto"
           *ngIf="procesando"
         >
           Validando acceso...
-        </p>
+        </small>
 
       </div>
 
@@ -195,10 +184,5 @@
     </section>
 
   </main>
-
-
-  <footer>
-    GymFlow · Gestión inteligente para gimnasios
-  </footer>
 
 </div>
