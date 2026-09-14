@@ -76,6 +76,7 @@
           autocomplete="off"
           [value]="codigoAcceso"
           (input)="capturarCodigo($event)"
+          (keydown.enter)="detectarEnter()"
         />
 
         <p class="scanner-help">

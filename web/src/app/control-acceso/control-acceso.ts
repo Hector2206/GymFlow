@@ -43,6 +43,14 @@ export class ControlAcceso implements AfterViewInit {
       input.value;
   }
 
+  detectarEnter(): void {
+
+    console.log(
+      'Enter detectado. Código:',
+      this.codigoAcceso
+    );
+  }
+
   volverInicio(): void {
 
     this.router.navigate([
