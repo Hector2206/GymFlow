@@ -1,5 +1,7 @@
 import {
-  Component
+  ChangeDetectorRef,
+  Component,
+  OnInit
 } from '@angular/core';
 
 import {
@@ -14,6 +16,11 @@ import {
   Router
 } from '@angular/router';
 
+import {
+  ClienteConsultaService,
+  ClienteResumen
+} from '../services/cliente-consulta.service';
+
 @Component({
   selector: 'app-registrar-pago',
   standalone: true,
@@ -24,7 +31,11 @@ import {
   templateUrl: './registrar-pago.html',
   styleUrl: './registrar-pago.css'
 })
-export class RegistrarPago {
+export class RegistrarPago implements OnInit {
+
+  clientes: ClienteResumen[] = [];
+
+  idCliente: number | null = null;
 
   monto: number | null = null;
 
@@ -32,9 +43,58 @@ export class RegistrarPago {
 
   errorMonto = '';
 
+  errorClientes = '';
+
+  cargandoClientes = false;
+
   constructor(
-    private router: Router
+    private router: Router,
+    private clienteConsultaService: ClienteConsultaService,
+    private changeDetector: ChangeDetectorRef
   ) {}
+
+  ngOnInit(): void {
+
+    this.cargarClientes();
+  }
+
+  cargarClientes(): void {
+
+    this.cargandoClientes = true;
+    this.errorClientes = '';
+
+    this.clienteConsultaService
+      .obtenerClientes()
+      .subscribe({
+
+        next: (clientes) => {
+
+          this.clientes =
+            clientes ?? [];
+
+          this.cargandoClientes = false;
+
+          this.changeDetector
+            .detectChanges();
+        },
+
+        error: (error) => {
+
+          console.error(
+            'Error al cargar clientes:',
+            error
+          );
+
+          this.cargandoClientes = false;
+
+          this.errorClientes =
+            'No fue posible cargar los clientes.';
+
+          this.changeDetector
+            .detectChanges();
+        }
+      });
+  }
 
   validarMonto(): boolean {
 
@@ -74,8 +134,7 @@ export class RegistrarPago {
     }
 
     if (
-      Number(this.monto) >
-      100000
+      Number(this.monto) > 100000
     ) {
 
       this.errorMonto =

@@ -369,3 +369,28 @@
       1fr;
   }
 }
+.full-width {
+  grid-column:
+    1 / -1;
+}
+
+.message {
+  margin-bottom: 20px;
+
+  padding:
+    14px 17px;
+
+  border-radius: 11px;
+
+  font-size: 14px;
+}
+
+.error-message {
+  border:
+    1px solid rgba(153, 0, 0, 0.8);
+
+  background:
+    rgba(153, 0, 0, 0.17);
+
+  color: #ffaaaa;
+}

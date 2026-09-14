@@ -53,7 +53,52 @@
       </p>
 
 
+      <div
+        *ngIf="errorClientes"
+        class="message error-message"
+      >
+        {{ errorClientes }}
+      </div>
+
+
       <div class="form-grid">
+
+        <div class="field full-width">
+
+          <label for="idCliente">
+            Cliente *
+          </label>
+
+          <select
+            id="idCliente"
+            name="idCliente"
+            [(ngModel)]="idCliente"
+            [disabled]="cargandoClientes"
+          >
+
+            <option [ngValue]="null">
+              {{
+                cargandoClientes
+                  ? 'Cargando clientes...'
+                  : 'Selecciona un cliente'
+              }}
+            </option>
+
+            <option
+              *ngFor="let cliente of clientes"
+              [ngValue]="cliente.idCliente"
+            >
+              {{ cliente.nombreCompleto }}
+            </option>
+
+          </select>
+
+          <small>
+            Selecciona el cliente que realizará el pago.
+          </small>
+
+        </div>
+
 
         <div class="field">
 
