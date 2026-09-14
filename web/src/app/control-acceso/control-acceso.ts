@@ -19,6 +19,8 @@ export class ControlAcceso implements AfterViewInit {
   @ViewChild('codigoInput')
   codigoInput!: ElementRef<HTMLInputElement>;
 
+  codigoAcceso = '';
+
   constructor(
     private router: Router
   ) {}
@@ -28,6 +30,17 @@ export class ControlAcceso implements AfterViewInit {
     this.codigoInput
       .nativeElement
       .focus();
+  }
+
+  capturarCodigo(
+    event: Event
+  ): void {
+
+    const input =
+      event.target as HTMLInputElement;
+
+    this.codigoAcceso =
+      input.value;
   }
 
   volverInicio(): void {

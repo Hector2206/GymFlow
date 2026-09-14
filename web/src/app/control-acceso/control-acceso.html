@@ -74,6 +74,8 @@
           class="scanner-input"
           placeholder="Escanea o escribe el código"
           autocomplete="off"
+          [value]="codigoAcceso"
+          (input)="capturarCodigo($event)"
         />
 
         <p class="scanner-help">
