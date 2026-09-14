@@ -31,6 +31,18 @@ export interface RegistrarAsistenciaResponse {
   mensaje?: string;
 }
 
+export interface AsistenciaCliente {
+  idAsistencia: number;
+  fechaHora: string;
+  estadoAcceso: string;
+  origenRegistro: string;
+}
+
+export interface HistorialAsistenciasResponse {
+  idCliente: number;
+  asistencias: AsistenciaCliente[];
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -54,6 +66,15 @@ export class AsistenciaService {
     return this.http.post<RegistrarAsistenciaResponse>(
       `${this.apiUrl}/codigo`,
       body
+    );
+  }
+
+  consultarPorCliente(
+    idCliente: number
+  ): Observable<HistorialAsistenciasResponse> {
+
+    return this.http.get<HistorialAsistenciasResponse>(
+      `${this.apiUrl}/cliente/${idCliente}`
     );
   }
 }
