@@ -1,0 +1,213 @@
+<div class="historial-pagos-page">
+
+  <header class="topbar">
+
+    <div class="header-left">
+
+      <button
+        type="button"
+        class="back-button"
+        (click)="volverInicio()"
+      >
+        ←
+      </button>
+
+      <img
+        src="/Logo_GymFlow.png"
+        alt="GymFlow"
+        class="logo"
+      />
+
+    </div>
+
+  </header>
+
+
+  <main class="content">
+
+    <section class="page-header">
+
+      <p class="section-label">
+        Recepción
+      </p>
+
+      <h1>
+        Historial de Pagos
+      </h1>
+
+      <p class="subtitle">
+        Consulta los pagos registrados de los clientes.
+      </p>
+
+    </section>
+
+
+    <section class="history-section">
+
+      <h2>
+        Consultar pagos
+      </h2>
+
+      <p class="section-description">
+        Selecciona un cliente para consultar su historial de pagos.
+      </p>
+
+
+      <div class="search-row">
+
+        <div class="field">
+
+          <label for="idCliente">
+            Cliente
+          </label>
+
+          <select
+            id="idCliente"
+            name="idCliente"
+            [(ngModel)]="idCliente"
+            [disabled]="
+              cargandoClientes ||
+              cargandoPagos
+            "
+          >
+
+            <option [ngValue]="null">
+              {{
+                cargandoClientes
+                  ? 'Cargando clientes...'
+                  : 'Selecciona un cliente'
+              }}
+            </option>
+
+            <option
+              *ngFor="let cliente of clientes"
+              [ngValue]="cliente.idCliente"
+            >
+              {{ cliente.nombreCompleto }}
+            </option>
+
+          </select>
+
+        </div>
+
+
+        <button
+          type="button"
+          class="search-button"
+          [disabled]="
+            cargandoPagos ||
+            cargandoClientes
+          "
+          (click)="consultarPagos()"
+        >
+          {{
+            cargandoPagos
+              ? 'Consultando...'
+              : 'Consultar'
+          }}
+        </button>
+
+      </div>
+
+
+      <div
+        *ngIf="error"
+        class="message error-message"
+      >
+        {{ error }}
+      </div>
+
+
+      <div
+        *ngIf="
+          consultaRealizada &&
+          !error &&
+          pagos.length === 0
+        "
+        class="empty-state"
+      >
+        Este cliente no tiene pagos registrados.
+      </div>
+
+
+      <div
+        *ngIf="pagos.length > 0"
+        class="results"
+      >
+
+        <p class="results-count">
+          Pagos encontrados:
+          {{ pagos.length }}
+        </p>
+
+
+        <div
+          class="payment-card"
+          *ngFor="let pago of pagos"
+        >
+
+          <span class="payment-label">
+            Pago #{{ pago.idPago }}
+          </span>
+
+
+          <div class="payment-row">
+
+            <span>
+              Fecha
+            </span>
+
+            <strong>
+              {{ formatearFecha(pago.fechaTransaccion) }}
+            </strong>
+
+          </div>
+
+
+          <div class="payment-row">
+
+            <span>
+              Hora
+            </span>
+
+            <strong>
+              {{ formatearHora(pago.fechaTransaccion) }}
+            </strong>
+
+          </div>
+
+
+          <div class="payment-row">
+
+            <span>
+              Monto
+            </span>
+
+            <strong>
+              {{ formatearMonto(pago.monto) }}
+            </strong>
+
+          </div>
+
+
+          <div class="payment-row">
+
+            <span>
+              Concepto
+            </span>
+
+            <strong>
+              {{ pago.tipoPago }}
+            </strong>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </section>
+
+  </main>
+
+</div>

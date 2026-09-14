@@ -208,6 +208,24 @@ export class Home implements OnInit {
     ]);
   }
 
+  irHistorialPagos(): void {
+
+    if (!this.esRecepcionista()) {
+
+      this.mensaje =
+        'No tienes permisos para consultar pagos.';
+
+      this.changeDetector
+        .detectChanges();
+
+      return;
+    }
+
+    this.router.navigate([
+      '/historial-pagos'
+    ]);
+  }
+
   proximamente(
     opcion: string
   ): void {

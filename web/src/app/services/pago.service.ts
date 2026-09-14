@@ -31,6 +31,18 @@ export interface RegistrarPagoResponse {
   mensaje: string;
 }
 
+export interface PagoCliente {
+  idPago: number;
+  monto: number;
+  tipoPago: string;
+  fechaTransaccion: string;
+}
+
+export interface HistorialPagosResponse {
+  idCliente: number;
+  pagos: PagoCliente[];
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -50,6 +62,15 @@ export class PagoService {
     return this.http.post<RegistrarPagoResponse>(
       this.apiUrl,
       request
+    );
+  }
+
+  consultarPagosCliente(
+    idCliente: number
+  ): Observable<HistorialPagosResponse> {
+
+    return this.http.get<HistorialPagosResponse>(
+      `${this.apiUrl}/cliente/${idCliente}`
     );
   }
 }
