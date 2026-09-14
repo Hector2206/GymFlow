@@ -1,0 +1,164 @@
+<div class="mis-pagos-page">
+
+  <header class="topbar">
+
+    <div class="header-left">
+
+      <button
+        type="button"
+        class="back-button"
+        (click)="volverInicio()"
+      >
+        ←
+      </button>
+
+      <img
+        src="/Logo_GymFlow.png"
+        alt="GymFlow"
+        class="logo"
+      />
+
+    </div>
+
+  </header>
+
+
+  <main class="content">
+
+    <section class="page-header">
+
+      <p class="section-label">
+        Cliente
+      </p>
+
+      <h1>
+        Mis Pagos
+      </h1>
+
+      <p class="subtitle">
+        Consulta tus pagos y renovaciones registrados.
+      </p>
+
+    </section>
+
+
+    <section class="history-section">
+
+      <h2>
+        Historial de pagos
+      </h2>
+
+      <p class="section-description">
+        Aquí puedes revisar los pagos registrados en tu cuenta.
+      </p>
+
+
+      <div
+        *ngIf="cargando"
+        class="loading-state"
+      >
+        Cargando pagos...
+      </div>
+
+
+      <div
+        *ngIf="error"
+        class="message error-message"
+      >
+        {{ error }}
+      </div>
+
+
+      <div
+        *ngIf="
+          !cargando &&
+          !error &&
+          pagos.length === 0
+        "
+        class="empty-state"
+      >
+        Aún no tienes pagos registrados.
+      </div>
+
+
+      <div
+        *ngIf="pagos.length > 0"
+        class="results"
+      >
+
+        <p class="results-count">
+          Pagos registrados:
+          {{ pagos.length }}
+        </p>
+
+
+        <div
+          class="payment-card"
+          *ngFor="let pago of pagos"
+        >
+
+          <span class="payment-label">
+            Pago #{{ pago.idPago }}
+          </span>
+
+
+          <div class="payment-row">
+
+            <span>
+              Fecha
+            </span>
+
+            <strong>
+              {{ formatearFecha(pago.fechaTransaccion) }}
+            </strong>
+
+          </div>
+
+
+          <div class="payment-row">
+
+            <span>
+              Hora
+            </span>
+
+            <strong>
+              {{ formatearHora(pago.fechaTransaccion) }}
+            </strong>
+
+          </div>
+
+
+          <div class="payment-row">
+
+            <span>
+              Monto
+            </span>
+
+            <strong>
+              {{ formatearMonto(pago.monto) }}
+            </strong>
+
+          </div>
+
+
+          <div class="payment-row">
+
+            <span>
+              Concepto
+            </span>
+
+            <strong>
+              {{ pago.tipoPago }}
+            </strong>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </section>
+
+  </main>
+
+</div>

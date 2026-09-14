@@ -43,6 +43,10 @@ export interface HistorialPagosResponse {
   pagos: PagoCliente[];
 }
 
+export interface MisPagosResponse {
+  pagos: PagoCliente[];
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -71,6 +75,13 @@ export class PagoService {
 
     return this.http.get<HistorialPagosResponse>(
       `${this.apiUrl}/cliente/${idCliente}`
+    );
+  }
+
+  consultarMisPagos(): Observable<MisPagosResponse> {
+
+    return this.http.get<MisPagosResponse>(
+      `${this.apiUrl}/mis-pagos`
     );
   }
 }

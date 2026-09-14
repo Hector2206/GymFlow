@@ -284,6 +284,8 @@
         *ngIf="esCliente()"
       >
 
+        <!-- FUNCIONES DISPONIBLES -->
+
         <button
           class="dashboard-card"
           (click)="irPerfil()"
@@ -303,6 +305,68 @@
 
         </button>
 
+
+        <button
+          class="dashboard-card"
+          (click)="irMiCodigoAcceso()"
+        >
+
+          <div class="card-icon">
+            🔐
+          </div>
+
+          <h2>
+            Mi Código de Acceso
+          </h2>
+
+          <p>
+            Consulta tu código personal para registrar tu entrada
+          </p>
+
+        </button>
+
+
+        <button
+          class="dashboard-card"
+          (click)="irMisAsistencias()"
+        >
+
+          <div class="card-icon">
+            📅
+          </div>
+
+          <h2>
+            Mis Asistencias
+          </h2>
+
+          <p>
+            Consulta tu historial de asistencias
+          </p>
+
+        </button>
+
+
+        <button
+          class="dashboard-card"
+          (click)="irMisPagos()"
+        >
+
+          <div class="card-icon">
+            💳
+          </div>
+
+          <h2>
+            Mis Pagos
+          </h2>
+
+          <p>
+            Consulta tu historial de pagos y renovaciones
+          </p>
+
+        </button>
+
+
+        <!-- PRÓXIMAMENTE -->
 
         <button
           class="dashboard-card"
@@ -339,26 +403,6 @@
 
           <p>
             Consulta tu rutina de entrenamiento
-          </p>
-
-        </button>
-
-
-        <button
-          class="dashboard-card"
-          (click)="proximamente('Asistencias')"
-        >
-
-          <div class="card-icon">
-            📅
-          </div>
-
-          <h2>
-            Ver Asistencias
-          </h2>
-
-          <p>
-            Consulta tu historial de asistencias
           </p>
 
         </button>

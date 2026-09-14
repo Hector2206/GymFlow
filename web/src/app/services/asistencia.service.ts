@@ -43,6 +43,10 @@ export interface HistorialAsistenciasResponse {
   asistencias: AsistenciaCliente[];
 }
 
+export interface MisAsistenciasResponse {
+  asistencias: AsistenciaCliente[];
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -75,6 +79,13 @@ export class AsistenciaService {
 
     return this.http.get<HistorialAsistenciasResponse>(
       `${this.apiUrl}/cliente/${idCliente}`
+    );
+  }
+
+  consultarMisAsistencias(): Observable<MisAsistenciasResponse> {
+
+    return this.http.get<MisAsistenciasResponse>(
+      `${this.apiUrl}/mis-asistencias`
     );
   }
 }

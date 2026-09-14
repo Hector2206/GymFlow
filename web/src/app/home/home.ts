@@ -226,6 +226,60 @@ export class Home implements OnInit {
     ]);
   }
 
+  irMiCodigoAcceso(): void {
+
+    if (!this.esCliente()) {
+
+      this.mensaje =
+        'Esta opción está disponible únicamente para clientes.';
+
+      this.changeDetector
+        .detectChanges();
+
+      return;
+    }
+
+    this.router.navigate([
+      '/mi-codigo-acceso'
+    ]);
+  }
+
+  irMisAsistencias(): void {
+
+    if (!this.esCliente()) {
+
+      this.mensaje =
+        'Esta opción está disponible únicamente para clientes.';
+
+      this.changeDetector
+        .detectChanges();
+
+      return;
+    }
+
+    this.router.navigate([
+      '/mis-asistencias'
+    ]);
+  }
+
+  irMisPagos(): void {
+
+    if (!this.esCliente()) {
+
+      this.mensaje =
+        'Esta opción está disponible únicamente para clientes.';
+
+      this.changeDetector
+        .detectChanges();
+
+      return;
+    }
+
+    this.router.navigate([
+      '/mis-pagos'
+    ]);
+  }
+
   proximamente(
     opcion: string
   ): void {

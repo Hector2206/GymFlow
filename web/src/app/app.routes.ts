@@ -19,6 +19,18 @@ import {
 } from './historial-pagos/historial-pagos';
 
 import {
+  MiCodigoAcceso
+} from './mi-codigo-acceso/mi-codigo-acceso';
+
+import {
+  MisAsistencias
+} from './mis-asistencias/mis-asistencias';
+
+import {
+  MisPagos
+} from './mis-pagos/mis-pagos';
+
+import {
   RegistrarCliente
 } from './registrar-cliente/registrar-cliente';
 
@@ -104,6 +116,30 @@ export const routes: Routes = [
     canActivate: [
       authGuard,
       recepcionistaGuard
+    ]
+  },
+
+  {
+    path: 'mi-codigo-acceso',
+    component: MiCodigoAcceso,
+    canActivate: [
+      authGuard
+    ]
+  },
+
+  {
+    path: 'mis-asistencias',
+    component: MisAsistencias,
+    canActivate: [
+      authGuard
+    ]
+  },
+
+  {
+    path: 'mis-pagos',
+    component: MisPagos,
+    canActivate: [
+      authGuard
     ]
   },
 
