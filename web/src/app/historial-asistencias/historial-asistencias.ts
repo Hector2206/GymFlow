@@ -147,6 +147,27 @@ export class HistorialAsistencias {
       });
   }
 
+  formatearFecha(
+    fechaHora: string
+  ): string {
+
+    if (!fechaHora) {
+      return 'Sin fecha';
+    }
+
+    const fecha =
+      new Date(fechaHora);
+
+    return fecha.toLocaleDateString(
+      'es-MX',
+      {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric'
+      }
+    );
+  }
+
   volverInicio(): void {
 
     this.router.navigate([
