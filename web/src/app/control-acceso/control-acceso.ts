@@ -5,16 +5,20 @@ import {
   ViewChild
 } from '@angular/core';
 
+import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 
 import {
-  AsistenciaService
+  AsistenciaService,
+  RegistrarAsistenciaResponse
 } from '../services/asistencia.service';
 
 @Component({
   selector: 'app-control-acceso',
   standalone: true,
-  imports: [],
+  imports: [
+    CommonModule
+  ],
   templateUrl: './control-acceso.html',
   styleUrl: './control-acceso.css'
 })
@@ -24,6 +28,8 @@ export class ControlAcceso implements AfterViewInit {
   codigoInput!: ElementRef<HTMLInputElement>;
 
   codigoAcceso = '';
+
+  clienteIdentificado = '';
 
   constructor(
     private router: Router,
@@ -78,12 +84,17 @@ export class ControlAcceso implements AfterViewInit {
       )
       .subscribe({
 
-        next: (respuesta) => {
+        next: (
+          respuesta: RegistrarAsistenciaResponse
+        ) => {
 
           console.log(
             'Respuesta del backend:',
             respuesta
           );
+
+          this.clienteIdentificado =
+            respuesta.nombreCompleto ?? '';
         },
 
         error: (error) => {
@@ -92,6 +103,8 @@ export class ControlAcceso implements AfterViewInit {
             'Error al registrar asistencia:',
             error
           );
+
+          this.clienteIdentificado = '';
         }
       });
   }
