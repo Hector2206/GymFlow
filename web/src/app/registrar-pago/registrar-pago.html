@@ -61,6 +61,22 @@
       </div>
 
 
+      <div
+        *ngIf="errorFormulario"
+        class="message error-message"
+      >
+        {{ errorFormulario }}
+      </div>
+
+
+      <div
+        *ngIf="exito"
+        class="message success-message"
+      >
+        {{ exito }}
+      </div>
+
+
       <div class="form-grid">
 
         <div class="field full-width">
@@ -73,7 +89,10 @@
             id="idCliente"
             name="idCliente"
             [(ngModel)]="idCliente"
-            [disabled]="cargandoClientes"
+            [disabled]="
+              cargandoClientes ||
+              procesandoPago
+            "
           >
 
             <option [ngValue]="null">
@@ -117,6 +136,7 @@
             (ngModelChange)="montoCambio()"
             placeholder="Ejemplo: 500.00"
             autocomplete="off"
+            [disabled]="procesandoPago"
             [class.input-error]="errorMonto"
           />
 
@@ -146,6 +166,7 @@
             id="tipoPago"
             name="tipoPago"
             [(ngModel)]="tipoPago"
+            [disabled]="procesandoPago"
           >
 
             <option value="">
@@ -191,6 +212,92 @@
             {{ tipoPago.toLowerCase() }},
             el sistema lo registrará automáticamente como renovación.
           </p>
+
+        </div>
+
+      </div>
+
+
+      <button
+        type="button"
+        class="submit-button"
+        [disabled]="procesandoPago"
+        (click)="registrarPago()"
+      >
+        {{
+          procesandoPago
+            ? 'Registrando pago...'
+            : 'Registrar pago'
+        }}
+      </button>
+
+
+      <div
+        class="payment-result"
+        *ngIf="respuestaPago"
+      >
+
+        <h3>
+          Resumen del pago
+        </h3>
+
+
+        <div class="result-row">
+
+          <span>
+            Tipo
+          </span>
+
+          <strong>
+            {{ respuestaPago.tipoPago }}
+          </strong>
+
+        </div>
+
+
+        <div class="result-row">
+
+          <span>
+            Monto
+          </span>
+
+          <strong>
+            ${{ respuestaPago.monto }}
+          </strong>
+
+        </div>
+
+
+        <div class="result-row">
+
+          <span>
+            Movimiento
+          </span>
+
+          <strong>
+            {{
+              respuestaPago.esRenovacion
+                ? 'Renovación'
+                : 'Primer pago'
+            }}
+          </strong>
+
+        </div>
+
+
+        <div class="result-row">
+
+          <span>
+            Nueva vigencia
+          </span>
+
+          <strong>
+            {{
+              formatearFecha(
+                respuestaPago.fechaVencimiento
+              )
+            }}
+          </strong>
 
         </div>
 

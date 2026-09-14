@@ -21,6 +21,11 @@ import {
   ClienteResumen
 } from '../services/cliente-consulta.service';
 
+import {
+  PagoService,
+  RegistrarPagoResponse
+} from '../services/pago.service';
+
 @Component({
   selector: 'app-registrar-pago',
   standalone: true,
@@ -42,14 +47,21 @@ export class RegistrarPago implements OnInit {
   tipoPago = '';
 
   errorMonto = '';
-
+  errorFormulario = '';
   errorClientes = '';
 
+  exito = '';
+
+  respuestaPago:
+    RegistrarPagoResponse | null = null;
+
   cargandoClientes = false;
+  procesandoPago = false;
 
   constructor(
     private router: Router,
     private clienteConsultaService: ClienteConsultaService,
+    private pagoService: PagoService,
     private changeDetector: ChangeDetectorRef
   ) {}
 
@@ -134,7 +146,8 @@ export class RegistrarPago implements OnInit {
     }
 
     if (
-      Number(this.monto) > 100000
+      Number(this.monto) >
+      100000
     ) {
 
       this.errorMonto =
@@ -158,6 +171,168 @@ export class RegistrarPago implements OnInit {
     }
 
     this.validarMonto();
+  }
+
+  registrarPago(): void {
+
+    this.errorFormulario = '';
+    this.exito = '';
+    this.respuestaPago = null;
+
+    if (
+      this.idCliente === null ||
+      this.idCliente <= 0
+    ) {
+
+      this.errorFormulario =
+        'Selecciona un cliente.';
+
+      this.changeDetector
+        .detectChanges();
+
+      return;
+    }
+
+    if (!this.validarMonto()) {
+
+      this.changeDetector
+        .detectChanges();
+
+      return;
+    }
+
+    if (
+      this.tipoPago !== 'Mensualidad' &&
+      this.tipoPago !== 'Anualidad'
+    ) {
+
+      this.errorFormulario =
+        'Selecciona el concepto del pago.';
+
+      this.changeDetector
+        .detectChanges();
+
+      return;
+    }
+
+    if (this.procesandoPago) {
+      return;
+    }
+
+    this.procesandoPago = true;
+
+    this.changeDetector
+      .detectChanges();
+
+    this.pagoService
+      .registrarPago({
+        idCliente:
+          this.idCliente,
+        monto:
+          Number(this.monto),
+        tipoPago:
+          this.tipoPago
+      })
+      .subscribe({
+
+        next: (
+          respuesta: RegistrarPagoResponse
+        ) => {
+
+          console.log(
+            'Pago registrado:',
+            respuesta
+          );
+
+          this.procesandoPago = false;
+
+          this.respuestaPago =
+            respuesta;
+
+          this.exito =
+            respuesta.mensaje ||
+            'Pago registrado correctamente.';
+
+          this.changeDetector
+            .detectChanges();
+        },
+
+        error: (error) => {
+
+          console.error(
+            'Error al registrar pago:',
+            error
+          );
+
+          this.procesandoPago = false;
+
+          if (
+            error.error &&
+            typeof error.error === 'object' &&
+            error.error.mensaje
+          ) {
+
+            this.errorFormulario =
+              error.error.mensaje;
+
+          } else if (
+            error.status === 404
+          ) {
+
+            this.errorFormulario =
+              'El cliente seleccionado no existe.';
+
+          } else if (
+            error.status === 401
+          ) {
+
+            this.errorFormulario =
+              'Tu sesión no es válida. Inicia sesión nuevamente.';
+
+          } else if (
+            error.status === 403
+          ) {
+
+            this.errorFormulario =
+              'No tienes permiso para registrar pagos.';
+
+          } else if (
+            error.status === 0
+          ) {
+
+            this.errorFormulario =
+              'No fue posible conectar con el servidor.';
+
+          } else {
+
+            this.errorFormulario =
+              'No fue posible registrar el pago. Intenta nuevamente.';
+          }
+
+          this.changeDetector
+            .detectChanges();
+        }
+      });
+  }
+
+  formatearFecha(
+    fecha: string
+  ): string {
+
+    if (!fecha) {
+      return '';
+    }
+
+    return new Date(
+      fecha
+    ).toLocaleDateString(
+      'es-MX',
+      {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric'
+      }
+    );
   }
 
   volverInicio(): void {
