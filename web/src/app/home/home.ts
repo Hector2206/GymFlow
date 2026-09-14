@@ -190,6 +190,24 @@ export class Home implements OnInit {
     ]);
   }
 
+  irRegistrarPago(): void {
+
+    if (!this.esRecepcionista()) {
+
+      this.mensaje =
+        'No tienes permisos para registrar pagos.';
+
+      this.changeDetector
+        .detectChanges();
+
+      return;
+    }
+
+    this.router.navigate([
+      '/registrar-pago'
+    ]);
+  }
+
   proximamente(
     opcion: string
   ): void {

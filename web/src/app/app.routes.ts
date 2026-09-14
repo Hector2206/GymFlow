@@ -19,6 +19,10 @@ import {
 } from './registrar-cliente/registrar-cliente';
 
 import {
+  RegistrarPago
+} from './registrar-pago/registrar-pago';
+
+import {
   authGuard
 } from './auth-guard';
 
@@ -75,6 +79,15 @@ export const routes: Routes = [
   {
     path: 'historial-asistencias',
     component: HistorialAsistencias,
+    canActivate: [
+      authGuard,
+      recepcionistaGuard
+    ]
+  },
+
+  {
+    path: 'registrar-pago',
+    component: RegistrarPago,
     canActivate: [
       authGuard,
       recepcionistaGuard
