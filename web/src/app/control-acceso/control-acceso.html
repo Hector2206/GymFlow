@@ -1,0 +1,188 @@
+<div class="control-acceso-page">
+
+  <header class="topbar">
+
+    <div class="header-left">
+
+      <button
+        type="button"
+        class="back-button"
+        (click)="volverInicio()"
+      >
+        ←
+      </button>
+
+      <img
+        src="/Logo_GymFlow.png"
+        alt="GymFlow"
+        class="logo"
+      />
+
+    </div>
+
+  </header>
+
+
+  <main class="content">
+
+    <section class="page-header">
+
+      <p class="section-label">
+        Recepción
+      </p>
+
+      <h1>
+        Control de Acceso
+      </h1>
+
+      <p class="subtitle">
+        Registra la entrada de los clientes mediante su código personal.
+      </p>
+
+    </section>
+
+
+    <section class="control-section">
+
+      <h2>
+        Registrar Asistencia
+      </h2>
+
+      <p class="section-description">
+        Ingresa o escanea el código de acceso del cliente.
+      </p>
+
+
+      <div class="field">
+
+        <label for="codigoAcceso">
+          Código de acceso
+        </label>
+
+        <input
+          #codigoInput
+          id="codigoAcceso"
+          name="codigoAcceso"
+          type="text"
+          placeholder="Escanea o escribe el código"
+          autocomplete="off"
+          spellcheck="false"
+          [value]="codigoAcceso"
+          [disabled]="procesando"
+          (input)="capturarCodigo($event)"
+          (keydown.enter)="detectarEnter()"
+        />
+
+        <small *ngIf="!procesando">
+          El lector de código de barras escribirá el código en este campo.
+        </small>
+
+        <small
+          class="procesando-texto"
+          *ngIf="procesando"
+        >
+          Validando acceso...
+        </small>
+
+      </div>
+
+
+      <div
+        class="acceso-aprobado"
+        *ngIf="accesoAprobado"
+      >
+
+        <span class="acceso-icono">
+          ✓
+        </span>
+
+        <span class="acceso-texto">
+          ACCESO APROBADO
+        </span>
+
+      </div>
+
+
+      <div
+        class="acceso-rechazado"
+        *ngIf="accesoRechazado"
+      >
+
+        <div class="rechazo-titulo">
+
+          <span class="rechazo-icono">
+            ✕
+          </span>
+
+          <span class="rechazo-texto">
+            ACCESO RECHAZADO
+          </span>
+
+        </div>
+
+        <p
+          class="rechazo-motivo"
+          *ngIf="mensajeRechazo"
+        >
+          {{ mensajeRechazo }}
+        </p>
+
+      </div>
+
+
+      <div
+        class="cliente-identificado"
+        *ngIf="clienteIdentificado"
+      >
+
+        <span class="resultado-label">
+          Cliente identificado
+        </span>
+
+        <strong class="resultado-nombre">
+          {{ clienteIdentificado }}
+        </strong>
+
+
+        <div
+          class="membresia-info"
+          *ngIf="nombrePlan"
+        >
+
+          <div class="membresia-fila">
+
+            <span class="membresia-label">
+              Membresía
+            </span>
+
+            <span class="membresia-valor">
+              {{ nombrePlan }}
+            </span>
+
+          </div>
+
+
+          <div
+            class="membresia-fila"
+            *ngIf="fechaVencimiento"
+          >
+
+            <span class="membresia-label">
+              Vencimiento
+            </span>
+
+            <span class="membresia-valor">
+              {{ formatearFecha(fechaVencimiento) }}
+            </span>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </section>
+
+  </main>
+
+</div>

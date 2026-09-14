@@ -1,0 +1,310 @@
+<div class="pago-page">
+
+  <header class="topbar">
+
+    <div class="header-left">
+
+      <button
+        type="button"
+        class="back-button"
+        (click)="volverInicio()"
+      >
+        ←
+      </button>
+
+      <img
+        src="/Logo_GymFlow.png"
+        alt="GymFlow"
+        class="logo"
+      />
+
+    </div>
+
+  </header>
+
+
+  <main class="content">
+
+    <section class="page-header">
+
+      <p class="section-label">
+        Recepción
+      </p>
+
+      <h1>
+        Registrar Pago
+      </h1>
+
+      <p class="subtitle">
+        Registra pagos y renovaciones de los clientes.
+      </p>
+
+    </section>
+
+
+    <section class="payment-section">
+
+      <h2>
+        Datos del pago
+      </h2>
+
+      <p class="section-description">
+        Completa la información necesaria para registrar el pago.
+      </p>
+
+
+      <div
+        *ngIf="errorClientes"
+        class="message error-message"
+      >
+        {{ errorClientes }}
+      </div>
+
+
+      <div
+        *ngIf="errorFormulario"
+        class="message error-message"
+      >
+        {{ errorFormulario }}
+      </div>
+
+
+      <div
+        *ngIf="exito"
+        class="message success-message"
+      >
+        {{ exito }}
+      </div>
+
+
+      <div class="form-grid">
+
+        <div class="field full-width">
+
+          <label for="idCliente">
+            Cliente *
+          </label>
+
+          <select
+            id="idCliente"
+            name="idCliente"
+            [(ngModel)]="idCliente"
+            [disabled]="
+              cargandoClientes ||
+              procesandoPago
+            "
+          >
+
+            <option [ngValue]="null">
+              {{
+                cargandoClientes
+                  ? 'Cargando clientes...'
+                  : 'Selecciona un cliente'
+              }}
+            </option>
+
+            <option
+              *ngFor="let cliente of clientes"
+              [ngValue]="cliente.idCliente"
+            >
+              {{ cliente.nombreCompleto }}
+            </option>
+
+          </select>
+
+          <small>
+            Selecciona el cliente que realizará el pago.
+          </small>
+
+        </div>
+
+
+        <div class="field">
+
+          <label for="monto">
+            Monto *
+          </label>
+
+          <input
+            id="monto"
+            name="monto"
+            type="number"
+            min="0.01"
+            max="100000"
+            step="0.01"
+            [(ngModel)]="monto"
+            (ngModelChange)="montoCambio()"
+            placeholder="Ejemplo: 500.00"
+            autocomplete="off"
+            [disabled]="procesandoPago"
+            [class.input-error]="errorMonto"
+          />
+
+          <small
+            *ngIf="!errorMonto"
+          >
+            Ingresa el monto pagado por el cliente.
+          </small>
+
+          <small
+            class="field-error"
+            *ngIf="errorMonto"
+          >
+            {{ errorMonto }}
+          </small>
+
+        </div>
+
+
+        <div class="field">
+
+          <label for="tipoPago">
+            Concepto del pago *
+          </label>
+
+          <select
+            id="tipoPago"
+            name="tipoPago"
+            [(ngModel)]="tipoPago"
+            [disabled]="procesandoPago"
+          >
+
+            <option value="">
+              Selecciona una opción
+            </option>
+
+            <option value="Mensualidad">
+              Mensualidad
+            </option>
+
+            <option value="Anualidad">
+              Anualidad
+            </option>
+
+          </select>
+
+          <small>
+            Selecciona el tipo de pago realizado.
+          </small>
+
+        </div>
+
+      </div>
+
+
+      <div
+        class="renovacion-info"
+        *ngIf="tipoPago"
+      >
+
+        <div class="renovacion-icon">
+          ↻
+        </div>
+
+        <div>
+
+          <strong>
+            Renovación automática
+          </strong>
+
+          <p>
+            Si el cliente ya tiene un pago previo de
+            {{ tipoPago.toLowerCase() }},
+            el sistema lo registrará automáticamente como renovación.
+          </p>
+
+        </div>
+
+      </div>
+
+
+      <button
+        type="button"
+        class="submit-button"
+        [disabled]="procesandoPago"
+        (click)="registrarPago()"
+      >
+        {{
+          procesandoPago
+            ? 'Registrando pago...'
+            : 'Registrar pago'
+        }}
+      </button>
+
+
+      <div
+        class="payment-result"
+        *ngIf="respuestaPago"
+      >
+
+        <h3>
+          Resumen del pago
+        </h3>
+
+
+        <div class="result-row">
+
+          <span>
+            Tipo
+          </span>
+
+          <strong>
+            {{ respuestaPago.tipoPago }}
+          </strong>
+
+        </div>
+
+
+        <div class="result-row">
+
+          <span>
+            Monto
+          </span>
+
+          <strong>
+            ${{ respuestaPago.monto }}
+          </strong>
+
+        </div>
+
+
+        <div class="result-row">
+
+          <span>
+            Movimiento
+          </span>
+
+          <strong>
+            {{
+              respuestaPago.esRenovacion
+                ? 'Renovación'
+                : 'Primer pago'
+            }}
+          </strong>
+
+        </div>
+
+
+        <div class="result-row">
+
+          <span>
+            Nueva vigencia
+          </span>
+
+          <strong>
+            {{
+              formatearFecha(
+                respuestaPago.fechaVencimiento
+              )
+            }}
+          </strong>
+
+        </div>
+
+      </div>
+
+    </section>
+
+  </main>
+
+</div>

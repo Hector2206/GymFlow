@@ -154,6 +154,132 @@ export class Home implements OnInit {
     ]);
   }
 
+  irControlAcceso(): void {
+
+    if (!this.esRecepcionista()) {
+
+      this.mensaje =
+        'No tienes permisos para registrar asistencias.';
+
+      this.changeDetector
+        .detectChanges();
+
+      return;
+    }
+
+    this.router.navigate([
+      '/control-acceso'
+    ]);
+  }
+
+  irHistorialAsistencias(): void {
+
+    if (!this.esRecepcionista()) {
+
+      this.mensaje =
+        'No tienes permisos para consultar asistencias.';
+
+      this.changeDetector
+        .detectChanges();
+
+      return;
+    }
+
+    this.router.navigate([
+      '/historial-asistencias'
+    ]);
+  }
+
+  irRegistrarPago(): void {
+
+    if (!this.esRecepcionista()) {
+
+      this.mensaje =
+        'No tienes permisos para registrar pagos.';
+
+      this.changeDetector
+        .detectChanges();
+
+      return;
+    }
+
+    this.router.navigate([
+      '/registrar-pago'
+    ]);
+  }
+
+  irHistorialPagos(): void {
+
+    if (!this.esRecepcionista()) {
+
+      this.mensaje =
+        'No tienes permisos para consultar pagos.';
+
+      this.changeDetector
+        .detectChanges();
+
+      return;
+    }
+
+    this.router.navigate([
+      '/historial-pagos'
+    ]);
+  }
+
+  irMiCodigoAcceso(): void {
+
+    if (!this.esCliente()) {
+
+      this.mensaje =
+        'Esta opción está disponible únicamente para clientes.';
+
+      this.changeDetector
+        .detectChanges();
+
+      return;
+    }
+
+    this.router.navigate([
+      '/mi-codigo-acceso'
+    ]);
+  }
+
+  irMisAsistencias(): void {
+
+    if (!this.esCliente()) {
+
+      this.mensaje =
+        'Esta opción está disponible únicamente para clientes.';
+
+      this.changeDetector
+        .detectChanges();
+
+      return;
+    }
+
+    this.router.navigate([
+      '/mis-asistencias'
+    ]);
+  }
+
+  irMisPagos(): void {
+
+    if (!this.esCliente()) {
+
+      this.mensaje =
+        'Esta opción está disponible únicamente para clientes.';
+
+      this.changeDetector
+        .detectChanges();
+
+      return;
+    }
+
+    this.router.navigate([
+      '/mis-pagos'
+    ]);
+  }
+
   proximamente(
     opcion: string
   ): void {

@@ -137,7 +137,7 @@
 
         <button
           class="dashboard-card"
-          (click)="proximamente('Registrar asistencia')"
+          (click)="irControlAcceso()"
         >
 
           <div class="card-icon">
@@ -150,6 +150,66 @@
 
           <p>
             Registrar la asistencia de un cliente
+          </p>
+
+        </button>
+
+
+        <button
+          class="dashboard-card"
+          (click)="irHistorialAsistencias()"
+        >
+
+          <div class="card-icon">
+            📅
+          </div>
+
+          <h2>
+            Historial de Asistencias
+          </h2>
+
+          <p>
+            Consultar registros de entrada de clientes
+          </p>
+
+        </button>
+
+
+        <button
+          class="dashboard-card"
+          (click)="irRegistrarPago()"
+        >
+
+          <div class="card-icon">
+            💳
+          </div>
+
+          <h2>
+            Registrar Pago
+          </h2>
+
+          <p>
+            Registrar pagos y renovaciones de clientes
+          </p>
+
+        </button>
+
+
+        <button
+          class="dashboard-card"
+          (click)="irHistorialPagos()"
+        >
+
+          <div class="card-icon">
+            🧾
+          </div>
+
+          <h2>
+            Historial de Pagos
+          </h2>
+
+          <p>
+            Consultar los pagos registrados de clientes
           </p>
 
         </button>
@@ -224,6 +284,8 @@
         *ngIf="esCliente()"
       >
 
+        <!-- FUNCIONES DISPONIBLES -->
+
         <button
           class="dashboard-card"
           (click)="irPerfil()"
@@ -243,6 +305,68 @@
 
         </button>
 
+
+        <button
+          class="dashboard-card"
+          (click)="irMiCodigoAcceso()"
+        >
+
+          <div class="card-icon">
+            🔐
+          </div>
+
+          <h2>
+            Mi Código de Acceso
+          </h2>
+
+          <p>
+            Consulta tu código personal para registrar tu entrada
+          </p>
+
+        </button>
+
+
+        <button
+          class="dashboard-card"
+          (click)="irMisAsistencias()"
+        >
+
+          <div class="card-icon">
+            📅
+          </div>
+
+          <h2>
+            Mis Asistencias
+          </h2>
+
+          <p>
+            Consulta tu historial de asistencias
+          </p>
+
+        </button>
+
+
+        <button
+          class="dashboard-card"
+          (click)="irMisPagos()"
+        >
+
+          <div class="card-icon">
+            💳
+          </div>
+
+          <h2>
+            Mis Pagos
+          </h2>
+
+          <p>
+            Consulta tu historial de pagos y renovaciones
+          </p>
+
+        </button>
+
+
+        <!-- PRÓXIMAMENTE -->
 
         <button
           class="dashboard-card"
@@ -279,26 +403,6 @@
 
           <p>
             Consulta tu rutina de entrenamiento
-          </p>
-
-        </button>
-
-
-        <button
-          class="dashboard-card"
-          (click)="proximamente('Asistencias')"
-        >
-
-          <div class="card-icon">
-            📅
-          </div>
-
-          <h2>
-            Ver Asistencias
-          </h2>
-
-          <p>
-            Consulta tu historial de asistencias
           </p>
 
         </button>

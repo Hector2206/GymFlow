@@ -1,0 +1,99 @@
+<div class="codigo-page">
+
+  <header class="topbar">
+
+    <div class="header-left">
+
+      <button
+        type="button"
+        class="back-button"
+        (click)="volverInicio()"
+      >
+        ←
+      </button>
+
+      <img
+        src="/Logo_GymFlow.png"
+        alt="GymFlow"
+        class="logo"
+      />
+
+    </div>
+
+  </header>
+
+
+  <main class="content">
+
+    <section class="page-header">
+
+      <p class="section-label">
+        Cliente
+      </p>
+
+      <h1>
+        Mi Código de Acceso
+      </h1>
+
+      <p class="subtitle">
+        Presenta este código en recepción para registrar tu entrada.
+      </p>
+
+    </section>
+
+
+    <section class="codigo-section">
+
+      <div
+        *ngIf="cargando"
+        class="loading-state"
+      >
+        Cargando tu código...
+      </div>
+
+
+      <div
+        *ngIf="error"
+        class="message error-message"
+      >
+        {{ error }}
+      </div>
+
+
+      <ng-container
+        *ngIf="!cargando && datos"
+      >
+
+        <p class="cliente-label">
+          Código de acceso de
+        </p>
+
+        <h2 class="cliente-name">
+          {{ datos.nombreCompleto }}
+        </h2>
+
+
+        <div class="codigo-card">
+
+          <span class="codigo-label">
+            Tu código
+          </span>
+
+          <strong class="codigo-value">
+            {{ datos.codigoAcceso }}
+          </strong>
+
+        </div>
+
+
+        <p class="codigo-help">
+          Muestra este código al personal de recepción para registrar tu asistencia.
+        </p>
+
+      </ng-container>
+
+    </section>
+
+  </main>
+
+</div>

@@ -1,0 +1,180 @@
+<div class="historial-page">
+
+  <header class="topbar">
+
+    <div class="header-left">
+
+      <button
+        type="button"
+        class="back-button"
+        (click)="volverInicio()"
+      >
+        ←
+      </button>
+
+      <img
+        src="/Logo_GymFlow.png"
+        alt="GymFlow"
+        class="logo"
+      />
+
+    </div>
+
+  </header>
+
+
+  <main class="content">
+
+    <section class="page-header">
+
+      <p class="section-label">
+        Recepción
+      </p>
+
+      <h1>
+        Historial de Asistencias
+      </h1>
+
+      <p class="subtitle">
+        Consulta las asistencias registradas de los clientes.
+      </p>
+
+    </section>
+
+
+    <section class="history-section">
+
+      <h2>
+        Consultar asistencias
+      </h2>
+
+      <p class="section-description">
+        Ingresa el ID del cliente que deseas consultar.
+      </p>
+
+
+      <div class="search-row">
+
+        <div class="field">
+
+          <label for="idCliente">
+            ID del cliente
+          </label>
+
+          <input
+            id="idCliente"
+            name="idCliente"
+            type="number"
+            min="1"
+            [(ngModel)]="idCliente"
+            placeholder="Ejemplo: 17"
+            autocomplete="off"
+          />
+
+        </div>
+
+        <button
+          type="button"
+          class="search-button"
+          [disabled]="cargando"
+          (click)="consultarAsistencias()"
+        >
+          {{
+            cargando
+              ? 'Consultando...'
+              : 'Consultar'
+          }}
+        </button>
+
+      </div>
+
+
+      <div
+        *ngIf="error"
+        class="message error-message"
+      >
+        {{ error }}
+      </div>
+
+
+      <div
+        *ngIf="asistencias.length > 0"
+        class="results"
+      >
+
+        <p class="results-count">
+          Registros encontrados:
+          {{ asistencias.length }}
+        </p>
+
+
+        <div
+          class="attendance-card"
+          *ngFor="let asistencia of asistencias"
+        >
+
+          <span class="attendance-label">
+            Asistencia #{{ asistencia.idAsistencia }}
+          </span>
+
+
+          <div class="attendance-row">
+
+            <span>
+              Fecha
+            </span>
+
+            <strong>
+              {{ formatearFecha(asistencia.fechaHora) }}
+            </strong>
+
+          </div>
+
+
+          <div class="attendance-row">
+
+            <span>
+              Hora
+            </span>
+
+            <strong>
+              {{ formatearHora(asistencia.fechaHora) }}
+            </strong>
+
+          </div>
+
+
+          <div class="attendance-row">
+
+            <span>
+              Estado
+            </span>
+
+            <strong>
+              {{ asistencia.estadoAcceso }}
+            </strong>
+
+          </div>
+
+
+          <div class="attendance-row">
+
+            <span>
+              Origen
+            </span>
+
+            <strong>
+              {{ asistencia.origenRegistro }}
+            </strong>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </section>
+
+  </main>
+
+</div>

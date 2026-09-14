@@ -1,13 +1,42 @@
 import { Routes } from '@angular/router';
 
 import { Splash } from './splash/splash';
+
 import { Login } from './login/login';
+
 import { Home } from './home/home';
+
 import { Perfil } from './perfil/perfil';
+
+import { ControlAcceso } from './control-acceso/control-acceso';
+
+import {
+  HistorialAsistencias
+} from './historial-asistencias/historial-asistencias';
+
+import {
+  HistorialPagos
+} from './historial-pagos/historial-pagos';
+
+import {
+  MiCodigoAcceso
+} from './mi-codigo-acceso/mi-codigo-acceso';
+
+import {
+  MisAsistencias
+} from './mis-asistencias/mis-asistencias';
+
+import {
+  MisPagos
+} from './mis-pagos/mis-pagos';
 
 import {
   RegistrarCliente
 } from './registrar-cliente/registrar-cliente';
+
+import {
+  RegistrarPago
+} from './registrar-pago/registrar-pago';
 
 import {
   authGuard
@@ -51,6 +80,66 @@ export const routes: Routes = [
     canActivate: [
       authGuard,
       recepcionistaGuard
+    ]
+  },
+
+  {
+    path: 'control-acceso',
+    component: ControlAcceso,
+    canActivate: [
+      authGuard,
+      recepcionistaGuard
+    ]
+  },
+
+  {
+    path: 'historial-asistencias',
+    component: HistorialAsistencias,
+    canActivate: [
+      authGuard,
+      recepcionistaGuard
+    ]
+  },
+
+  {
+    path: 'registrar-pago',
+    component: RegistrarPago,
+    canActivate: [
+      authGuard,
+      recepcionistaGuard
+    ]
+  },
+
+  {
+    path: 'historial-pagos',
+    component: HistorialPagos,
+    canActivate: [
+      authGuard,
+      recepcionistaGuard
+    ]
+  },
+
+  {
+    path: 'mi-codigo-acceso',
+    component: MiCodigoAcceso,
+    canActivate: [
+      authGuard
+    ]
+  },
+
+  {
+    path: 'mis-asistencias',
+    component: MisAsistencias,
+    canActivate: [
+      authGuard
+    ]
+  },
+
+  {
+    path: 'mis-pagos',
+    component: MisPagos,
+    canActivate: [
+      authGuard
     ]
   },
 
