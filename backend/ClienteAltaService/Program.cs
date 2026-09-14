@@ -1289,4 +1289,75 @@ app.MapGet(
     policy.RequireRole("Cliente");
 });
 
+// ===============================
+// LISTAR CLIENTES PARA RECEPCION
+// ===============================
+
+app.MapGet(
+    "/api/clientes",
+    async (
+        IConfiguration configuration
+    ) =>
+    {
+        var connectionString =
+            configuration.GetConnectionString(
+                "PostgreSQL"
+            );
+
+        if (string.IsNullOrWhiteSpace(connectionString))
+        {
+            return Results.Problem(
+                title: "Configuración faltante",
+                detail:
+                    "No existe la cadena de conexión PostgreSQL.",
+                statusCode: 500
+            );
+        }
+
+        await using var connection =
+            new NpgsqlConnection(connectionString);
+
+        await connection.OpenAsync();
+
+        await using var command =
+            new NpgsqlCommand(
+                """
+                SELECT
+                    c.id_cliente,
+                    c.nombre_completo
+                FROM clientes c
+                INNER JOIN usuarios u
+                    ON c.id_usuario = u.id_usuario
+                WHERE u.estatus = 'Activo'
+                ORDER BY c.nombre_completo;
+                """,
+                connection
+            );
+
+        await using var reader =
+            await command.ExecuteReaderAsync();
+
+        var clientes =
+            new List<object>();
+
+        while (await reader.ReadAsync())
+        {
+            clientes.Add(new
+            {
+                idCliente =
+                    reader.GetInt32(0),
+
+                nombreCompleto =
+                    reader.GetString(1)
+            });
+        }
+
+        return Results.Ok(clientes);
+    }
+)
+.RequireAuthorization(policy =>
+{
+    policy.RequireRole("Recepcionista");
+});
+
 app.Run();
