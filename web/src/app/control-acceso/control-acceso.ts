@@ -7,6 +7,10 @@ import {
 
 import { Router } from '@angular/router';
 
+import {
+  AsistenciaService
+} from '../services/asistencia.service';
+
 @Component({
   selector: 'app-control-acceso',
   standalone: true,
@@ -22,7 +26,8 @@ export class ControlAcceso implements AfterViewInit {
   codigoAcceso = '';
 
   constructor(
-    private router: Router
+    private router: Router,
+    private asistenciaService: AsistenciaService
   ) {}
 
   ngAfterViewInit(): void {
@@ -48,10 +53,47 @@ export class ControlAcceso implements AfterViewInit {
     this.codigoAcceso =
       this.codigoAcceso.trim();
 
+    if (!this.codigoAcceso) {
+
+      console.log(
+        'No se ingresó un código de acceso.'
+      );
+
+      return;
+    }
+
+    this.enviarCodigo();
+  }
+
+  enviarCodigo(): void {
+
     console.log(
-      'Enter detectado. Código limpio:',
+      'Enviando código al backend:',
       this.codigoAcceso
     );
+
+    this.asistenciaService
+      .registrarPorCodigo(
+        this.codigoAcceso
+      )
+      .subscribe({
+
+        next: (respuesta) => {
+
+          console.log(
+            'Respuesta del backend:',
+            respuesta
+          );
+        },
+
+        error: (error) => {
+
+          console.error(
+            'Error al registrar asistencia:',
+            error
+          );
+        }
+      });
   }
 
   volverInicio(): void {
