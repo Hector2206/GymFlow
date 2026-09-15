@@ -329,7 +329,7 @@ class _MiCodigoPageState
   }) {
     if (cargando) {
       return SizedBox(
-        height: 220,
+        height: 260,
 
         child: Center(
           child: Column(
@@ -365,7 +365,7 @@ class _MiCodigoPageState
     if (error.isNotEmpty) {
       return SizedBox(
         width: double.infinity,
-        height: 220,
+        height: 260,
 
         child: Center(
           child: Column(
@@ -466,7 +466,7 @@ class _MiCodigoPageState
     if (codigoAcceso.isEmpty) {
       return SizedBox(
         width: double.infinity,
-        height: 220,
+        height: 260,
 
         child: Center(
           child: Text(
@@ -541,11 +541,8 @@ class _MiCodigoPageState
               TextAlign.center,
 
           style: TextStyle(
-            color:
-                silver,
-
-            fontSize:
-                14,
+            color: silver,
+            fontSize: 14,
           ),
         ),
 
@@ -562,14 +559,49 @@ class _MiCodigoPageState
               TextAlign.center,
 
           style: TextStyle(
-            color:
-                gold,
-
-            fontSize:
-                20,
-
+            color: gold,
+            fontSize: 20,
             fontWeight:
                 FontWeight.bold,
+          ),
+        ),
+
+        const SizedBox(
+          height: 22,
+        ),
+
+        Text(
+          'TU CÓDIGO',
+
+          textAlign:
+              TextAlign.center,
+
+          style: TextStyle(
+            color: silver,
+            fontSize: 12,
+            fontWeight:
+                FontWeight.bold,
+            letterSpacing: 2,
+          ),
+        ),
+
+        const SizedBox(
+          height: 8,
+        ),
+
+        Text(
+          codigoAcceso,
+
+          textAlign:
+              TextAlign.center,
+
+          style: const TextStyle(
+            color:
+                Colors.white,
+            fontSize: 22,
+            fontWeight:
+                FontWeight.bold,
+            letterSpacing: 1.5,
           ),
         ),
       ],
