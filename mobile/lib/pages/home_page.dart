@@ -4,6 +4,7 @@ import '../models/usuario.dart';
 import '../services/auth_service.dart';
 
 import 'login_page.dart';
+import 'mi_codigo_page.dart';
 import 'profile_page.dart';
 import 'registrar_cliente_page.dart';
 
@@ -66,6 +67,17 @@ class HomePage extends StatelessWidget {
       MaterialPageRoute(
         builder: (_) =>
             const RegistrarClientePage(),
+      ),
+    );
+  }
+
+  void irMiCodigoAcceso(
+    BuildContext context,
+  ) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) =>
+            const MiCodigoPage(),
       ),
     );
   }
@@ -405,6 +417,25 @@ class HomePage extends StatelessWidget {
 
         onTap: () {
           irPerfil(
+            context,
+          );
+        },
+      ),
+
+      _espacio(),
+
+      _buildCard(
+        icon:
+            Icons.qr_code_2_outlined,
+
+        titulo:
+            'Mi Código de Acceso',
+
+        subtitulo:
+            'Consulta tu código personal para registrar tu entrada',
+
+        onTap: () {
+          irMiCodigoAcceso(
             context,
           );
         },
