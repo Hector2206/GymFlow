@@ -9,7 +9,6 @@ class ClienteService {
   Future<Map<String, dynamic>> registrarCliente({
     required String correo,
     required String password,
-    required String idAsistencia,
     required String nombreCompleto,
     required String telefono,
     required int idMembresia,
@@ -30,6 +29,9 @@ class ClienteService {
       };
     }
 
+    final telefonoLimpio =
+        telefono.trim();
+
     final response =
         await http.post(
       Uri.parse(
@@ -46,12 +48,12 @@ class ClienteService {
             correo.trim(),
         'Password':
             password,
-        'IdAsistencia':
-            idAsistencia.trim(),
         'NombreCompleto':
             nombreCompleto.trim(),
         'Telefono':
-            telefono.trim(),
+            telefonoLimpio.isEmpty
+                ? null
+                : telefonoLimpio,
         'IdMembresia':
             idMembresia,
         'CostoMensual':
