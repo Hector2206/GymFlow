@@ -1,5 +1,7 @@
 import 'package:barcode_widget/barcode_widget.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:screen_brightness/screen_brightness.dart';
 
 import '../models/mi_codigo_acceso.dart';
 import '../services/codigo_acceso_service.dart';
@@ -29,6 +31,51 @@ class _MiCodigoPageState
     super.initState();
 
     cargarCodigo();
+
+    WidgetsBinding.instance.addPostFrameCallback(
+      (_) {
+        _activarBrilloCodigo();
+      },
+    );
+  }
+
+  Future<void> _activarBrilloCodigo() async {
+    if (kIsWeb) {
+      return;
+    }
+
+    try {
+      await ScreenBrightness.instance
+          .setApplicationScreenBrightness(
+        1.0,
+      );
+    } catch (e) {
+      debugPrint(
+        'No se pudo aumentar el brillo: $e',
+      );
+    }
+  }
+
+  Future<void> _restaurarBrillo() async {
+    if (kIsWeb) {
+      return;
+    }
+
+    try {
+      await ScreenBrightness.instance
+          .resetApplicationScreenBrightness();
+    } catch (e) {
+      debugPrint(
+        'No se pudo restaurar el brillo: $e',
+      );
+    }
+  }
+
+  @override
+  void dispose() {
+    _restaurarBrillo();
+
+    super.dispose();
   }
 
   Future<void> cargarCodigo() async {
@@ -163,161 +210,203 @@ class _MiCodigoPageState
         ),
       ),
 
-      body: Container(
-        width: double.infinity,
+      body: LayoutBuilder(
+        builder: (
+          context,
+          constraints,
+        ) {
+          final pantallaPequena =
+              constraints.maxWidth < 380;
 
-        decoration:
-            const BoxDecoration(
-          gradient: RadialGradient(
-            center:
-                Alignment.topCenter,
+          final paddingHorizontal =
+              pantallaPequena
+                  ? 14.0
+                  : 20.0;
 
-            radius: 1.5,
+          final paddingTarjeta =
+              pantallaPequena
+                  ? 16.0
+                  : 24.0;
 
-            colors: [
-              Color(0xFF29292E),
-              coal,
-              Color(0xFF0D0D0F),
-            ],
+          return Container(
+            width: double.infinity,
 
-            stops: [
-              0.0,
-              0.35,
-              1.0,
-            ],
-          ),
-        ),
+            decoration:
+                const BoxDecoration(
+              gradient: RadialGradient(
+                center:
+                    Alignment.topCenter,
 
-        child: SafeArea(
-          top: false,
+                radius: 1.5,
 
-          child:
-              SingleChildScrollView(
-            padding:
-                const EdgeInsets.fromLTRB(
-              20,
-              36,
-              20,
-              50,
+                colors: [
+                  Color(0xFF29292E),
+                  coal,
+                  Color(0xFF0D0D0F),
+                ],
+
+                stops: [
+                  0.0,
+                  0.35,
+                  1.0,
+                ],
+              ),
             ),
 
-            child: Center(
+            child: SafeArea(
+              top: false,
+
               child:
-                  ConstrainedBox(
-                constraints:
-                    const BoxConstraints(
-                  maxWidth: 650,
+                  SingleChildScrollView(
+                padding:
+                    EdgeInsets.fromLTRB(
+                  paddingHorizontal,
+                  30,
+                  paddingHorizontal,
+                  50,
                 ),
 
-                child: Column(
-                  crossAxisAlignment:
-                      CrossAxisAlignment.start,
-
-                  children: [
-                    const Text(
-                      'CLIENTE',
-
-                      style: TextStyle(
-                        color: gold,
-                        fontSize: 13,
-                        fontWeight:
-                            FontWeight.bold,
-                        letterSpacing: 2,
-                      ),
+                child: Center(
+                  child:
+                      ConstrainedBox(
+                    constraints:
+                        const BoxConstraints(
+                      maxWidth: 650,
                     ),
 
-                    const SizedBox(
-                      height: 8,
-                    ),
+                    child: Column(
+                      crossAxisAlignment:
+                          CrossAxisAlignment.start,
 
-                    const Text(
-                      'Mi Código de Acceso',
+                      children: [
+                        const Text(
+                          'CLIENTE',
 
-                      style: TextStyle(
-                        color:
-                            Colors.white,
-                        fontSize: 32,
-                        fontWeight:
-                            FontWeight.bold,
-                      ),
-                    ),
+                          style:
+                              TextStyle(
+                            color:
+                                gold,
 
-                    const SizedBox(
-                      height: 8,
-                    ),
+                            fontSize:
+                                13,
 
-                    const Text(
-                      'Presenta este código en recepción para registrar tu entrada.',
+                            fontWeight:
+                                FontWeight.bold,
 
-                      style: TextStyle(
-                        color: silver,
-                        fontSize: 15,
-                        height: 1.4,
-                      ),
-                    ),
-
-                    const SizedBox(
-                      height: 32,
-                    ),
-
-                    Container(
-                      width:
-                          double.infinity,
-
-                      padding:
-                          const EdgeInsets.all(
-                        24,
-                      ),
-
-                      decoration:
-                          BoxDecoration(
-                        gradient:
-                            const LinearGradient(
-                          begin:
-                              Alignment.topLeft,
-
-                          end:
-                              Alignment.bottomRight,
-
-                          colors: [
-                            Color(
-                              0xFF1D1D20,
-                            ),
-                            Color(
-                              0xFF151517,
-                            ),
-                          ],
-                        ),
-
-                        borderRadius:
-                            BorderRadius.circular(
-                          20,
-                        ),
-
-                        border: Border.all(
-                          color:
-                              gold.withValues(
-                            alpha: 0.16,
+                            letterSpacing:
+                                2,
                           ),
                         ),
-                      ),
 
-                      child:
-                          _buildContenido(
-                        gold:
-                            gold,
-                        silver:
-                            silver,
-                        errorColor:
-                            errorColor,
-                      ),
+                        const SizedBox(
+                          height: 8,
+                        ),
+
+                        Text(
+                          'Mi Código de Acceso',
+
+                          style: TextStyle(
+                            color:
+                                Colors.white,
+
+                            fontSize:
+                                pantallaPequena
+                                    ? 28
+                                    : 32,
+
+                            fontWeight:
+                                FontWeight.bold,
+                          ),
+                        ),
+
+                        const SizedBox(
+                          height: 8,
+                        ),
+
+                        const Text(
+                          'Presenta este código en recepción para registrar tu entrada.',
+
+                          style:
+                              TextStyle(
+                            color:
+                                silver,
+
+                            fontSize:
+                                15,
+
+                            height:
+                                1.4,
+                          ),
+                        ),
+
+                        const SizedBox(
+                          height: 28,
+                        ),
+
+                        Container(
+                          width:
+                              double.infinity,
+
+                          padding:
+                              EdgeInsets.all(
+                            paddingTarjeta,
+                          ),
+
+                          decoration:
+                              BoxDecoration(
+                            gradient:
+                                const LinearGradient(
+                              begin:
+                                  Alignment.topLeft,
+
+                              end:
+                                  Alignment.bottomRight,
+
+                              colors: [
+                                Color(
+                                  0xFF1D1D20,
+                                ),
+                                Color(
+                                  0xFF151517,
+                                ),
+                              ],
+                            ),
+
+                            borderRadius:
+                                BorderRadius.circular(
+                              20,
+                            ),
+
+                            border:
+                                Border.all(
+                              color:
+                                  gold.withValues(
+                                alpha:
+                                    0.16,
+                              ),
+                            ),
+                          ),
+
+                          child:
+                              _buildContenido(
+                            gold:
+                                gold,
+                            silver:
+                                silver,
+                            errorColor:
+                                errorColor,
+                            pantallaPequena:
+                                pantallaPequena,
+                          ),
+                        ),
+                      ],
                     ),
-                  ],
+                  ),
                 ),
               ),
             ),
-          ),
-        ),
+          );
+        },
       ),
     );
   }
@@ -326,6 +415,7 @@ class _MiCodigoPageState
     required Color gold,
     required Color silver,
     required Color errorColor,
+    required bool pantallaPequena,
   }) {
     if (cargando) {
       return SizedBox(
@@ -490,9 +580,16 @@ class _MiCodigoPageState
           width: double.infinity,
 
           padding:
-              const EdgeInsets.symmetric(
-            horizontal: 16,
-            vertical: 20,
+              EdgeInsets.symmetric(
+            horizontal:
+                pantallaPequena
+                    ? 10
+                    : 16,
+
+            vertical:
+                pantallaPequena
+                    ? 16
+                    : 20,
           ),
 
           decoration:
@@ -506,27 +603,50 @@ class _MiCodigoPageState
             ),
           ),
 
-          child: BarcodeWidget(
-            barcode:
-                Barcode.code128(),
+          child: LayoutBuilder(
+            builder: (
+              context,
+              constraints,
+            ) {
+              return SizedBox(
+                width:
+                    constraints.maxWidth,
 
-            data:
-                codigoAcceso,
+                height:
+                    pantallaPequena
+                        ? 100
+                        : 120,
 
-            drawText:
-                false,
+                child:
+                    BarcodeWidget(
+                  barcode:
+                      Barcode.code128(),
 
-            color:
-                Colors.black,
+                  data:
+                      codigoAcceso,
 
-            backgroundColor:
-                Colors.white,
+                  drawText:
+                      false,
 
-            height:
-                110,
+                  color:
+                      Colors.black,
 
-            width:
-                double.infinity,
+                  backgroundColor:
+                      Colors.white,
+
+                  width:
+                      constraints.maxWidth,
+
+                  height:
+                      pantallaPequena
+                          ? 100
+                          : 120,
+
+                  padding:
+                      EdgeInsets.zero,
+                ),
+              );
+            },
           ),
         ),
 
@@ -560,7 +680,12 @@ class _MiCodigoPageState
 
           style: TextStyle(
             color: gold,
-            fontSize: 20,
+
+            fontSize:
+                pantallaPequena
+                    ? 18
+                    : 20,
+
             fontWeight:
                 FontWeight.bold,
           ),
@@ -589,19 +714,30 @@ class _MiCodigoPageState
           height: 8,
         ),
 
-        Text(
-          codigoAcceso,
+        FittedBox(
+          fit: BoxFit.scaleDown,
 
-          textAlign:
-              TextAlign.center,
+          child: Text(
+            codigoAcceso,
 
-          style: const TextStyle(
-            color:
-                Colors.white,
-            fontSize: 22,
-            fontWeight:
-                FontWeight.bold,
-            letterSpacing: 1.5,
+            textAlign:
+                TextAlign.center,
+
+            style: TextStyle(
+              color:
+                  Colors.white,
+
+              fontSize:
+                  pantallaPequena
+                      ? 19
+                      : 22,
+
+              fontWeight:
+                  FontWeight.bold,
+
+              letterSpacing:
+                  1.5,
+            ),
           ),
         ),
       ],

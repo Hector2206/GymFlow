@@ -17,6 +17,7 @@ dependencies:
   google_sign_in: ^6.3.0
   google_sign_in_web: 0.12.4+4
   barcode_widget: ^2.0.4
+  screen_brightness: ^2.1.11
 
 dev_dependencies:
   flutter_test:
