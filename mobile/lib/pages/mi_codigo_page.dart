@@ -329,7 +329,7 @@ class _MiCodigoPageState
   }) {
     if (cargando) {
       return SizedBox(
-        height: 260,
+        height: 280,
 
         child: Center(
           child: Column(
@@ -365,7 +365,7 @@ class _MiCodigoPageState
     if (error.isNotEmpty) {
       return SizedBox(
         width: double.infinity,
-        height: 260,
+        height: 280,
 
         child: Center(
           child: Column(
@@ -466,7 +466,7 @@ class _MiCodigoPageState
     if (codigoAcceso.isEmpty) {
       return SizedBox(
         width: double.infinity,
-        height: 260,
+        height: 280,
 
         child: Center(
           child: Text(
@@ -491,8 +491,8 @@ class _MiCodigoPageState
 
           padding:
               const EdgeInsets.symmetric(
-            horizontal: 20,
-            vertical: 22,
+            horizontal: 16,
+            vertical: 20,
           ),
 
           decoration:
@@ -523,7 +523,7 @@ class _MiCodigoPageState
                 Colors.white,
 
             height:
-                90,
+                110,
 
             width:
                 double.infinity,
