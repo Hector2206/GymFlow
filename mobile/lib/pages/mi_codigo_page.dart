@@ -329,7 +329,7 @@ class _MiCodigoPageState
   }) {
     if (cargando) {
       return SizedBox(
-        height: 180,
+        height: 220,
 
         child: Center(
           child: Column(
@@ -365,7 +365,7 @@ class _MiCodigoPageState
     if (error.isNotEmpty) {
       return SizedBox(
         width: double.infinity,
-        height: 180,
+        height: 220,
 
         child: Center(
           child: Column(
@@ -390,8 +390,7 @@ class _MiCodigoPageState
                     TextAlign.center,
 
                 style: TextStyle(
-                  color:
-                      errorColor,
+                  color: errorColor,
                   fontSize: 17,
                   fontWeight:
                       FontWeight.bold,
@@ -461,10 +460,13 @@ class _MiCodigoPageState
     final codigoAcceso =
         codigo?.codigoAcceso.trim() ?? '';
 
+    final nombreCompleto =
+        codigo?.nombreCompleto.trim() ?? '';
+
     if (codigoAcceso.isEmpty) {
       return SizedBox(
         width: double.infinity,
-        height: 180,
+        height: 220,
 
         child: Center(
           child: Text(
@@ -482,12 +484,9 @@ class _MiCodigoPageState
       );
     }
 
-    return SizedBox(
-      width: double.infinity,
-      height: 180,
-
-      child: Center(
-        child: Container(
+    return Column(
+      children: [
+        Container(
           width: double.infinity,
 
           padding:
@@ -530,7 +529,50 @@ class _MiCodigoPageState
                 double.infinity,
           ),
         ),
-      ),
+
+        const SizedBox(
+          height: 22,
+        ),
+
+        Text(
+          'Código de acceso de',
+
+          textAlign:
+              TextAlign.center,
+
+          style: TextStyle(
+            color:
+                silver,
+
+            fontSize:
+                14,
+          ),
+        ),
+
+        const SizedBox(
+          height: 6,
+        ),
+
+        Text(
+          nombreCompleto.isNotEmpty
+              ? nombreCompleto
+              : 'Cliente GymFlow',
+
+          textAlign:
+              TextAlign.center,
+
+          style: TextStyle(
+            color:
+                gold,
+
+            fontSize:
+                20,
+
+            fontWeight:
+                FontWeight.bold,
+          ),
+        ),
+      ],
     );
   }
 }
