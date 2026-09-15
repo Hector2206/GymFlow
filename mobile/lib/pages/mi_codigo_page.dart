@@ -1,3 +1,4 @@
+import 'package:barcode_widget/barcode_widget.dart';
 import 'package:flutter/material.dart';
 
 import '../services/codigo_acceso_service.dart';
@@ -87,37 +88,29 @@ class _MiCodigoPageState
         Color(0xFFE57373);
 
     return Scaffold(
-      backgroundColor:
-          dark,
+      backgroundColor: dark,
 
       appBar: AppBar(
-        backgroundColor:
-            dark,
-
+        backgroundColor: dark,
         elevation: 0,
-
         leadingWidth: 70,
 
         leading: Padding(
-          padding:
-              const EdgeInsets.only(
+          padding: const EdgeInsets.only(
             left: 14,
             top: 6,
             bottom: 6,
           ),
 
           child: Container(
-            decoration:
-                BoxDecoration(
+            decoration: BoxDecoration(
               borderRadius:
                   BorderRadius.circular(
                 10,
               ),
 
-              border:
-                  Border.all(
-                color:
-                    gold.withValues(
+              border: Border.all(
+                color: gold.withValues(
                   alpha: 0.45,
                 ),
               ),
@@ -128,8 +121,7 @@ class _MiCodigoPageState
                 Navigator.of(context).pop();
               },
 
-              icon:
-                  const Icon(
+              icon: const Icon(
                 Icons.arrow_back,
                 color: gold,
               ),
@@ -151,8 +143,7 @@ class _MiCodigoPageState
           child: Container(
             height: 1,
 
-            color:
-                gold.withValues(
+            color: gold.withValues(
               alpha: 0.30,
             ),
           ),
@@ -160,18 +151,15 @@ class _MiCodigoPageState
       ),
 
       body: Container(
-        width:
-            double.infinity,
+        width: double.infinity,
 
         decoration:
             const BoxDecoration(
-          gradient:
-              RadialGradient(
+          gradient: RadialGradient(
             center:
                 Alignment.topCenter,
 
-            radius:
-                1.5,
+            radius: 1.5,
 
             colors: [
               Color(0xFF29292E),
@@ -216,15 +204,11 @@ class _MiCodigoPageState
                     const Text(
                       'CLIENTE',
 
-                      style:
-                          TextStyle(
+                      style: TextStyle(
                         color: gold,
-
                         fontSize: 13,
-
                         fontWeight:
                             FontWeight.bold,
-
                         letterSpacing: 2,
                       ),
                     ),
@@ -236,13 +220,10 @@ class _MiCodigoPageState
                     const Text(
                       'Mi Código de Acceso',
 
-                      style:
-                          TextStyle(
+                      style: TextStyle(
                         color:
                             Colors.white,
-
                         fontSize: 32,
-
                         fontWeight:
                             FontWeight.bold,
                       ),
@@ -255,12 +236,9 @@ class _MiCodigoPageState
                     const Text(
                       'Presenta este código en recepción para registrar tu entrada.',
 
-                      style:
-                          TextStyle(
+                      style: TextStyle(
                         color: silver,
-
                         fontSize: 15,
-
                         height: 1.4,
                       ),
                     ),
@@ -289,8 +267,12 @@ class _MiCodigoPageState
                               Alignment.bottomRight,
 
                           colors: [
-                            Color(0xFF1D1D20),
-                            Color(0xFF151517),
+                            Color(
+                              0xFF1D1D20,
+                            ),
+                            Color(
+                              0xFF151517,
+                            ),
                           ],
                         ),
 
@@ -299,8 +281,7 @@ class _MiCodigoPageState
                           20,
                         ),
 
-                        border:
-                            Border.all(
+                        border: Border.all(
                           color:
                               gold.withValues(
                             alpha: 0.16,
@@ -335,41 +316,29 @@ class _MiCodigoPageState
   }) {
     if (cargando) {
       return SizedBox(
-        height:
-            180,
+        height: 180,
 
-        child:
-            Center(
-          child:
-              Column(
+        child: Center(
+          child: Column(
             mainAxisSize:
                 MainAxisSize.min,
 
             children: [
               CircularProgressIndicator(
-                color:
-                    gold,
-
-                strokeWidth:
-                    3,
+                color: gold,
+                strokeWidth: 3,
               ),
 
               const SizedBox(
-                height:
-                    18,
+                height: 18,
               ),
 
               Text(
                 'Cargando tu código...',
 
-                style:
-                    TextStyle(
-                  color:
-                      silver,
-
-                  fontSize:
-                      15,
-
+                style: TextStyle(
+                  color: silver,
+                  fontSize: 15,
                   fontWeight:
                       FontWeight.w500,
                 ),
@@ -382,31 +351,23 @@ class _MiCodigoPageState
 
     if (error.isNotEmpty) {
       return SizedBox(
-        width:
-            double.infinity,
+        width: double.infinity,
+        height: 180,
 
-        height:
-            180,
-
-        child:
-            Center(
-          child:
-              Column(
+        child: Center(
+          child: Column(
             mainAxisSize:
                 MainAxisSize.min,
 
             children: [
               Icon(
                 Icons.error_outline,
-                color:
-                    errorColor,
-                size:
-                    42,
+                color: errorColor,
+                size: 42,
               ),
 
               const SizedBox(
-                height:
-                    12,
+                height: 12,
               ),
 
               Text(
@@ -415,22 +376,17 @@ class _MiCodigoPageState
                 textAlign:
                     TextAlign.center,
 
-                style:
-                    TextStyle(
+                style: TextStyle(
                   color:
                       errorColor,
-
-                  fontSize:
-                      17,
-
+                  fontSize: 17,
                   fontWeight:
                       FontWeight.bold,
                 ),
               ),
 
               const SizedBox(
-                height:
-                    8,
+                height: 8,
               ),
 
               Text(
@@ -439,63 +395,47 @@ class _MiCodigoPageState
                 textAlign:
                     TextAlign.center,
 
-                style:
-                    TextStyle(
-                  color:
-                      silver,
-
-                  fontSize:
-                      14,
-
-                  height:
-                      1.4,
+                style: TextStyle(
+                  color: silver,
+                  fontSize: 14,
+                  height: 1.4,
                 ),
               ),
 
               const SizedBox(
-                height:
-                    16,
+                height: 16,
               ),
 
               OutlinedButton.icon(
                 onPressed:
                     cargarCodigo,
 
-                icon:
-                    Icon(
+                icon: Icon(
                   Icons.refresh,
-                  color:
-                      gold,
+                  color: gold,
                 ),
 
-                label:
-                    Text(
+                label: Text(
                   'Reintentar',
 
-                  style:
-                      TextStyle(
-                    color:
-                        gold,
+                  style: TextStyle(
+                    color: gold,
                   ),
                 ),
 
                 style:
                     OutlinedButton.styleFrom(
-                  side:
-                      BorderSide(
+                  side: BorderSide(
                     color:
                         gold.withValues(
-                      alpha:
-                          0.55,
+                      alpha: 0.55,
                     ),
                   ),
 
                   padding:
                       const EdgeInsets.symmetric(
-                    horizontal:
-                        18,
-                    vertical:
-                        12,
+                    horizontal: 18,
+                    vertical: 12,
                   ),
                 ),
               ),
@@ -505,11 +445,55 @@ class _MiCodigoPageState
       );
     }
 
-    return const SizedBox(
-      width:
-          double.infinity,
-      height:
-          180,
+    return SizedBox(
+      width: double.infinity,
+      height: 180,
+
+      child: Center(
+        child: Container(
+          width: double.infinity,
+
+          padding:
+              const EdgeInsets.symmetric(
+            horizontal: 20,
+            vertical: 22,
+          ),
+
+          decoration:
+              BoxDecoration(
+            color:
+                Colors.white,
+
+            borderRadius:
+                BorderRadius.circular(
+              14,
+            ),
+          ),
+
+          child: BarcodeWidget(
+            barcode:
+                Barcode.code128(),
+
+            data:
+                'GYMFLOW-CODE128',
+
+            drawText:
+                false,
+
+            color:
+                Colors.black,
+
+            backgroundColor:
+                Colors.white,
+
+            height:
+                90,
+
+            width:
+                double.infinity,
+          ),
+        ),
+      ),
     );
   }
 }
