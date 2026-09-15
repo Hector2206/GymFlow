@@ -1,6 +1,7 @@
 import 'package:barcode_widget/barcode_widget.dart';
 import 'package:flutter/material.dart';
 
+import '../models/mi_codigo_acceso.dart';
 import '../services/codigo_acceso_service.dart';
 
 class MiCodigoPage extends StatefulWidget {
@@ -21,6 +22,8 @@ class _MiCodigoPageState
   bool cargando = true;
   String error = '';
 
+  MiCodigoAcceso? codigo;
+
   @override
   void initState() {
     super.initState();
@@ -32,10 +35,20 @@ class _MiCodigoPageState
     setState(() {
       cargando = true;
       error = '';
+      codigo = null;
     });
 
     try {
-      await codigoAccesoService.obtenerMiCodigo();
+      final resultado =
+          await codigoAccesoService.obtenerMiCodigo();
+
+      if (!mounted) {
+        return;
+      }
+
+      setState(() {
+        codigo = resultado;
+      });
     } catch (e) {
       if (!mounted) {
         return;
@@ -445,6 +458,30 @@ class _MiCodigoPageState
       );
     }
 
+    final codigoAcceso =
+        codigo?.codigoAcceso.trim() ?? '';
+
+    if (codigoAcceso.isEmpty) {
+      return SizedBox(
+        width: double.infinity,
+        height: 180,
+
+        child: Center(
+          child: Text(
+            'No hay un código de acceso disponible.',
+
+            textAlign:
+                TextAlign.center,
+
+            style: TextStyle(
+              color: silver,
+              fontSize: 15,
+            ),
+          ),
+        ),
+      );
+    }
+
     return SizedBox(
       width: double.infinity,
       height: 180,
@@ -475,7 +512,7 @@ class _MiCodigoPageState
                 Barcode.code128(),
 
             data:
-                'GYMFLOW-CODE128',
+                codigoAcceso,
 
             drawText:
                 false,
