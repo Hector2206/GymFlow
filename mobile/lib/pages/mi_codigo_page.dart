@@ -18,6 +18,7 @@ class _MiCodigoPageState
       CodigoAccesoService();
 
   bool cargando = true;
+  String error = '';
 
   @override
   void initState() {
@@ -29,13 +30,36 @@ class _MiCodigoPageState
   Future<void> cargarCodigo() async {
     setState(() {
       cargando = true;
+      error = '';
     });
 
     try {
       await codigoAccesoService.obtenerMiCodigo();
-    } catch (_) {
-      // El manejo visual del error se agregará
-      // en la microtarea #848.
+    } catch (e) {
+      if (!mounted) {
+        return;
+      }
+
+      String mensaje =
+          e.toString().trim();
+
+      if (mensaje.startsWith('Exception:')) {
+        mensaje = mensaje
+            .replaceFirst(
+              'Exception:',
+              '',
+            )
+            .trim();
+      }
+
+      if (mensaje.isEmpty) {
+        mensaje =
+            'No se pudo cargar tu código de acceso.';
+      }
+
+      setState(() {
+        error = mensaje;
+      });
     } finally {
       if (mounted) {
         setState(() {
@@ -58,6 +82,9 @@ class _MiCodigoPageState
 
     const dark =
         Color(0xFF101012);
+
+    const errorColor =
+        Color(0xFFE57373);
 
     return Scaffold(
       backgroundColor:
@@ -282,60 +309,14 @@ class _MiCodigoPageState
                       ),
 
                       child:
-                          cargando
-                              ? const SizedBox(
-                                  height:
-                                      180,
-
-                                  child:
-                                      Center(
-                                    child:
-                                        Column(
-                                      mainAxisSize:
-                                          MainAxisSize
-                                              .min,
-
-                                      children: [
-                                        CircularProgressIndicator(
-                                          color:
-                                              gold,
-
-                                          strokeWidth:
-                                              3,
-                                        ),
-
-                                        SizedBox(
-                                          height:
-                                              18,
-                                        ),
-
-                                        Text(
-                                          'Cargando tu código...',
-
-                                          style:
-                                              TextStyle(
-                                            color:
-                                                silver,
-
-                                            fontSize:
-                                                15,
-
-                                            fontWeight:
-                                                FontWeight
-                                                    .w500,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                )
-                              : const SizedBox(
-                                  width:
-                                      double.infinity,
-
-                                  height:
-                                      180,
-                                ),
+                          _buildContenido(
+                        gold:
+                            gold,
+                        silver:
+                            silver,
+                        errorColor:
+                            errorColor,
+                      ),
                     ),
                   ],
                 ),
@@ -344,6 +325,191 @@ class _MiCodigoPageState
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildContenido({
+    required Color gold,
+    required Color silver,
+    required Color errorColor,
+  }) {
+    if (cargando) {
+      return SizedBox(
+        height:
+            180,
+
+        child:
+            Center(
+          child:
+              Column(
+            mainAxisSize:
+                MainAxisSize.min,
+
+            children: [
+              CircularProgressIndicator(
+                color:
+                    gold,
+
+                strokeWidth:
+                    3,
+              ),
+
+              const SizedBox(
+                height:
+                    18,
+              ),
+
+              Text(
+                'Cargando tu código...',
+
+                style:
+                    TextStyle(
+                  color:
+                      silver,
+
+                  fontSize:
+                      15,
+
+                  fontWeight:
+                      FontWeight.w500,
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    if (error.isNotEmpty) {
+      return SizedBox(
+        width:
+            double.infinity,
+
+        height:
+            180,
+
+        child:
+            Center(
+          child:
+              Column(
+            mainAxisSize:
+                MainAxisSize.min,
+
+            children: [
+              Icon(
+                Icons.error_outline,
+                color:
+                    errorColor,
+                size:
+                    42,
+              ),
+
+              const SizedBox(
+                height:
+                    12,
+              ),
+
+              Text(
+                'No se pudo cargar tu código',
+
+                textAlign:
+                    TextAlign.center,
+
+                style:
+                    TextStyle(
+                  color:
+                      errorColor,
+
+                  fontSize:
+                      17,
+
+                  fontWeight:
+                      FontWeight.bold,
+                ),
+              ),
+
+              const SizedBox(
+                height:
+                    8,
+              ),
+
+              Text(
+                error,
+
+                textAlign:
+                    TextAlign.center,
+
+                style:
+                    TextStyle(
+                  color:
+                      silver,
+
+                  fontSize:
+                      14,
+
+                  height:
+                      1.4,
+                ),
+              ),
+
+              const SizedBox(
+                height:
+                    16,
+              ),
+
+              OutlinedButton.icon(
+                onPressed:
+                    cargarCodigo,
+
+                icon:
+                    Icon(
+                  Icons.refresh,
+                  color:
+                      gold,
+                ),
+
+                label:
+                    Text(
+                  'Reintentar',
+
+                  style:
+                      TextStyle(
+                    color:
+                        gold,
+                  ),
+                ),
+
+                style:
+                    OutlinedButton.styleFrom(
+                  side:
+                      BorderSide(
+                    color:
+                        gold.withValues(
+                      alpha:
+                          0.55,
+                    ),
+                  ),
+
+                  padding:
+                      const EdgeInsets.symmetric(
+                    horizontal:
+                        18,
+                    vertical:
+                        12,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    return const SizedBox(
+      width:
+          double.infinity,
+      height:
+          180,
     );
   }
 }
