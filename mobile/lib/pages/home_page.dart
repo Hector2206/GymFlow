@@ -3,9 +3,16 @@ import 'package:flutter/material.dart';
 import '../models/usuario.dart';
 import '../services/auth_service.dart';
 
+import 'historial_asistencias_page.dart';
+import 'historial_pagos_page.dart';
 import 'login_page.dart';
+import 'mi_codigo_page.dart';
+import 'mis_asistencias_page.dart';
+import 'mis_pagos_page.dart';
 import 'profile_page.dart';
+import 'registrar_asistencia_page.dart';
 import 'registrar_cliente_page.dart';
+import 'registrar_pago_page.dart';
 
 class HomePage extends StatelessWidget {
   final Usuario usuario;
@@ -70,6 +77,83 @@ class HomePage extends StatelessWidget {
     );
   }
 
+  void irRegistrarAsistencia(
+    BuildContext context,
+  ) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) =>
+            const RegistrarAsistenciaPage(),
+      ),
+    );
+  }
+
+  void irHistorialAsistencias(
+    BuildContext context,
+  ) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) =>
+            const HistorialAsistenciasPage(),
+      ),
+    );
+  }
+
+  void irRegistrarPago(
+    BuildContext context,
+  ) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) =>
+            const RegistrarPagoPage(),
+      ),
+    );
+  }
+
+  void irHistorialPagos(
+    BuildContext context,
+  ) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) =>
+            const HistorialPagosPage(),
+      ),
+    );
+  }
+
+  void irMiCodigoAcceso(
+    BuildContext context,
+  ) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) =>
+            const MiCodigoPage(),
+      ),
+    );
+  }
+
+  void irMisAsistencias(
+    BuildContext context,
+  ) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) =>
+            const MisAsistenciasPage(),
+      ),
+    );
+  }
+
+  void irMisPagos(
+    BuildContext context,
+  ) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) =>
+            const MisPagosPage(),
+      ),
+    );
+  }
+
   void proximamente(
     BuildContext context,
     String nombre,
@@ -85,15 +169,20 @@ class HomePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const gold = Color(0xFFD4AF37);
+    const gold =
+        Color(0xFFD4AF37);
 
     return Scaffold(
       backgroundColor:
-          const Color(0xFF101012),
+          const Color(
+        0xFF101012,
+      ),
 
       appBar: AppBar(
         backgroundColor:
-            const Color(0xFF101012),
+            const Color(
+          0xFF101012,
+        ),
 
         elevation: 0,
 
@@ -104,11 +193,14 @@ class HomePage extends StatelessWidget {
 
         actions: [
           Padding(
-            padding: const EdgeInsets.only(
+            padding:
+                const EdgeInsets.only(
               right: 16,
             ),
+
             child: IconButton(
-              tooltip: 'Cerrar sesión',
+              tooltip:
+                  'Cerrar sesión',
 
               onPressed: () {
                 cerrarSesion(
@@ -116,7 +208,8 @@ class HomePage extends StatelessWidget {
                 );
               },
 
-              icon: const Icon(
+              icon:
+                  const Icon(
                 Icons.logout,
                 color: gold,
               ),
@@ -126,15 +219,18 @@ class HomePage extends StatelessWidget {
       ),
 
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(
+        child:
+            SingleChildScrollView(
+          padding:
+              const EdgeInsets.fromLTRB(
             18,
             28,
             18,
             40,
           ),
 
-          child: Column(
+          child:
+              Column(
             crossAxisAlignment:
                 CrossAxisAlignment.start,
 
@@ -142,9 +238,13 @@ class HomePage extends StatelessWidget {
               const Text(
                 'Bienvenido a GymFlow',
 
-                style: TextStyle(
+                style:
+                    TextStyle(
                   color:
-                      Color(0xFFA9A9A9),
+                      Color(
+                    0xFFA9A9A9,
+                  ),
+
                   fontSize: 15,
                 ),
               ),
@@ -156,7 +256,8 @@ class HomePage extends StatelessWidget {
               Text(
                 'Hola, ${usuario.name}',
 
-                style: const TextStyle(
+                style:
+                    const TextStyle(
                   color:
                       Colors.white,
 
@@ -258,7 +359,9 @@ class HomePage extends StatelessWidget {
           style:
               TextStyle(
             color:
-                Color(0xFF777777),
+                Color(
+              0xFF777777,
+            ),
 
             fontSize: 12,
           ),
@@ -320,9 +423,65 @@ class HomePage extends StatelessWidget {
             'Registrar la asistencia de un cliente',
 
         onTap: () {
-          proximamente(
+          irRegistrarAsistencia(
             context,
-            'Registrar asistencia',
+          );
+        },
+      ),
+
+      _espacio(),
+
+      _buildCard(
+        icon:
+            Icons.calendar_month_outlined,
+
+        titulo:
+            'Historial de Asistencias',
+
+        subtitulo:
+            'Consultar registros de entrada de clientes',
+
+        onTap: () {
+          irHistorialAsistencias(
+            context,
+          );
+        },
+      ),
+
+      _espacio(),
+
+      _buildCard(
+        icon:
+            Icons.payments_outlined,
+
+        titulo:
+            'Registrar Pago',
+
+        subtitulo:
+            'Registrar pagos y renovaciones de clientes',
+
+        onTap: () {
+          irRegistrarPago(
+            context,
+          );
+        },
+      ),
+
+      _espacio(),
+
+      _buildCard(
+        icon:
+            Icons.receipt_long_outlined,
+
+        titulo:
+            'Historial de Pagos',
+
+        subtitulo:
+            'Consultar los pagos registrados de clientes',
+
+        onTap: () {
+          irHistorialPagos(
+            context,
           );
         },
       ),
@@ -414,6 +573,63 @@ class HomePage extends StatelessWidget {
 
       _buildCard(
         icon:
+            Icons.qr_code_2_outlined,
+
+        titulo:
+            'Mi Código de Acceso',
+
+        subtitulo:
+            'Consulta tu código personal para registrar tu entrada',
+
+        onTap: () {
+          irMiCodigoAcceso(
+            context,
+          );
+        },
+      ),
+
+      _espacio(),
+
+      _buildCard(
+        icon:
+            Icons.calendar_month_outlined,
+
+        titulo:
+            'Mis Asistencias',
+
+        subtitulo:
+            'Consulta tu historial de asistencias',
+
+        onTap: () {
+          irMisAsistencias(
+            context,
+          );
+        },
+      ),
+
+      _espacio(),
+
+      _buildCard(
+        icon:
+            Icons.payments_outlined,
+
+        titulo:
+            'Mis Pagos',
+
+        subtitulo:
+            'Consulta tus pagos y renovaciones',
+
+        onTap: () {
+          irMisPagos(
+            context,
+          );
+        },
+      ),
+
+      _espacio(),
+
+      _buildCard(
+        icon:
             Icons.card_membership_outlined,
 
         titulo:
@@ -446,26 +662,6 @@ class HomePage extends StatelessWidget {
           proximamente(
             context,
             'Rutinas',
-          );
-        },
-      ),
-
-      _espacio(),
-
-      _buildCard(
-        icon:
-            Icons.calendar_month_outlined,
-
-        titulo:
-            'Ver Asistencias',
-
-        subtitulo:
-            'Consulta tu historial de asistencias',
-
-        onTap: () {
-          proximamente(
-            context,
-            'Asistencias',
           );
         },
       ),
@@ -764,8 +960,7 @@ class HomePage extends StatelessWidget {
                         color:
                             Colors.white,
 
-                        fontSize:
-                            18,
+                        fontSize: 18,
 
                         fontWeight:
                             FontWeight.bold,
@@ -784,8 +979,7 @@ class HomePage extends StatelessWidget {
                         color:
                             silver,
 
-                        fontSize:
-                            14,
+                        fontSize: 14,
                       ),
                     ),
                   ],
