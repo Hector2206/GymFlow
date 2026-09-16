@@ -13,6 +13,9 @@ class ApiConfig {
   static const String usuarioConsultaUrl =
       'https://gymflow-usuario-consulta.onrender.com';
 
+  static const String asistenciasUrl =
+      '$clienteAltaUrl/api/asistencias';
+
   static const String googleClientId =
       '403800585371-gvse8f49bhq6gqh1tmvmk1t8sebg6rvs.apps.googleusercontent.com';
 }

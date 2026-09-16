@@ -5,6 +5,7 @@ import '../services/auth_service.dart';
 
 import 'login_page.dart';
 import 'mi_codigo_page.dart';
+import 'mis_asistencias_page.dart';
 import 'profile_page.dart';
 import 'registrar_cliente_page.dart';
 
@@ -82,6 +83,17 @@ class HomePage extends StatelessWidget {
     );
   }
 
+  void irMisAsistencias(
+    BuildContext context,
+  ) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) =>
+            const MisAsistenciasPage(),
+      ),
+    );
+  }
+
   void proximamente(
     BuildContext context,
     String nombre,
@@ -119,6 +131,7 @@ class HomePage extends StatelessWidget {
             padding: const EdgeInsets.only(
               right: 16,
             ),
+
             child: IconButton(
               tooltip: 'Cerrar sesión',
 
@@ -157,6 +170,7 @@ class HomePage extends StatelessWidget {
                 style: TextStyle(
                   color:
                       Color(0xFFA9A9A9),
+
                   fontSize: 15,
                 ),
               ),
@@ -488,15 +502,14 @@ class HomePage extends StatelessWidget {
             Icons.calendar_month_outlined,
 
         titulo:
-            'Ver Asistencias',
+            'Mis Asistencias',
 
         subtitulo:
             'Consulta tu historial de asistencias',
 
         onTap: () {
-          proximamente(
+          irMisAsistencias(
             context,
-            'Asistencias',
           );
         },
       ),
