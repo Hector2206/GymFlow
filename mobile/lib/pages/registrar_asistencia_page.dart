@@ -9,32 +9,38 @@ class RegistrarAsistenciaPage
   });
 
   @override
-  State<RegistrarAsistenciaPage> createState() =>
-      _RegistrarAsistenciaPageState();
+  State<RegistrarAsistenciaPage>
+      createState() =>
+          _RegistrarAsistenciaPageState();
 }
 
 class _RegistrarAsistenciaPageState
     extends State<RegistrarAsistenciaPage> {
-  final AsistenciaService asistenciaService =
+  final _formKey =
+      GlobalKey<FormState>();
+
+  final asistenciaService =
       AsistenciaService();
 
-  final TextEditingController codigoController =
+  final codigoController =
       TextEditingController();
 
-  final FocusNode codigoFocus =
+  final codigoFocus =
       FocusNode();
 
   bool procesando = false;
 
-  ResultadoRegistroAsistencia? resultado;
-
   String error = '';
+
+  ResultadoRegistroAsistencia?
+      resultado;
 
   @override
   void initState() {
     super.initState();
 
-    WidgetsBinding.instance.addPostFrameCallback(
+    WidgetsBinding.instance
+        .addPostFrameCallback(
       (_) {
         if (mounted) {
           codigoFocus.requestFocus();
@@ -52,57 +58,41 @@ class _RegistrarAsistenciaPageState
   }
 
   String limpiarException(
-    Object e,
+    Object error,
   ) {
-    String mensaje =
-        e.toString().trim();
-
-    if (mensaje.startsWith('Exception:')) {
-      mensaje =
-          mensaje
-              .replaceFirst(
-                'Exception:',
-                '',
-              )
-              .trim();
-    }
-
-    return mensaje;
+    return error
+        .toString()
+        .replaceFirst(
+          'Exception:',
+          '',
+        )
+        .trim();
   }
 
-  String formatearFecha(
-    String fecha,
+  String? validarCodigo(
+    String? value,
   ) {
-    if (fecha.trim().isEmpty) {
-      return '';
+    final codigo =
+        asistenciaService
+            .normalizarCodigo(
+      value ?? '',
+    );
+
+    if (codigo.isEmpty) {
+      return 'Ingresa un código de acceso.';
     }
 
-    try {
-      final date =
-          DateTime.parse(
-        fecha,
-      ).toLocal();
-
-      final dia =
-          date.day
-              .toString()
-              .padLeft(
-                2,
-                '0',
-              );
-
-      final mes =
-          date.month
-              .toString()
-              .padLeft(
-                2,
-                '0',
-              );
-
-      return '$dia/$mes/${date.year}';
-    } catch (_) {
-      return fecha;
+    if (codigo.length > 80) {
+      return 'El código es demasiado largo.';
     }
+
+    if (!RegExp(
+      r'^[A-Z0-9-]+$',
+    ).hasMatch(codigo)) {
+      return 'El código solo puede contener letras, números y guiones.';
+    }
+
+    return null;
   }
 
   Future<void> registrar() async {
@@ -110,61 +100,35 @@ class _RegistrarAsistenciaPageState
       return;
     }
 
-    final codigoNormalizado =
-        asistenciaService.normalizarCodigo(
+    FocusScope.of(context).unfocus();
+
+    final normalizado =
+        asistenciaService
+            .normalizarCodigo(
       codigoController.text,
     );
 
     codigoController.text =
-        codigoNormalizado;
+        normalizado;
 
-    codigoController.selection =
-        TextSelection.collapsed(
-      offset:
-          codigoController.text.length,
-    );
-
-    setState(() {
-      resultado = null;
-      error = '';
-    });
-
-    if (codigoNormalizado.isEmpty) {
-      setState(() {
-        error =
-            'Ingresa un código de acceso.';
-      });
-
-      codigoFocus.requestFocus();
-      return;
-    }
-
-    final formatoValido =
-        RegExp(
-      r'^[A-Z0-9-]+$',
-    ).hasMatch(
-      codigoNormalizado,
-    );
-
-    if (!formatoValido) {
-      setState(() {
-        error =
-            'El código solo puede contener letras, números y guiones.';
-      });
-
+    if (!(_formKey.currentState
+            ?.validate() ??
+        false)) {
       codigoFocus.requestFocus();
       return;
     }
 
     setState(() {
       procesando = true;
+      resultado = null;
+      error = '';
     });
 
     try {
       final respuesta =
           await asistenciaService
               .registrarPorCodigo(
-        codigoNormalizado,
+        normalizado,
       );
 
       if (!mounted) {
@@ -172,9 +136,10 @@ class _RegistrarAsistenciaPageState
       }
 
       setState(() {
-        resultado =
-            respuesta;
+        resultado = respuesta;
       });
+
+      codigoController.clear();
     } catch (e) {
       if (!mounted) {
         return;
@@ -182,17 +147,13 @@ class _RegistrarAsistenciaPageState
 
       setState(() {
         error =
-            limpiarException(
-          e,
-        );
+            limpiarException(e);
       });
     } finally {
       if (mounted) {
         setState(() {
           procesando = false;
         });
-
-        codigoController.clear();
 
         Future.delayed(
           const Duration(
@@ -212,498 +173,178 @@ class _RegistrarAsistenciaPageState
   Widget build(BuildContext context) {
     const gold =
         Color(0xFFD4AF37);
-
-    const silver =
-        Color(0xFFA9A9A9);
-
     const dark =
         Color(0xFF101012);
-
     const coal =
         Color(0xFF1A1A1D);
 
     return Scaffold(
-      backgroundColor:
-          dark,
-
+      backgroundColor: dark,
       appBar: AppBar(
-        backgroundColor:
-            dark,
-
-        elevation:
-            0,
-
-        leadingWidth:
-            70,
-
-        leading: Padding(
-          padding:
-              const EdgeInsets.only(
-            left: 14,
-            top: 6,
-            bottom: 6,
-          ),
-
-          child: Container(
-            decoration:
-                BoxDecoration(
-              borderRadius:
-                  BorderRadius.circular(
-                10,
-              ),
-
-              border:
-                  Border.all(
-                color:
-                    gold.withValues(
-                  alpha:
-                      0.45,
-                ),
-              ),
-            ),
-
-            child: IconButton(
-              onPressed: () {
-                Navigator.of(
-                  context,
-                ).pop();
-              },
-
-              icon:
-                  const Icon(
-                Icons.arrow_back,
-                color:
-                    gold,
-              ),
-            ),
-          ),
-        ),
-
+        backgroundColor: dark,
         title: Image.asset(
           'assets/Logo_GymFlow.png',
-          height:
-              48,
-        ),
-
-        bottom:
-            PreferredSize(
-          preferredSize:
-              const Size.fromHeight(
-            1,
-          ),
-
-          child: Container(
-            height:
-                1,
-
-            color:
-                gold.withValues(
-              alpha:
-                  0.30,
-            ),
-          ),
+          height: 48,
         ),
       ),
-
-      body: Container(
-        width:
-            double.infinity,
-
-        decoration:
-            const BoxDecoration(
-          gradient:
-              RadialGradient(
-            center:
-                Alignment.topCenter,
-
-            radius:
-                1.5,
-
-            colors: [
-              Color(
-                0xFF29292E,
-              ),
-              coal,
-              Color(
-                0xFF0D0D0F,
-              ),
-            ],
-          ),
-        ),
-
-        child:
-            SingleChildScrollView(
-          padding:
-              const EdgeInsets.fromLTRB(
-            20,
-            34,
-            20,
-            50,
-          ),
-
-          child:
-              Center(
-            child:
-                ConstrainedBox(
-              constraints:
-                  const BoxConstraints(
-                maxWidth:
-                    650,
-              ),
-
-              child:
-                  Column(
+      body: SingleChildScrollView(
+        padding:
+            const EdgeInsets.all(20),
+        child: Center(
+          child: ConstrainedBox(
+            constraints:
+                const BoxConstraints(
+              maxWidth: 650,
+            ),
+            child: Form(
+              key: _formKey,
+              child: Column(
                 crossAxisAlignment:
                     CrossAxisAlignment.start,
-
                 children: [
                   const Text(
                     'RECEPCIÓN',
-
-                    style:
-                        TextStyle(
-                      color:
-                          gold,
-
-                      fontSize:
-                          13,
-
+                    style: TextStyle(
+                      color: gold,
                       fontWeight:
                           FontWeight.bold,
-
-                      letterSpacing:
-                          2,
+                      letterSpacing: 2,
                     ),
                   ),
-
-                  const SizedBox(
-                    height:
-                        8,
-                  ),
-
+                  const SizedBox(height: 8),
                   const Text(
                     'Control de Acceso',
-
-                    style:
-                        TextStyle(
-                      color:
-                          Colors.white,
-
-                      fontSize:
-                          32,
-
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 32,
                       fontWeight:
                           FontWeight.bold,
                     ),
                   ),
-
-                  const SizedBox(
-                    height:
-                        8,
-                  ),
-
-                  const Text(
-                    'Registra la entrada de los clientes mediante su código personal.',
-
-                    style:
-                        TextStyle(
-                      color:
-                          silver,
-
-                      fontSize:
-                          15,
-
-                      height:
-                          1.4,
-                    ),
-                  ),
-
-                  const SizedBox(
-                    height:
-                        30,
-                  ),
+                  const SizedBox(height: 28),
 
                   Container(
-                    width:
-                        double.infinity,
-
                     padding:
                         const EdgeInsets.all(
                       22,
                     ),
-
-                    decoration:
-                        BoxDecoration(
-                      color:
-                          coal,
-
+                    decoration: BoxDecoration(
+                      color: coal,
                       borderRadius:
                           BorderRadius.circular(
-                        20,
-                      ),
-
-                      border:
-                          Border.all(
-                        color:
-                            gold.withValues(
-                          alpha:
-                              0.18,
-                        ),
+                        18,
                       ),
                     ),
-
-                    child:
-                        Column(
-                      crossAxisAlignment:
-                          CrossAxisAlignment.start,
-
+                    child: Column(
                       children: [
-                        const Text(
-                          'Registrar Asistencia',
-
-                          style:
-                              TextStyle(
-                            color:
-                                gold,
-
-                            fontSize:
-                                19,
-
-                            fontWeight:
-                                FontWeight.bold,
-                          ),
-                        ),
-
-                        const SizedBox(
-                          height:
-                              7,
-                        ),
-
-                        const Text(
-                          'Ingresa o escanea el código de acceso del cliente.',
-
-                          style:
-                              TextStyle(
-                            color:
-                                silver,
-
-                            fontSize:
-                                14,
-                          ),
-                        ),
-
-                        const SizedBox(
-                          height:
-                              22,
-                        ),
-
-                        TextField(
+                        TextFormField(
                           controller:
                               codigoController,
-
                           focusNode:
                               codigoFocus,
-
                           enabled:
                               !procesando,
-
+                          validator:
+                              validarCodigo,
+                          maxLength: 80,
                           textCapitalization:
-                              TextCapitalization.characters,
-
+                              TextCapitalization
+                                  .characters,
                           textInputAction:
-                              TextInputAction.done,
-
-                          onSubmitted:
+                              TextInputAction
+                                  .done,
+                          onFieldSubmitted:
                               (_) {
                             registrar();
                           },
-
                           style:
                               const TextStyle(
                             color:
                                 Colors.white,
-
-                            fontSize:
-                                17,
-
-                            letterSpacing:
-                                1,
+                            fontSize: 17,
                           ),
-
                           decoration:
                               InputDecoration(
                             labelText:
                                 'Código de acceso',
-
                             hintText:
                                 'Escanea o escribe el código',
-
-                            labelStyle:
-                                const TextStyle(
-                              color:
-                                  silver,
-                            ),
-
-                            hintStyle:
-                                const TextStyle(
-                              color:
-                                  Color(
-                                0xFF666666,
-                              ),
-                            ),
-
+                            counterText: '',
                             prefixIcon:
                                 const Icon(
-                              Icons.barcode_reader,
-                              color:
-                                  gold,
+                              Icons
+                                  .barcode_reader,
+                              color: gold,
                             ),
-
-                            filled:
-                                true,
-
-                            fillColor:
-                                dark,
-
-                            enabledBorder:
+                            filled: true,
+                            fillColor: dark,
+                            border:
                                 OutlineInputBorder(
                               borderRadius:
-                                  BorderRadius.circular(
+                                  BorderRadius
+                                      .circular(
                                 12,
-                              ),
-
-                              borderSide:
-                                  BorderSide(
-                                color:
-                                    gold.withValues(
-                                  alpha:
-                                      0.25,
-                                ),
-                              ),
-                            ),
-
-                            focusedBorder:
-                                OutlineInputBorder(
-                              borderRadius:
-                                  BorderRadius.circular(
-                                12,
-                              ),
-
-                              borderSide:
-                                  const BorderSide(
-                                color:
-                                    gold,
-
-                                width:
-                                    1.5,
-                              ),
-                            ),
-
-                            disabledBorder:
-                                OutlineInputBorder(
-                              borderRadius:
-                                  BorderRadius.circular(
-                                12,
-                              ),
-
-                              borderSide:
-                                  const BorderSide(
-                                color:
-                                    Color(
-                                  0xFF444444,
-                                ),
                               ),
                             ),
                           ),
                         ),
 
                         const SizedBox(
-                          height:
-                              10,
-                        ),
-
-                        Text(
-                          procesando
-                              ? 'Validando acceso...'
-                              : 'El lector puede escribir el código y enviar Enter automáticamente.',
-
-                          style:
-                              TextStyle(
-                            color:
-                                procesando
-                                    ? gold
-                                    : silver,
-
-                            fontSize:
-                                12,
-                          ),
-                        ),
-
-                        const SizedBox(
-                          height:
-                              18,
+                          height: 18,
                         ),
 
                         SizedBox(
                           width:
                               double.infinity,
-
-                          height:
-                              50,
-
+                          height: 50,
                           child:
                               FilledButton.icon(
                             onPressed:
                                 procesando
                                     ? null
                                     : registrar,
-
-                            icon:
-                                procesando
-                                    ? const SizedBox(
-                                        width:
-                                            20,
-                                        height:
-                                            20,
-                                        child:
-                                            CircularProgressIndicator(
-                                          strokeWidth:
-                                              2,
-                                        ),
-                                      )
-                                    : const Icon(
-                                        Icons.check_circle_outline,
-                                      ),
-
-                            label:
-                                Text(
+                            icon: procesando
+                                ? const SizedBox(
+                                    width: 20,
+                                    height: 20,
+                                    child:
+                                        CircularProgressIndicator(
+                                      strokeWidth:
+                                          2,
+                                    ),
+                                  )
+                                : const Icon(
+                                    Icons
+                                        .check_circle_outline,
+                                  ),
+                            label: Text(
                               procesando
                                   ? 'Validando...'
                                   : 'Validar acceso',
                             ),
-
                             style:
-                                FilledButton.styleFrom(
+                                FilledButton
+                                    .styleFrom(
                               backgroundColor:
                                   gold,
-
                               foregroundColor:
                                   Colors.black,
-
-                              disabledBackgroundColor:
-                                  gold.withValues(
-                                alpha:
-                                    0.35,
-                              ),
-
-                              shape:
-                                  RoundedRectangleBorder(
-                                borderRadius:
-                                    BorderRadius.circular(
-                                  12,
-                                ),
-                              ),
                             ),
+                          ),
+                        ),
+
+                        const SizedBox(
+                          height: 10,
+                        ),
+
+                        const Text(
+                          "El lector puede enviar ASIS'TEST'001; GymFlow lo normaliza automáticamente a ASIS-TEST-001.",
+                          style: TextStyle(
+                            color:
+                                Color(
+                              0xFFA9A9A9,
+                            ),
+                            fontSize: 12,
                           ),
                         ),
                       ],
@@ -712,38 +353,33 @@ class _RegistrarAsistenciaPageState
 
                   if (error.isNotEmpty) ...[
                     const SizedBox(
-                      height:
-                          22,
+                      height: 20,
                     ),
-
-                    _buildRechazado(
-                      mensaje:
-                          error,
-                    ),
+                    _rechazado(error),
                   ],
 
                   if (resultado != null) ...[
                     const SizedBox(
-                      height:
-                          22,
+                      height: 20,
                     ),
-
-                    if (resultado!.accesoAprobado)
-                      _buildAprobado(
-                        resultado!,
-                      )
-                    else
-                      _buildRechazado(
-                        mensaje:
-                            resultado!.mensaje.isNotEmpty
-                                ? resultado!.mensaje
-                                : resultado!.motivo.isNotEmpty
-                                    ? resultado!.motivo
-                                    : 'El acceso fue rechazado.',
-
-                        resultado:
-                            resultado,
-                      ),
+                    resultado!
+                            .accesoAprobado
+                        ? _aprobado(
+                            resultado!,
+                          )
+                        : _rechazado(
+                            resultado!
+                                    .mensaje
+                                    .isNotEmpty
+                                ? resultado!
+                                    .mensaje
+                                : resultado!
+                                        .motivo
+                                        .isNotEmpty
+                                    ? resultado!
+                                        .motivo
+                                    : 'Acceso rechazado.',
+                          ),
                   ],
                 ],
               ),
@@ -754,141 +390,55 @@ class _RegistrarAsistenciaPageState
     );
   }
 
-  Widget _buildAprobado(
-    ResultadoRegistroAsistencia respuesta,
+  Widget _aprobado(
+    ResultadoRegistroAsistencia r,
   ) {
-    const gold =
-        Color(0xFFD4AF37);
-
     return Container(
-      width:
-          double.infinity,
-
-      padding:
-          const EdgeInsets.all(
-        22,
-      ),
-
-      decoration:
-          BoxDecoration(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
         color:
-            const Color(
-          0xFF10271A,
-        ),
-
+            const Color(0xFF10271A),
         borderRadius:
-            BorderRadius.circular(
-          18,
-        ),
-
-        border:
-            Border.all(
-          color:
-              const Color(
-            0xFF49D17D,
-          ),
-        ),
+            BorderRadius.circular(14),
       ),
-
-      child:
-          Column(
+      child: Column(
         children: [
           const Icon(
             Icons.check_circle,
-            color:
-                Color(
-              0xFF49D17D,
-            ),
-            size:
-                52,
+            color: Color(0xFF49D17D),
+            size: 48,
           ),
-
-          const SizedBox(
-            height:
-                12,
-          ),
-
           const Text(
             'ACCESO APROBADO',
-
-            style:
-                TextStyle(
-              color:
-                  Color(
-                0xFF49D17D,
-              ),
-
+            style: TextStyle(
+              color: Color(0xFF49D17D),
               fontWeight:
                   FontWeight.bold,
-
-              fontSize:
-                  18,
+              fontSize: 18,
             ),
           ),
-
-          if (respuesta.nombreCompleto.isNotEmpty) ...[
-            const SizedBox(
-              height:
-                  20,
-            ),
-
-            const Text(
-              'Cliente identificado',
-
-              style:
-                  TextStyle(
-                color:
-                    Color(
-                  0xFFA9A9A9,
-                ),
-
-                fontSize:
-                    12,
-              ),
-            ),
-
-            const SizedBox(
-              height:
-                  5,
-            ),
-
+          if (r.nombreCompleto
+              .isNotEmpty) ...[
+            const SizedBox(height: 12),
             Text(
-              respuesta.nombreCompleto,
-
-              textAlign:
-                  TextAlign.center,
-
-              style:
-                  const TextStyle(
-                color:
-                    gold,
-
-                fontSize:
-                    20,
-
+              r.nombreCompleto,
+              style: const TextStyle(
+                color: Colors.white,
                 fontWeight:
                     FontWeight.bold,
               ),
             ),
           ],
-
-          if (respuesta.nombrePlan.isNotEmpty) ...[
-            const SizedBox(
-              height:
-                  18,
-            ),
-
-            _datoResultado(
-              'Membresía',
-              respuesta.nombrePlan,
-            ),
-          ],
-
-          if (respuesta.fechaVencimiento.isNotEmpty)
-            _datoResultado(
-              'Vencimiento',
-              formatearFecha(
-                respuesta.fechaVencimiento,
+          if (r.nombrePlan
+              .isNotEmpty)
+            Text(
+              'Membresía: ${r.nombrePlan}',
+              style: const TextStyle(
+                color:
+                    Color(
+                  0xFFA9A9A9,
+                ),
               ),
             ),
         ],
@@ -896,186 +446,41 @@ class _RegistrarAsistenciaPageState
     );
   }
 
-  Widget _buildRechazado({
-    required String mensaje,
-    ResultadoRegistroAsistencia? resultado,
-  }) {
+  Widget _rechazado(
+    String mensaje,
+  ) {
     return Container(
-      width:
-          double.infinity,
-
-      padding:
-          const EdgeInsets.all(
-        22,
-      ),
-
-      decoration:
-          BoxDecoration(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
         color:
-            const Color(
-          0xFF2A1111,
-        ),
-
+            const Color(0xFF2A1111),
         borderRadius:
-            BorderRadius.circular(
-          18,
-        ),
-
-        border:
-            Border.all(
-          color:
-              const Color(
-            0xFFE45C5C,
-          ),
-        ),
+            BorderRadius.circular(14),
       ),
-
-      child:
-          Column(
+      child: Column(
         children: [
           const Icon(
             Icons.cancel,
-            color:
-                Color(
-              0xFFE45C5C,
-            ),
-            size:
-                50,
+            color: Color(0xFFE45C5C),
+            size: 45,
           ),
-
-          const SizedBox(
-            height:
-                12,
-          ),
-
+          const SizedBox(height: 8),
           const Text(
             'ACCESO RECHAZADO',
-
-            style:
-                TextStyle(
-              color:
-                  Color(
-                0xFFE45C5C,
-              ),
-
-              fontSize:
-                  18,
-
+            style: TextStyle(
+              color: Color(0xFFE45C5C),
               fontWeight:
                   FontWeight.bold,
             ),
           ),
-
-          const SizedBox(
-            height:
-                10,
-          ),
-
+          const SizedBox(height: 8),
           Text(
             mensaje,
-
             textAlign:
                 TextAlign.center,
-
-            style:
-                const TextStyle(
-              color:
-                  Colors.white,
-
-              fontSize:
-                  14,
-            ),
-          ),
-
-          if (resultado != null &&
-              resultado.nombreCompleto.isNotEmpty) ...[
-            const SizedBox(
-              height:
-                  18,
-            ),
-
-            _datoResultado(
-              'Cliente',
-              resultado.nombreCompleto,
-            ),
-          ],
-
-          if (resultado != null &&
-              resultado.nombrePlan.isNotEmpty)
-            _datoResultado(
-              'Membresía',
-              resultado.nombrePlan,
-            ),
-
-          if (resultado != null &&
-              resultado.fechaVencimiento.isNotEmpty)
-            _datoResultado(
-              'Vencimiento',
-              formatearFecha(
-                resultado.fechaVencimiento,
-              ),
-            ),
-        ],
-      ),
-    );
-  }
-
-  Widget _datoResultado(
-    String etiqueta,
-    String valor,
-  ) {
-    return Padding(
-      padding:
-          const EdgeInsets.only(
-        top:
-            10,
-      ),
-
-      child:
-          Row(
-        children: [
-          Expanded(
-            child:
-                Text(
-              etiqueta,
-
-              style:
-                  const TextStyle(
-                color:
-                    Color(
-                  0xFFA9A9A9,
-                ),
-
-                fontSize:
-                    13,
-              ),
-            ),
-          ),
-
-          const SizedBox(
-            width:
-                16,
-          ),
-
-          Flexible(
-            child:
-                Text(
-              valor,
-
-              textAlign:
-                  TextAlign.right,
-
-              style:
-                  const TextStyle(
-                color:
-                    Colors.white,
-
-                fontWeight:
-                    FontWeight.bold,
-
-                fontSize:
-                    13,
-              ),
+            style: const TextStyle(
+              color: Colors.white,
             ),
           ),
         ],

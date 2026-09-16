@@ -17,13 +17,16 @@ class RegistrarPagoPage extends StatefulWidget {
 
 class _RegistrarPagoPageState
     extends State<RegistrarPagoPage> {
-  final ClienteConsultaService clienteConsultaService =
+  final _formKey =
+      GlobalKey<FormState>();
+
+  final clienteConsultaService =
       ClienteConsultaService();
 
-  final PagoService pagoService =
+  final pagoService =
       PagoService();
 
-  final TextEditingController montoController =
+  final montoController =
       TextEditingController();
 
   List<ClienteResumen> clientes = [];
@@ -37,7 +40,7 @@ class _RegistrarPagoPageState
   String errorClientes = '';
   String errorFormulario = '';
 
-  ResultadoRegistroPago? resultadoPago;
+  ResultadoRegistroPago? resultado;
 
   @override
   void initState() {
@@ -54,32 +57,29 @@ class _RegistrarPagoPageState
   }
 
   String limpiarException(
-    Object e,
+    Object error,
   ) {
-    String mensaje =
-        e.toString().trim();
-
-    if (mensaje.startsWith('Exception:')) {
-      mensaje =
-          mensaje
-              .replaceFirst(
-                'Exception:',
-                '',
-              )
-              .trim();
-    }
-
-    return mensaje;
+    return error
+        .toString()
+        .replaceFirst(
+          'Exception:',
+          '',
+        )
+        .trim();
   }
 
   Future<void> cargarClientes() async {
+    if (!mounted) {
+      return;
+    }
+
     setState(() {
       cargandoClientes = true;
       errorClientes = '';
     });
 
     try {
-      final resultado =
+      final lista =
           await clienteConsultaService
               .obtenerClientes();
 
@@ -88,11 +88,7 @@ class _RegistrarPagoPageState
       }
 
       setState(() {
-        clientes =
-            resultado;
-
-        cargandoClientes =
-            false;
+        clientes = lista;
       });
     } catch (e) {
       if (!mounted) {
@@ -100,129 +96,73 @@ class _RegistrarPagoPageState
       }
 
       setState(() {
-        cargandoClientes =
-            false;
-
         errorClientes =
-            limpiarException(
-          e,
-        );
+            limpiarException(e);
       });
+    } finally {
+      if (mounted) {
+        setState(() {
+          cargandoClientes = false;
+        });
+      }
     }
   }
 
-  double? obtenerMonto() {
+  String? validarMonto(
+    String? value,
+  ) {
     final texto =
-        montoController.text
-            .trim()
-            .replaceAll(
-              ',',
-              '',
-            );
+        value?.trim() ?? '';
 
-    return double.tryParse(
-      texto,
-    );
-  }
-
-  String formatearFecha(
-    String fecha,
-  ) {
-    if (fecha.trim().isEmpty) {
-      return 'Sin información';
+    if (texto.isEmpty) {
+      return 'Ingresa el monto del pago.';
     }
 
-    try {
-      final valor =
-          DateTime.parse(
-        fecha,
-      ).toLocal();
+    final monto =
+        double.tryParse(texto);
 
-      final dia =
-          valor.day
-              .toString()
-              .padLeft(
-                2,
-                '0',
-              );
-
-      final mes =
-          valor.month
-              .toString()
-              .padLeft(
-                2,
-                '0',
-              );
-
-      return '$dia/$mes/${valor.year}';
-    } catch (_) {
-      return fecha;
+    if (monto == null ||
+        !monto.isFinite) {
+      return 'Ingresa un monto válido.';
     }
-  }
 
-  String formatearMonto(
-    double monto,
-  ) {
-    return '\$${monto.toStringAsFixed(2)} MXN';
+    if (monto <= 0) {
+      return 'El monto debe ser mayor a \$0.';
+    }
+
+    if (monto > 100000) {
+      return 'Verifica el monto ingresado.';
+    }
+
+    return null;
   }
 
   Future<void> registrarPago() async {
+    FocusScope.of(context).unfocus();
+
     if (procesandoPago) {
       return;
     }
 
     setState(() {
       errorFormulario = '';
-      resultadoPago = null;
+      resultado = null;
     });
 
-    if (idCliente == null ||
-        idCliente! <= 0) {
-      setState(() {
-        errorFormulario =
-            'Selecciona un cliente.';
-      });
-
+    if (!(_formKey.currentState?.validate() ??
+        false)) {
       return;
     }
 
     final monto =
-        obtenerMonto();
+        double.tryParse(
+      montoController.text.trim(),
+    );
 
-    if (monto == null) {
-      setState(() {
-        errorFormulario =
-            'Ingresa el monto del pago.';
-      });
-
-      return;
-    }
-
-    if (monto <= 0) {
-      setState(() {
-        errorFormulario =
-            'El monto debe ser mayor a \$0.';
-      });
-
-      return;
-    }
-
-    if (monto > 100000) {
-      setState(() {
-        errorFormulario =
-            'Verifica el monto ingresado.';
-      });
-
-      return;
-    }
-
-    if (tipoPago != 'Mensualidad' &&
-        tipoPago != 'Anualidad') {
-      setState(() {
-        errorFormulario =
-            'Selecciona el concepto del pago.';
-      });
-
+    if (idCliente == null ||
+        idCliente! <= 0 ||
+        monto == null ||
+        tipoPago == null) {
       return;
     }
 
@@ -232,14 +172,10 @@ class _RegistrarPagoPageState
 
     try {
       final respuesta =
-          await pagoService
-              .registrarPago(
-        idCliente:
-            idCliente!,
-        monto:
-            monto,
-        tipoPago:
-            tipoPago!,
+          await pagoService.registrarPago(
+        idCliente: idCliente!,
+        monto: monto,
+        tipoPago: tipoPago!,
       );
 
       if (!mounted) {
@@ -247,8 +183,7 @@ class _RegistrarPagoPageState
       }
 
       setState(() {
-        resultadoPago =
-            respuesta;
+        resultado = respuesta;
       });
     } catch (e) {
       if (!mounted) {
@@ -257,9 +192,7 @@ class _RegistrarPagoPageState
 
       setState(() {
         errorFormulario =
-            limpiarException(
-          e,
-        );
+            limpiarException(e);
       });
     } finally {
       if (mounted) {
@@ -274,360 +207,150 @@ class _RegistrarPagoPageState
   Widget build(BuildContext context) {
     const gold =
         Color(0xFFD4AF37);
-
-    const silver =
-        Color(0xFFA9A9A9);
-
     const dark =
         Color(0xFF101012);
-
     const coal =
         Color(0xFF1A1A1D);
 
     return Scaffold(
-      backgroundColor:
-          dark,
-
+      backgroundColor: dark,
       appBar: AppBar(
-        backgroundColor:
-            dark,
-
-        elevation:
-            0,
-
-        leadingWidth:
-            70,
-
-        leading: Padding(
-          padding:
-              const EdgeInsets.only(
-            left: 14,
-            top: 6,
-            bottom: 6,
-          ),
-
-          child: Container(
-            decoration:
-                BoxDecoration(
-              borderRadius:
-                  BorderRadius.circular(
-                10,
-              ),
-
-              border:
-                  Border.all(
-                color:
-                    gold.withValues(
-                  alpha: 0.45,
-                ),
-              ),
-            ),
-
-            child: IconButton(
-              onPressed: () {
-                Navigator.of(
-                  context,
-                ).pop();
-              },
-
-              icon:
-                  const Icon(
-                Icons.arrow_back,
-                color: gold,
-              ),
-            ),
-          ),
-        ),
-
+        backgroundColor: dark,
         title: Image.asset(
           'assets/Logo_GymFlow.png',
           height: 48,
         ),
-
-        bottom:
-            PreferredSize(
-          preferredSize:
-              const Size.fromHeight(
-            1,
-          ),
-
-          child: Container(
-            height: 1,
-
-            color:
-                gold.withValues(
-              alpha: 0.30,
-            ),
-          ),
-        ),
       ),
-
-      body: Container(
-        width:
-            double.infinity,
-
-        decoration:
-            const BoxDecoration(
-          gradient:
-              RadialGradient(
-            center:
-                Alignment.topCenter,
-
-            radius:
-                1.5,
-
-            colors: [
-              Color(
-                0xFF29292E,
-              ),
-              coal,
-              Color(
-                0xFF0D0D0F,
-              ),
-            ],
-          ),
-        ),
-
-        child:
-            SingleChildScrollView(
-          padding:
-              const EdgeInsets.fromLTRB(
-            20,
-            34,
-            20,
-            50,
-          ),
-
-          child: Center(
-            child:
-                ConstrainedBox(
-              constraints:
-                  const BoxConstraints(
-                maxWidth: 650,
-              ),
-
+      body: SingleChildScrollView(
+        padding:
+            const EdgeInsets.all(20),
+        child: Center(
+          child: ConstrainedBox(
+            constraints:
+                const BoxConstraints(
+              maxWidth: 650,
+            ),
+            child: Form(
+              key: _formKey,
+              autovalidateMode:
+                  AutovalidateMode
+                      .onUserInteraction,
               child: Column(
                 crossAxisAlignment:
                     CrossAxisAlignment.start,
-
                 children: [
                   const Text(
                     'RECEPCIÓN',
-
-                    style:
-                        TextStyle(
+                    style: TextStyle(
                       color: gold,
-                      fontSize: 13,
                       fontWeight:
                           FontWeight.bold,
                       letterSpacing: 2,
                     ),
                   ),
-
-                  const SizedBox(
-                    height: 8,
-                  ),
-
+                  const SizedBox(height: 8),
                   const Text(
                     'Registrar Pago',
-
-                    style:
-                        TextStyle(
-                      color:
-                          Colors.white,
-
+                    style: TextStyle(
+                      color: Colors.white,
                       fontSize: 32,
-
                       fontWeight:
                           FontWeight.bold,
                     ),
                   ),
-
-                  const SizedBox(
-                    height: 8,
-                  ),
-
-                  const Text(
-                    'Registra pagos y renovaciones de los clientes.',
-
-                    style:
-                        TextStyle(
-                      color: silver,
-                      fontSize: 15,
-                    ),
-                  ),
-
-                  const SizedBox(
-                    height: 30,
-                  ),
+                  const SizedBox(height: 28),
 
                   Container(
-                    width:
-                        double.infinity,
-
                     padding:
                         const EdgeInsets.all(
                       22,
                     ),
-
-                    decoration:
-                        BoxDecoration(
+                    decoration: BoxDecoration(
                       color: coal,
-
                       borderRadius:
                           BorderRadius.circular(
-                        20,
+                        18,
                       ),
-
-                      border:
-                          Border.all(
+                      border: Border.all(
                         color:
                             gold.withValues(
                           alpha: 0.18,
                         ),
                       ),
                     ),
-
                     child: Column(
-                      crossAxisAlignment:
-                          CrossAxisAlignment.start,
-
                       children: [
-                        const Text(
-                          'Datos del pago',
-
-                          style:
-                              TextStyle(
-                            color: gold,
-                            fontSize: 19,
-                            fontWeight:
-                                FontWeight.bold,
-                          ),
-                        ),
-
-                        const SizedBox(
-                          height: 20,
-                        ),
-
                         if (cargandoClientes)
-                          const Center(
+                          const Padding(
+                            padding:
+                                EdgeInsets.all(
+                              20,
+                            ),
                             child:
-                                Padding(
-                              padding:
-                                  EdgeInsets.all(
-                                18,
-                              ),
-                              child:
-                                  CircularProgressIndicator(
-                                color: gold,
-                              ),
+                                CircularProgressIndicator(
+                              color: gold,
                             ),
                           )
-                        else if (errorClientes.isNotEmpty)
-                          Column(
-                            children: [
-                              _mensajeError(
-                                errorClientes,
-                              ),
-
-                              const SizedBox(
-                                height: 12,
-                              ),
-
-                              SizedBox(
-                                width:
-                                    double.infinity,
-
-                                child:
-                                    OutlinedButton.icon(
-                                  onPressed:
-                                      cargarClientes,
-
-                                  icon:
-                                      const Icon(
-                                    Icons.refresh,
-                                  ),
-
-                                  label:
-                                      const Text(
-                                    'Reintentar',
-                                  ),
-                                ),
-                              ),
-                            ],
+                        else if (errorClientes
+                            .isNotEmpty)
+                          _error(
+                            errorClientes,
+                            botonReintentar: true,
+                          )
+                        else if (clientes
+                            .isEmpty)
+                          _error(
+                            'No hay clientes disponibles para registrar pagos.',
                           )
                         else ...[
-                          DropdownButtonFormField<int>(
+                          DropdownButtonFormField<
+                              int>(
                             initialValue:
                                 idCliente,
-
-                            isExpanded:
-                                true,
-
+                            isExpanded: true,
                             dropdownColor:
                                 coal,
-
                             decoration:
-                                _inputDecoration(
-                              label:
-                                  'Cliente',
-
-                              icon:
-                                  Icons.person_outline,
-
-                              gold:
-                                  gold,
-
-                              silver:
-                                  silver,
-
-                              dark:
-                                  dark,
+                                _decoracion(
+                              'Cliente',
                             ),
-
-                            hint:
-                                const Text(
-                              'Selecciona un cliente',
-                              style:
-                                  TextStyle(
-                                color:
-                                    silver,
-                              ),
-                            ),
-
-                            items:
-                                clientes
-                                    .map(
-                                      (
-                                        cliente,
-                                      ) =>
-                                          DropdownMenuItem<int>(
-                                        value:
-                                            cliente.idCliente,
-
-                                        child:
-                                            Text(
-                                          '${cliente.nombreCompleto} · ID ${cliente.idCliente}',
-
-                                          overflow:
-                                              TextOverflow.ellipsis,
-
-                                          style:
-                                              const TextStyle(
-                                            color:
-                                                Colors.white,
-                                          ),
-                                        ),
+                            items: clientes
+                                .map(
+                                  (
+                                    cliente,
+                                  ) =>
+                                      DropdownMenuItem<
+                                          int>(
+                                    value: cliente
+                                        .idCliente,
+                                    child: Text(
+                                      '${cliente.nombreCompleto} · ID ${cliente.idCliente}',
+                                      overflow:
+                                          TextOverflow
+                                              .ellipsis,
+                                      style:
+                                          const TextStyle(
+                                        color:
+                                            Colors.white,
                                       ),
-                                    )
-                                    .toList(),
+                                    ),
+                                  ),
+                                )
+                                .toList(),
+                            validator:
+                                (value) {
+                              if (value ==
+                                      null ||
+                                  value <= 0) {
+                                return 'Selecciona un cliente.';
+                              }
 
+                              return null;
+                            },
                             onChanged:
                                 procesandoPago
                                     ? null
-                                    : (
-                                        value,
-                                      ) {
+                                    : (value) {
                                         setState(
                                           () {
                                             idCliente =
@@ -641,51 +364,55 @@ class _RegistrarPagoPageState
                             height: 16,
                           ),
 
-                          TextField(
+                          TextFormField(
                             controller:
                                 montoController,
-
                             enabled:
                                 !procesandoPago,
-
+                            validator:
+                                validarMonto,
                             keyboardType:
-                                const TextInputType.numberWithOptions(
+                                const TextInputType
+                                    .numberWithOptions(
                               decimal: true,
                             ),
-
                             inputFormatters: [
-                              FilteringTextInputFormatter.allow(
-                                RegExp(
-                                  r'^\d*\.?\d{0,2}',
-                                ),
+                              TextInputFormatter
+                                  .withFunction(
+                                (
+                                  oldValue,
+                                  newValue,
+                                ) {
+                                  if (RegExp(
+                                    r'^\d{0,6}(\.\d{0,2})?$',
+                                  ).hasMatch(
+                                    newValue
+                                        .text,
+                                  )) {
+                                    return newValue;
+                                  }
+
+                                  return oldValue;
+                                },
                               ),
                             ],
-
                             style:
                                 const TextStyle(
                               color:
                                   Colors.white,
                             ),
-
                             decoration:
-                                _inputDecoration(
-                              label:
-                                  'Monto',
-
-                              icon:
-                                  Icons.attach_money,
-
-                              gold:
-                                  gold,
-
-                              silver:
-                                  silver,
-
-                              dark:
-                                  dark,
-
-                              hint:
-                                  'Ej. 500.00',
+                                _decoracion(
+                              'Monto',
+                            ).copyWith(
+                              hintText:
+                                  '500.00',
+                              prefixIcon:
+                                  const Icon(
+                                Icons
+                                    .attach_money,
+                                color: gold,
+                              ),
                             ),
                           ),
 
@@ -693,52 +420,22 @@ class _RegistrarPagoPageState
                             height: 16,
                           ),
 
-                          DropdownButtonFormField<String>(
+                          DropdownButtonFormField<
+                              String>(
                             initialValue:
                                 tipoPago,
-
                             dropdownColor:
                                 coal,
-
                             decoration:
-                                _inputDecoration(
-                              label:
-                                  'Concepto del pago',
-
-                              icon:
-                                  Icons.receipt_long_outlined,
-
-                              gold:
-                                  gold,
-
-                              silver:
-                                  silver,
-
-                              dark:
-                                  dark,
+                                _decoracion(
+                              'Concepto del pago',
                             ),
-
-                            hint:
-                                const Text(
-                              'Selecciona un concepto',
-
-                              style:
-                                  TextStyle(
-                                color:
-                                    silver,
-                              ),
-                            ),
-
-                            items:
-                                const [
-                              DropdownMenuItem<String>(
+                            items: const [
+                              DropdownMenuItem(
                                 value:
                                     'Mensualidad',
-
-                                child:
-                                    Text(
+                                child: Text(
                                   'Mensualidad',
-
                                   style:
                                       TextStyle(
                                     color:
@@ -746,15 +443,11 @@ class _RegistrarPagoPageState
                                   ),
                                 ),
                               ),
-
-                              DropdownMenuItem<String>(
+                              DropdownMenuItem(
                                 value:
                                     'Anualidad',
-
-                                child:
-                                    Text(
+                                child: Text(
                                   'Anualidad',
-
                                   style:
                                       TextStyle(
                                     color:
@@ -763,13 +456,21 @@ class _RegistrarPagoPageState
                                 ),
                               ),
                             ],
+                            validator:
+                                (value) {
+                              if (value !=
+                                      'Mensualidad' &&
+                                  value !=
+                                      'Anualidad') {
+                                return 'Selecciona el concepto del pago.';
+                              }
 
+                              return null;
+                            },
                             onChanged:
                                 procesandoPago
                                     ? null
-                                    : (
-                                        value,
-                                      ) {
+                                    : (value) {
                                         setState(
                                           () {
                                             tipoPago =
@@ -780,22 +481,19 @@ class _RegistrarPagoPageState
                           ),
 
                           const SizedBox(
-                            height: 20,
+                            height: 22,
                           ),
 
                           SizedBox(
                             width:
                                 double.infinity,
-
                             height: 52,
-
                             child:
                                 FilledButton.icon(
                               onPressed:
                                   procesandoPago
                                       ? null
                                       : registrarPago,
-
                               icon:
                                   procesandoPago
                                       ? const SizedBox(
@@ -810,31 +508,21 @@ class _RegistrarPagoPageState
                                           ),
                                         )
                                       : const Icon(
-                                          Icons.payments_outlined,
+                                          Icons
+                                              .payments_outlined,
                                         ),
-
-                              label:
-                                  Text(
+                              label: Text(
                                 procesandoPago
                                     ? 'Registrando...'
                                     : 'Registrar pago',
                               ),
-
                               style:
-                                  FilledButton.styleFrom(
+                                  FilledButton
+                                      .styleFrom(
                                 backgroundColor:
                                     gold,
-
                                 foregroundColor:
                                     Colors.black,
-
-                                shape:
-                                    RoundedRectangleBorder(
-                                  borderRadius:
-                                      BorderRadius.circular(
-                                    12,
-                                  ),
-                                ),
                               ),
                             ),
                           ),
@@ -843,23 +531,22 @@ class _RegistrarPagoPageState
                     ),
                   ),
 
-                  if (errorFormulario.isNotEmpty) ...[
+                  if (errorFormulario
+                      .isNotEmpty) ...[
                     const SizedBox(
-                      height: 22,
+                      height: 20,
                     ),
-
-                    _mensajeError(
+                    _error(
                       errorFormulario,
                     ),
                   ],
 
-                  if (resultadoPago != null) ...[
+                  if (resultado != null) ...[
                     const SizedBox(
-                      height: 22,
+                      height: 20,
                     ),
-
-                    _resultadoExito(
-                      resultadoPago!,
+                    _resultado(
+                      resultado!,
                     ),
                   ],
                 ],
@@ -871,307 +558,114 @@ class _RegistrarPagoPageState
     );
   }
 
-  InputDecoration _inputDecoration({
-    required String label,
-    required IconData icon,
-    required Color gold,
-    required Color silver,
-    required Color dark,
-    String? hint,
-  }) {
+  InputDecoration _decoracion(
+    String label,
+  ) {
+    const gold =
+        Color(0xFFD4AF37);
+
     return InputDecoration(
-      labelText:
-          label,
-
-      hintText:
-          hint,
-
-      labelStyle:
-          TextStyle(
-        color:
-            silver,
-      ),
-
-      hintStyle:
-          const TextStyle(
-        color:
-            Color(
-          0xFF666666,
-        ),
-      ),
-
-      prefixIcon:
-          Icon(
-        icon,
-        color:
-            gold,
-      ),
-
-      filled:
-          true,
-
+      labelText: label,
+      filled: true,
       fillColor:
-          dark,
-
-      enabledBorder:
-          OutlineInputBorder(
-        borderRadius:
-            BorderRadius.circular(
-          12,
-        ),
-
-        borderSide:
-            BorderSide(
-          color:
-              gold.withValues(
-            alpha: 0.25,
-          ),
-        ),
+          const Color(0xFF101012),
+      labelStyle: const TextStyle(
+        color: Color(0xFFA9A9A9),
       ),
-
+      border: OutlineInputBorder(
+        borderRadius:
+            BorderRadius.circular(12),
+      ),
       focusedBorder:
           OutlineInputBorder(
         borderRadius:
-            BorderRadius.circular(
-          12,
-        ),
-
+            BorderRadius.circular(12),
         borderSide:
-            BorderSide(
-          color:
-              gold,
+            const BorderSide(
+          color: gold,
         ),
       ),
     );
   }
 
-  Widget _mensajeError(
-    String mensaje,
-  ) {
+  Widget _error(
+    String mensaje, {
+    bool botonReintentar = false,
+  }) {
     return Container(
-      width:
-          double.infinity,
-
-      padding:
-          const EdgeInsets.all(
-        18,
-      ),
-
-      decoration:
-          BoxDecoration(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
         color:
-            const Color(
-          0xFF2A1111,
-        ),
-
+            const Color(0xFF2A1111),
         borderRadius:
-            BorderRadius.circular(
-          14,
-        ),
-
-        border:
-            Border.all(
-          color:
-              const Color(
-            0xFFE45C5C,
-          ),
-        ),
+            BorderRadius.circular(12),
       ),
-
-      child: Row(
+      child: Column(
         children: [
-          const Icon(
-            Icons.error_outline,
-            color:
-                Color(
-              0xFFE45C5C,
+          Text(
+            mensaje,
+            style: const TextStyle(
+              color: Colors.white,
             ),
           ),
-
-          const SizedBox(
-            width: 12,
-          ),
-
-          Expanded(
-            child:
-                Text(
-              mensaje,
-
-              style:
-                  const TextStyle(
-                color:
-                    Colors.white,
+          if (botonReintentar) ...[
+            const SizedBox(height: 10),
+            OutlinedButton.icon(
+              onPressed:
+                  cargarClientes,
+              icon:
+                  const Icon(
+                Icons.refresh,
+              ),
+              label:
+                  const Text(
+                'Reintentar',
               ),
             ),
-          ),
+          ],
         ],
       ),
     );
   }
 
-  Widget _resultadoExito(
-    ResultadoRegistroPago resultado,
+  Widget _resultado(
+    ResultadoRegistroPago pago,
   ) {
     return Container(
-      width:
-          double.infinity,
-
-      padding:
-          const EdgeInsets.all(
-        22,
-      ),
-
-      decoration:
-          BoxDecoration(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
         color:
-            const Color(
-          0xFF10271A,
-        ),
-
+            const Color(0xFF10271A),
         borderRadius:
-            BorderRadius.circular(
-          18,
-        ),
-
-        border:
-            Border.all(
-          color:
-              const Color(
-            0xFF49D17D,
-          ),
-        ),
+            BorderRadius.circular(14),
       ),
-
       child: Column(
         children: [
           const Icon(
             Icons.check_circle,
-            color:
-                Color(
-              0xFF49D17D,
-            ),
-            size: 50,
+            color: Color(0xFF49D17D),
+            size: 45,
           ),
-
-          const SizedBox(
-            height: 12,
-          ),
-
+          const SizedBox(height: 10),
           Text(
-            resultado.mensaje.isNotEmpty
-                ? resultado.mensaje
-                : 'Pago registrado correctamente.',
-
+            pago.mensaje.isEmpty
+                ? 'Pago registrado correctamente.'
+                : pago.mensaje,
             textAlign:
                 TextAlign.center,
-
-            style:
-                const TextStyle(
-              color:
-                  Color(
-                0xFF49D17D,
-              ),
-
-              fontSize: 17,
-
+            style: const TextStyle(
+              color: Colors.white,
               fontWeight:
                   FontWeight.bold,
             ),
           ),
-
-          const SizedBox(
-            height: 18,
-          ),
-
-          _filaResultado(
-            'Monto',
-            formatearMonto(
-              resultado.monto,
-            ),
-          ),
-
-          _filaResultado(
-            'Concepto',
-            resultado.tipoPago,
-          ),
-
-          _filaResultado(
-            'Renovación',
-            resultado.esRenovacion
-                ? 'Sí'
-                : 'No',
-          ),
-
-          _filaResultado(
-            'Membresía activa',
-            resultado.membresiaActiva
-                ? 'Sí'
-                : 'No',
-          ),
-
-          if (resultado.fechaVencimiento.isNotEmpty)
-            _filaResultado(
-              'Nuevo vencimiento',
-              formatearFecha(
-                resultado.fechaVencimiento,
-              ),
-            ),
-        ],
-      ),
-    );
-  }
-
-  Widget _filaResultado(
-    String titulo,
-    String valor,
-  ) {
-    return Padding(
-      padding:
-          const EdgeInsets.symmetric(
-        vertical: 6,
-      ),
-
-      child: Row(
-        children: [
-          Expanded(
-            child:
-                Text(
-              titulo,
-
-              style:
-                  const TextStyle(
-                color:
-                    Color(
-                  0xFFA9A9A9,
-                ),
-
-                fontSize: 13,
-              ),
-            ),
-          ),
-
-          const SizedBox(
-            width: 12,
-          ),
-
-          Flexible(
-            child:
-                Text(
-              valor,
-
-              textAlign:
-                  TextAlign.right,
-
-              style:
-                  const TextStyle(
-                color:
-                    Colors.white,
-
-                fontSize: 13,
-
-                fontWeight:
-                    FontWeight.bold,
-              ),
+          const SizedBox(height: 12),
+          Text(
+            '\$${pago.monto.toStringAsFixed(2)} MXN · ${pago.tipoPago}',
+            style: const TextStyle(
+              color: Color(0xFFA9A9A9),
             ),
           ),
         ],

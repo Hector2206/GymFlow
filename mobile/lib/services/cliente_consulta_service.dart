@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:http/http.dart' as http;
@@ -22,79 +23,82 @@ class ClienteConsultaService {
       );
     }
 
+    late http.Response response;
+
     try {
-      final response =
-          await http.get(
-        Uri.parse(
-          '${ApiConfig.clienteAltaUrl}/api/clientes',
-        ),
-        headers: {
-          'Accept':
-              'application/json',
-          'Authorization':
-              'Bearer $token',
-        },
-      );
-
-      if (response.statusCode == 200) {
-        final data =
-            jsonDecode(
-          response.body,
-        );
-
-        if (data is! List) {
-          throw Exception(
-            'El servidor devolvió una lista de clientes no válida.',
+      response = await http
+          .get(
+            Uri.parse(
+              '${ApiConfig.clienteAltaUrl}/api/clientes',
+            ),
+            headers: {
+              'Accept': 'application/json',
+              'Authorization': 'Bearer $token',
+            },
+          )
+          .timeout(
+            const Duration(seconds: 25),
           );
-        }
-
-        final clientes =
-            data
-                .whereType<
-                    Map<String, dynamic>>()
-                .map(
-                  ClienteResumen.fromJson,
-                )
-                .where(
-                  (cliente) =>
-                      cliente.idCliente > 0,
-                )
-                .toList();
-
-        clientes.sort(
-          (
-            a,
-            b,
-          ) =>
-              a.nombreCompleto
-                  .toLowerCase()
-                  .compareTo(
-                    b.nombreCompleto
-                        .toLowerCase(),
-                  ),
-        );
-
-        return clientes;
-      }
-
-      if (response.statusCode == 401) {
-        throw Exception(
-          'Tu sesión no es válida. Inicia sesión nuevamente.',
-        );
-      }
-
-      if (response.statusCode == 403) {
-        throw Exception(
-          'No tienes permiso para consultar clientes.',
-        );
-      }
-
+    } on TimeoutException {
       throw Exception(
-        'No fue posible cargar los clientes.',
+        'El servidor tardó demasiado en responder.',
       );
     } on http.ClientException {
       throw Exception(
         'No fue posible conectar con el servidor.',
+      );
+    }
+
+    if (response.statusCode == 401) {
+      throw Exception(
+        'Tu sesión no es válida. Inicia sesión nuevamente.',
+      );
+    }
+
+    if (response.statusCode == 403) {
+      throw Exception(
+        'No tienes permiso para consultar clientes.',
+      );
+    }
+
+    if (response.statusCode != 200) {
+      throw Exception(
+        'No fue posible cargar los clientes.',
+      );
+    }
+
+    try {
+      final data =
+          jsonDecode(response.body);
+
+      if (data is! List) {
+        throw Exception(
+          'El servidor devolvió una respuesta no válida.',
+        );
+      }
+
+      final clientes = data
+          .whereType<Map<String, dynamic>>()
+          .map(ClienteResumen.fromJson)
+          .where(
+            (cliente) =>
+                cliente.idCliente > 0 &&
+                cliente.nombreCompleto.trim().isNotEmpty,
+          )
+          .toList();
+
+      clientes.sort(
+        (a, b) => a.nombreCompleto
+            .toLowerCase()
+            .compareTo(
+              b.nombreCompleto.toLowerCase(),
+            ),
+      );
+
+      return clientes;
+    } on FormatException {
+      throw Exception(
+        'El servidor devolvió información no válida.',
       );
     }
   }
