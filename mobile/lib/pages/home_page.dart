@@ -4,6 +4,7 @@ import '../models/usuario.dart';
 import '../services/auth_service.dart';
 
 import 'historial_asistencias_page.dart';
+import 'historial_pagos_page.dart';
 import 'login_page.dart';
 import 'mi_codigo_page.dart';
 import 'mis_asistencias_page.dart';
@@ -11,6 +12,7 @@ import 'mis_pagos_page.dart';
 import 'profile_page.dart';
 import 'registrar_asistencia_page.dart';
 import 'registrar_cliente_page.dart';
+import 'registrar_pago_page.dart';
 
 class HomePage extends StatelessWidget {
   final Usuario usuario;
@@ -93,6 +95,28 @@ class HomePage extends StatelessWidget {
       MaterialPageRoute(
         builder: (_) =>
             const HistorialAsistenciasPage(),
+      ),
+    );
+  }
+
+  void irRegistrarPago(
+    BuildContext context,
+  ) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) =>
+            const RegistrarPagoPage(),
+      ),
+    );
+  }
+
+  void irHistorialPagos(
+    BuildContext context,
+  ) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) =>
+            const HistorialPagosPage(),
       ),
     );
   }
@@ -437,9 +461,8 @@ class HomePage extends StatelessWidget {
             'Registrar pagos y renovaciones de clientes',
 
         onTap: () {
-          proximamente(
+          irRegistrarPago(
             context,
-            'Registrar pago',
           );
         },
       ),
@@ -457,9 +480,8 @@ class HomePage extends StatelessWidget {
             'Consultar los pagos registrados de clientes',
 
         onTap: () {
-          proximamente(
+          irHistorialPagos(
             context,
-            'Historial de pagos',
           );
         },
       ),
@@ -897,11 +919,8 @@ class HomePage extends StatelessWidget {
           child: Row(
             children: [
               Container(
-                width:
-                    58,
-
-                height:
-                    58,
+                width: 58,
+                height: 58,
 
                 decoration:
                     BoxDecoration(
@@ -918,11 +937,8 @@ class HomePage extends StatelessWidget {
 
                 child: Icon(
                   icon,
-                  color:
-                      gold,
-
-                  size:
-                      30,
+                  color: gold,
+                  size: 30,
                 ),
               ),
 
@@ -944,8 +960,7 @@ class HomePage extends StatelessWidget {
                         color:
                             Colors.white,
 
-                        fontSize:
-                            18,
+                        fontSize: 18,
 
                         fontWeight:
                             FontWeight.bold,
@@ -964,8 +979,7 @@ class HomePage extends StatelessWidget {
                         color:
                             silver,
 
-                        fontSize:
-                            14,
+                        fontSize: 14,
                       ),
                     ),
                   ],
@@ -978,8 +992,7 @@ class HomePage extends StatelessWidget {
 
               const Icon(
                 Icons.chevron_right,
-                color:
-                    gold,
+                color: gold,
               ),
             ],
           ),
