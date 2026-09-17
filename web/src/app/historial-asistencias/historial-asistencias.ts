@@ -1,6 +1,7 @@
 import {
   ChangeDetectorRef,
-  Component
+  Component,
+  OnInit
 } from '@angular/core';
 
 import {
@@ -21,6 +22,11 @@ import {
   HistorialAsistenciasResponse
 } from '../services/asistencia.service';
 
+import {
+  ClienteConsultaService,
+  ClienteResumen
+} from '../services/cliente-consulta.service';
+
 @Component({
   selector: 'app-historial-asistencias',
   standalone: true,
@@ -31,21 +37,68 @@ import {
   templateUrl: './historial-asistencias.html',
   styleUrl: './historial-asistencias.css'
 })
-export class HistorialAsistencias {
+export class HistorialAsistencias implements OnInit {
+  clientes: ClienteResumen[] = [];
 
   idCliente: number | null = null;
 
   asistencias: AsistenciaCliente[] = [];
 
   cargando = false;
+  cargandoClientes = false;
 
   error = '';
+  errorClientes = '';
 
   constructor(
     private router: Router,
     private asistenciaService: AsistenciaService,
+    private clienteConsultaService: ClienteConsultaService,
     private changeDetector: ChangeDetectorRef
   ) {}
+
+  ngOnInit(): void {
+
+  this.cargarClientes();
+}
+
+cargarClientes(): void {
+
+  this.cargandoClientes = true;
+  this.errorClientes = '';
+
+  this.clienteConsultaService
+    .obtenerClientes()
+    .subscribe({
+
+      next: (clientes) => {
+
+        this.clientes =
+          clientes ?? [];
+
+        this.cargandoClientes = false;
+
+        this.changeDetector
+          .detectChanges();
+      },
+
+      error: (error) => {
+
+        console.error(
+          'Error al cargar clientes:',
+          error
+        );
+
+        this.cargandoClientes = false;
+
+        this.errorClientes =
+          'No fue posible cargar la lista de clientes.';
+
+        this.changeDetector
+          .detectChanges();
+      }
+    });
+}
 
   consultarAsistencias(): void {
 
@@ -58,7 +111,7 @@ export class HistorialAsistencias {
     ) {
 
       this.error =
-        'Ingresa un ID de cliente válido.';
+      'Selecciona un cliente.';
 
       this.changeDetector
         .detectChanges();

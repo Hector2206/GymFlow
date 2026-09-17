@@ -49,29 +49,45 @@
       </h2>
 
       <p class="section-description">
-        Ingresa el ID del cliente que deseas consultar.
+      Selecciona el cliente que deseas consultar.
       </p>
 
 
       <div class="search-row">
 
-        <div class="field">
+       <div class="field">
 
-          <label for="idCliente">
-            ID del cliente
-          </label>
+      <label for="idCliente">
+        Cliente
+      </label>
 
-          <input
-            id="idCliente"
-            name="idCliente"
-            type="number"
-            min="1"
-            [(ngModel)]="idCliente"
-            placeholder="Ejemplo: 17"
-            autocomplete="off"
-          />
+      <select
+        id="idCliente"
+        name="idCliente"
+        [(ngModel)]="idCliente"
+        [disabled]="cargandoClientes || cargando"
+      >
 
-        </div>
+        <option
+          [ngValue]="null"
+        >
+          {{
+            cargandoClientes
+              ? 'Cargando clientes...'
+              : 'Selecciona un cliente'
+          }}
+        </option>
+
+        <option
+          *ngFor="let cliente of clientes"
+          [ngValue]="cliente.idCliente"
+        >
+          {{ cliente.nombreCompleto }}
+        </option>
+
+         </select>
+
+      </div>
 
         <button
           type="button"
@@ -87,6 +103,13 @@
         </button>
 
       </div>
+      
+      <div
+      *ngIf="errorClientes"
+      class="message error-message"
+    >
+      {{ errorClientes }}
+    </div>
 
 
       <div
