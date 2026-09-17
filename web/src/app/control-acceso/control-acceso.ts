@@ -66,7 +66,8 @@ export class ControlAcceso implements AfterViewInit {
 
     const valorNormalizado =
       input.value
-        .toUpperCase();
+        .toUpperCase()
+        .replace(/['’´`]/g, '-');
 
     this.codigoAcceso =
       valorNormalizado;
@@ -112,7 +113,7 @@ export class ControlAcceso implements AfterViewInit {
     if (!formatoValido) {
 
       this.mostrarRechazo(
-        'El código solo puede contener letras, números y guiones.'
+        'El código puede contener letras, números, guiones y apóstrofos. Los apóstrofos se convierten automáticamente en guiones.'
       );
 
       this.limpiarCampo();
