@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 
 import '../models/asistencia_cliente.dart';
+import '../models/cliente_resumen.dart';
 import '../services/asistencia_service.dart';
+import '../services/cliente_consulta_service.dart';
 
 class HistorialAsistenciasPage
     extends StatefulWidget {
@@ -24,22 +25,29 @@ class _HistorialAsistenciasPageState
   final asistenciaService =
       AsistenciaService();
 
-  final idController =
-      TextEditingController();
+  final clienteConsultaService =
+      ClienteConsultaService();
+
+  List<ClienteResumen> clientes =
+      [];
+
+  int? idClienteSeleccionado;
 
   bool cargando = false;
+  bool cargandoClientes = false;
   bool consultaRealizada = false;
 
   String error = '';
+  String errorClientes = '';
 
   List<AsistenciaCliente> asistencias =
       [];
 
   @override
-  void dispose() {
-    idController.dispose();
+  void initState() {
+    super.initState();
 
-    super.dispose();
+    cargarClientes();
   }
 
   String limpiarException(
@@ -54,25 +62,50 @@ class _HistorialAsistenciasPageState
         .trim();
   }
 
-  String? validarId(
-    String? value,
+  String? validarCliente(
+    int? value,
   ) {
-    final texto =
-        value?.trim() ?? '';
-
-    if (texto.isEmpty) {
-      return 'Ingresa el ID del cliente.';
-    }
-
-    final id =
-        int.tryParse(texto);
-
-    if (id == null ||
-        id <= 0) {
-      return 'El ID debe ser mayor a 0.';
+    if (value == null) {
+      return 'Selecciona un cliente.';
     }
 
     return null;
+  }
+
+  Future<void> cargarClientes() async {
+    setState(() {
+      cargandoClientes = true;
+      errorClientes = '';
+    });
+
+    try {
+      final lista =
+          await clienteConsultaService
+              .obtenerClientes();
+
+      if (!mounted) {
+        return;
+      }
+
+      setState(() {
+        clientes = lista;
+      });
+    } catch (e) {
+      if (!mounted) {
+        return;
+      }
+
+      setState(() {
+        errorClientes =
+            limpiarException(e);
+      });
+    } finally {
+      if (mounted) {
+        setState(() {
+          cargandoClientes = false;
+        });
+      }
+    }
   }
 
   Future<void> consultar() async {
@@ -95,9 +128,11 @@ class _HistorialAsistenciasPageState
     }
 
     final id =
-        int.parse(
-      idController.text.trim(),
-    );
+        idClienteSeleccionado;
+
+    if (id == null) {
+      return;
+    }
 
     setState(() {
       cargando = true;
@@ -175,7 +210,11 @@ class _HistorialAsistenciasPageState
                     letterSpacing: 2,
                   ),
                 ),
-                const SizedBox(height: 8),
+
+                const SizedBox(
+                  height: 8,
+                ),
+
                 const Text(
                   'Historial de Asistencias',
                   style: TextStyle(
@@ -185,7 +224,22 @@ class _HistorialAsistenciasPageState
                         FontWeight.bold,
                   ),
                 ),
-                const SizedBox(height: 28),
+
+                const SizedBox(
+                  height: 8,
+                ),
+
+                const Text(
+                  'Selecciona el cliente que deseas consultar.',
+                  style: TextStyle(
+                    color: Colors.white70,
+                    fontSize: 14,
+                  ),
+                ),
+
+                const SizedBox(
+                  height: 28,
+                ),
 
                 Container(
                   padding:
@@ -206,30 +260,14 @@ class _HistorialAsistenciasPageState
                             .onUserInteraction,
                     child: Column(
                       children: [
-                        TextFormField(
-                          controller:
-                              idController,
-                          enabled:
-                              !cargando,
+                        DropdownButtonFormField<
+                            int>(
+                          initialValue:
+                              idClienteSeleccionado,
+                          isExpanded: true,
+                          dropdownColor: dark,
                           validator:
-                              validarId,
-                          keyboardType:
-                              TextInputType
-                                  .number,
-                          inputFormatters: [
-                            FilteringTextInputFormatter
-                                .digitsOnly,
-                            LengthLimitingTextInputFormatter(
-                              9,
-                            ),
-                          ],
-                          textInputAction:
-                              TextInputAction
-                                  .search,
-                          onFieldSubmitted:
-                              (_) {
-                            consultar();
-                          },
+                              validarCliente,
                           style:
                               const TextStyle(
                             color:
@@ -238,9 +276,12 @@ class _HistorialAsistenciasPageState
                           decoration:
                               InputDecoration(
                             labelText:
-                                'ID de cliente',
-                            hintText:
-                                'Ej. 15',
+                                'Cliente',
+                            labelStyle:
+                                const TextStyle(
+                              color:
+                                  Colors.white70,
+                            ),
                             prefixIcon:
                                 const Icon(
                               Icons
@@ -257,8 +298,102 @@ class _HistorialAsistenciasPageState
                                 12,
                               ),
                             ),
+                            enabledBorder:
+                                OutlineInputBorder(
+                              borderRadius:
+                                  BorderRadius
+                                      .circular(
+                                12,
+                              ),
+                              borderSide:
+                                  const BorderSide(
+                                color:
+                                    Colors.white24,
+                              ),
+                            ),
+                            focusedBorder:
+                                OutlineInputBorder(
+                              borderRadius:
+                                  BorderRadius
+                                      .circular(
+                                12,
+                              ),
+                              borderSide:
+                                  const BorderSide(
+                                color: gold,
+                              ),
+                            ),
                           ),
+                          hint: Text(
+                            cargandoClientes
+                                ? 'Cargando clientes...'
+                                : 'Selecciona un cliente',
+                            style:
+                                const TextStyle(
+                              color:
+                                  Colors.white54,
+                            ),
+                          ),
+                          items: clientes
+                              .map(
+                                (
+                                  cliente,
+                                ) =>
+                                    DropdownMenuItem<
+                                        int>(
+                                  value: cliente
+                                      .idCliente,
+                                  child: Text(
+                                    cliente
+                                        .nombreCompleto,
+                                    overflow:
+                                        TextOverflow
+                                            .ellipsis,
+                                    style:
+                                        const TextStyle(
+                                      color:
+                                          Colors.white,
+                                    ),
+                                  ),
+                                ),
+                              )
+                              .toList(),
+                          onChanged:
+                              cargando ||
+                                      cargandoClientes
+                                  ? null
+                                  : (value) {
+                                      setState(
+                                        () {
+                                          idClienteSeleccionado =
+                                              value;
+
+                                          error =
+                                              '';
+
+                                          asistencias =
+                                              [];
+
+                                          consultaRealizada =
+                                              false;
+                                        },
+                                      );
+                                    },
                         ),
+
+                        if (cargandoClientes)
+                          const Padding(
+                            padding:
+                                EdgeInsets.only(
+                              top: 16,
+                            ),
+                            child:
+                                LinearProgressIndicator(
+                              color: gold,
+                              backgroundColor:
+                                  Colors.white12,
+                            ),
+                          ),
 
                         const SizedBox(
                           height: 16,
@@ -270,7 +405,8 @@ class _HistorialAsistenciasPageState
                           child:
                               FilledButton.icon(
                             onPressed:
-                                cargando
+                                cargando ||
+                                        cargandoClientes
                                     ? null
                                     : consultar,
                             icon:
@@ -297,7 +433,16 @@ class _HistorialAsistenciasPageState
                   ),
                 ),
 
-                const SizedBox(height: 24),
+                const SizedBox(
+                  height: 24,
+                ),
+
+                if (!cargandoClientes &&
+                    errorClientes.isNotEmpty)
+                  _mensaje(
+                    errorClientes,
+                    error: true,
+                  ),
 
                 if (cargando)
                   const Center(
@@ -376,7 +521,9 @@ class _HistorialAsistenciasPageState
                   FontWeight.bold,
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(
+            height: 8,
+          ),
           Text(
             'Fecha: $fechaTexto',
             style: const TextStyle(
@@ -414,6 +561,10 @@ class _HistorialAsistenciasPageState
       width: double.infinity,
       padding:
           const EdgeInsets.all(20),
+      margin:
+          const EdgeInsets.only(
+        bottom: 16,
+      ),
       decoration: BoxDecoration(
         color: error
             ? const Color(0xFF2A1111)
