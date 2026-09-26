@@ -1,0 +1,2 @@
+﻿ALTER TABLE rutinas
+ADD COLUMN nombre VARCHAR(120) NOT NULL;
