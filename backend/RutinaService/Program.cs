@@ -1179,4 +1179,98 @@ app.MapPut(
 .RequireAuthorization();
 
 
+// ===============================
+// LISTAR RUTINAS
+// #922
+// ===============================
+
+app.MapGet(
+    "/api/rutinas",
+    async (
+        IConfiguration configuration
+    ) =>
+    {
+        var connectionString =
+            configuration.GetConnectionString(
+                "PostgreSQL"
+            );
+
+        if (string.IsNullOrWhiteSpace(connectionString))
+        {
+            return Results.Problem(
+                title: "Configuración faltante",
+                detail:
+                    "No existe la cadena de conexión PostgreSQL.",
+                statusCode: 500
+            );
+        }
+
+        try
+        {
+            await using var connection =
+                new NpgsqlConnection(connectionString);
+
+            await connection.OpenAsync();
+
+            await using var command =
+                new NpgsqlCommand(
+                    """
+                    SELECT
+                        r.id_rutina,
+                        r.nombre,
+                        r.descripcion,
+                        r.id_cliente,
+                        c.nombre_completo
+                    FROM rutinas r
+                    INNER JOIN clientes c
+                        ON c.id_cliente = r.id_cliente
+                    ORDER BY r.id_rutina DESC;
+                    """,
+                    connection
+                );
+
+            await using var reader =
+                await command.ExecuteReaderAsync();
+
+            var rutinas =
+                new List<object>();
+
+            while (await reader.ReadAsync())
+            {
+                rutinas.Add(new
+                {
+                    idRutina =
+                        reader.GetInt32(0),
+
+                    nombre =
+                        reader.GetString(1),
+
+                    descripcion =
+                        reader.IsDBNull(2)
+                            ? null
+                            : reader.GetString(2),
+
+                    idCliente =
+                        reader.GetInt32(3),
+
+                    nombreCliente =
+                        reader.GetString(4)
+                });
+            }
+
+            return Results.Ok(rutinas);
+        }
+        catch (Exception)
+        {
+            return Results.Problem(
+                title: "Error al consultar rutinas",
+                detail: "Ocurrió un error interno.",
+                statusCode: 500
+            );
+        }
+    }
+)
+.RequireAuthorization();
+
+
 app.Run();
