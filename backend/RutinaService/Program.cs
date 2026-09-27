@@ -139,12 +139,6 @@ app.MapPost(
         CrearEjercicioRequest request,
         IConfiguration configuration
     ) =>
-    app.MapPost(
-    "/api/ejercicios",
-    async (
-        CrearEjercicioRequest request,
-        IConfiguration configuration
-    ) =>
     {
         if (string.IsNullOrWhiteSpace(request.Nombre))
         {
@@ -245,7 +239,6 @@ app.MapPost(
             );
         }
     }
-)
 )
 .RequireAuthorization();
 
