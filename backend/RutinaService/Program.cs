@@ -895,10 +895,78 @@ app.MapPost(
                         await diaCommand.ExecuteScalarAsync()
                     );
 
+                var ejerciciosGuardados = new List<object>();
+
+                foreach (var ejercicio in dia.Ejercicios)
+                {
+                    await using var ejercicioCommand =
+                        new NpgsqlCommand(
+                            """
+                            INSERT INTO ejercicios_rutina (
+                                id_dia,
+                                id_ejercicio,
+                                series,
+                                repeticiones,
+                                orden
+                            )
+                            VALUES (
+                                @id_dia,
+                                @id_ejercicio,
+                                @series,
+                                @repeticiones,
+                                @orden
+                            )
+                            RETURNING id_ejercicio_rutina;
+                            """,
+                            connection,
+                            transaction
+                        );
+
+                    ejercicioCommand.Parameters.AddWithValue(
+                        "id_dia",
+                        idDia
+                    );
+
+                    ejercicioCommand.Parameters.AddWithValue(
+                        "id_ejercicio",
+                        ejercicio.IdEjercicio
+                    );
+
+                    ejercicioCommand.Parameters.AddWithValue(
+                        "series",
+                        ejercicio.Series
+                    );
+
+                    ejercicioCommand.Parameters.AddWithValue(
+                        "repeticiones",
+                        ejercicio.Repeticiones
+                    );
+
+                    ejercicioCommand.Parameters.AddWithValue(
+                        "orden",
+                        ejercicio.Orden
+                    );
+
+                    var idEjercicioRutina =
+                        Convert.ToInt32(
+                            await ejercicioCommand.ExecuteScalarAsync()
+                        );
+
+                    ejerciciosGuardados.Add(new
+                    {
+                        idEjercicioRutina,
+                        idEjercicio = ejercicio.IdEjercicio,
+                        series = ejercicio.Series,
+                        repeticiones = ejercicio.Repeticiones,
+                        orden = ejercicio.Orden
+                    });
+                }
+
                 diasGuardados.Add(new
                 {
                     idDia,
-                    dia = dia.Dia
+                    dia = dia.Dia,
+                    ejercicios = ejerciciosGuardados
                 });
             }
 
