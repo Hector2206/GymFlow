@@ -755,4 +755,110 @@ app.MapGet(
 .RequireAuthorization();
 
 
+// ===============================
+// CREAR RUTINA
+// #913
+// ===============================
+
+app.MapPost(
+    "/api/rutinas",
+    async (
+        CrearRutinaRequest request,
+        IConfiguration configuration
+    ) =>
+    {
+        var connectionString =
+            configuration.GetConnectionString(
+                "PostgreSQL"
+            );
+
+        if (string.IsNullOrWhiteSpace(connectionString))
+        {
+            return Results.Problem(
+                title: "Configuración faltante",
+                detail:
+                    "No existe la cadena de conexión PostgreSQL.",
+                statusCode: 500
+            );
+        }
+
+        try
+        {
+            await using var connection =
+                new NpgsqlConnection(connectionString);
+
+            await connection.OpenAsync();
+
+            await using var command =
+                new NpgsqlCommand(
+                    """
+                    INSERT INTO rutinas (
+                        nombre,
+                        descripcion,
+                        id_cliente
+                    )
+                    VALUES (
+                        @nombre,
+                        @descripcion,
+                        @id_cliente
+                    )
+                    RETURNING id_rutina;
+                    """,
+                    connection
+                );
+
+            command.Parameters.AddWithValue(
+                "nombre",
+                request.Nombre
+            );
+
+            command.Parameters.AddWithValue(
+                "descripcion",
+                (object?)request.Descripcion
+                ?? DBNull.Value
+            );
+
+            command.Parameters.AddWithValue(
+                "id_cliente",
+                request.IdCliente
+            );
+
+            var idRutina =
+                Convert.ToInt32(
+                    await command.ExecuteScalarAsync()
+                );
+
+            return Results.Created(
+                $"/api/rutinas/{idRutina}",
+                new
+                {
+                    idRutina,
+                    idCliente = request.IdCliente,
+                    nombre = request.Nombre,
+                    descripcion = request.Descripcion
+                }
+            );
+        }
+        catch (PostgresException ex)
+        {
+            return Results.BadRequest(new
+            {
+                mensaje =
+                    "No se pudo registrar la rutina.",
+                detalle = ex.MessageText
+            });
+        }
+        catch (Exception)
+        {
+            return Results.Problem(
+                title: "Error al registrar rutina",
+                detail: "Ocurrió un error interno.",
+                statusCode: 500
+            );
+        }
+    }
+)
+.RequireAuthorization();
+
+
 app.Run();
