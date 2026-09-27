@@ -1593,5 +1593,22 @@ app.MapGet(
 )
 .RequireAuthorization();
 
+// ===============================
+// MI RUTINA - WEB
+// #925
+// ===============================
+
+app.MapGet(
+    "/api/rutinas/mi-rutina",
+    () =>
+    {
+        return Results.Ok(new
+        {
+            mensaje = "Endpoint Mi Rutina disponible."
+        });
+    }
+)
+.RequireAuthorization();
+
 
 app.Run();
