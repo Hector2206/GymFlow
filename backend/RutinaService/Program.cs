@@ -437,4 +437,130 @@ app.MapGet(
 )
 .RequireAuthorization();
 
+// ===============================
+// EDITAR EJERCICIO
+// #909
+// ===============================
+
+app.MapPut(
+    "/api/ejercicios/{idEjercicio:int}",
+    async (
+        int idEjercicio,
+        CrearEjercicioRequest request,
+        IConfiguration configuration
+    ) =>
+    {
+        if (idEjercicio <= 0)
+        {
+            return Results.BadRequest(new
+            {
+                mensaje = "El id del ejercicio no es válido."
+            });
+        }
+
+        if (string.IsNullOrWhiteSpace(request.Nombre))
+        {
+            return Results.BadRequest(new
+            {
+                mensaje = "El nombre del ejercicio es obligatorio."
+            });
+        }
+
+        if (request.Nombre.Length > 120)
+        {
+            return Results.BadRequest(new
+            {
+                mensaje = "El nombre del ejercicio no puede superar los 120 caracteres."
+            });
+        }
+
+        var connectionString =
+            configuration.GetConnectionString(
+                "PostgreSQL"
+            );
+
+        if (string.IsNullOrWhiteSpace(connectionString))
+        {
+            return Results.Problem(
+                title: "Configuración faltante",
+                detail:
+                    "No existe la cadena de conexión PostgreSQL.",
+                statusCode: 500
+            );
+        }
+
+        try
+        {
+            await using var connection =
+                new NpgsqlConnection(connectionString);
+
+            await connection.OpenAsync();
+
+            await using var command =
+                new NpgsqlCommand(
+                    """
+                    UPDATE ejercicios
+                    SET
+                        nombre = @nombre,
+                        descripcion = @descripcion
+                    WHERE id_ejercicio = @id_ejercicio;
+                    """,
+                    connection
+                );
+
+            command.Parameters.AddWithValue(
+                "id_ejercicio",
+                idEjercicio
+            );
+
+            command.Parameters.AddWithValue(
+                "nombre",
+                request.Nombre
+            );
+
+            command.Parameters.AddWithValue(
+                "descripcion",
+                (object?)request.Descripcion
+                ?? DBNull.Value
+            );
+
+            var filasAfectadas =
+                await command.ExecuteNonQueryAsync();
+
+            if (filasAfectadas == 0)
+            {
+                return Results.NotFound(new
+                {
+                    mensaje = "El ejercicio no existe."
+                });
+            }
+
+            return Results.Ok(new
+            {
+                idEjercicio,
+                nombre = request.Nombre,
+                descripcion = request.Descripcion,
+                mensaje = "Ejercicio actualizado correctamente."
+            });
+        }
+        catch (PostgresException ex)
+        {
+            return Results.BadRequest(new
+            {
+                mensaje =
+                    "No se pudo actualizar el ejercicio.",
+                detalle = ex.MessageText
+            });
+        }
+        catch (Exception)
+        {
+            return Results.Problem(
+                title: "Error al actualizar ejercicio",
+                detail: "Ocurrió un error interno.",
+                statusCode: 500
+            );
+        }
+    }
+)
+.RequireAuthorization();
 app.Run();
