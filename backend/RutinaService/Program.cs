@@ -837,13 +837,16 @@ app.MapPost(
                     await clienteCommand.ExecuteScalarAsync()
                 ) > 0;
 
-            if (!clienteAsignado)
+           if (!clienteAsignado)
             {
-                return Results.NotFound(new
-                {
-                    mensaje =
-                        "El cliente no está asignado al entrenador autenticado."
-                });
+                return Results.Json(
+                    new
+                    {
+                        mensaje =
+                            "Acceso denegado. El cliente no está asignado al entrenador autenticado."
+                    },
+                    statusCode: StatusCodes.Status403Forbidden
+                );
             }
 
             // ===============================
@@ -1084,7 +1087,7 @@ app.MapPost(
 
 // ===============================
 // EDITAR RUTINA
-// #921 + #1281 + #1283
+// #921 + #1281 + #1283 + #1284
 // ===============================
 
 app.MapPut(
@@ -1101,7 +1104,8 @@ app.MapPut(
         {
             return Results.BadRequest(new
             {
-                mensaje = "El id de la rutina no es válido."
+                mensaje =
+                    "El id de la rutina no es válido."
             });
         }
 
@@ -1109,7 +1113,8 @@ app.MapPut(
         {
             return Results.BadRequest(new
             {
-                mensaje = "El nombre de la rutina es obligatorio."
+                mensaje =
+                    "El nombre de la rutina es obligatorio."
             });
         }
 
@@ -1135,7 +1140,8 @@ app.MapPut(
         if (string.IsNullOrWhiteSpace(connectionString))
         {
             return Results.Problem(
-                title: "Configuración faltante",
+                title:
+                    "Configuración faltante",
                 detail:
                     "No existe la cadena de conexión PostgreSQL.",
                 statusCode: 500
@@ -1152,7 +1158,7 @@ app.MapPut(
             // ===============================
             // VALIDAR QUE LA RUTINA PERTENEZCA
             // A UN CLIENTE DEL ENTRENADOR
-            // #1283
+            // #1283 + #1284
             // ===============================
 
             await using var rutinaCommand =
@@ -1185,15 +1191,20 @@ app.MapPut(
 
             if (!rutinaAsignada)
             {
-                return Results.NotFound(new
-                {
-                    mensaje =
-                        "La rutina no pertenece a un cliente asignado al entrenador autenticado."
-                });
+                return Results.Json(
+                    new
+                    {
+                        mensaje =
+                            "Acceso denegado. La rutina no pertenece a un cliente asignado al entrenador autenticado."
+                    },
+                    statusCode:
+                        StatusCodes.Status403Forbidden
+                );
             }
 
             // ===============================
             // VALIDAR CLIENTE DESTINO
+            // #1283 + #1284
             // ===============================
 
             await using var clienteCommand =
@@ -1224,11 +1235,15 @@ app.MapPut(
 
             if (!clienteAsignado)
             {
-                return Results.NotFound(new
-                {
-                    mensaje =
-                        "El cliente no está asignado al entrenador autenticado."
-                });
+                return Results.Json(
+                    new
+                    {
+                        mensaje =
+                            "Acceso denegado. El cliente no está asignado al entrenador autenticado."
+                    },
+                    statusCode:
+                        StatusCodes.Status403Forbidden
+                );
             }
 
             // ===============================
@@ -1276,7 +1291,8 @@ app.MapPut(
             {
                 return Results.NotFound(new
                 {
-                    mensaje = "La rutina no existe."
+                    mensaje =
+                        "La rutina no existe."
                 });
             }
 
