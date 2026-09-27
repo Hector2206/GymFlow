@@ -1084,7 +1084,7 @@ app.MapPost(
 
 // ===============================
 // EDITAR RUTINA
-// #921
+// #921 + #1281 + #1283
 // ===============================
 
 app.MapPut(
@@ -1092,6 +1092,8 @@ app.MapPut(
     async (
         int idRutina,
         CrearRutinaRequest request,
+        ClaimsPrincipal usuario,
+        EntrenadorService entrenadorService,
         IConfiguration configuration
     ) =>
     {
@@ -1108,6 +1110,20 @@ app.MapPut(
             return Results.BadRequest(new
             {
                 mensaje = "El nombre de la rutina es obligatorio."
+            });
+        }
+
+        var idEntrenador =
+            await entrenadorService.ObtenerIdPersonalAsync(
+                usuario
+            );
+
+        if (idEntrenador is null)
+        {
+            return Results.NotFound(new
+            {
+                mensaje =
+                    "No se encontró información del entrenador."
             });
         }
 
@@ -1133,13 +1149,60 @@ app.MapPut(
 
             await connection.OpenAsync();
 
-            // Validar que el cliente exista
+            // ===============================
+            // VALIDAR QUE LA RUTINA PERTENEZCA
+            // A UN CLIENTE DEL ENTRENADOR
+            // #1283
+            // ===============================
+
+            await using var rutinaCommand =
+                new NpgsqlCommand(
+                    """
+                    SELECT COUNT(*)
+                    FROM rutinas r
+                    INNER JOIN clientes c
+                        ON c.id_cliente = r.id_cliente
+                    WHERE r.id_rutina = @id_rutina
+                      AND c.id_entrenador = @id_entrenador;
+                    """,
+                    connection
+                );
+
+            rutinaCommand.Parameters.AddWithValue(
+                "id_rutina",
+                idRutina
+            );
+
+            rutinaCommand.Parameters.AddWithValue(
+                "id_entrenador",
+                idEntrenador.Value
+            );
+
+            var rutinaAsignada =
+                Convert.ToInt32(
+                    await rutinaCommand.ExecuteScalarAsync()
+                ) > 0;
+
+            if (!rutinaAsignada)
+            {
+                return Results.NotFound(new
+                {
+                    mensaje =
+                        "La rutina no pertenece a un cliente asignado al entrenador autenticado."
+                });
+            }
+
+            // ===============================
+            // VALIDAR CLIENTE DESTINO
+            // ===============================
+
             await using var clienteCommand =
                 new NpgsqlCommand(
                     """
                     SELECT COUNT(*)
                     FROM clientes
-                    WHERE id_cliente = @id_cliente;
+                    WHERE id_cliente = @id_cliente
+                      AND id_entrenador = @id_entrenador;
                     """,
                     connection
                 );
@@ -1149,18 +1212,28 @@ app.MapPut(
                 request.IdCliente
             );
 
-            var clienteExiste =
+            clienteCommand.Parameters.AddWithValue(
+                "id_entrenador",
+                idEntrenador.Value
+            );
+
+            var clienteAsignado =
                 Convert.ToInt32(
                     await clienteCommand.ExecuteScalarAsync()
                 ) > 0;
 
-            if (!clienteExiste)
+            if (!clienteAsignado)
             {
                 return Results.NotFound(new
                 {
-                    mensaje = "El cliente no existe."
+                    mensaje =
+                        "El cliente no está asignado al entrenador autenticado."
                 });
             }
+
+            // ===============================
+            // ACTUALIZAR RUTINA
+            // ===============================
 
             await using var command =
                 new NpgsqlCommand(
@@ -1210,9 +1283,14 @@ app.MapPut(
             return Results.Ok(new
             {
                 idRutina,
-                idCliente = request.IdCliente,
-                nombre = request.Nombre,
-                descripcion = request.Descripcion,
+                idCliente =
+                    request.IdCliente,
+                idEntrenador =
+                    idEntrenador.Value,
+                nombre =
+                    request.Nombre,
+                descripcion =
+                    request.Descripcion,
                 mensaje =
                     "Rutina actualizada correctamente."
             });
@@ -1223,20 +1301,26 @@ app.MapPut(
             {
                 mensaje =
                     "No se pudo actualizar la rutina.",
-                detalle = ex.MessageText
+                detalle =
+                    ex.MessageText
             });
         }
         catch (Exception)
         {
             return Results.Problem(
-                title: "Error al actualizar rutina",
-                detail: "Ocurrió un error interno.",
+                title:
+                    "Error al actualizar rutina",
+                detail:
+                    "Ocurrió un error interno.",
                 statusCode: 500
             );
         }
     }
 )
-.RequireAuthorization();
+.RequireAuthorization(policy =>
+{
+    policy.RequireRole("Entrenador");
+});
 
 
 // ===============================
