@@ -788,6 +788,33 @@ app.MapPost(
                 new NpgsqlConnection(connectionString);
 
             await connection.OpenAsync();
+            await using var clienteCommand =
+                new NpgsqlCommand(
+                    """
+                    SELECT COUNT(*)
+                    FROM clientes
+                    WHERE id_cliente = @id_cliente;
+                    """,
+                    connection
+                );
+
+            clienteCommand.Parameters.AddWithValue(
+                "id_cliente",
+                request.IdCliente
+            );
+
+            var clienteExiste =
+                Convert.ToInt32(
+                    await clienteCommand.ExecuteScalarAsync()
+                ) > 0;
+
+            if (!clienteExiste)
+            {
+                return Results.NotFound(new
+                {
+                    mensaje = "El cliente no existe."
+                });
+            }
 
             await using var command =
                 new NpgsqlCommand(
