@@ -1022,4 +1022,161 @@ app.MapPost(
 .RequireAuthorization();
 
 
+// ===============================
+// EDITAR RUTINA
+// #921
+// ===============================
+
+app.MapPut(
+    "/api/rutinas/{idRutina:int}",
+    async (
+        int idRutina,
+        CrearRutinaRequest request,
+        IConfiguration configuration
+    ) =>
+    {
+        if (idRutina <= 0)
+        {
+            return Results.BadRequest(new
+            {
+                mensaje = "El id de la rutina no es válido."
+            });
+        }
+
+        if (string.IsNullOrWhiteSpace(request.Nombre))
+        {
+            return Results.BadRequest(new
+            {
+                mensaje = "El nombre de la rutina es obligatorio."
+            });
+        }
+
+        var connectionString =
+            configuration.GetConnectionString(
+                "PostgreSQL"
+            );
+
+        if (string.IsNullOrWhiteSpace(connectionString))
+        {
+            return Results.Problem(
+                title: "Configuración faltante",
+                detail:
+                    "No existe la cadena de conexión PostgreSQL.",
+                statusCode: 500
+            );
+        }
+
+        try
+        {
+            await using var connection =
+                new NpgsqlConnection(connectionString);
+
+            await connection.OpenAsync();
+
+            // Validar que el cliente exista
+            await using var clienteCommand =
+                new NpgsqlCommand(
+                    """
+                    SELECT COUNT(*)
+                    FROM clientes
+                    WHERE id_cliente = @id_cliente;
+                    """,
+                    connection
+                );
+
+            clienteCommand.Parameters.AddWithValue(
+                "id_cliente",
+                request.IdCliente
+            );
+
+            var clienteExiste =
+                Convert.ToInt32(
+                    await clienteCommand.ExecuteScalarAsync()
+                ) > 0;
+
+            if (!clienteExiste)
+            {
+                return Results.NotFound(new
+                {
+                    mensaje = "El cliente no existe."
+                });
+            }
+
+            await using var command =
+                new NpgsqlCommand(
+                    """
+                    UPDATE rutinas
+                    SET
+                        nombre = @nombre,
+                        descripcion = @descripcion,
+                        id_cliente = @id_cliente
+                    WHERE id_rutina = @id_rutina;
+                    """,
+                    connection
+                );
+
+            command.Parameters.AddWithValue(
+                "id_rutina",
+                idRutina
+            );
+
+            command.Parameters.AddWithValue(
+                "nombre",
+                request.Nombre
+            );
+
+            command.Parameters.AddWithValue(
+                "descripcion",
+                (object?)request.Descripcion
+                ?? DBNull.Value
+            );
+
+            command.Parameters.AddWithValue(
+                "id_cliente",
+                request.IdCliente
+            );
+
+            var filasAfectadas =
+                await command.ExecuteNonQueryAsync();
+
+            if (filasAfectadas == 0)
+            {
+                return Results.NotFound(new
+                {
+                    mensaje = "La rutina no existe."
+                });
+            }
+
+            return Results.Ok(new
+            {
+                idRutina,
+                idCliente = request.IdCliente,
+                nombre = request.Nombre,
+                descripcion = request.Descripcion,
+                mensaje =
+                    "Rutina actualizada correctamente."
+            });
+        }
+        catch (PostgresException ex)
+        {
+            return Results.BadRequest(new
+            {
+                mensaje =
+                    "No se pudo actualizar la rutina.",
+                detalle = ex.MessageText
+            });
+        }
+        catch (Exception)
+        {
+            return Results.Problem(
+                title: "Error al actualizar rutina",
+                detail: "Ocurrió un error interno.",
+                statusCode: 500
+            );
+        }
+    }
+)
+.RequireAuthorization();
+
+
 app.Run();
