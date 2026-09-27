@@ -563,4 +563,93 @@ app.MapPut(
     }
 )
 .RequireAuthorization();
+
+// ===============================
+// DESACTIVAR EJERCICIO
+// #910
+// ===============================
+
+app.MapDelete(
+    "/api/ejercicios/{idEjercicio:int}",
+    async (
+        int idEjercicio,
+        IConfiguration configuration
+    ) =>
+    {
+        if (idEjercicio <= 0)
+        {
+            return Results.BadRequest(new
+            {
+                mensaje = "El id del ejercicio no es válido."
+            });
+        }
+
+        var connectionString =
+            configuration.GetConnectionString(
+                "PostgreSQL"
+            );
+
+        if (string.IsNullOrWhiteSpace(connectionString))
+        {
+            return Results.Problem(
+                title: "Configuración faltante",
+                detail:
+                    "No existe la cadena de conexión PostgreSQL.",
+                statusCode: 500
+            );
+        }
+
+        try
+        {
+            await using var connection =
+                new NpgsqlConnection(connectionString);
+
+            await connection.OpenAsync();
+
+            await using var command =
+                new NpgsqlCommand(
+                    """
+                    UPDATE ejercicios
+                    SET estado = FALSE
+                    WHERE id_ejercicio = @id_ejercicio;
+                    """,
+                    connection
+                );
+
+            command.Parameters.AddWithValue(
+                "id_ejercicio",
+                idEjercicio
+            );
+
+            var filasAfectadas =
+                await command.ExecuteNonQueryAsync();
+
+            if (filasAfectadas == 0)
+            {
+                return Results.NotFound(new
+                {
+                    mensaje = "El ejercicio no existe."
+                });
+            }
+
+            return Results.Ok(new
+            {
+                idEjercicio,
+                estado = false,
+                mensaje = "Ejercicio desactivado correctamente."
+            });
+        }
+        catch (Exception)
+        {
+            return Results.Problem(
+                title: "Error al desactivar ejercicio",
+                detail: "Ocurrió un error interno.",
+                statusCode: 500
+            );
+        }
+    }
+)
+.RequireAuthorization();
+
+
 app.Run();
