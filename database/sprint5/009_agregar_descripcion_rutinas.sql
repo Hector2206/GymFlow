@@ -1,0 +1,2 @@
+﻿ALTER TABLE rutinas
+ADD COLUMN descripcion VARCHAR(500);

@@ -1,0 +1,2 @@
+﻿ALTER TABLE ejercicios_rutina
+ADD COLUMN orden INTEGER NOT NULL;
