@@ -336,4 +336,105 @@ app.MapGet(
 )
 .RequireAuthorization();
 
+// ===============================
+// OBTENER EJERCICIO POR ID
+// #908
+// ===============================
+
+app.MapGet(
+    "/api/ejercicios/{idEjercicio:int}",
+    async (
+        int idEjercicio,
+        IConfiguration configuration
+    ) =>
+    {
+        if (idEjercicio <= 0)
+        {
+            return Results.BadRequest(new
+            {
+                mensaje = "El id del ejercicio no es válido."
+            });
+        }
+
+        var connectionString =
+            configuration.GetConnectionString(
+                "PostgreSQL"
+            );
+
+        if (string.IsNullOrWhiteSpace(connectionString))
+        {
+            return Results.Problem(
+                title: "Configuración faltante",
+                detail:
+                    "No existe la cadena de conexión PostgreSQL.",
+                statusCode: 500
+            );
+        }
+
+        try
+        {
+            await using var connection =
+                new NpgsqlConnection(connectionString);
+
+            await connection.OpenAsync();
+
+            await using var command =
+                new NpgsqlCommand(
+                    """
+                    SELECT
+                        id_ejercicio,
+                        nombre,
+                        descripcion,
+                        estado
+                    FROM ejercicios
+                    WHERE id_ejercicio = @id_ejercicio;
+                    """,
+                    connection
+                );
+
+            command.Parameters.AddWithValue(
+                "id_ejercicio",
+                idEjercicio
+            );
+
+            await using var reader =
+                await command.ExecuteReaderAsync();
+
+            if (!await reader.ReadAsync())
+            {
+                return Results.NotFound(new
+                {
+                    mensaje = "El ejercicio no existe."
+                });
+            }
+
+            return Results.Ok(new
+            {
+                idEjercicio =
+                    reader.GetInt32(0),
+
+                nombre =
+                    reader.GetString(1),
+
+                descripcion =
+                    reader.IsDBNull(2)
+                        ? null
+                        : reader.GetString(2),
+
+                estado =
+                    reader.GetBoolean(3)
+            });
+        }
+        catch (Exception)
+        {
+            return Results.Problem(
+                title: "Error al consultar ejercicio",
+                detail: "Ocurrió un error interno.",
+                statusCode: 500
+            );
+        }
+    }
+)
+.RequireAuthorization();
+
 app.Run();
