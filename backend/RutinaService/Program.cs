@@ -788,6 +788,8 @@ app.MapPost(
                 new NpgsqlConnection(connectionString);
 
             await connection.OpenAsync();
+            await using var transaction =
+                await connection.BeginTransactionAsync();
             await using var clienteCommand =
                 new NpgsqlCommand(
                     """
@@ -795,7 +797,8 @@ app.MapPost(
                     FROM clientes
                     WHERE id_cliente = @id_cliente;
                     """,
-                    connection
+                    connection,
+                    transaction
                 );
 
             clienteCommand.Parameters.AddWithValue(
@@ -831,7 +834,8 @@ app.MapPost(
                     )
                     RETURNING id_rutina;
                     """,
-                    connection
+                    connection,
+                    transaction
                 );
 
             command.Parameters.AddWithValue(
@@ -854,6 +858,8 @@ app.MapPost(
                 Convert.ToInt32(
                     await command.ExecuteScalarAsync()
                 );
+
+            await transaction.CommitAsync();
 
             return Results.Created(
                 $"/api/rutinas/{idRutina}",
