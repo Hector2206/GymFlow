@@ -1594,18 +1594,101 @@ app.MapGet(
 .RequireAuthorization();
 
 // ===============================
-// MI RUTINA - WEB
-// #925
+// MI RUTINA - OBTENER CLIENTE
+// #925 + #926
 // ===============================
 
 app.MapGet(
     "/api/rutinas/mi-rutina",
-    () =>
+    async (
+        ClaimsPrincipal usuario,
+        IConfiguration configuration
+    ) =>
     {
-        return Results.Ok(new
+        var sub =
+            usuario.FindFirst("sub")?.Value;
+
+        if (string.IsNullOrWhiteSpace(sub) ||
+            !int.TryParse(sub, out var idUsuario))
         {
-            mensaje = "Endpoint Mi Rutina disponible."
-        });
+            return Results.Unauthorized();
+        }
+
+        var connectionString =
+            configuration.GetConnectionString(
+                "PostgreSQL"
+            );
+
+        if (string.IsNullOrWhiteSpace(connectionString))
+        {
+            return Results.Problem(
+                title: "Configuración faltante",
+                detail:
+                    "No existe la cadena de conexión PostgreSQL.",
+                statusCode: 500
+            );
+        }
+
+        try
+        {
+            await using var connection =
+                new NpgsqlConnection(connectionString);
+
+            await connection.OpenAsync();
+
+            await using var command =
+                new NpgsqlCommand(
+                    """
+                    SELECT
+                        id_cliente,
+                        nombre_completo
+                    FROM clientes
+                    WHERE id_usuario = @id_usuario
+                    LIMIT 1;
+                    """,
+                    connection
+                );
+
+            command.Parameters.AddWithValue(
+                "id_usuario",
+                idUsuario
+            );
+
+            await using var reader =
+                await command.ExecuteReaderAsync();
+
+            if (!await reader.ReadAsync())
+            {
+                return Results.NotFound(new
+                {
+                    mensaje =
+                        "No se encontró un cliente asociado al usuario."
+                });
+            }
+
+            var idCliente =
+                reader.GetInt32(0);
+
+            var nombreCliente =
+                reader.GetString(1);
+
+            return Results.Ok(new
+            {
+                idUsuario,
+                idCliente,
+                nombreCliente
+            });
+        }
+        catch (Exception)
+        {
+            return Results.Problem(
+                title:
+                    "Error al obtener cliente desde la sesión",
+                detail:
+                    "Ocurrió un error interno.",
+                statusCode: 500
+            );
+        }
     }
 )
 .RequireAuthorization();
