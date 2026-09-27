@@ -1918,5 +1918,126 @@ app.MapGet(
 )
 .RequireAuthorization();
 
+// ===============================
+// MIS CLIENTES - ENTRENADOR
+// #1279
+// ===============================
+
+app.MapGet(
+    "/api/entrenador/mis-clientes",
+    async (
+        ClaimsPrincipal usuario,
+        EntrenadorService entrenadorService,
+        IConfiguration configuration
+    ) =>
+    {
+        var idEntrenador =
+            await entrenadorService.ObtenerIdPersonalAsync(
+                usuario
+            );
+
+        if (idEntrenador is null)
+        {
+            return Results.NotFound(new
+            {
+                mensaje =
+                    "No se encontró información del entrenador."
+            });
+        }
+
+        var connectionString =
+            configuration.GetConnectionString(
+                "PostgreSQL"
+            );
+
+        if (string.IsNullOrWhiteSpace(connectionString))
+        {
+            return Results.Problem(
+                title: "Configuración faltante",
+                detail:
+                    "No existe la cadena de conexión PostgreSQL.",
+                statusCode: 500
+            );
+        }
+
+        try
+        {
+            await using var connection =
+                new NpgsqlConnection(connectionString);
+
+            await connection.OpenAsync();
+
+            await using var command =
+                new NpgsqlCommand(
+                    """
+                    SELECT
+                        id_cliente,
+                        id_usuario,
+                        nombre_cliente,
+                        correo,
+                        telefono,
+                        estatus
+                    FROM vw_clientes_por_entrenador
+                    WHERE id_entrenador = @id_entrenador
+                    ORDER BY nombre_cliente;
+                    """,
+                    connection
+                );
+
+            command.Parameters.AddWithValue(
+                "id_entrenador",
+                idEntrenador.Value
+            );
+
+            await using var reader =
+                await command.ExecuteReaderAsync();
+
+            var clientes =
+                new List<object>();
+
+            while (await reader.ReadAsync())
+            {
+                clientes.Add(new
+                {
+                    idCliente =
+                        reader.GetInt32(0),
+
+                    idUsuario =
+                        reader.GetInt32(1),
+
+                    nombre =
+                        reader.GetString(2),
+
+                    correo =
+                        reader.GetString(3),
+
+                    telefono =
+                        reader.GetString(4),
+
+                    estatus =
+                        reader.GetBoolean(5)
+                });
+            }
+
+            return Results.Ok(new
+            {
+                idEntrenador,
+                clientes
+            });
+        }
+        catch (Exception)
+        {
+            return Results.Problem(
+                title:
+                    "Error al consultar clientes del entrenador",
+                detail:
+                    "Ocurrió un error interno.",
+                statusCode: 500
+            );
+        }
+    }
+)
+.RequireAuthorization();
+
 
 app.Run();
