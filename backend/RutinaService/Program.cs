@@ -752,16 +752,34 @@ app.MapGet(
 
 // ===============================
 // CREAR RUTINA
-// #913
+// #913 + #914 + #915 + #916 + #917
+// #918 + #919 + #920
+// #1281 + #1282
 // ===============================
 
 app.MapPost(
     "/api/rutinas",
     async (
         CrearRutinaRequest request,
+        ClaimsPrincipal usuario,
+        EntrenadorService entrenadorService,
         IConfiguration configuration
     ) =>
     {
+        var idEntrenador =
+            await entrenadorService.ObtenerIdPersonalAsync(
+                usuario
+            );
+
+        if (idEntrenador is null)
+        {
+            return Results.NotFound(new
+            {
+                mensaje =
+                    "No se encontró información del entrenador."
+            });
+        }
+
         var connectionString =
             configuration.GetConnectionString(
                 "PostgreSQL"
@@ -783,14 +801,22 @@ app.MapPost(
                 new NpgsqlConnection(connectionString);
 
             await connection.OpenAsync();
+
             await using var transaction =
                 await connection.BeginTransactionAsync();
+
+            // ===============================
+            // VALIDAR CLIENTE ASIGNADO
+            // #1282
+            // ===============================
+
             await using var clienteCommand =
                 new NpgsqlCommand(
                     """
                     SELECT COUNT(*)
                     FROM clientes
-                    WHERE id_cliente = @id_cliente;
+                    WHERE id_cliente = @id_cliente
+                      AND id_entrenador = @id_entrenador;
                     """,
                     connection,
                     transaction
@@ -801,18 +827,28 @@ app.MapPost(
                 request.IdCliente
             );
 
-            var clienteExiste =
+            clienteCommand.Parameters.AddWithValue(
+                "id_entrenador",
+                idEntrenador.Value
+            );
+
+            var clienteAsignado =
                 Convert.ToInt32(
                     await clienteCommand.ExecuteScalarAsync()
                 ) > 0;
 
-            if (!clienteExiste)
+            if (!clienteAsignado)
             {
                 return Results.NotFound(new
                 {
-                    mensaje = "El cliente no existe."
+                    mensaje =
+                        "El cliente no está asignado al entrenador autenticado."
                 });
             }
+
+            // ===============================
+            // CREAR ENCABEZADO DE RUTINA
+            // ===============================
 
             await using var command =
                 new NpgsqlCommand(
@@ -854,7 +890,12 @@ app.MapPost(
                     await command.ExecuteScalarAsync()
                 );
 
-            var diasGuardados = new List<object>();
+            var diasGuardados =
+                new List<object>();
+
+            // ===============================
+            // GUARDAR DÍAS
+            // ===============================
 
             foreach (var dia in request.Dias)
             {
@@ -890,26 +931,33 @@ app.MapPost(
                         await diaCommand.ExecuteScalarAsync()
                     );
 
-                var ejerciciosGuardados = new List<object>();
+                var ejerciciosGuardados =
+                    new List<object>();
+
+                // ===============================
+                // GUARDAR EJERCICIOS
+                // ===============================
 
                 foreach (var ejercicio in dia.Ejercicios)
                 {
                     if (ejercicio.Series <= 0)
+                    {
+                        return Results.BadRequest(new
                         {
-                            return Results.BadRequest(new
-                            {
-                                mensaje =
-                                    "La cantidad de series debe ser mayor a 0."
-                            });
-                        }
+                            mensaje =
+                                "La cantidad de series debe ser mayor a 0."
+                        });
+                    }
+
                     if (ejercicio.Repeticiones <= 0)
+                    {
+                        return Results.BadRequest(new
                         {
-                            return Results.BadRequest(new
-                            {
-                                mensaje =
-                                    "La cantidad de repeticiones debe ser mayor a 0."
-                            });
-                        }
+                            mensaje =
+                                "La cantidad de repeticiones debe ser mayor a 0."
+                        });
+                    }
+
                     await using var ejercicioCommand =
                         new NpgsqlCommand(
                             """
@@ -966,10 +1014,14 @@ app.MapPost(
                     ejerciciosGuardados.Add(new
                     {
                         idEjercicioRutina,
-                        idEjercicio = ejercicio.IdEjercicio,
-                        series = ejercicio.Series,
-                        repeticiones = ejercicio.Repeticiones,
-                        orden = ejercicio.Orden
+                        idEjercicio =
+                            ejercicio.IdEjercicio,
+                        series =
+                            ejercicio.Series,
+                        repeticiones =
+                            ejercicio.Repeticiones,
+                        orden =
+                            ejercicio.Orden
                     });
                 }
 
@@ -977,7 +1029,8 @@ app.MapPost(
                 {
                     idDia,
                     dia = dia.Dia,
-                    ejercicios = ejerciciosGuardados
+                    ejercicios =
+                        ejerciciosGuardados
                 });
             }
 
@@ -988,10 +1041,16 @@ app.MapPost(
                 new
                 {
                     idRutina,
-                    idCliente = request.IdCliente,
-                    nombre = request.Nombre,
-                    descripcion = request.Descripcion,
-                    dias = diasGuardados
+                    idCliente =
+                        request.IdCliente,
+                    idEntrenador =
+                        idEntrenador.Value,
+                    nombre =
+                        request.Nombre,
+                    descripcion =
+                        request.Descripcion,
+                    dias =
+                        diasGuardados
                 }
             );
         }
@@ -1001,14 +1060,17 @@ app.MapPost(
             {
                 mensaje =
                     "No se pudo registrar la rutina.",
-                detalle = ex.MessageText
+                detalle =
+                    ex.MessageText
             });
         }
         catch (Exception)
         {
             return Results.Problem(
-                title: "Error al registrar rutina",
-                detail: "Ocurrió un error interno.",
+                title:
+                    "Error al registrar rutina",
+                detail:
+                    "Ocurrió un error interno.",
                 statusCode: 500
             );
         }
