@@ -1014,7 +1014,10 @@ app.MapPost(
         }
     }
 )
-.RequireAuthorization();
+.RequireAuthorization(policy =>
+{
+    policy.RequireRole("Entrenador");
+});
 
 
 // ===============================
@@ -2037,7 +2040,10 @@ app.MapGet(
         }
     }
 )
-.RequireAuthorization();
+.RequireAuthorization(policy =>
+{
+    policy.RequireRole("Entrenador");
+});
 
 
 app.Run();
