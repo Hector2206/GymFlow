@@ -1598,6 +1598,12 @@ app.MapGet(
 // #925 + #926
 // ===============================
 
+// ===============================
+// MI RUTINA - OBTENER CLIENTE
+// Y DEVOLVER DÍAS ORDENADOS
+// #925 + #926 + #927
+// ===============================
+
 app.MapGet(
     "/api/rutinas/mi-rutina",
     async (
@@ -1636,7 +1642,11 @@ app.MapGet(
 
             await connection.OpenAsync();
 
-            await using var command =
+            // ===============================
+            // OBTENER CLIENTE DESDE EL JWT
+            // ===============================
+
+            await using var clienteCommand =
                 new NpgsqlCommand(
                     """
                     SELECT
@@ -1649,41 +1659,238 @@ app.MapGet(
                     connection
                 );
 
-            command.Parameters.AddWithValue(
+            clienteCommand.Parameters.AddWithValue(
                 "id_usuario",
                 idUsuario
             );
 
-            await using var reader =
-                await command.ExecuteReaderAsync();
+            int idCliente;
+            string nombreCliente;
 
-            if (!await reader.ReadAsync())
+            await using (var clienteReader =
+                await clienteCommand.ExecuteReaderAsync())
             {
-                return Results.NotFound(new
+                if (!await clienteReader.ReadAsync())
                 {
-                    mensaje =
-                        "No se encontró un cliente asociado al usuario."
+                    return Results.NotFound(new
+                    {
+                        mensaje =
+                            "No se encontró un cliente asociado al usuario."
+                    });
+                }
+
+                idCliente =
+                    clienteReader.GetInt32(0);
+
+                nombreCliente =
+                    clienteReader.GetString(1);
+            }
+
+            // ===============================
+            // OBTENER RUTINA DEL CLIENTE
+            // ===============================
+
+            await using var rutinaCommand =
+                new NpgsqlCommand(
+                    """
+                    SELECT
+                        id_rutina,
+                        nombre,
+                        descripcion
+                    FROM rutinas
+                    WHERE id_cliente = @id_cliente
+                    ORDER BY id_rutina DESC
+                    LIMIT 1;
+                    """,
+                    connection
+                );
+
+            rutinaCommand.Parameters.AddWithValue(
+                "id_cliente",
+                idCliente
+            );
+
+            int idRutina;
+            string nombreRutina;
+            string? descripcionRutina;
+
+            await using (var rutinaReader =
+                await rutinaCommand.ExecuteReaderAsync())
+            {
+                if (!await rutinaReader.ReadAsync())
+                {
+                    return Results.NotFound(new
+                    {
+                        mensaje =
+                            "El cliente todavía no tiene una rutina asignada."
+                    });
+                }
+
+                idRutina =
+                    rutinaReader.GetInt32(0);
+
+                nombreRutina =
+                    rutinaReader.GetString(1);
+
+                descripcionRutina =
+                    rutinaReader.IsDBNull(2)
+                        ? null
+                        : rutinaReader.GetString(2);
+            }
+
+            // ===============================
+            // OBTENER DÍAS ORDENADOS
+            // #927
+            // ===============================
+
+            await using var diasCommand =
+                new NpgsqlCommand(
+                    """
+                    SELECT
+                        id_dia,
+                        dia
+                    FROM dias_rutina
+                    WHERE id_rutina = @id_rutina
+                    ORDER BY
+                        CASE LOWER(dia)
+                            WHEN 'lunes' THEN 1
+                            WHEN 'martes' THEN 2
+                            WHEN 'miércoles' THEN 3
+                            WHEN 'miercoles' THEN 3
+                            WHEN 'jueves' THEN 4
+                            WHEN 'viernes' THEN 5
+                            WHEN 'sábado' THEN 6
+                            WHEN 'sabado' THEN 6
+                            WHEN 'domingo' THEN 7
+                            ELSE 8
+                        END,
+                        id_dia;
+                    """,
+                    connection
+                );
+
+            diasCommand.Parameters.AddWithValue(
+                "id_rutina",
+                idRutina
+            );
+
+            var diasBase =
+                new List<(int IdDia, string Dia)>();
+
+            await using (var diasReader =
+                await diasCommand.ExecuteReaderAsync())
+            {
+                while (await diasReader.ReadAsync())
+                {
+                    diasBase.Add(
+                        (
+                            diasReader.GetInt32(0),
+                            diasReader.GetString(1)
+                        )
+                    );
+                }
+            }
+
+            // ===============================
+            // OBTENER EJERCICIOS ORDENADOS
+            // #928
+            // ===============================
+
+            var dias =
+                new List<object>();
+
+            foreach (var diaBase in diasBase)
+            {
+                await using var ejerciciosCommand =
+                    new NpgsqlCommand(
+                        """
+                        SELECT
+                            er.id_ejercicio_rutina,
+                            er.id_ejercicio,
+                            e.nombre,
+                            e.descripcion,
+                            er.series,
+                            er.repeticiones,
+                            er.orden
+                        FROM ejercicios_rutina er
+                        INNER JOIN ejercicios e
+                            ON e.id_ejercicio = er.id_ejercicio
+                        WHERE er.id_dia = @id_dia
+                        ORDER BY
+                            er.orden,
+                            er.id_ejercicio_rutina;
+                        """,
+                        connection
+                    );
+
+                ejerciciosCommand.Parameters.AddWithValue(
+                    "id_dia",
+                    diaBase.IdDia
+                );
+
+                var ejercicios =
+                    new List<object>();
+
+                await using var ejerciciosReader =
+                    await ejerciciosCommand.ExecuteReaderAsync();
+
+                while (await ejerciciosReader.ReadAsync())
+                {
+                    ejercicios.Add(new
+                    {
+                        idEjercicioRutina =
+                            ejerciciosReader.GetInt32(0),
+
+                        idEjercicio =
+                            ejerciciosReader.GetInt32(1),
+
+                        nombre =
+                            ejerciciosReader.GetString(2),
+
+                        descripcion =
+                            ejerciciosReader.IsDBNull(3)
+                                ? null
+                                : ejerciciosReader.GetString(3),
+
+                        series =
+                            ejerciciosReader.GetInt32(4),
+
+                        repeticiones =
+                            ejerciciosReader.GetInt32(5),
+
+                        orden =
+                            ejerciciosReader.GetInt32(6)
+                    });
+                }
+
+                dias.Add(new
+                {
+                    idDia = diaBase.IdDia,
+                    dia = diaBase.Dia,
+                    ejercicios
                 });
             }
 
-            var idCliente =
-                reader.GetInt32(0);
-
-            var nombreCliente =
-                reader.GetString(1);
+            // ===============================
+            // RESPUESTA
+            // ===============================
 
             return Results.Ok(new
             {
                 idUsuario,
                 idCliente,
-                nombreCliente
+                nombreCliente,
+                idRutina,
+                nombre = nombreRutina,
+                descripcion = descripcionRutina,
+                dias
             });
         }
         catch (Exception)
         {
             return Results.Problem(
                 title:
-                    "Error al obtener cliente desde la sesión",
+                    "Error al consultar Mi Rutina",
                 detail:
                     "Ocurrió un error interno.",
                 statusCode: 500
