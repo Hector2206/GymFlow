@@ -139,7 +139,29 @@ app.MapPost(
         CrearEjercicioRequest request,
         IConfiguration configuration
     ) =>
+    app.MapPost(
+    "/api/ejercicios",
+    async (
+        CrearEjercicioRequest request,
+        IConfiguration configuration
+    ) =>
     {
+        if (string.IsNullOrWhiteSpace(request.Nombre))
+        {
+            return Results.BadRequest(new
+            {
+                mensaje = "El nombre del ejercicio es obligatorio."
+            });
+        }
+
+        if (request.Nombre.Length > 120)
+        {
+            return Results.BadRequest(new
+            {
+                mensaje = "El nombre del ejercicio no puede superar los 120 caracteres."
+            });
+        }
+
         var connectionString =
             configuration.GetConnectionString(
                 "PostgreSQL"
@@ -218,6 +240,94 @@ app.MapPost(
         {
             return Results.Problem(
                 title: "Error al registrar ejercicio",
+                detail: "Ocurrió un error interno.",
+                statusCode: 500
+            );
+        }
+    }
+)
+)
+.RequireAuthorization();
+
+// ===============================
+// LISTAR EJERCICIOS
+// #907
+// ===============================
+
+app.MapGet(
+    "/api/ejercicios",
+    async (
+        IConfiguration configuration
+    ) =>
+    {
+        var connectionString =
+            configuration.GetConnectionString(
+                "PostgreSQL"
+            );
+
+        if (string.IsNullOrWhiteSpace(connectionString))
+        {
+            return Results.Problem(
+                title: "Configuración faltante",
+                detail:
+                    "No existe la cadena de conexión PostgreSQL.",
+                statusCode: 500
+            );
+        }
+
+        try
+        {
+            await using var connection =
+                new NpgsqlConnection(connectionString);
+
+            await connection.OpenAsync();
+
+            await using var command =
+                new NpgsqlCommand(
+                    """
+                    SELECT
+                        id_ejercicio,
+                        nombre,
+                        descripcion,
+                        estado
+                    FROM ejercicios
+                    ORDER BY nombre;
+                    """,
+                    connection
+                );
+
+            await using var reader =
+                await command.ExecuteReaderAsync();
+
+            var ejercicios =
+                new List<object>();
+
+            while (await reader.ReadAsync())
+            {
+                ejercicios.Add(new
+                {
+                    idEjercicio =
+                        reader.GetInt32(0),
+
+                    nombre =
+                        reader.GetString(1),
+
+                    descripcion =
+                        reader.IsDBNull(2)
+                            ? null
+                            : reader.GetString(2),
+
+                    estado =
+                        reader.GetBoolean(3)
+                });
+            }
+
+            return Results.Ok(ejercicios);
+        }
+        catch (Exception)
+        {
+            return Results.Problem(
+                title: "Error al consultar ejercicios",
                 detail: "Ocurrió un error interno.",
                 statusCode: 500
             );
