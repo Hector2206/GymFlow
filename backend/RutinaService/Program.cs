@@ -1273,4 +1273,215 @@ app.MapGet(
 .RequireAuthorization();
 
 
+// ===============================
+// OBTENER RUTINA POR ID
+// #923
+// ===============================
+
+app.MapGet(
+    "/api/rutinas/{idRutina:int}",
+    async (
+        int idRutina,
+        IConfiguration configuration
+    ) =>
+    {
+        if (idRutina <= 0)
+        {
+            return Results.BadRequest(new
+            {
+                mensaje = "El id de la rutina no es válido."
+            });
+        }
+
+        var connectionString =
+            configuration.GetConnectionString("PostgreSQL");
+
+        if (string.IsNullOrWhiteSpace(connectionString))
+        {
+            return Results.Problem(
+                title: "Configuración faltante",
+                detail: "No existe la cadena de conexión PostgreSQL.",
+                statusCode: 500
+            );
+        }
+
+        try
+        {
+            await using var connection =
+                new NpgsqlConnection(connectionString);
+
+            await connection.OpenAsync();
+
+            // Encabezado de la rutina
+            await using var rutinaCommand =
+                new NpgsqlCommand(
+                    """
+                    SELECT
+                        r.id_rutina,
+                        r.nombre,
+                        r.descripcion,
+                        r.id_cliente,
+                        c.nombre_completo
+                    FROM rutinas r
+                    INNER JOIN clientes c
+                        ON c.id_cliente = r.id_cliente
+                    WHERE r.id_rutina = @id_rutina;
+                    """,
+                    connection
+                );
+
+            rutinaCommand.Parameters.AddWithValue(
+                "id_rutina",
+                idRutina
+            );
+
+            int idCliente;
+            string nombreRutina;
+            string? descripcion;
+            string nombreCliente;
+
+            await using (var rutinaReader =
+                await rutinaCommand.ExecuteReaderAsync())
+            {
+                if (!await rutinaReader.ReadAsync())
+                {
+                    return Results.NotFound(new
+                    {
+                        mensaje = "La rutina no existe."
+                    });
+                }
+
+                nombreRutina =
+                    rutinaReader.GetString(1);
+
+                descripcion =
+                    rutinaReader.IsDBNull(2)
+                        ? null
+                        : rutinaReader.GetString(2);
+
+                idCliente =
+                    rutinaReader.GetInt32(3);
+
+                nombreCliente =
+                    rutinaReader.GetString(4);
+            }
+
+            // Días y ejercicios
+            await using var detalleCommand =
+                new NpgsqlCommand(
+                    """
+                    SELECT
+                        d.id_dia,
+                        d.dia,
+                        er.id_ejercicio_rutina,
+                        er.id_ejercicio,
+                        e.nombre,
+                        e.descripcion,
+                        er.series,
+                        er.repeticiones,
+                        er.orden
+                    FROM dias_rutina d
+                    LEFT JOIN ejercicios_rutina er
+                        ON er.id_dia = d.id_dia
+                    LEFT JOIN ejercicios e
+                        ON e.id_ejercicio = er.id_ejercicio
+                    WHERE d.id_rutina = @id_rutina
+                    ORDER BY
+                        d.id_dia,
+                        er.orden;
+                    """,
+                    connection
+                );
+
+            detalleCommand.Parameters.AddWithValue(
+                "id_rutina",
+                idRutina
+            );
+
+            var dias =
+                new Dictionary<
+                    int,
+                    (string Dia, List<object> Ejercicios)
+                >();
+
+            await using var detalleReader =
+                await detalleCommand.ExecuteReaderAsync();
+
+            while (await detalleReader.ReadAsync())
+            {
+                var idDia =
+                    detalleReader.GetInt32(0);
+
+                var dia =
+                    detalleReader.GetString(1);
+
+                if (!dias.ContainsKey(idDia))
+                {
+                    dias[idDia] =
+                        (dia, new List<object>());
+                }
+
+                if (!detalleReader.IsDBNull(2))
+                {
+                    dias[idDia].Ejercicios.Add(new
+                    {
+                        idEjercicioRutina =
+                            detalleReader.GetInt32(2),
+
+                        idEjercicio =
+                            detalleReader.GetInt32(3),
+
+                        nombre =
+                            detalleReader.GetString(4),
+
+                        descripcion =
+                            detalleReader.IsDBNull(5)
+                                ? null
+                                : detalleReader.GetString(5),
+
+                        series =
+                            detalleReader.GetInt32(6),
+
+                        repeticiones =
+                            detalleReader.GetInt32(7),
+
+                        orden =
+                            detalleReader.GetInt32(8)
+                    });
+                }
+            }
+
+            var diasRespuesta =
+                dias.Select(d => new
+                {
+                    idDia = d.Key,
+                    dia = d.Value.Dia,
+                    ejercicios =
+                        d.Value.Ejercicios
+                })
+                .ToList();
+
+            return Results.Ok(new
+            {
+                idRutina,
+                idCliente,
+                nombreCliente,
+                nombre = nombreRutina,
+                descripcion,
+                dias = diasRespuesta
+            });
+        }
+        catch (Exception)
+        {
+            return Results.Problem(
+                title: "Error al consultar rutina",
+                detail: "Ocurrió un error interno.",
+                statusCode: 500
+            );
+        }
+    }
+)
+.RequireAuthorization();
+
+
 app.Run();
