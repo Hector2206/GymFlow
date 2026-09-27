@@ -652,4 +652,107 @@ app.MapDelete(
 .RequireAuthorization();
 
 
+// ===============================
+// BUSCAR EJERCICIO POR NOMBRE
+// #911
+// ===============================
+
+app.MapGet(
+    "/api/ejercicios/buscar",
+    async (
+        string nombre,
+        IConfiguration configuration
+    ) =>
+    {
+        if (string.IsNullOrWhiteSpace(nombre))
+        {
+            return Results.BadRequest(new
+            {
+                mensaje = "El nombre de búsqueda es obligatorio."
+            });
+        }
+
+        var connectionString =
+            configuration.GetConnectionString(
+                "PostgreSQL"
+            );
+
+        if (string.IsNullOrWhiteSpace(connectionString))
+        {
+            return Results.Problem(
+                title: "Configuración faltante",
+                detail:
+                    "No existe la cadena de conexión PostgreSQL.",
+                statusCode: 500
+            );
+        }
+
+        try
+        {
+            await using var connection =
+                new NpgsqlConnection(connectionString);
+
+            await connection.OpenAsync();
+
+            await using var command =
+                new NpgsqlCommand(
+                    """
+                    SELECT
+                        id_ejercicio,
+                        nombre,
+                        descripcion,
+                        estado
+                    FROM ejercicios
+                    WHERE nombre ILIKE @nombre
+                    ORDER BY nombre;
+                    """,
+                    connection
+                );
+
+            command.Parameters.AddWithValue(
+                "nombre",
+                $"%{nombre}%"
+            );
+
+            await using var reader =
+                await command.ExecuteReaderAsync();
+
+            var ejercicios =
+                new List<object>();
+
+            while (await reader.ReadAsync())
+            {
+                ejercicios.Add(new
+                {
+                    idEjercicio =
+                        reader.GetInt32(0),
+
+                    nombre =
+                        reader.GetString(1),
+
+                    descripcion =
+                        reader.IsDBNull(2)
+                            ? null
+                            : reader.GetString(2),
+
+                    estado =
+                        reader.GetBoolean(3)
+                });
+            }
+
+            return Results.Ok(ejercicios);
+        }
+        catch (Exception)
+        {
+            return Results.Problem(
+                title: "Error al buscar ejercicios",
+                detail: "Ocurrió un error interno.",
+                statusCode: 500
+            );
+        }
+    }
+)
+.RequireAuthorization();
+
+
 app.Run();
