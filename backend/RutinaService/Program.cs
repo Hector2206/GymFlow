@@ -1902,16 +1902,19 @@ app.MapGet(
 
 // ===============================
 // URL WEB DE RUTINAS
-// #929
+// #929 + #930
 // ===============================
 
 app.MapGet(
     "/api/rutinas/url",
     () =>
     {
+        const string urlRutinas =
+            "https://gymflow-web-lkvv.onrender.com/rutinas";
+
         return Results.Ok(new
         {
-            mensaje = "Endpoint de URL de rutinas disponible."
+            url = urlRutinas
         });
     }
 )
