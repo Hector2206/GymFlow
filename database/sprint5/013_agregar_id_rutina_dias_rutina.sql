@@ -1,0 +1,2 @@
+﻿ALTER TABLE dias_rutina
+ADD COLUMN id_rutina INTEGER NOT NULL;
