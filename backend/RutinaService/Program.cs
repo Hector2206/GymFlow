@@ -859,6 +859,49 @@ app.MapPost(
                     await command.ExecuteScalarAsync()
                 );
 
+            var diasGuardados = new List<object>();
+
+            foreach (var dia in request.Dias)
+            {
+                await using var diaCommand =
+                    new NpgsqlCommand(
+                        """
+                        INSERT INTO dias_rutina (
+                            dia,
+                            id_rutina
+                        )
+                        VALUES (
+                            @dia,
+                            @id_rutina
+                        )
+                        RETURNING id_dia;
+                        """,
+                        connection,
+                        transaction
+                    );
+
+                diaCommand.Parameters.AddWithValue(
+                    "dia",
+                    dia.Dia
+                );
+
+                diaCommand.Parameters.AddWithValue(
+                    "id_rutina",
+                    idRutina
+                );
+
+                var idDia =
+                    Convert.ToInt32(
+                        await diaCommand.ExecuteScalarAsync()
+                    );
+
+                diasGuardados.Add(new
+                {
+                    idDia,
+                    dia = dia.Dia
+                });
+            }
+
             await transaction.CommitAsync();
 
             return Results.Created(
@@ -868,7 +911,8 @@ app.MapPost(
                     idRutina,
                     idCliente = request.IdCliente,
                     nombre = request.Nombre,
-                    descripcion = request.Descripcion
+                    descripcion = request.Descripcion,
+                    dias = diasGuardados
                 }
             );
         }
