@@ -1900,5 +1900,22 @@ app.MapGet(
 )
 .RequireAuthorization();
 
+// ===============================
+// URL WEB DE RUTINAS
+// #929
+// ===============================
+
+app.MapGet(
+    "/api/rutinas/url",
+    () =>
+    {
+        return Results.Ok(new
+        {
+            mensaje = "Endpoint de URL de rutinas disponible."
+        });
+    }
+)
+.RequireAuthorization();
+
 
 app.Run();
