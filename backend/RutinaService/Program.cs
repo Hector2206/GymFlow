@@ -1898,7 +1898,10 @@ app.MapGet(
         }
     }
 )
-.RequireAuthorization();
+.RequireAuthorization(policy =>
+{
+    policy.RequireRole("Cliente");
+});
 
 // ===============================
 // URL WEB DE RUTINAS
