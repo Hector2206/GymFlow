@@ -1,0 +1,2 @@
+﻿ALTER TABLE rutinas
+ADD COLUMN id_cliente INTEGER NOT NULL;
