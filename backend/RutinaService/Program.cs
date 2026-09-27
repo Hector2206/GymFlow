@@ -907,6 +907,14 @@ app.MapPost(
                                     "La cantidad de series debe ser mayor a 0."
                             });
                         }
+                    if (ejercicio.Repeticiones <= 0)
+                        {
+                            return Results.BadRequest(new
+                            {
+                                mensaje =
+                                    "La cantidad de repeticiones debe ser mayor a 0."
+                            });
+                        }
                     await using var ejercicioCommand =
                         new NpgsqlCommand(
                             """
