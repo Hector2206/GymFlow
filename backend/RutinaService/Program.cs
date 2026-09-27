@@ -899,6 +899,14 @@ app.MapPost(
 
                 foreach (var ejercicio in dia.Ejercicios)
                 {
+                    if (ejercicio.Series <= 0)
+                        {
+                            return Results.BadRequest(new
+                            {
+                                mensaje =
+                                    "La cantidad de series debe ser mayor a 0."
+                            });
+                        }
                     await using var ejercicioCommand =
                         new NpgsqlCommand(
                             """
