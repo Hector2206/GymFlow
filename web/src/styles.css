@@ -1,1 +1,106 @@
-/* You can add global styles to this file, and also import other style files */
+:root {
+  --bg-primary: #f5f5f7;
+  --bg-card: #ffffff;
+  --bg-secondary: #fbfbfd;
+
+  --text-primary: #1d1d1f;
+  --text-secondary: #6e6e73;
+  --text-light: #86868b;
+
+  --accent: #0071e3;
+  --accent-hover: #0077ed;
+
+  --success: #34c759;
+  --danger: #ff3b30;
+  --warning: #ff9500;
+
+  --border: rgba(0, 0, 0, 0.08);
+
+  --shadow-small:
+    0 2px 8px rgba(0, 0, 0, 0.04);
+
+  --shadow-medium:
+    0 8px 30px rgba(0, 0, 0, 0.08);
+
+  --shadow-large:
+    0 18px 50px rgba(0, 0, 0, 0.1);
+
+  --radius-small: 10px;
+  --radius-medium: 16px;
+  --radius-large: 24px;
+  --radius-xl: 30px;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+
+  min-width: 320px;
+  min-height: 100vh;
+}
+
+body {
+  background: var(--bg-primary);
+
+  color: var(--text-primary);
+
+  font-family:
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Roboto,
+    Helvetica,
+    Arial,
+    sans-serif;
+
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+button,
+input,
+select,
+textarea {
+  font-family: inherit;
+}
+
+button {
+  -webkit-tap-highlight-color: transparent;
+}
+
+a {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+img {
+  max-width: 100%;
+}
+
+::selection {
+  background: rgba(0, 113, 227, 0.2);
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.18);
+
+  border: 3px solid transparent;
+  border-radius: 20px;
+
+  background-clip: padding-box;
+}
