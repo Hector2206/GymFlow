@@ -158,212 +158,572 @@ class HomePage extends StatelessWidget {
     BuildContext context,
     String nombre,
   ) {
-    ScaffoldMessenger.of(context).showSnackBar(
+    ScaffoldMessenger.of(
+      context,
+    ).hideCurrentSnackBar();
+
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(
       SnackBar(
-        content: Text(
-          '$nombre estará disponible próximamente.',
+        behavior:
+            SnackBarBehavior.floating,
+
+        backgroundColor:
+            const Color(
+          0xFFFFFDF8,
+        ),
+
+        elevation: 3,
+
+        shape:
+            RoundedRectangleBorder(
+          borderRadius:
+              BorderRadius.circular(
+            14,
+          ),
+
+          side:
+              const BorderSide(
+            color:
+                Color(
+              0xFFD8C8A5,
+            ),
+          ),
+        ),
+
+        content: Row(
+          children: [
+            Container(
+              width: 30,
+              height: 30,
+
+              decoration:
+                  const BoxDecoration(
+                color:
+                    Color(
+                  0xFFB58A2A,
+                ),
+                shape:
+                    BoxShape.circle,
+              ),
+
+              child:
+                  const Icon(
+                Icons.info_outline,
+                color: Colors.white,
+                size: 18,
+              ),
+            ),
+
+            const SizedBox(
+              width: 12,
+            ),
+
+            Expanded(
+              child: Text(
+                '$nombre estará disponible próximamente.',
+
+                style:
+                    const TextStyle(
+                  color:
+                      Color(
+                    0xFF2F2A24,
+                  ),
+                  fontSize: 13,
+                  fontWeight:
+                      FontWeight.w600,
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );
   }
 
   @override
-  Widget build(BuildContext context) {
-    const gold =
-        Color(0xFFD4AF37);
+  Widget build(
+    BuildContext context,
+  ) {
+    const background =
+        Color(
+      0xFFF8F5EF,
+    );
+
+    const surface =
+        Color(
+      0xFFFFFDF8,
+    );
+
+    const goldDark =
+        Color(
+      0xFF8A6814,
+    );
+
+    const textPrimary =
+        Color(
+      0xFF2F2A24,
+    );
+
+    const textSecondary =
+        Color(
+      0xFF777067,
+    );
 
     return Scaffold(
       backgroundColor:
-          const Color(
-        0xFF101012,
-      ),
+          background,
 
       appBar: AppBar(
         backgroundColor:
-            const Color(
-          0xFF101012,
-        ),
+            surface,
+
+        surfaceTintColor:
+            Colors.transparent,
 
         elevation: 0,
 
+        shadowColor:
+            const Color(
+          0x144C3E24,
+        ),
+
+        titleSpacing: 18,
+
         title: Image.asset(
           'assets/Logo_GymFlow.png',
-          height: 50,
+
+          height: 48,
+
+          fit:
+              BoxFit.contain,
         ),
 
         actions: [
           Padding(
             padding:
                 const EdgeInsets.only(
-              right: 16,
+              right: 14,
             ),
 
-            child: IconButton(
-              tooltip:
-                  'Cerrar sesión',
+            child: Container(
+              width: 42,
+              height: 42,
 
-              onPressed: () {
-                cerrarSesion(
-                  context,
-                );
-              },
+              decoration:
+                  BoxDecoration(
+                color:
+                    const Color(
+                  0xFFF8F4EC,
+                ),
 
-              icon:
-                  const Icon(
-                Icons.logout,
-                color: gold,
+                borderRadius:
+                    BorderRadius.circular(
+                  12,
+                ),
+
+                border:
+                    Border.all(
+                  color:
+                      const Color(
+                    0xFFD8C8A5,
+                  ),
+                ),
+              ),
+
+              child:
+                  IconButton(
+                padding:
+                    EdgeInsets.zero,
+
+                tooltip:
+                    'Cerrar sesión',
+
+                onPressed: () {
+                  cerrarSesion(
+                    context,
+                  );
+                },
+
+                icon:
+                    const Icon(
+                  Icons.logout_rounded,
+
+                  color:
+                      goldDark,
+
+                  size:
+                      21,
+                ),
               ),
             ),
           ),
         ],
-      ),
 
-      body: SafeArea(
-        child:
-            SingleChildScrollView(
-          padding:
-              const EdgeInsets.fromLTRB(
-            18,
-            28,
-            18,
-            40,
+        bottom:
+            const PreferredSize(
+          preferredSize:
+              Size.fromHeight(
+            1,
           ),
 
           child:
-              Column(
-            crossAxisAlignment:
-                CrossAxisAlignment.start,
+              Divider(
+            height: 1,
 
-            children: [
-              const Text(
-                'Bienvenido a GymFlow',
+            color:
+                Color(
+              0xFFE7DFD2,
+            ),
+          ),
+        ),
+      ),
 
-                style:
-                    TextStyle(
-                  color:
-                      Color(
-                    0xFFA9A9A9,
-                  ),
+      body: SafeArea(
+        child: Container(
+          width:
+              double.infinity,
 
-                  fontSize: 15,
-                ),
-              ),
+          decoration:
+              const BoxDecoration(
+            gradient:
+                LinearGradient(
+              begin:
+                  Alignment.topCenter,
 
-              const SizedBox(
-                height: 6,
-              ),
+              end:
+                  Alignment.bottomCenter,
 
-              Text(
-                'Hola, ${usuario.name}',
-
-                style:
-                    const TextStyle(
-                  color:
-                      Colors.white,
-
-                  fontSize: 30,
-
-                  fontWeight:
-                      FontWeight.bold,
-                ),
-              ),
-
-              const SizedBox(
-                height: 12,
-              ),
-
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(
-                  horizontal: 14,
-                  vertical: 7,
+              colors: [
+                Color(
+                  0xFFF8F5EF,
                 ),
 
-                decoration:
-                    BoxDecoration(
-                  color:
-                      gold.withValues(
-                    alpha: 0.10,
-                  ),
+                Color(
+                  0xFFF2EDE4,
+                ),
+              ],
+            ),
+          ),
 
-                  borderRadius:
-                      BorderRadius.circular(
-                    30,
-                  ),
+          child:
+              SingleChildScrollView(
+            padding:
+                const EdgeInsets.fromLTRB(
+              18,
+              28,
+              18,
+              40,
+            ),
 
-                  border:
-                      Border.all(
-                    color:
-                        gold.withValues(
-                      alpha: 0.45,
+            child: Center(
+              child:
+                  ConstrainedBox(
+                constraints:
+                    const BoxConstraints(
+                  maxWidth: 760,
+                ),
+
+                child: Column(
+                  crossAxisAlignment:
+                      CrossAxisAlignment
+                          .start,
+
+                  children: [
+                    Container(
+                      width:
+                          double.infinity,
+
+                      padding:
+                          const EdgeInsets.all(
+                        22,
+                      ),
+
+                      decoration:
+                          BoxDecoration(
+                        color:
+                            surface,
+
+                        borderRadius:
+                            BorderRadius.circular(
+                          20,
+                        ),
+
+                        border:
+                            Border.all(
+                          color:
+                              const Color(
+                            0xFFE5DDCF,
+                          ),
+                        ),
+
+                        boxShadow: [
+                          BoxShadow(
+                            color:
+                                const Color(
+                              0xFF4C3E24,
+                            ).withValues(
+                              alpha:
+                                  0.05,
+                            ),
+
+                            blurRadius:
+                                22,
+
+                            offset:
+                                const Offset(
+                              0,
+                              8,
+                            ),
+                          ),
+                        ],
+                      ),
+
+                      child: Column(
+                        crossAxisAlignment:
+                            CrossAxisAlignment
+                                .start,
+
+                        children: [
+                          const Text(
+                            'GYMFLOW',
+
+                            style:
+                                TextStyle(
+                              color:
+                                  goldDark,
+
+                              fontSize:
+                                  11,
+
+                              fontWeight:
+                                  FontWeight
+                                      .w700,
+
+                              letterSpacing:
+                                  2,
+                            ),
+                          ),
+
+                          const SizedBox(
+                            height:
+                                7,
+                          ),
+
+                          Text(
+                            'Hola, ${usuario.name}',
+
+                            style:
+                                const TextStyle(
+                              color:
+                                  textPrimary,
+
+                              fontSize:
+                                  29,
+
+                              fontWeight:
+                                  FontWeight
+                                      .w700,
+
+                              letterSpacing:
+                                  -0.6,
+                            ),
+                          ),
+
+                          const SizedBox(
+                            height:
+                                8,
+                          ),
+
+                          const Text(
+                            'Bienvenido a tu espacio de gestión.',
+
+                            style:
+                                TextStyle(
+                              color:
+                                  textSecondary,
+
+                              fontSize:
+                                  14,
+
+                              height:
+                                  1.4,
+                            ),
+                          ),
+
+                          const SizedBox(
+                            height:
+                                16,
+                          ),
+
+                          Container(
+                            padding:
+                                const EdgeInsets.symmetric(
+                              horizontal:
+                                  14,
+
+                              vertical:
+                                  7,
+                            ),
+
+                            decoration:
+                                BoxDecoration(
+                              color:
+                                  const Color(
+                                0xFFF3EAD8,
+                              ),
+
+                              borderRadius:
+                                  BorderRadius.circular(
+                                30,
+                              ),
+
+                              border:
+                                  Border.all(
+                                color:
+                                    const Color(
+                                  0xFFD8C392,
+                                ),
+                              ),
+                            ),
+
+                            child: Text(
+                              usuario.role,
+
+                              style:
+                                  const TextStyle(
+                                color:
+                                    goldDark,
+
+                                fontSize:
+                                    12,
+
+                                fontWeight:
+                                    FontWeight
+                                        .w700,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                ),
 
-                child: Text(
-                  usuario.role,
+                    const SizedBox(
+                      height:
+                          28,
+                    ),
 
-                  style:
-                      const TextStyle(
-                    color: gold,
+                    const Text(
+                      'Accesos rápidos',
 
-                    fontSize: 13,
+                      style:
+                          TextStyle(
+                        color:
+                            textPrimary,
 
-                    fontWeight:
-                        FontWeight.bold,
-                  ),
+                        fontSize:
+                            19,
+
+                        fontWeight:
+                            FontWeight
+                                .w700,
+                      ),
+                    ),
+
+                    const SizedBox(
+                      height:
+                          5,
+                    ),
+
+                    const Text(
+                      'Selecciona una opción para continuar.',
+
+                      style:
+                          TextStyle(
+                        color:
+                            textSecondary,
+
+                        fontSize:
+                            13,
+                      ),
+                    ),
+
+                    const SizedBox(
+                      height:
+                          18,
+                    ),
+
+                    if (esRecepcionista)
+                      ..._tarjetasRecepcionista(
+                        context,
+                      ),
+
+                    if (esCliente)
+                      ..._tarjetasCliente(
+                        context,
+                      ),
+
+                    if (esAdministrador)
+                      ..._tarjetasAdministrador(
+                        context,
+                      ),
+
+                    if (esEntrenador)
+                      ..._tarjetasEntrenador(
+                        context,
+                      ),
+                  ],
                 ),
               ),
-
-              const SizedBox(
-                height: 35,
-              ),
-
-              if (esRecepcionista)
-                ..._tarjetasRecepcionista(
-                  context,
-                ),
-
-              if (esCliente)
-                ..._tarjetasCliente(
-                  context,
-                ),
-
-              if (esAdministrador)
-                ..._tarjetasAdministrador(
-                  context,
-                ),
-
-              if (esEntrenador)
-                ..._tarjetasEntrenador(
-                  context,
-                ),
-            ],
+            ),
           ),
         ),
       ),
 
       bottomNavigationBar:
-          const Padding(
+          Container(
         padding:
-            EdgeInsets.symmetric(
+            const EdgeInsets.symmetric(
+          horizontal: 16,
           vertical: 14,
         ),
 
-        child: Text(
-          'GymFlow · Gestión inteligente para gimnasios',
+        decoration:
+            const BoxDecoration(
+          color:
+              surface,
 
-          textAlign:
-              TextAlign.center,
-
-          style:
-              TextStyle(
-            color:
-                Color(
-              0xFF777777,
+          border:
+              Border(
+            top:
+                BorderSide(
+              color:
+                  Color(
+                0xFFE7DFD2,
+              ),
             ),
+          ),
+        ),
 
-            fontSize: 12,
+        child:
+            const SafeArea(
+          top: false,
+
+          child: Text(
+            'GymFlow · Gestión inteligente para gimnasios',
+
+            textAlign:
+                TextAlign.center,
+
+            style:
+                TextStyle(
+              color:
+                  textSecondary,
+
+              fontSize:
+                  11,
+            ),
           ),
         ),
       ),
@@ -377,13 +737,10 @@ class HomePage extends StatelessWidget {
       _buildCard(
         icon:
             Icons.person_outline,
-
         titulo:
             'Mi Perfil',
-
         subtitulo:
             'Consulta tu información de usuario',
-
         onTap: () {
           irPerfil(
             context,
@@ -396,13 +753,10 @@ class HomePage extends StatelessWidget {
       _buildCard(
         icon:
             Icons.person_add_alt_1,
-
         titulo:
             'Registrar Cliente',
-
         subtitulo:
             'Dar de alta un nuevo cliente',
-
         onTap: () {
           irRegistrarCliente(
             context,
@@ -415,13 +769,10 @@ class HomePage extends StatelessWidget {
       _buildCard(
         icon:
             Icons.check_circle_outline,
-
         titulo:
             'Registrar Asistencia',
-
         subtitulo:
             'Registrar la asistencia de un cliente',
-
         onTap: () {
           irRegistrarAsistencia(
             context,
@@ -434,13 +785,10 @@ class HomePage extends StatelessWidget {
       _buildCard(
         icon:
             Icons.calendar_month_outlined,
-
         titulo:
             'Historial de Asistencias',
-
         subtitulo:
             'Consultar registros de entrada de clientes',
-
         onTap: () {
           irHistorialAsistencias(
             context,
@@ -453,13 +801,10 @@ class HomePage extends StatelessWidget {
       _buildCard(
         icon:
             Icons.payments_outlined,
-
         titulo:
             'Registrar Pago',
-
         subtitulo:
             'Registrar pagos y renovaciones de clientes',
-
         onTap: () {
           irRegistrarPago(
             context,
@@ -472,13 +817,10 @@ class HomePage extends StatelessWidget {
       _buildCard(
         icon:
             Icons.receipt_long_outlined,
-
         titulo:
             'Historial de Pagos',
-
         subtitulo:
             'Consultar los pagos registrados de clientes',
-
         onTap: () {
           irHistorialPagos(
             context,
@@ -491,13 +833,10 @@ class HomePage extends StatelessWidget {
       _buildCard(
         icon:
             Icons.groups_outlined,
-
         titulo:
             'Administrar Clientes',
-
         subtitulo:
             'Consultar y administrar clientes',
-
         onTap: () {
           proximamente(
             context,
@@ -511,13 +850,10 @@ class HomePage extends StatelessWidget {
       _buildCard(
         icon:
             Icons.fitness_center,
-
         titulo:
             'Asignación de Entrenadores',
-
         subtitulo:
             'Asignar clientes a entrenadores',
-
         onTap: () {
           proximamente(
             context,
@@ -531,13 +867,10 @@ class HomePage extends StatelessWidget {
       _buildCard(
         icon:
             Icons.campaign_outlined,
-
         titulo:
             'Anuncios',
-
         subtitulo:
             'Administrar anuncios del gimnasio',
-
         onTap: () {
           proximamente(
             context,
@@ -555,13 +888,10 @@ class HomePage extends StatelessWidget {
       _buildCard(
         icon:
             Icons.person_outline,
-
         titulo:
             'Mi Perfil',
-
         subtitulo:
             'Consulta tu información personal',
-
         onTap: () {
           irPerfil(
             context,
@@ -574,13 +904,10 @@ class HomePage extends StatelessWidget {
       _buildCard(
         icon:
             Icons.qr_code_2_outlined,
-
         titulo:
             'Mi Código de Acceso',
-
         subtitulo:
             'Consulta tu código personal para registrar tu entrada',
-
         onTap: () {
           irMiCodigoAcceso(
             context,
@@ -593,13 +920,10 @@ class HomePage extends StatelessWidget {
       _buildCard(
         icon:
             Icons.calendar_month_outlined,
-
         titulo:
             'Mis Asistencias',
-
         subtitulo:
             'Consulta tu historial de asistencias',
-
         onTap: () {
           irMisAsistencias(
             context,
@@ -612,13 +936,10 @@ class HomePage extends StatelessWidget {
       _buildCard(
         icon:
             Icons.payments_outlined,
-
         titulo:
             'Mis Pagos',
-
         subtitulo:
             'Consulta tus pagos y renovaciones',
-
         onTap: () {
           irMisPagos(
             context,
@@ -631,13 +952,10 @@ class HomePage extends StatelessWidget {
       _buildCard(
         icon:
             Icons.card_membership_outlined,
-
         titulo:
             'Membresía',
-
         subtitulo:
             'Consulta tu membresía actual',
-
         onTap: () {
           proximamente(
             context,
@@ -651,13 +969,10 @@ class HomePage extends StatelessWidget {
       _buildCard(
         icon:
             Icons.fitness_center,
-
         titulo:
             'Rutinas',
-
         subtitulo:
             'Consulta tu rutina de entrenamiento',
-
         onTap: () {
           proximamente(
             context,
@@ -671,13 +986,10 @@ class HomePage extends StatelessWidget {
       _buildCard(
         icon:
             Icons.campaign_outlined,
-
         titulo:
             'Anuncios',
-
         subtitulo:
             'Consulta anuncios y promociones',
-
         onTap: () {
           proximamente(
             context,
@@ -695,13 +1007,10 @@ class HomePage extends StatelessWidget {
       _buildCard(
         icon:
             Icons.person_outline,
-
         titulo:
             'Mi Perfil',
-
         subtitulo:
             'Consulta tu información de administrador',
-
         onTap: () {
           irPerfil(
             context,
@@ -714,13 +1023,10 @@ class HomePage extends StatelessWidget {
       _buildCard(
         icon:
             Icons.groups_outlined,
-
         titulo:
             'Administrar Clientes',
-
         subtitulo:
             'Consultar y administrar clientes',
-
         onTap: () {
           proximamente(
             context,
@@ -734,13 +1040,10 @@ class HomePage extends StatelessWidget {
       _buildCard(
         icon:
             Icons.badge_outlined,
-
         titulo:
             'Administrar Recepcionistas',
-
         subtitulo:
             'Consultar y administrar recepcionistas',
-
         onTap: () {
           proximamente(
             context,
@@ -754,13 +1057,10 @@ class HomePage extends StatelessWidget {
       _buildCard(
         icon:
             Icons.fitness_center,
-
         titulo:
             'Administrar Entrenadores',
-
         subtitulo:
             'Consultar y administrar entrenadores',
-
         onTap: () {
           proximamente(
             context,
@@ -774,13 +1074,10 @@ class HomePage extends StatelessWidget {
       _buildCard(
         icon:
             Icons.admin_panel_settings_outlined,
-
         titulo:
             'Ver Administradores',
-
         subtitulo:
             'Consulta los administradores registrados',
-
         onTap: () {
           proximamente(
             context,
@@ -798,13 +1095,10 @@ class HomePage extends StatelessWidget {
       _buildCard(
         icon:
             Icons.person_outline,
-
         titulo:
             'Mi Perfil',
-
         subtitulo:
             'Consulta tu información de entrenador',
-
         onTap: () {
           irPerfil(
             context,
@@ -817,13 +1111,10 @@ class HomePage extends StatelessWidget {
       _buildCard(
         icon:
             Icons.groups_outlined,
-
         titulo:
             'Administrar mis Clientes',
-
         subtitulo:
             'Consulta los clientes que tienes asignados',
-
         onTap: () {
           proximamente(
             context,
@@ -837,13 +1128,10 @@ class HomePage extends StatelessWidget {
       _buildCard(
         icon:
             Icons.fitness_center,
-
         titulo:
             'Rutinas',
-
         subtitulo:
             'Crear y administrar rutinas de entrenamiento',
-
         onTap: () {
           proximamente(
             context,
@@ -856,7 +1144,7 @@ class HomePage extends StatelessWidget {
 
   Widget _espacio() {
     return const SizedBox(
-      height: 18,
+      height: 14,
     );
   }
 
@@ -867,13 +1155,29 @@ class HomePage extends StatelessWidget {
     required VoidCallback onTap,
   }) {
     const gold =
-        Color(0xFFD4AF37);
+        Color(
+      0xFFB58A2A,
+    );
 
-    const coal =
-        Color(0xFF1A1A1D);
+    const goldDark =
+        Color(
+      0xFF8A6814,
+    );
 
-    const silver =
-        Color(0xFFA9A9A9);
+    const surface =
+        Color(
+      0xFFFFFDF8,
+    );
+
+    const textPrimary =
+        Color(
+      0xFF2F2A24,
+    );
+
+    const textSecondary =
+        Color(
+      0xFF777067,
+    );
 
     return Material(
       color:
@@ -882,7 +1186,7 @@ class HomePage extends StatelessWidget {
       child: InkWell(
         borderRadius:
             BorderRadius.circular(
-          18,
+          16,
         ),
 
         onTap:
@@ -894,62 +1198,100 @@ class HomePage extends StatelessWidget {
 
           padding:
               const EdgeInsets.all(
-            22,
+            18,
           ),
 
           decoration:
               BoxDecoration(
             color:
-                coal,
+                surface,
 
             borderRadius:
                 BorderRadius.circular(
-              18,
+              16,
             ),
 
             border:
                 Border.all(
               color:
-                  gold.withValues(
-                alpha: 0.20,
+                  const Color(
+                0xFFE5DDCF,
               ),
             ),
+
+            boxShadow: [
+              BoxShadow(
+                color:
+                    const Color(
+                  0xFF4C3E24,
+                ).withValues(
+                  alpha:
+                      0.04,
+                ),
+
+                blurRadius:
+                    16,
+
+                offset:
+                    const Offset(
+                  0,
+                  5,
+                ),
+              ),
+            ],
           ),
 
           child: Row(
             children: [
               Container(
-                width: 58,
-                height: 58,
+                width:
+                    54,
+
+                height:
+                    54,
 
                 decoration:
                     BoxDecoration(
                   color:
-                      gold.withValues(
-                    alpha: 0.10,
+                      const Color(
+                    0xFFF3EAD8,
                   ),
 
                   borderRadius:
                       BorderRadius.circular(
                     14,
                   ),
+
+                  border:
+                      Border.all(
+                    color:
+                        const Color(
+                      0xFFE4D2AA,
+                    ),
+                  ),
                 ),
 
                 child: Icon(
                   icon,
-                  color: gold,
-                  size: 30,
+
+                  color:
+                      goldDark,
+
+                  size:
+                      27,
                 ),
               ),
 
               const SizedBox(
-                width: 18,
+                width:
+                    16,
               ),
 
               Expanded(
                 child: Column(
                   crossAxisAlignment:
-                      CrossAxisAlignment.start,
+                      CrossAxisAlignment
+                          .start,
 
                   children: [
                     Text(
@@ -958,17 +1300,20 @@ class HomePage extends StatelessWidget {
                       style:
                           const TextStyle(
                         color:
-                            Colors.white,
+                            textPrimary,
 
-                        fontSize: 18,
+                        fontSize:
+                            16,
 
                         fontWeight:
-                            FontWeight.bold,
+                            FontWeight
+                                .w700,
                       ),
                     ),
 
                     const SizedBox(
-                      height: 6,
+                      height:
+                          5,
                     ),
 
                     Text(
@@ -977,9 +1322,13 @@ class HomePage extends StatelessWidget {
                       style:
                           const TextStyle(
                         color:
-                            silver,
+                            textSecondary,
 
-                        fontSize: 14,
+                        fontSize:
+                            13,
+
+                        height:
+                            1.35,
                       ),
                     ),
                   ],
@@ -987,12 +1336,18 @@ class HomePage extends StatelessWidget {
               ),
 
               const SizedBox(
-                width: 8,
+                width:
+                    8,
               ),
 
               const Icon(
-                Icons.chevron_right,
-                color: gold,
+                Icons.chevron_right_rounded,
+
+                color:
+                    gold,
+
+                size:
+                    24,
               ),
             ],
           ),
