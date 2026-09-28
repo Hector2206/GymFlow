@@ -33,6 +33,9 @@ class _GoogleLoginButtonState
   late final GoogleSignIn
       googleSignIn;
 
+  late final Widget
+      googleButton;
+
   StreamSubscription<
           GoogleSignInAccount?>?
       subscription;
@@ -50,6 +53,9 @@ class _GoogleLoginButtonState
         'email',
       ],
     );
+
+    googleButton =
+        web.renderButton();
 
     subscription =
         googleSignIn
@@ -110,9 +116,12 @@ class _GoogleLoginButtonState
     BuildContext context,
   ) {
     return SizedBox(
-      width: double.infinity,
+      width:
+          double.infinity,
+
       child: Center(
-        child: web.renderButton(),
+        child:
+            googleButton,
       ),
     );
   }

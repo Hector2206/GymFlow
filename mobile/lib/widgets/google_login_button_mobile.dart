@@ -36,7 +36,7 @@ class _GoogleLoginButtonState
     });
 
     try {
-        final googleSignIn =
+      final googleSignIn =
           GoogleSignIn(
         scopes: const [
           'email',
@@ -89,30 +89,97 @@ class _GoogleLoginButtonState
   Widget build(
     BuildContext context,
   ) {
+    const goldDark =
+        Color(0xFF8A6814);
+
+    const border =
+        Color(0xFFD8C8A5);
+
+    const surface =
+        Color(0xFFFFFDF8);
+
+    const textPrimary =
+        Color(0xFF2F2A24);
+
     return SizedBox(
       width: double.infinity,
       height: 52,
+
       child: OutlinedButton.icon(
         onPressed:
             procesando
                 ? null
                 : iniciarGoogle,
-        icon: procesando
-            ? const SizedBox(
-                width: 20,
-                height: 20,
-                child:
-                    CircularProgressIndicator(
-                  strokeWidth: 2,
-                  color:
-                      Color(
-                    0xFFD4AF37,
+
+        style:
+            OutlinedButton.styleFrom(
+          backgroundColor:
+              surface,
+
+          foregroundColor:
+              textPrimary,
+
+          disabledForegroundColor:
+              const Color(
+            0xFF9D958A,
+          ),
+
+          side:
+              const BorderSide(
+            color:
+                border,
+            width:
+                1,
+          ),
+
+          elevation:
+              0,
+
+          shape:
+              RoundedRectangleBorder(
+            borderRadius:
+                BorderRadius.circular(
+              13,
+            ),
+          ),
+
+          textStyle:
+              const TextStyle(
+            fontSize:
+                14,
+
+            fontWeight:
+                FontWeight.w600,
+          ),
+        ),
+
+        icon:
+            procesando
+                ? const SizedBox(
+                    width:
+                        20,
+                    height:
+                        20,
+
+                    child:
+                        CircularProgressIndicator(
+                      strokeWidth:
+                          2,
+
+                      color:
+                          goldDark,
+                    ),
+                  )
+                : const Icon(
+                    Icons.login_rounded,
+
+                    color:
+                        goldDark,
+
+                    size:
+                        21,
                   ),
-                ),
-              )
-            : const Icon(
-                Icons.login,
-              ),
+
         label: Text(
           procesando
               ? 'Iniciando sesión...'
