@@ -3,19 +3,22 @@ import 'package:flutter/services.dart';
 
 import '../services/cliente_service.dart';
 
-class RegistrarClientePage extends StatefulWidget {
+class RegistrarClientePage
+    extends StatefulWidget {
   const RegistrarClientePage({
     super.key,
   });
 
   @override
-  State<RegistrarClientePage> createState() =>
-      _RegistrarClientePageState();
+  State<RegistrarClientePage>
+      createState() =>
+          _RegistrarClientePageState();
 }
 
 class _RegistrarClientePageState
     extends State<RegistrarClientePage> {
-  final _formKey = GlobalKey<FormState>();
+  final _formKey =
+      GlobalKey<FormState>();
 
   final ClienteService clienteService =
       ClienteService();
@@ -65,7 +68,8 @@ class _RegistrarClientePageState
       return 'El nombre completo es obligatorio.';
     }
 
-    if (RegExp(r'\d').hasMatch(nombre)) {
+    if (RegExp(r'\d')
+        .hasMatch(nombre)) {
       return 'El nombre no puede contener números.';
     }
 
@@ -189,7 +193,8 @@ class _RegistrarClientePageState
       return;
     }
 
-    if (!(_formKey.currentState?.validate() ??
+    if (!(_formKey.currentState
+            ?.validate() ??
         false)) {
       return;
     }
@@ -230,7 +235,8 @@ class _RegistrarClientePageState
 
     try {
       final resultado =
-          await clienteService.registrarCliente(
+          await clienteService
+              .registrarCliente(
         correo:
             correoController.text.trim(),
         password:
@@ -285,15 +291,125 @@ class _RegistrarClientePageState
     String mensaje,
     bool exito,
   ) {
-    ScaffoldMessenger.of(context)
-        .hideCurrentSnackBar();
+    ScaffoldMessenger.of(
+      context,
+    ).hideCurrentSnackBar();
 
-    ScaffoldMessenger.of(context).showSnackBar(
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(
       SnackBar(
-        content: Text(mensaje),
-        backgroundColor: exito
-            ? const Color(0xFF2E7D32)
-            : const Color(0xFF990000),
+        behavior:
+            SnackBarBehavior.floating,
+
+        margin:
+            const EdgeInsets.all(
+          18,
+        ),
+
+        elevation:
+            3,
+
+        backgroundColor:
+            exito
+                ? const Color(
+                    0xFFF1F8F2,
+                  )
+                : const Color(
+                    0xFFFFF6F6,
+                  ),
+
+        shape:
+            RoundedRectangleBorder(
+          borderRadius:
+              BorderRadius.circular(
+            14,
+          ),
+
+          side:
+              BorderSide(
+            color:
+                exito
+                    ? const Color(
+                        0xFFBBD8BF,
+                      )
+                    : const Color(
+                        0xFFEDB9BF,
+                      ),
+          ),
+        ),
+
+        content: Row(
+          children: [
+            Container(
+              width:
+                  30,
+              height:
+                  30,
+
+              decoration:
+                  BoxDecoration(
+                color:
+                    exito
+                        ? const Color(
+                            0xFF2E7D32,
+                          )
+                        : const Color(
+                            0xFFC21B2E,
+                          ),
+
+                shape:
+                    BoxShape.circle,
+              ),
+
+              child: Icon(
+                exito
+                    ? Icons
+                        .check_rounded
+                    : Icons
+                        .priority_high_rounded,
+
+                color:
+                    Colors.white,
+
+                size:
+                    18,
+              ),
+            ),
+
+            const SizedBox(
+              width:
+                  12,
+            ),
+
+            Expanded(
+              child: Text(
+                mensaje,
+
+                style:
+                    TextStyle(
+                  color:
+                      exito
+                          ? const Color(
+                              0xFF285E2D,
+                            )
+                          : const Color(
+                              0xFF8F2030,
+                            ),
+
+                  fontSize:
+                      13,
+
+                  fontWeight:
+                      FontWeight.w600,
+
+                  height:
+                      1.4,
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -314,159 +430,478 @@ class _RegistrarClientePageState
   }
 
   @override
-  Widget build(BuildContext context) {
-    const gold = Color(0xFFD4AF37);
-    const dark = Color(0xFF101012);
-    const coal = Color(0xFF1A1A1D);
-    const silver = Color(0xFFA9A9A9);
+  Widget build(
+    BuildContext context,
+  ) {
+    const background =
+        Color(
+      0xFFF8F5EF,
+    );
+
+    const surface =
+        Color(
+      0xFFFFFDF8,
+    );
+
+    const gold =
+        Color(
+      0xFFB58A2A,
+    );
+
+    const goldDark =
+        Color(
+      0xFF8A6814,
+    );
+
+    const textPrimary =
+        Color(
+      0xFF2F2A24,
+    );
+
+    const textSecondary =
+        Color(
+      0xFF777067,
+    );
 
     return Scaffold(
-      backgroundColor: dark,
+      backgroundColor:
+          background,
+
       appBar: AppBar(
-        backgroundColor: dark,
+        backgroundColor:
+            surface,
+
+        surfaceTintColor:
+            Colors.transparent,
+
+        elevation:
+            0,
+
+        leading: Padding(
+          padding:
+              const EdgeInsets.all(
+            8,
+          ),
+
+          child: Container(
+            decoration:
+                BoxDecoration(
+              color:
+                  surface,
+
+              borderRadius:
+                  BorderRadius.circular(
+                12,
+              ),
+
+              border:
+                  Border.all(
+                color:
+                    const Color(
+                  0xFFD8C8A5,
+                ),
+              ),
+            ),
+
+            child: IconButton(
+              padding:
+                  EdgeInsets.zero,
+
+              tooltip:
+                  'Regresar',
+
+              onPressed: () {
+                Navigator.of(
+                  context,
+                ).pop();
+              },
+
+              icon:
+                  const Icon(
+                Icons
+                    .arrow_back_rounded,
+
+                color:
+                    goldDark,
+
+                size:
+                    21,
+              ),
+            ),
+          ),
+        ),
+
         title: Image.asset(
           'assets/Logo_GymFlow.png',
-          height: 48,
+
+          height:
+              48,
+
+          fit:
+              BoxFit.contain,
+        ),
+
+        bottom:
+            const PreferredSize(
+          preferredSize:
+              Size.fromHeight(
+            1,
+          ),
+
+          child: Divider(
+            height:
+                1,
+
+            color:
+                Color(
+              0xFFE7DFD2,
+            ),
+          ),
         ),
       ),
+
       body: Container(
-        decoration: const BoxDecoration(
-          gradient: RadialGradient(
-            center: Alignment.topCenter,
-            radius: 1.5,
+        width:
+            double.infinity,
+
+        decoration:
+            const BoxDecoration(
+          gradient:
+              LinearGradient(
+            begin:
+                Alignment.topCenter,
+
+            end:
+                Alignment.bottomCenter,
+
             colors: [
-              Color(0xFF29292E),
-              coal,
-              Color(0xFF0D0D0F),
+              Color(
+                0xFFF8F5EF,
+              ),
+
+              Color(
+                0xFFF2EDE4,
+              ),
             ],
           ),
         ),
-        child: SingleChildScrollView(
+
+        child:
+            SingleChildScrollView(
           padding:
-              const EdgeInsets.all(20),
+              const EdgeInsets.fromLTRB(
+            20,
+            28,
+            20,
+            45,
+          ),
+
           child: Center(
-            child: ConstrainedBox(
+            child:
+                ConstrainedBox(
               constraints:
                   const BoxConstraints(
-                maxWidth: 650,
+                maxWidth:
+                    650,
               ),
+
               child: Form(
-                key: _formKey,
+                key:
+                    _formKey,
+
                 autovalidateMode:
                     AutovalidateMode
                         .onUserInteraction,
+
                 child: Column(
                   crossAxisAlignment:
-                      CrossAxisAlignment.start,
+                      CrossAxisAlignment
+                          .start,
+
                   children: [
-                    const Text(
-                      'RECEPCIÓN',
-                      style: TextStyle(
-                        color: gold,
-                        fontWeight:
-                            FontWeight.bold,
-                        letterSpacing: 2,
+                    Container(
+                      width:
+                          double.infinity,
+
+                      padding:
+                          const EdgeInsets.all(
+                        22,
+                      ),
+
+                      decoration:
+                          BoxDecoration(
+                        color:
+                            surface,
+
+                        borderRadius:
+                            BorderRadius.circular(
+                          20,
+                        ),
+
+                        border:
+                            Border.all(
+                          color:
+                              const Color(
+                            0xFFE5DDCF,
+                          ),
+                        ),
+
+                        boxShadow: [
+                          BoxShadow(
+                            color:
+                                const Color(
+                              0xFF4C3E24,
+                            ).withValues(
+                              alpha:
+                                  0.05,
+                            ),
+
+                            blurRadius:
+                                20,
+
+                            offset:
+                                const Offset(
+                              0,
+                              7,
+                            ),
+                          ),
+                        ],
+                      ),
+
+                      child:
+                          const Column(
+                        crossAxisAlignment:
+                            CrossAxisAlignment
+                                .start,
+
+                        children: [
+                          Text(
+                            'RECEPCIÓN',
+
+                            style:
+                                TextStyle(
+                              color:
+                                  goldDark,
+
+                              fontSize:
+                                  11,
+
+                              fontWeight:
+                                  FontWeight
+                                      .w700,
+
+                              letterSpacing:
+                                  2,
+                            ),
+                          ),
+
+                          SizedBox(
+                            height:
+                                7,
+                          ),
+
+                          Text(
+                            'Registrar Cliente',
+
+                            style:
+                                TextStyle(
+                              color:
+                                  textPrimary,
+
+                              fontSize:
+                                  29,
+
+                              fontWeight:
+                                  FontWeight
+                                      .w700,
+
+                              letterSpacing:
+                                  -0.5,
+                            ),
+                          ),
+
+                          SizedBox(
+                            height:
+                                7,
+                          ),
+
+                          Text(
+                            'Captura la información del nuevo cliente para crear su acceso a GymFlow.',
+
+                            style:
+                                TextStyle(
+                              color:
+                                  textSecondary,
+
+                              fontSize:
+                                  13,
+
+                              height:
+                                  1.4,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                    const SizedBox(height: 8),
-                    const Text(
-                      'Registrar Cliente',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 32,
-                        fontWeight:
-                            FontWeight.bold,
-                      ),
+
+                    const SizedBox(
+                      height:
+                          22,
                     ),
-                    const SizedBox(height: 28),
 
                     _section(
                       'Datos personales',
+                      Icons.person_outline_rounded,
                       [
                         _campo(
                           controller:
                               nombreController,
+
                           label:
                               'Nombre completo *',
+
                           hint:
                               'Nombre completo',
+
                           validator:
                               validarNombre,
+
                           keyboardType:
                               TextInputType.name,
-                          maxLength: 100,
+
+                          maxLength:
+                              100,
+
+                          icon:
+                              Icons
+                                  .person_outline_rounded,
                         ),
+
                         _campo(
                           controller:
                               correoController,
+
                           label:
                               'Correo electrónico *',
+
                           hint:
                               'cliente@gymflow.com',
+
                           validator:
                               validarCorreo,
+
                           keyboardType:
                               TextInputType
                                   .emailAddress,
-                          maxLength: 150,
+
+                          maxLength:
+                              150,
+
+                          icon:
+                              Icons
+                                  .email_outlined,
                         ),
+
                         _campo(
                           controller:
                               telefonoController,
-                          label: 'Teléfono',
-                          hint: '4421234567',
+
+                          label:
+                              'Teléfono',
+
+                          hint:
+                              '4421234567',
+
                           validator:
                               validarTelefono,
+
                           keyboardType:
                               TextInputType.phone,
-                          maxLength: 10,
+
+                          maxLength:
+                              10,
+
                           inputFormatters: [
                             FilteringTextInputFormatter
                                 .digitsOnly,
                           ],
+
+                          icon:
+                              Icons
+                                  .phone_outlined,
                         ),
                       ],
                     ),
 
-                    const SizedBox(height: 20),
+                    const SizedBox(
+                      height:
+                          18,
+                    ),
 
                     _section(
                       'Acceso',
+                      Icons.lock_outline_rounded,
                       [
                         TextFormField(
                           controller:
                               passwordController,
-                          enabled: !cargando,
+
+                          enabled:
+                              !cargando,
+
                           obscureText:
                               ocultarPassword,
+
                           validator:
                               validarPassword,
-                          maxLength: 72,
+
+                          maxLength:
+                              72,
+
                           style:
                               const TextStyle(
-                            color: Colors.white,
+                            color:
+                                textPrimary,
+
+                            fontSize:
+                                14,
                           ),
+
                           decoration:
                               _decoracion(
                             'Contraseña *',
                             'Mínimo 6 caracteres',
+                            Icons
+                                .lock_outline_rounded,
                           ).copyWith(
-                            counterText: '',
+                            counterText:
+                                '',
+
                             suffixIcon:
                                 IconButton(
+                              tooltip:
+                                  ocultarPassword
+                                      ? 'Mostrar contraseña'
+                                      : 'Ocultar contraseña',
+
                               onPressed: () {
-                                setState(() {
-                                  ocultarPassword =
-                                      !ocultarPassword;
-                                });
+                                setState(
+                                  () {
+                                    ocultarPassword =
+                                        !ocultarPassword;
+                                  },
+                                );
                               },
+
                               icon: Icon(
                                 ocultarPassword
                                     ? Icons
                                         .visibility_outlined
                                     : Icons
                                         .visibility_off_outlined,
-                                color: silver,
+
+                                color:
+                                    goldDark,
                               ),
                             ),
                           ),
@@ -474,116 +909,231 @@ class _RegistrarClientePageState
                       ],
                     ),
 
-                    const SizedBox(height: 20),
+                    const SizedBox(
+                      height:
+                          18,
+                    ),
 
                     _section(
                       'Membresía y asistencia',
+                      Icons
+                          .card_membership_outlined,
                       [
                         DropdownButtonFormField<int>(
                           initialValue:
                               idMembresia,
-                          dropdownColor: coal,
+
+                          dropdownColor:
+                              surface,
+
                           style:
                               const TextStyle(
-                            color: Colors.white,
+                            color:
+                                textPrimary,
+
+                            fontSize:
+                                14,
                           ),
+
+                          icon:
+                              const Icon(
+                            Icons
+                                .keyboard_arrow_down_rounded,
+
+                            color:
+                                goldDark,
+                          ),
+
                           decoration:
                               _decoracion(
                             'Membresía *',
                             'Selecciona una opción',
+                            Icons
+                                .card_membership_outlined,
                           ),
-                          items: const [
+
+                          items:
+                              const [
                             DropdownMenuItem(
-                              value: 1,
-                              child: Text(
+                              value:
+                                  1,
+
+                              child:
+                                  Text(
                                 'BasicFlow',
                               ),
                             ),
                           ],
-                          validator: (value) {
-                            if (value == null ||
-                                value <= 0) {
+
+                          validator:
+                              (value) {
+                            if (value ==
+                                    null ||
+                                value <=
+                                    0) {
                               return 'Selecciona una membresía válida.';
                             }
 
                             return null;
                           },
-                          onChanged: cargando
-                              ? null
-                              : (value) {
-                                  setState(() {
-                                    idMembresia =
-                                        value;
-                                  });
-                                },
+
+                          onChanged:
+                              cargando
+                                  ? null
+                                  : (value) {
+                                      setState(
+                                        () {
+                                          idMembresia =
+                                              value;
+                                        },
+                                      );
+                                    },
                         ),
+
                         _campo(
                           controller:
                               costoMensualController,
+
                           label:
                               'Costo mensual *',
-                          hint: '500.00',
+
+                          hint:
+                              '500.00',
+
                           validator:
                               validarCosto,
+
                           keyboardType:
                               const TextInputType
                                   .numberWithOptions(
-                            decimal: true,
+                            decimal:
+                                true,
                           ),
+
                           inputFormatters:
                               _formatoDecimal(),
+
+                          icon:
+                              Icons
+                                  .payments_outlined,
                         ),
+
                         _campo(
                           controller:
                               costoAnualController,
+
                           label:
                               'Costo anual *',
-                          hint: '5000.00',
+
+                          hint:
+                              '5000.00',
+
                           validator:
                               validarCosto,
+
                           keyboardType:
                               const TextInputType
                                   .numberWithOptions(
-                            decimal: true,
+                            decimal:
+                                true,
                           ),
+
                           inputFormatters:
                               _formatoDecimal(),
+
+                          icon:
+                              Icons
+                                  .account_balance_wallet_outlined,
                         ),
                       ],
                     ),
 
-                    const SizedBox(height: 28),
+                    const SizedBox(
+                      height:
+                          26,
+                    ),
 
                     SizedBox(
-                      width: double.infinity,
-                      height: 54,
+                      width:
+                          double.infinity,
+
+                      height:
+                          54,
+
                       child:
                           FilledButton.icon(
-                        onPressed: cargando
-                            ? null
-                            : registrarCliente,
-                        icon: cargando
-                            ? const SizedBox(
-                                width: 20,
-                                height: 20,
-                                child:
-                                    CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                ),
-                              )
-                            : const Icon(
-                                Icons.person_add,
-                              ),
+                        onPressed:
+                            cargando
+                                ? null
+                                : registrarCliente,
+
+                        icon:
+                            cargando
+                                ? const SizedBox(
+                                    width:
+                                        20,
+
+                                    height:
+                                        20,
+
+                                    child:
+                                        CircularProgressIndicator(
+                                      strokeWidth:
+                                          2,
+
+                                      color:
+                                          Colors.white,
+                                    ),
+                                  )
+                                : const Icon(
+                                    Icons
+                                        .person_add_alt_1_rounded,
+
+                                    size:
+                                        21,
+                                  ),
+
                         label: Text(
                           cargando
                               ? 'Registrando...'
                               : 'Registrar cliente',
                         ),
+
                         style:
                             FilledButton.styleFrom(
-                          backgroundColor: gold,
+                          backgroundColor:
+                              gold,
+
                           foregroundColor:
-                              Colors.black,
+                              Colors.white,
+
+                          disabledBackgroundColor:
+                              const Color(
+                            0xFFD8C89F,
+                          ),
+
+                          disabledForegroundColor:
+                              Colors.white,
+
+                          elevation:
+                              0,
+
+                          shape:
+                              RoundedRectangleBorder(
+                            borderRadius:
+                                BorderRadius.circular(
+                              13,
+                            ),
+                          ),
+
+                          textStyle:
+                              const TextStyle(
+                            fontSize:
+                                14,
+
+                            fontWeight:
+                                FontWeight.w700,
+                          ),
                         ),
                       ),
                     ),
@@ -604,7 +1154,9 @@ class _RegistrarClientePageState
         (oldValue, newValue) {
           if (RegExp(
             r'^\d{0,7}(\.\d{0,2})?$',
-          ).hasMatch(newValue.text)) {
+          ).hasMatch(
+            newValue.text,
+          )) {
             return newValue;
           }
 
@@ -616,42 +1168,162 @@ class _RegistrarClientePageState
 
   Widget _section(
     String titulo,
+    IconData icon,
     List<Widget> children,
   ) {
-    const gold = Color(0xFFD4AF37);
+    const surface =
+        Color(
+      0xFFFFFDF8,
+    );
+
+    const goldDark =
+        Color(
+      0xFF8A6814,
+    );
+
+    const textPrimary =
+        Color(
+      0xFF2F2A24,
+    );
 
     return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(22),
-      decoration: BoxDecoration(
-        color: const Color(0xFF171719),
-        borderRadius:
-            BorderRadius.circular(18),
-        border: Border.all(
-          color:
-              gold.withValues(alpha: 0.18),
-        ),
+      width:
+          double.infinity,
+
+      padding:
+          const EdgeInsets.all(
+        20,
       ),
+
+      decoration:
+          BoxDecoration(
+        color:
+            surface,
+
+        borderRadius:
+            BorderRadius.circular(
+          18,
+        ),
+
+        border:
+            Border.all(
+          color:
+              const Color(
+            0xFFE5DDCF,
+          ),
+        ),
+
+        boxShadow: [
+          BoxShadow(
+            color:
+                const Color(
+              0xFF4C3E24,
+            ).withValues(
+              alpha:
+                  0.04,
+            ),
+
+            blurRadius:
+                16,
+
+            offset:
+                const Offset(
+              0,
+              5,
+            ),
+          ),
+        ],
+      ),
+
       child: Column(
         crossAxisAlignment:
             CrossAxisAlignment.start,
+
         children: [
-          Text(
-            titulo,
-            style: const TextStyle(
-              color: gold,
-              fontSize: 18,
-              fontWeight:
-                  FontWeight.bold,
-            ),
+          Row(
+            children: [
+              Container(
+                width:
+                    38,
+
+                height:
+                    38,
+
+                decoration:
+                    BoxDecoration(
+                  color:
+                      const Color(
+                    0xFFF3EAD8,
+                  ),
+
+                  borderRadius:
+                      BorderRadius.circular(
+                    11,
+                  ),
+
+                  border:
+                      Border.all(
+                    color:
+                        const Color(
+                      0xFFE4D2AA,
+                    ),
+                  ),
+                ),
+
+                child: Icon(
+                  icon,
+
+                  color:
+                      goldDark,
+
+                  size:
+                      20,
+                ),
+              ),
+
+              const SizedBox(
+                width:
+                    12,
+              ),
+
+              Expanded(
+                child: Text(
+                  titulo,
+
+                  style:
+                      const TextStyle(
+                    color:
+                        textPrimary,
+
+                    fontSize:
+                        17,
+
+                    fontWeight:
+                        FontWeight.w700,
+                  ),
+                ),
+              ),
+            ],
           ),
-          const SizedBox(height: 18),
-          for (int i = 0;
-              i < children.length;
-              i++) ...[
+
+          const SizedBox(
+            height:
+                20,
+          ),
+
+          for (
+            int i = 0;
+            i < children.length;
+            i++
+          ) ...[
             children[i],
-            if (i < children.length - 1)
-              const SizedBox(height: 16),
+
+            if (i <
+                children.length - 1)
+              const SizedBox(
+                height:
+                    16,
+              ),
           ],
         ],
       ),
@@ -659,11 +1331,13 @@ class _RegistrarClientePageState
   }
 
   Widget _campo({
-    required TextEditingController controller,
+    required TextEditingController
+        controller,
     required String label,
     required String hint,
     required String? Function(String?)
         validator,
+    required IconData icon,
     TextInputType keyboardType =
         TextInputType.text,
     List<TextInputFormatter>?
@@ -671,18 +1345,43 @@ class _RegistrarClientePageState
     int? maxLength,
   }) {
     return TextFormField(
-      controller: controller,
-      enabled: !cargando,
-      validator: validator,
-      keyboardType: keyboardType,
-      inputFormatters: inputFormatters,
-      maxLength: maxLength,
-      style: const TextStyle(
-        color: Colors.white,
+      controller:
+          controller,
+
+      enabled:
+          !cargando,
+
+      validator:
+          validator,
+
+      keyboardType:
+          keyboardType,
+
+      inputFormatters:
+          inputFormatters,
+
+      maxLength:
+          maxLength,
+
+      style:
+          const TextStyle(
+        color:
+            Color(
+          0xFF2F2A24,
+        ),
+
+        fontSize:
+            14,
       ),
+
       decoration:
-          _decoracion(label, hint).copyWith(
-        counterText: '',
+          _decoracion(
+        label,
+        hint,
+        icon,
+      ).copyWith(
+        counterText:
+            '',
       ),
     );
   }
@@ -690,50 +1389,159 @@ class _RegistrarClientePageState
   InputDecoration _decoracion(
     String label,
     String hint,
+    IconData icon,
   ) {
-    const gold = Color(0xFFD4AF37);
+    const gold =
+        Color(
+      0xFFB58A2A,
+    );
+
+    const goldDark =
+        Color(
+      0xFF8A6814,
+    );
 
     return InputDecoration(
-      labelText: label,
-      hintText: hint,
-      filled: true,
+      labelText:
+          label,
+
+      hintText:
+          hint,
+
+      filled:
+          true,
+
       fillColor:
-          const Color(0xFF101012),
-      labelStyle: const TextStyle(
-        color: Color(0xFFA9A9A9),
+          const Color(
+        0xFFF8F4EC,
       ),
-      hintStyle: const TextStyle(
-        color: Color(0xFF666666),
+
+      prefixIcon:
+          Icon(
+        icon,
+
+        color:
+            goldDark,
+
+        size:
+            21,
       ),
-      border: OutlineInputBorder(
+
+      labelStyle:
+          const TextStyle(
+        color:
+            Color(
+          0xFF777067,
+        ),
+
+        fontSize:
+            13,
+      ),
+
+      hintStyle:
+          const TextStyle(
+        color:
+            Color(
+          0xFFA39A8D,
+        ),
+
+        fontSize:
+            13,
+      ),
+
+      border:
+          OutlineInputBorder(
         borderRadius:
-            BorderRadius.circular(12),
+            BorderRadius.circular(
+          13,
+        ),
+
+        borderSide:
+            const BorderSide(
+          color:
+              Color(
+            0xFFE5DDCF,
+          ),
+        ),
       ),
+
       enabledBorder:
           OutlineInputBorder(
         borderRadius:
-            BorderRadius.circular(12),
-        borderSide: BorderSide(
+            BorderRadius.circular(
+          13,
+        ),
+
+        borderSide:
+            const BorderSide(
           color:
-              gold.withValues(alpha: 0.20),
+              Color(
+            0xFFE5DDCF,
+          ),
         ),
       ),
+
       focusedBorder:
           OutlineInputBorder(
         borderRadius:
-            BorderRadius.circular(12),
+            BorderRadius.circular(
+          13,
+        ),
+
         borderSide:
             const BorderSide(
-          color: gold,
+          color:
+              gold,
+
+          width:
+              1.5,
         ),
       ),
-      errorBorder: OutlineInputBorder(
+
+      errorBorder:
+          OutlineInputBorder(
         borderRadius:
-            BorderRadius.circular(12),
+            BorderRadius.circular(
+          13,
+        ),
+
         borderSide:
             const BorderSide(
-          color: Colors.red,
+          color:
+              Color(
+            0xFFC21B2E,
+          ),
         ),
+      ),
+
+      focusedErrorBorder:
+          OutlineInputBorder(
+        borderRadius:
+            BorderRadius.circular(
+          13,
+        ),
+
+        borderSide:
+            const BorderSide(
+          color:
+              Color(
+            0xFFC21B2E,
+          ),
+
+          width:
+              1.5,
+        ),
+      ),
+
+      errorStyle:
+          const TextStyle(
+        color:
+            Color(
+          0xFFC21B2E,
+        ),
+
+        fontSize:
+            11,
       ),
     );
   }

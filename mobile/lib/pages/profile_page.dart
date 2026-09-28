@@ -31,255 +31,611 @@ class ProfilePage extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) {
-    const gold = Color(0xFFD4AF37);
-    const coal = Color(0xFF1A1A1D);
-    const silver = Color(0xFFA9A9A9);
+  Widget build(
+    BuildContext context,
+  ) {
+    const background =
+        Color(0xFFF8F5EF);
+
+    const surface =
+        Color(0xFFFFFDF8);
+
+    const goldDark =
+        Color(0xFF8A6814);
+
+    const textPrimary =
+        Color(0xFF2F2A24);
+
+    const textSecondary =
+        Color(0xFF777067);
+
+    const border =
+        Color(0xFFE5DDCF);
 
     return Scaffold(
-      backgroundColor: const Color(0xFF101012),
+      backgroundColor: background,
 
       appBar: AppBar(
-        backgroundColor: const Color(0xFF101012),
+        backgroundColor: surface,
+
+        surfaceTintColor:
+            Colors.transparent,
+
         elevation: 0,
 
-        leading: IconButton(
-          onPressed: () {
-            Navigator.of(context).pop();
-          },
-          icon: const Icon(
-            Icons.arrow_back,
-            color: gold,
+        leading: Padding(
+          padding:
+              const EdgeInsets.all(
+            8,
+          ),
+
+          child: Container(
+            decoration:
+                BoxDecoration(
+              color:
+                  surface,
+
+              borderRadius:
+                  BorderRadius.circular(
+                12,
+              ),
+
+              border:
+                  Border.all(
+                color:
+                    const Color(
+                  0xFFD8C8A5,
+                ),
+              ),
+            ),
+
+            child: IconButton(
+              padding:
+                  EdgeInsets.zero,
+
+              tooltip:
+                  'Regresar',
+
+              onPressed: () {
+                Navigator.of(
+                  context,
+                ).pop();
+              },
+
+              icon:
+                  const Icon(
+                Icons
+                    .arrow_back_rounded,
+
+                color:
+                    goldDark,
+
+                size:
+                    21,
+              ),
+            ),
           ),
         ),
 
         title: Image.asset(
           'assets/Logo_GymFlow.png',
-          height: 48,
+
+          height:
+              48,
+
+          fit:
+              BoxFit.contain,
+        ),
+
+        bottom:
+            const PreferredSize(
+          preferredSize:
+              Size.fromHeight(
+            1,
+          ),
+
+          child: Divider(
+            height:
+                1,
+
+            color:
+                Color(
+              0xFFE7DFD2,
+            ),
+          ),
         ),
       ),
 
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
+        child: Container(
+          width:
+              double.infinity,
 
-          child: Center(
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(
-                maxWidth: 650,
-              ),
+          decoration:
+              const BoxDecoration(
+            gradient:
+                LinearGradient(
+              begin:
+                  Alignment.topCenter,
 
-              child: Column(
-                children: [
-                  const SizedBox(
-                    height: 15,
-                  ),
+              end:
+                  Alignment.bottomCenter,
 
-                  Container(
-                    width: 105,
-                    height: 105,
+              colors: [
+                Color(
+                  0xFFF8F5EF,
+                ),
 
-                    decoration: BoxDecoration(
-                      color: gold.withValues(
-                        alpha: 0.10,
-                      ),
+                Color(
+                  0xFFF2EDE4,
+                ),
+              ],
+            ),
+          ),
 
-                      shape: BoxShape.circle,
+          child:
+              SingleChildScrollView(
+            padding:
+                const EdgeInsets.fromLTRB(
+              20,
+              30,
+              20,
+              45,
+            ),
 
-                      border: Border.all(
-                        color: gold.withValues(
-                          alpha: 0.55,
-                        ),
-                        width: 2,
-                      ),
-                    ),
+            child: Center(
+              child:
+                  ConstrainedBox(
+                constraints:
+                    const BoxConstraints(
+                  maxWidth:
+                      650,
+                ),
 
-                    child: const Icon(
-                      Icons.person_outline,
-                      color: gold,
-                      size: 58,
-                    ),
-                  ),
+                child: Column(
+                  children: [
+                    const Text(
+                      'MI PERFIL',
 
-                  const SizedBox(
-                    height: 22,
-                  ),
+                      style:
+                          TextStyle(
+                        color:
+                            goldDark,
 
-                  Text(
-                    usuario.name,
-                    textAlign: TextAlign.center,
+                        fontSize:
+                            11,
 
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
+                        fontWeight:
+                            FontWeight.w700,
 
-                  const SizedBox(
-                    height: 8,
-                  ),
-
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 7,
-                    ),
-
-                    decoration: BoxDecoration(
-                      color: gold.withValues(
-                        alpha: 0.10,
-                      ),
-
-                      borderRadius: BorderRadius.circular(
-                        30,
-                      ),
-
-                      border: Border.all(
-                        color: gold.withValues(
-                          alpha: 0.45,
-                        ),
+                        letterSpacing:
+                            2,
                       ),
                     ),
 
-                    child: Text(
-                      usuario.role,
-
-                      style: const TextStyle(
-                        color: gold,
-                        fontSize: 13,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-
-                  const SizedBox(
-                    height: 35,
-                  ),
-
-                  Container(
-                    width: double.infinity,
-
-                    padding: const EdgeInsets.all(
-                      24,
+                    const SizedBox(
+                      height:
+                          18,
                     ),
 
-                    decoration: BoxDecoration(
-                      color: coal,
+                    Container(
+                      width:
+                          104,
 
-                      borderRadius: BorderRadius.circular(
-                        20,
-                      ),
+                      height:
+                          104,
 
-                      border: Border.all(
-                        color: gold.withValues(
-                          alpha: 0.20,
-                        ),
-                      ),
-                    ),
-
-                    child: Column(
-                      children: [
-                        _datoPerfil(
-                          icon: Icons.badge_outlined,
-                          titulo: 'ID de usuario',
-                          valor: usuario.idUsuario,
+                      decoration:
+                          BoxDecoration(
+                        color:
+                            const Color(
+                          0xFFF3EAD8,
                         ),
 
-                        const Divider(
-                          height: 32,
-                          color: Color(0xFF353535),
-                        ),
+                        shape:
+                            BoxShape.circle,
 
-                        _datoPerfil(
-                          icon: Icons.person_outline,
-                          titulo: 'Nombre',
-                          valor: usuario.name,
-                        ),
-
-                        const Divider(
-                          height: 32,
-                          color: Color(0xFF353535),
-                        ),
-
-                        _datoPerfil(
-                          icon: Icons.email_outlined,
-                          titulo: 'Correo',
-                          valor: usuario.correo,
-                        ),
-
-                        const Divider(
-                          height: 32,
-                          color: Color(0xFF353535),
-                        ),
-
-                        _datoPerfil(
-                          icon:
-                              Icons.admin_panel_settings_outlined,
-                          titulo: 'Rol',
-                          valor: usuario.role,
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  const SizedBox(
-                    height: 30,
-                  ),
-
-                  SizedBox(
-                    width: double.infinity,
-                    height: 52,
-
-                    child: OutlinedButton.icon(
-                      onPressed: () {
-                        cerrarSesion(
-                          context,
-                        );
-                      },
-
-                      icon: const Icon(
-                        Icons.logout,
-                      ),
-
-                      label: const Text(
-                        'Cerrar sesión',
-                      ),
-
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: gold,
-
-                        side: BorderSide(
-                          color: gold.withValues(
-                            alpha: 0.50,
+                        border:
+                            Border.all(
+                          color:
+                              const Color(
+                            0xFFD8C392,
                           ),
+
+                          width:
+                              2,
                         ),
 
-                        shape: RoundedRectangleBorder(
-                          borderRadius:
-                              BorderRadius.circular(
-                            14,
+                        boxShadow: [
+                          BoxShadow(
+                            color:
+                                const Color(
+                              0xFF4C3E24,
+                            ).withValues(
+                              alpha:
+                                  0.08,
+                            ),
+
+                            blurRadius:
+                                20,
+
+                            offset:
+                                const Offset(
+                              0,
+                              7,
+                            ),
+                          ),
+                        ],
+                      ),
+
+                      child:
+                          const Icon(
+                        Icons
+                            .person_outline_rounded,
+
+                        color:
+                            goldDark,
+
+                        size:
+                            55,
+                      ),
+                    ),
+
+                    const SizedBox(
+                      height:
+                          20,
+                    ),
+
+                    Text(
+                      usuario.name,
+
+                      textAlign:
+                          TextAlign.center,
+
+                      style:
+                          const TextStyle(
+                        color:
+                            textPrimary,
+
+                        fontSize:
+                            28,
+
+                        fontWeight:
+                            FontWeight.w700,
+
+                        letterSpacing:
+                            -0.5,
+                      ),
+                    ),
+
+                    const SizedBox(
+                      height:
+                          9,
+                    ),
+
+                    Container(
+                      padding:
+                          const EdgeInsets.symmetric(
+                        horizontal:
+                            16,
+
+                        vertical:
+                            7,
+                      ),
+
+                      decoration:
+                          BoxDecoration(
+                        color:
+                            const Color(
+                          0xFFF3EAD8,
+                        ),
+
+                        borderRadius:
+                            BorderRadius.circular(
+                          30,
+                        ),
+
+                        border:
+                            Border.all(
+                          color:
+                              const Color(
+                            0xFFD8C392,
                           ),
                         ),
                       ),
+
+                      child: Text(
+                        usuario.role,
+
+                        style:
+                            const TextStyle(
+                          color:
+                              goldDark,
+
+                          fontSize:
+                              12,
+
+                          fontWeight:
+                              FontWeight.w700,
+                        ),
+                      ),
                     ),
-                  ),
 
-                  const SizedBox(
-                    height: 20,
-                  ),
-
-                  const Text(
-                    'GymFlow · Gestión inteligente para gimnasios',
-
-                    textAlign: TextAlign.center,
-
-                    style: TextStyle(
-                      color: silver,
-                      fontSize: 12,
+                    const SizedBox(
+                      height:
+                          30,
                     ),
-                  ),
-                ],
+
+                    Container(
+                      width:
+                          double.infinity,
+
+                      padding:
+                          const EdgeInsets.all(
+                        22,
+                      ),
+
+                      decoration:
+                          BoxDecoration(
+                        color:
+                            surface,
+
+                        borderRadius:
+                            BorderRadius.circular(
+                          20,
+                        ),
+
+                        border:
+                            Border.all(
+                          color:
+                              border,
+                        ),
+
+                        boxShadow: [
+                          BoxShadow(
+                            color:
+                                const Color(
+                              0xFF4C3E24,
+                            ).withValues(
+                              alpha:
+                                  0.05,
+                            ),
+
+                            blurRadius:
+                                22,
+
+                            offset:
+                                const Offset(
+                              0,
+                              8,
+                            ),
+                          ),
+                        ],
+                      ),
+
+                      child: Column(
+                        children: [
+                          _datoPerfil(
+                            icon:
+                                Icons
+                                    .badge_outlined,
+
+                            titulo:
+                                'ID de usuario',
+
+                            valor:
+                                usuario.idUsuario,
+                          ),
+
+                          const Divider(
+                            height:
+                                32,
+
+                            color:
+                                border,
+                          ),
+
+                          _datoPerfil(
+                            icon:
+                                Icons
+                                    .person_outline,
+
+                            titulo:
+                                'Nombre',
+
+                            valor:
+                                usuario.name,
+                          ),
+
+                          const Divider(
+                            height:
+                                32,
+
+                            color:
+                                border,
+                          ),
+
+                          _datoPerfil(
+                            icon:
+                                Icons
+                                    .email_outlined,
+
+                            titulo:
+                                'Correo electrónico',
+
+                            valor:
+                                usuario.correo,
+                          ),
+
+                          const Divider(
+                            height:
+                                32,
+
+                            color:
+                                border,
+                          ),
+
+                          _datoPerfil(
+                            icon:
+                                Icons
+                                    .admin_panel_settings_outlined,
+
+                            titulo:
+                                'Tipo de usuario',
+
+                            valor:
+                                usuario.role,
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    const SizedBox(
+                      height:
+                          26,
+                    ),
+
+                    SizedBox(
+                      width:
+                          double.infinity,
+
+                      height:
+                          52,
+
+                      child:
+                          OutlinedButton.icon(
+                        onPressed: () {
+                          cerrarSesion(
+                            context,
+                          );
+                        },
+
+                        icon:
+                            const Icon(
+                          Icons
+                              .logout_rounded,
+
+                          size:
+                              20,
+                        ),
+
+                        label:
+                            const Text(
+                          'Cerrar sesión',
+                        ),
+
+                        style:
+                            OutlinedButton
+                                .styleFrom(
+                          foregroundColor:
+                              const Color(
+                            0xFF8F2030,
+                          ),
+
+                          backgroundColor:
+                              const Color(
+                            0xFFFFF8F7,
+                          ),
+
+                          side:
+                              const BorderSide(
+                            color:
+                                Color(
+                              0xFFE4B8B8,
+                            ),
+                          ),
+
+                          shape:
+                              RoundedRectangleBorder(
+                            borderRadius:
+                                BorderRadius.circular(
+                              13,
+                            ),
+                          ),
+
+                          textStyle:
+                              const TextStyle(
+                            fontSize:
+                                14,
+
+                            fontWeight:
+                                FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(
+                      height:
+                          30,
+                    ),
+
+                    Container(
+                      width:
+                          double.infinity,
+
+                      padding:
+                          const EdgeInsets.symmetric(
+                        vertical:
+                            18,
+                      ),
+
+                      decoration:
+                          const BoxDecoration(
+                        border:
+                            Border(
+                          top:
+                              BorderSide(
+                            color:
+                                border,
+                          ),
+                        ),
+                      ),
+
+                      child:
+                          const Column(
+                        children: [
+                          Text(
+                            'GymFlow Mobile',
+
+                            style:
+                                TextStyle(
+                              color:
+                                  textPrimary,
+
+                              fontSize:
+                                  12,
+
+                              fontWeight:
+                                  FontWeight.w600,
+
+                              letterSpacing:
+                                  0.3,
+                            ),
+                          ),
+
+                          SizedBox(
+                            height:
+                                5,
+                          ),
+
+                          Text(
+                            'Versión 1.0.3',
+
+                            style:
+                                TextStyle(
+                              color:
+                                  textSecondary,
+
+                              fontSize:
+                                  11,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
@@ -293,37 +649,62 @@ class ProfilePage extends StatelessWidget {
     required String titulo,
     required String valor,
   }) {
-    const gold = Color(0xFFD4AF37);
-    const silver = Color(0xFFA9A9A9);
+    const goldDark =
+        Color(0xFF8A6814);
+
+    const textPrimary =
+        Color(0xFF2F2A24);
+
+    const textSecondary =
+        Color(0xFF777067);
 
     return Row(
       crossAxisAlignment:
-          CrossAxisAlignment.start,
+          CrossAxisAlignment.center,
 
       children: [
         Container(
-          width: 48,
-          height: 48,
+          width:
+              48,
 
-          decoration: BoxDecoration(
-            color: gold.withValues(
-              alpha: 0.10,
+          height:
+              48,
+
+          decoration:
+              BoxDecoration(
+            color:
+                const Color(
+              0xFFF3EAD8,
             ),
 
             borderRadius:
                 BorderRadius.circular(
-              12,
+              13,
+            ),
+
+            border:
+                Border.all(
+              color:
+                  const Color(
+                0xFFE4D2AA,
+              ),
             ),
           ),
 
           child: Icon(
             icon,
-            color: gold,
+
+            color:
+                goldDark,
+
+            size:
+                23,
           ),
         ),
 
         const SizedBox(
-          width: 16,
+          width:
+              15,
         ),
 
         Expanded(
@@ -335,14 +716,22 @@ class ProfilePage extends StatelessWidget {
               Text(
                 titulo,
 
-                style: const TextStyle(
-                  color: silver,
-                  fontSize: 12,
+                style:
+                    const TextStyle(
+                  color:
+                      textSecondary,
+
+                  fontSize:
+                      11,
+
+                  fontWeight:
+                      FontWeight.w500,
                 ),
               ),
 
               const SizedBox(
-                height: 5,
+                height:
+                    5,
               ),
 
               Text(
@@ -350,10 +739,19 @@ class ProfilePage extends StatelessWidget {
                     ? 'Sin información'
                     : valor,
 
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
+                style:
+                    const TextStyle(
+                  color:
+                      textPrimary,
+
+                  fontSize:
+                      15,
+
+                  fontWeight:
+                      FontWeight.w700,
+
+                  height:
+                      1.3,
                 ),
               ),
             ],

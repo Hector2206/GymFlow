@@ -87,7 +87,8 @@ class _MiCodigoPageState
 
     try {
       final resultado =
-          await codigoAccesoService.obtenerMiCodigo();
+          await codigoAccesoService
+              .obtenerMiCodigo();
 
       if (!mounted) {
         return;
@@ -104,7 +105,9 @@ class _MiCodigoPageState
       String mensaje =
           e.toString().trim();
 
-      if (mensaje.startsWith('Exception:')) {
+      if (mensaje.startsWith(
+        'Exception:',
+      )) {
         mensaje = mensaje
             .replaceFirst(
               'Exception:',
@@ -131,59 +134,92 @@ class _MiCodigoPageState
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(
+    BuildContext context,
+  ) {
+    const background =
+        Color(0xFFF8F5EF);
+
+    const surface =
+        Color(0xFFFFFDF8);
+
     const gold =
-        Color(0xFFD4AF37);
+        Color(0xFFB58A2A);
 
-    const coal =
-        Color(0xFF1A1A1D);
+    const goldDark =
+        Color(0xFF8A6814);
 
-    const silver =
-        Color(0xFFA9A9A9);
+    const textPrimary =
+        Color(0xFF2F2A24);
 
-    const dark =
-        Color(0xFF101012);
-
-    const errorColor =
-        Color(0xFFE57373);
+    const textSecondary =
+        Color(0xFF777067);
 
     return Scaffold(
-      backgroundColor: dark,
+      backgroundColor:
+          background,
 
       appBar: AppBar(
-        backgroundColor: dark,
-        elevation: 0,
-        leadingWidth: 70,
+        backgroundColor:
+            surface,
+
+        surfaceTintColor:
+            Colors.transparent,
+
+        elevation:
+            0,
+
+        leadingWidth:
+            70,
 
         leading: Padding(
-          padding: const EdgeInsets.only(
+          padding:
+              const EdgeInsets.only(
             left: 14,
             top: 6,
             bottom: 6,
           ),
 
           child: Container(
-            decoration: BoxDecoration(
+            decoration:
+                BoxDecoration(
+              color:
+                  surface,
+
               borderRadius:
                   BorderRadius.circular(
-                10,
+                12,
               ),
 
-              border: Border.all(
-                color: gold.withValues(
-                  alpha: 0.45,
+              border:
+                  Border.all(
+                color:
+                    const Color(
+                  0xFFD8C8A5,
                 ),
               ),
             ),
 
             child: IconButton(
+              tooltip:
+                  'Regresar',
+
               onPressed: () {
-                Navigator.of(context).pop();
+                Navigator.of(
+                  context,
+                ).pop();
               },
 
-              icon: const Icon(
-                Icons.arrow_back,
-                color: gold,
+              icon:
+                  const Icon(
+                Icons
+                    .arrow_back_rounded,
+
+                color:
+                    goldDark,
+
+                size:
+                    21,
               ),
             ),
           ),
@@ -191,20 +227,28 @@ class _MiCodigoPageState
 
         title: Image.asset(
           'assets/Logo_GymFlow.png',
-          height: 48,
+
+          height:
+              48,
+
+          fit:
+              BoxFit.contain,
         ),
 
-        bottom: PreferredSize(
+        bottom:
+            const PreferredSize(
           preferredSize:
-              const Size.fromHeight(
+              Size.fromHeight(
             1,
           ),
 
-          child: Container(
-            height: 1,
+          child: Divider(
+            height:
+                1,
 
-            color: gold.withValues(
-              alpha: 0.30,
+            color:
+                Color(
+              0xFFE7DFD2,
             ),
           ),
         ),
@@ -229,32 +273,34 @@ class _MiCodigoPageState
                   : 24.0;
 
           return Container(
-            width: double.infinity,
+            width:
+                double.infinity,
 
             decoration:
                 const BoxDecoration(
-              gradient: RadialGradient(
-                center:
+              gradient:
+                  LinearGradient(
+                begin:
                     Alignment.topCenter,
 
-                radius: 1.5,
+                end:
+                    Alignment.bottomCenter,
 
                 colors: [
-                  Color(0xFF29292E),
-                  coal,
-                  Color(0xFF0D0D0F),
-                ],
+                  Color(
+                    0xFFF8F5EF,
+                  ),
 
-                stops: [
-                  0.0,
-                  0.35,
-                  1.0,
+                  Color(
+                    0xFFF2EDE4,
+                  ),
                 ],
               ),
             ),
 
             child: SafeArea(
-              top: false,
+              top:
+                  false,
 
               child:
                   SingleChildScrollView(
@@ -271,76 +317,144 @@ class _MiCodigoPageState
                       ConstrainedBox(
                     constraints:
                         const BoxConstraints(
-                      maxWidth: 650,
+                      maxWidth:
+                          650,
                     ),
 
                     child: Column(
                       crossAxisAlignment:
-                          CrossAxisAlignment.start,
+                          CrossAxisAlignment
+                              .start,
 
                       children: [
-                        const Text(
-                          'CLIENTE',
+                        Container(
+                          width:
+                              double.infinity,
 
-                          style:
-                              TextStyle(
+                          padding:
+                              const EdgeInsets.all(
+                            22,
+                          ),
+
+                          decoration:
+                              BoxDecoration(
                             color:
-                                gold,
+                                surface,
 
-                            fontSize:
-                                13,
+                            borderRadius:
+                                BorderRadius.circular(
+                              20,
+                            ),
 
-                            fontWeight:
-                                FontWeight.bold,
+                            border:
+                                Border.all(
+                              color:
+                                  const Color(
+                                0xFFE5DDCF,
+                              ),
+                            ),
 
-                            letterSpacing:
-                                2,
+                            boxShadow: [
+                              BoxShadow(
+                                color:
+                                    const Color(
+                                  0xFF4C3E24,
+                                ).withValues(
+                                  alpha:
+                                      0.05,
+                                ),
+
+                                blurRadius:
+                                    20,
+
+                                offset:
+                                    const Offset(
+                                  0,
+                                  7,
+                                ),
+                              ),
+                            ],
+                          ),
+
+                          child:
+                              Column(
+                            crossAxisAlignment:
+                                CrossAxisAlignment
+                                    .start,
+
+                            children: [
+                              const Text(
+                                'CLIENTE',
+
+                                style:
+                                    TextStyle(
+                                  color:
+                                      goldDark,
+
+                                  fontSize:
+                                      11,
+
+                                  fontWeight:
+                                      FontWeight.w700,
+
+                                  letterSpacing:
+                                      2,
+                                ),
+                              ),
+
+                              const SizedBox(
+                                height:
+                                    7,
+                              ),
+
+                              Text(
+                                'Mi Código de Acceso',
+
+                                style:
+                                    TextStyle(
+                                  color:
+                                      textPrimary,
+
+                                  fontSize:
+                                      pantallaPequena
+                                          ? 27
+                                          : 29,
+
+                                  fontWeight:
+                                      FontWeight.w700,
+
+                                  letterSpacing:
+                                      -0.5,
+                                ),
+                              ),
+
+                              const SizedBox(
+                                height:
+                                    7,
+                              ),
+
+                              const Text(
+                                'Presenta este código en recepción para registrar tu entrada.',
+
+                                style:
+                                    TextStyle(
+                                  color:
+                                      textSecondary,
+
+                                  fontSize:
+                                      13,
+
+                                  height:
+                                      1.4,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
 
                         const SizedBox(
-                          height: 8,
-                        ),
-
-                        Text(
-                          'Mi Código de Acceso',
-
-                          style: TextStyle(
-                            color:
-                                Colors.white,
-
-                            fontSize:
-                                pantallaPequena
-                                    ? 28
-                                    : 32,
-
-                            fontWeight:
-                                FontWeight.bold,
-                          ),
-                        ),
-
-                        const SizedBox(
-                          height: 8,
-                        ),
-
-                        const Text(
-                          'Presenta este código en recepción para registrar tu entrada.',
-
-                          style:
-                              TextStyle(
-                            color:
-                                silver,
-
-                            fontSize:
-                                15,
-
-                            height:
-                                1.4,
-                          ),
-                        ),
-
-                        const SizedBox(
-                          height: 28,
+                          height:
+                              22,
                         ),
 
                         Container(
@@ -354,23 +468,8 @@ class _MiCodigoPageState
 
                           decoration:
                               BoxDecoration(
-                            gradient:
-                                const LinearGradient(
-                              begin:
-                                  Alignment.topLeft,
-
-                              end:
-                                  Alignment.bottomRight,
-
-                              colors: [
-                                Color(
-                                  0xFF1D1D20,
-                                ),
-                                Color(
-                                  0xFF151517,
-                                ),
-                              ],
-                            ),
+                            color:
+                                surface,
 
                             borderRadius:
                                 BorderRadius.circular(
@@ -380,21 +479,47 @@ class _MiCodigoPageState
                             border:
                                 Border.all(
                               color:
-                                  gold.withValues(
-                                alpha:
-                                    0.16,
+                                  const Color(
+                                0xFFE5DDCF,
                               ),
                             ),
+
+                            boxShadow: [
+                              BoxShadow(
+                                color:
+                                    const Color(
+                                  0xFF4C3E24,
+                                ).withValues(
+                                  alpha:
+                                      0.05,
+                                ),
+
+                                blurRadius:
+                                    18,
+
+                                offset:
+                                    const Offset(
+                                  0,
+                                  6,
+                                ),
+                              ),
+                            ],
                           ),
 
                           child:
                               _buildContenido(
                             gold:
                                 gold,
-                            silver:
-                                silver,
-                            errorColor:
-                                errorColor,
+
+                            goldDark:
+                                goldDark,
+
+                            textPrimary:
+                                textPrimary,
+
+                            textSecondary:
+                                textSecondary,
+
                             pantallaPequena:
                                 pantallaPequena,
                           ),
@@ -413,13 +538,15 @@ class _MiCodigoPageState
 
   Widget _buildContenido({
     required Color gold,
-    required Color silver,
-    required Color errorColor,
+    required Color goldDark,
+    required Color textPrimary,
+    required Color textSecondary,
     required bool pantallaPequena,
   }) {
     if (cargando) {
       return SizedBox(
-        height: 280,
+        height:
+            280,
 
         child: Center(
           child: Column(
@@ -428,20 +555,29 @@ class _MiCodigoPageState
 
             children: [
               CircularProgressIndicator(
-                color: gold,
-                strokeWidth: 3,
+                color:
+                    gold,
+
+                strokeWidth:
+                    3,
               ),
 
               const SizedBox(
-                height: 18,
+                height:
+                    18,
               ),
 
               Text(
                 'Cargando tu código...',
 
-                style: TextStyle(
-                  color: silver,
-                  fontSize: 15,
+                style:
+                    TextStyle(
+                  color:
+                      textSecondary,
+
+                  fontSize:
+                      14,
+
                   fontWeight:
                       FontWeight.w500,
                 ),
@@ -454,8 +590,11 @@ class _MiCodigoPageState
 
     if (error.isNotEmpty) {
       return SizedBox(
-        width: double.infinity,
-        height: 280,
+        width:
+            double.infinity,
+
+        height:
+            280,
 
         child: Center(
           child: Column(
@@ -463,32 +602,68 @@ class _MiCodigoPageState
                 MainAxisSize.min,
 
             children: [
-              Icon(
-                Icons.error_outline,
-                color: errorColor,
-                size: 42,
+              Container(
+                width:
+                    58,
+
+                height:
+                    58,
+
+                decoration:
+                    const BoxDecoration(
+                  color:
+                      Color(
+                    0xFFF8DDDF,
+                  ),
+
+                  shape:
+                      BoxShape.circle,
+                ),
+
+                child:
+                    const Icon(
+                  Icons
+                      .error_outline_rounded,
+
+                  color:
+                      Color(
+                    0xFFC21B2E,
+                  ),
+
+                  size:
+                      34,
+                ),
               ),
 
               const SizedBox(
-                height: 12,
+                height:
+                    14,
               ),
 
-              Text(
+              const Text(
                 'No se pudo cargar tu código',
 
                 textAlign:
                     TextAlign.center,
 
-                style: TextStyle(
-                  color: errorColor,
-                  fontSize: 17,
+                style:
+                    TextStyle(
+                  color:
+                      Color(
+                    0xFFC21B2E,
+                  ),
+
+                  fontSize:
+                      17,
+
                   fontWeight:
-                      FontWeight.bold,
+                      FontWeight.w700,
                 ),
               ),
 
               const SizedBox(
-                height: 8,
+                height:
+                    8,
               ),
 
               Text(
@@ -497,47 +672,75 @@ class _MiCodigoPageState
                 textAlign:
                     TextAlign.center,
 
-                style: TextStyle(
-                  color: silver,
-                  fontSize: 14,
-                  height: 1.4,
+                style:
+                    TextStyle(
+                  color:
+                      textSecondary,
+
+                  fontSize:
+                      13,
+
+                  height:
+                      1.4,
                 ),
               ),
 
               const SizedBox(
-                height: 16,
+                height:
+                    18,
               ),
 
               OutlinedButton.icon(
                 onPressed:
                     cargarCodigo,
 
-                icon: Icon(
-                  Icons.refresh,
-                  color: gold,
+                icon:
+                    const Icon(
+                  Icons
+                      .refresh_rounded,
+
+                  size:
+                      19,
                 ),
 
-                label: Text(
+                label:
+                    const Text(
                   'Reintentar',
-
-                  style: TextStyle(
-                    color: gold,
-                  ),
                 ),
 
                 style:
                     OutlinedButton.styleFrom(
-                  side: BorderSide(
+                  foregroundColor:
+                      goldDark,
+
+                  backgroundColor:
+                      const Color(
+                    0xFFF8F4EC,
+                  ),
+
+                  side:
+                      const BorderSide(
                     color:
-                        gold.withValues(
-                      alpha: 0.55,
+                        Color(
+                      0xFFD8C8A5,
+                    ),
+                  ),
+
+                  shape:
+                      RoundedRectangleBorder(
+                    borderRadius:
+                        BorderRadius.circular(
+                      12,
                     ),
                   ),
 
                   padding:
                       const EdgeInsets.symmetric(
-                    horizontal: 18,
-                    vertical: 12,
+                    horizontal:
+                        18,
+
+                    vertical:
+                        12,
                   ),
                 ),
               ),
@@ -555,20 +758,80 @@ class _MiCodigoPageState
 
     if (codigoAcceso.isEmpty) {
       return SizedBox(
-        width: double.infinity,
-        height: 280,
+        width:
+            double.infinity,
+
+        height:
+            280,
 
         child: Center(
-          child: Text(
-            'No hay un código de acceso disponible.',
+          child: Column(
+            mainAxisSize:
+                MainAxisSize.min,
 
-            textAlign:
-                TextAlign.center,
+            children: [
+              Container(
+                width:
+                    58,
 
-            style: TextStyle(
-              color: silver,
-              fontSize: 15,
-            ),
+                height:
+                    58,
+
+                decoration:
+                    BoxDecoration(
+                  color:
+                      const Color(
+                    0xFFF3EAD8,
+                  ),
+
+                  shape:
+                      BoxShape.circle,
+
+                  border:
+                      Border.all(
+                    color:
+                        const Color(
+                      0xFFE4D2AA,
+                    ),
+                  ),
+                ),
+
+                child: Icon(
+                  Icons
+                      .qr_code_2_rounded,
+
+                  color:
+                      goldDark,
+
+                  size:
+                      32,
+                ),
+              ),
+
+              const SizedBox(
+                height:
+                    14,
+              ),
+
+              Text(
+                'No hay un código de acceso disponible.',
+
+                textAlign:
+                    TextAlign.center,
+
+                style:
+                    TextStyle(
+                  color:
+                      textSecondary,
+
+                  fontSize:
+                      14,
+
+                  fontWeight:
+                      FontWeight.w600,
+                ),
+              ),
+            ],
           ),
         ),
       );
@@ -577,7 +840,8 @@ class _MiCodigoPageState
     return Column(
       children: [
         Container(
-          width: double.infinity,
+          width:
+              double.infinity,
 
           padding:
               EdgeInsets.symmetric(
@@ -599,8 +863,37 @@ class _MiCodigoPageState
 
             borderRadius:
                 BorderRadius.circular(
-              14,
+              16,
             ),
+
+            border:
+                Border.all(
+              color:
+                  const Color(
+                0xFFE5DDCF,
+              ),
+            ),
+
+            boxShadow: [
+              BoxShadow(
+                color:
+                    const Color(
+                  0xFF4C3E24,
+                ).withValues(
+                  alpha:
+                      0.06,
+                ),
+
+                blurRadius:
+                    14,
+
+                offset:
+                    const Offset(
+                  0,
+                  4,
+                ),
+              ),
+            ],
           ),
 
           child: LayoutBuilder(
@@ -651,7 +944,51 @@ class _MiCodigoPageState
         ),
 
         const SizedBox(
-          height: 22,
+          height:
+              24,
+        ),
+
+        Container(
+          width:
+              58,
+
+          height:
+              58,
+
+          decoration:
+              BoxDecoration(
+            color:
+                const Color(
+              0xFFF3EAD8,
+            ),
+
+            shape:
+                BoxShape.circle,
+
+            border:
+                Border.all(
+              color:
+                  const Color(
+                0xFFE4D2AA,
+              ),
+            ),
+          ),
+
+          child: Icon(
+            Icons
+                .person_outline_rounded,
+
+            color:
+                goldDark,
+
+            size:
+                30,
+          ),
+        ),
+
+        const SizedBox(
+          height:
+              14,
         ),
 
         Text(
@@ -660,14 +997,19 @@ class _MiCodigoPageState
           textAlign:
               TextAlign.center,
 
-          style: TextStyle(
-            color: silver,
-            fontSize: 14,
+          style:
+              TextStyle(
+            color:
+                textSecondary,
+
+            fontSize:
+                13,
           ),
         ),
 
         const SizedBox(
-          height: 6,
+          height:
+              5,
         ),
 
         Text(
@@ -678,8 +1020,10 @@ class _MiCodigoPageState
           textAlign:
               TextAlign.center,
 
-          style: TextStyle(
-            color: gold,
+          style:
+              TextStyle(
+            color:
+                textPrimary,
 
             fontSize:
                 pantallaPequena
@@ -687,57 +1031,180 @@ class _MiCodigoPageState
                     : 20,
 
             fontWeight:
-                FontWeight.bold,
+                FontWeight.w700,
           ),
         ),
 
         const SizedBox(
-          height: 22,
+          height:
+              24,
         ),
 
-        Text(
-          'TU CÓDIGO',
+        Container(
+          width:
+              double.infinity,
 
-          textAlign:
-              TextAlign.center,
-
-          style: TextStyle(
-            color: silver,
-            fontSize: 12,
-            fontWeight:
-                FontWeight.bold,
-            letterSpacing: 2,
+          padding:
+              const EdgeInsets.all(
+            16,
           ),
-        ),
 
-        const SizedBox(
-          height: 8,
-        ),
-
-        FittedBox(
-          fit: BoxFit.scaleDown,
-
-          child: Text(
-            codigoAcceso,
-
-            textAlign:
-                TextAlign.center,
-
-            style: TextStyle(
-              color:
-                  Colors.white,
-
-              fontSize:
-                  pantallaPequena
-                      ? 19
-                      : 22,
-
-              fontWeight:
-                  FontWeight.bold,
-
-              letterSpacing:
-                  1.5,
+          decoration:
+              BoxDecoration(
+            color:
+                const Color(
+              0xFFF8F4EC,
             ),
+
+            borderRadius:
+                BorderRadius.circular(
+              14,
+            ),
+
+            border:
+                Border.all(
+              color:
+                  const Color(
+                0xFFE8DDC8,
+              ),
+            ),
+          ),
+
+          child: Column(
+            children: [
+              Text(
+                'TU CÓDIGO',
+
+                textAlign:
+                    TextAlign.center,
+
+                style:
+                    TextStyle(
+                  color:
+                      goldDark,
+
+                  fontSize:
+                      11,
+
+                  fontWeight:
+                      FontWeight.w700,
+
+                  letterSpacing:
+                      2,
+                ),
+              ),
+
+              const SizedBox(
+                height:
+                    9,
+              ),
+
+              FittedBox(
+                fit:
+                    BoxFit.scaleDown,
+
+                child: Text(
+                  codigoAcceso,
+
+                  textAlign:
+                      TextAlign.center,
+
+                  style:
+                      TextStyle(
+                    color:
+                        textPrimary,
+
+                    fontSize:
+                        pantallaPequena
+                            ? 19
+                            : 22,
+
+                    fontWeight:
+                        FontWeight.w800,
+
+                    letterSpacing:
+                        1.5,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+
+        const SizedBox(
+          height:
+              18,
+        ),
+
+        Container(
+          width:
+              double.infinity,
+
+          padding:
+              const EdgeInsets.all(
+            13,
+          ),
+
+          decoration:
+              BoxDecoration(
+            color:
+                const Color(
+              0xFFF8F4EC,
+            ),
+
+            borderRadius:
+                BorderRadius.circular(
+              12,
+            ),
+
+            border:
+                Border.all(
+              color:
+                  const Color(
+                0xFFE8DDC8,
+              ),
+            ),
+          ),
+
+          child: Row(
+            crossAxisAlignment:
+                CrossAxisAlignment.start,
+
+            children: [
+              Icon(
+                Icons
+                    .brightness_high_outlined,
+
+                color:
+                    goldDark,
+
+                size:
+                    18,
+              ),
+
+              const SizedBox(
+                width:
+                    9,
+              ),
+
+              Expanded(
+                child: Text(
+                  'El brillo de la pantalla aumenta automáticamente para facilitar la lectura del código.',
+
+                  style:
+                      TextStyle(
+                    color:
+                        textSecondary,
+
+                    fontSize:
+                        12,
+
+                    height:
+                        1.4,
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
       ],
