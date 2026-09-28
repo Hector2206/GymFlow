@@ -55,14 +55,15 @@ class _MisPagosPageState
       String mensaje =
           e.toString().trim();
 
-      if (mensaje.startsWith('Exception:')) {
-        mensaje =
-            mensaje
-                .replaceFirst(
-                  'Exception:',
-                  '',
-                )
-                .trim();
+      if (mensaje.startsWith(
+        'Exception:',
+      )) {
+        mensaje = mensaje
+            .replaceFirst(
+              'Exception:',
+              '',
+            )
+            .trim();
       }
 
       if (mensaje.isEmpty) {
@@ -168,7 +169,10 @@ class _MisPagosPageState
             : '00';
 
     final caracteres =
-        entero.split('').reversed.toList();
+        entero
+            .split('')
+            .reversed
+            .toList();
 
     final resultado =
         <String>[];
@@ -199,26 +203,37 @@ class _MisPagosPageState
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(
+    BuildContext context,
+  ) {
+    const background =
+        Color(0xFFF8F5EF);
+
+    const surface =
+        Color(0xFFFFFDF8);
+
     const gold =
-        Color(0xFFD4AF37);
+        Color(0xFFB58A2A);
 
-    const silver =
-        Color(0xFFA9A9A9);
+    const goldDark =
+        Color(0xFF8A6814);
 
-    const dark =
-        Color(0xFF101012);
+    const textPrimary =
+        Color(0xFF2F2A24);
 
-    const coal =
-        Color(0xFF1A1A1D);
+    const textSecondary =
+        Color(0xFF777067);
 
     return Scaffold(
       backgroundColor:
-          dark,
+          background,
 
       appBar: AppBar(
         backgroundColor:
-            dark,
+            surface,
+
+        surfaceTintColor:
+            Colors.transparent,
 
         elevation:
             0,
@@ -229,29 +244,38 @@ class _MisPagosPageState
         leading: Padding(
           padding:
               const EdgeInsets.only(
-            left: 14,
-            top: 6,
-            bottom: 6,
+            left:
+                14,
+            top:
+                6,
+            bottom:
+                6,
           ),
 
           child: Container(
             decoration:
                 BoxDecoration(
+              color:
+                  surface,
+
               borderRadius:
                   BorderRadius.circular(
-                10,
+                12,
               ),
 
               border:
                   Border.all(
                 color:
-                    gold.withValues(
-                  alpha: 0.45,
+                    const Color(
+                  0xFFD8C8A5,
                 ),
               ),
             ),
 
             child: IconButton(
+              tooltip:
+                  'Regresar',
+
               onPressed: () {
                 Navigator.of(
                   context,
@@ -260,8 +284,14 @@ class _MisPagosPageState
 
               icon:
                   const Icon(
-                Icons.arrow_back,
-                color: gold,
+                Icons
+                    .arrow_back_rounded,
+
+                color:
+                    goldDark,
+
+                size:
+                    21,
               ),
             ),
           ),
@@ -269,22 +299,28 @@ class _MisPagosPageState
 
         title: Image.asset(
           'assets/Logo_GymFlow.png',
-          height: 48,
+
+          height:
+              48,
+
+          fit:
+              BoxFit.contain,
         ),
 
         bottom:
-            PreferredSize(
+            const PreferredSize(
           preferredSize:
-              const Size.fromHeight(
+              Size.fromHeight(
             1,
           ),
 
-          child: Container(
-            height: 1,
+          child: Divider(
+            height:
+                1,
 
             color:
-                gold.withValues(
-              alpha: 0.30,
+                Color(
+              0xFFE7DFD2,
             ),
           ),
         ),
@@ -297,27 +333,21 @@ class _MisPagosPageState
         decoration:
             const BoxDecoration(
           gradient:
-              RadialGradient(
-            center:
+              LinearGradient(
+            begin:
                 Alignment.topCenter,
 
-            radius:
-                1.5,
+            end:
+                Alignment.bottomCenter,
 
             colors: [
               Color(
-                0xFF29292E,
+                0xFFF8F5EF,
               ),
-              coal,
-              Color(
-                0xFF0D0D0F,
-              ),
-            ],
 
-            stops: [
-              0.0,
-              0.35,
-              1.0,
+              Color(
+                0xFFF2EDE4,
+              ),
             ],
           ),
         ),
@@ -334,6 +364,9 @@ class _MisPagosPageState
             color:
                 gold,
 
+            backgroundColor:
+                surface,
+
             child:
                 SingleChildScrollView(
               physics:
@@ -342,13 +375,12 @@ class _MisPagosPageState
               padding:
                   const EdgeInsets.fromLTRB(
                 20,
-                34,
+                30,
                 20,
                 50,
               ),
 
-              child:
-                  Center(
+              child: Center(
                 child:
                     ConstrainedBox(
                   constraints:
@@ -357,78 +389,12 @@ class _MisPagosPageState
                         650,
                   ),
 
-                  child:
-                      Column(
+                  child: Column(
                     crossAxisAlignment:
-                        CrossAxisAlignment.start,
+                        CrossAxisAlignment
+                            .start,
 
                     children: [
-                      const Text(
-                        'CLIENTE',
-
-                        style:
-                            TextStyle(
-                          color:
-                              gold,
-
-                          fontSize:
-                              13,
-
-                          fontWeight:
-                              FontWeight.bold,
-
-                          letterSpacing:
-                              2,
-                        ),
-                      ),
-
-                      const SizedBox(
-                        height:
-                            8,
-                      ),
-
-                      const Text(
-                        'Mis Pagos',
-
-                        style:
-                            TextStyle(
-                          color:
-                              Colors.white,
-
-                          fontSize:
-                              32,
-
-                          fontWeight:
-                              FontWeight.bold,
-                        ),
-                      ),
-
-                      const SizedBox(
-                        height:
-                            8,
-                      ),
-
-                      const Text(
-                        'Consulta tus pagos y renovaciones registrados.',
-
-                        style:
-                            TextStyle(
-                          color:
-                              silver,
-
-                          fontSize:
-                              15,
-
-                          height:
-                              1.4,
-                        ),
-                      ),
-
-                      const SizedBox(
-                        height:
-                            30,
-                      ),
-
                       Container(
                         width:
                             double.infinity,
@@ -440,23 +406,8 @@ class _MisPagosPageState
 
                         decoration:
                             BoxDecoration(
-                          gradient:
-                              const LinearGradient(
-                            begin:
-                                Alignment.topLeft,
-
-                            end:
-                                Alignment.bottomRight,
-
-                            colors: [
-                              Color(
-                                0xFF1D1D20,
-                              ),
-                              Color(
-                                0xFF151517,
-                              ),
-                            ],
-                          ),
+                          color:
+                              surface,
 
                           borderRadius:
                               BorderRadius.circular(
@@ -466,64 +417,274 @@ class _MisPagosPageState
                           border:
                               Border.all(
                             color:
-                                gold.withValues(
-                              alpha:
-                                  0.16,
+                                const Color(
+                              0xFFE5DDCF,
                             ),
                           ),
+
+                          boxShadow: [
+                            BoxShadow(
+                              color:
+                                  const Color(
+                                0xFF4C3E24,
+                              ).withValues(
+                                alpha:
+                                    0.05,
+                              ),
+
+                              blurRadius:
+                                  20,
+
+                              offset:
+                                  const Offset(
+                                0,
+                                7,
+                              ),
+                            ),
+                          ],
                         ),
 
                         child:
-                            Column(
+                            const Column(
                           crossAxisAlignment:
-                              CrossAxisAlignment.start,
+                              CrossAxisAlignment
+                                  .start,
 
                           children: [
-                            const Text(
-                              'Historial de pagos',
+                            Text(
+                              'CLIENTE',
 
                               style:
                                   TextStyle(
                                 color:
-                                    gold,
+                                    goldDark,
 
                                 fontSize:
-                                    18,
+                                    11,
 
                                 fontWeight:
-                                    FontWeight.bold,
+                                    FontWeight.w700,
+
+                                letterSpacing:
+                                    2,
                               ),
                             ),
 
-                            const SizedBox(
+                            SizedBox(
                               height:
                                   7,
                             ),
 
-                            const Text(
-                              'Aquí puedes revisar los pagos registrados en tu cuenta.',
+                            Text(
+                              'Mis Pagos',
 
                               style:
                                   TextStyle(
                                 color:
-                                    silver,
+                                    textPrimary,
 
                                 fontSize:
-                                    14,
+                                    29,
+
+                                fontWeight:
+                                    FontWeight.w700,
+
+                                letterSpacing:
+                                    -0.5,
+                              ),
+                            ),
+
+                            SizedBox(
+                              height:
+                                  7,
+                            ),
+
+                            Text(
+                              'Consulta tus pagos y renovaciones registrados.',
+
+                              style:
+                                  TextStyle(
+                                color:
+                                    textSecondary,
+
+                                fontSize:
+                                    13,
+
+                                height:
+                                    1.4,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      const SizedBox(
+                        height:
+                            22,
+                      ),
+
+                      Container(
+                        width:
+                            double.infinity,
+
+                        padding:
+                            const EdgeInsets.all(
+                          20,
+                        ),
+
+                        decoration:
+                            BoxDecoration(
+                          color:
+                              surface,
+
+                          borderRadius:
+                              BorderRadius.circular(
+                            18,
+                          ),
+
+                          border:
+                              Border.all(
+                            color:
+                                const Color(
+                              0xFFE5DDCF,
+                            ),
+                          ),
+
+                          boxShadow: [
+                            BoxShadow(
+                              color:
+                                  const Color(
+                                0xFF4C3E24,
+                              ).withValues(
+                                alpha:
+                                    0.04,
+                              ),
+
+                              blurRadius:
+                                  16,
+
+                              offset:
+                                  const Offset(
+                                0,
+                                5,
+                              ),
+                            ),
+                          ],
+                        ),
+
+                        child: Column(
+                          crossAxisAlignment:
+                              CrossAxisAlignment
+                                  .start,
+
+                          children: [
+                            Row(
+                              children: [
+                                Container(
+                                  width:
+                                      40,
+
+                                  height:
+                                      40,
+
+                                  decoration:
+                                      BoxDecoration(
+                                    color:
+                                        const Color(
+                                      0xFFF3EAD8,
+                                    ),
+
+                                    borderRadius:
+                                        BorderRadius.circular(
+                                      11,
+                                    ),
+
+                                    border:
+                                        Border.all(
+                                      color:
+                                          const Color(
+                                        0xFFE4D2AA,
+                                      ),
+                                    ),
+                                  ),
+
+                                  child:
+                                      const Icon(
+                                    Icons
+                                        .payments_outlined,
+
+                                    color:
+                                        goldDark,
+
+                                    size:
+                                        21,
+                                  ),
+                                ),
+
+                                const SizedBox(
+                                  width:
+                                      12,
+                                ),
+
+                                const Expanded(
+                                  child:
+                                      Text(
+                                    'Historial de pagos',
+
+                                    style:
+                                        TextStyle(
+                                      color:
+                                          textPrimary,
+
+                                      fontSize:
+                                          17,
+
+                                      fontWeight:
+                                          FontWeight.w700,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+
+                            const SizedBox(
+                              height:
+                                  8,
+                            ),
+
+                            const Text(
+                              'Aquí puedes revisar los pagos registrados en tu cuenta. Desliza hacia abajo para actualizar.',
+
+                              style:
+                                  TextStyle(
+                                color:
+                                    textSecondary,
+
+                                fontSize:
+                                    12,
+
+                                height:
+                                    1.4,
                               ),
                             ),
 
                             const SizedBox(
                               height:
-                                  22,
+                                  20,
                             ),
 
                             _buildContenido(
                               gold:
                                   gold,
 
-                              silver:
-                                  silver,
+                              goldDark:
+                                  goldDark,
+
+                              textPrimary:
+                                  textPrimary,
+
+                              textSecondary:
+                                  textSecondary,
                             ),
                           ],
                         ),
@@ -541,7 +702,9 @@ class _MisPagosPageState
 
   Widget _buildContenido({
     required Color gold,
-    required Color silver,
+    required Color goldDark,
+    required Color textPrimary,
+    required Color textSecondary,
   }) {
     if (cargando) {
       return SizedBox(
@@ -551,10 +714,8 @@ class _MisPagosPageState
         height:
             150,
 
-        child:
-            Center(
-          child:
-              Column(
+        child: Center(
+          child: Column(
             mainAxisSize:
                 MainAxisSize.min,
 
@@ -578,10 +739,13 @@ class _MisPagosPageState
                 style:
                     TextStyle(
                   color:
-                      silver,
+                      textSecondary,
 
                   fontSize:
-                      14,
+                      13,
+
+                  fontWeight:
+                      FontWeight.w500,
                 ),
               ),
             ],
@@ -604,45 +768,61 @@ class _MisPagosPageState
             BoxDecoration(
           color:
               const Color(
-            0xFF990000,
-          ).withValues(
-            alpha:
-                0.17,
+            0xFFFFF5F5,
           ),
 
           borderRadius:
               BorderRadius.circular(
-            12,
+            14,
           ),
 
           border:
               Border.all(
             color:
                 const Color(
-              0xFF990000,
-            ).withValues(
-              alpha:
-                  0.80,
+              0xFFEDB9BF,
             ),
           ),
         ),
 
-        child:
-            Column(
+        child: Column(
           children: [
-            const Icon(
-              Icons.error_outline,
-              color:
-                  Color(
-                0xFFFFAAAA,
+            Container(
+              width:
+                  50,
+
+              height:
+                  50,
+
+              decoration:
+                  const BoxDecoration(
+                color:
+                    Color(
+                  0xFFF8DDDF,
+                ),
+
+                shape:
+                    BoxShape.circle,
               ),
-              size:
-                  38,
+
+              child:
+                  const Icon(
+                Icons
+                    .error_outline_rounded,
+
+                color:
+                    Color(
+                  0xFFC21B2E,
+                ),
+
+                size:
+                    30,
+              ),
             ),
 
             const SizedBox(
               height:
-                  10,
+                  12,
             ),
 
             Text(
@@ -655,11 +835,17 @@ class _MisPagosPageState
                   const TextStyle(
                 color:
                     Color(
-                  0xFFFFAAAA,
+                  0xFF8F2030,
                 ),
 
                 fontSize:
-                    14,
+                    13,
+
+                fontWeight:
+                    FontWeight.w600,
+
+                height:
+                    1.4,
               ),
             ),
 
@@ -673,31 +859,42 @@ class _MisPagosPageState
                   cargarPagos,
 
               icon:
-                  Icon(
-                Icons.refresh,
-                color:
-                    gold,
+                  const Icon(
+                Icons
+                    .refresh_rounded,
+
+                size:
+                    19,
               ),
 
               label:
-                  Text(
+                  const Text(
                 'Reintentar',
-
-                style:
-                    TextStyle(
-                  color:
-                      gold,
-                ),
               ),
 
               style:
                   OutlinedButton.styleFrom(
+                foregroundColor:
+                    const Color(
+                  0xFF8F2030,
+                ),
+
+                backgroundColor:
+                    Colors.white,
+
                 side:
-                    BorderSide(
+                    const BorderSide(
                   color:
-                      gold.withValues(
-                    alpha:
-                        0.50,
+                      Color(
+                    0xFFE4B8B8,
+                  ),
+                ),
+
+                shape:
+                    RoundedRectangleBorder(
+                  borderRadius:
+                      BorderRadius.circular(
+                    12,
                   ),
                 ),
               ),
@@ -725,40 +922,66 @@ class _MisPagosPageState
             BoxDecoration(
           color:
               const Color(
-            0xFF101012,
+            0xFFF8F4EC,
           ),
 
           borderRadius:
               BorderRadius.circular(
-            12,
+            14,
           ),
 
           border:
               Border.all(
             color:
-                gold.withValues(
-              alpha:
-                  0.25,
+                const Color(
+              0xFFE8DDC8,
             ),
           ),
         ),
 
-        child:
-            const Column(
+        child: Column(
           children: [
-            Icon(
-              Icons.payments_outlined,
-              color:
-                  Color(
-                0xFF777777,
+            Container(
+              width:
+                  54,
+
+              height:
+                  54,
+
+              decoration:
+                  BoxDecoration(
+                color:
+                    const Color(
+                  0xFFF3EAD8,
+                ),
+
+                shape:
+                    BoxShape.circle,
+
+                border:
+                    Border.all(
+                  color:
+                      const Color(
+                    0xFFE4D2AA,
+                  ),
+                ),
               ),
-              size:
-                  38,
+
+              child: Icon(
+                Icons
+                    .payments_outlined,
+
+                color:
+                    goldDark,
+
+                size:
+                    29,
+              ),
             ),
 
-            SizedBox(
+            const SizedBox(
               height:
-                  12,
+                  13,
             ),
 
             Text(
@@ -770,12 +993,16 @@ class _MisPagosPageState
               style:
                   TextStyle(
                 color:
-                    Color(
-                  0xFF888888,
-                ),
+                    textSecondary,
 
                 fontSize:
-                    14,
+                    13,
+
+                fontWeight:
+                    FontWeight.w600,
+
+                height:
+                    1.4,
               ),
             ),
           ],
@@ -788,17 +1015,74 @@ class _MisPagosPageState
           CrossAxisAlignment.start,
 
       children: [
-        Text(
-          'Pagos registrados: ${pagos.length}',
+        Row(
+          children: [
+            Expanded(
+              child: Text(
+                'Pagos registrados',
 
-          style:
-              TextStyle(
-            color:
-                silver,
+                style:
+                    TextStyle(
+                  color:
+                      textPrimary,
 
-            fontSize:
-                13,
-          ),
+                  fontSize:
+                      15,
+
+                  fontWeight:
+                      FontWeight.w700,
+                ),
+              ),
+            ),
+
+            Container(
+              padding:
+                  const EdgeInsets.symmetric(
+                horizontal:
+                    11,
+
+                vertical:
+                    6,
+              ),
+
+              decoration:
+                  BoxDecoration(
+                color:
+                    const Color(
+                  0xFFF3EAD8,
+                ),
+
+                borderRadius:
+                    BorderRadius.circular(
+                  30,
+                ),
+
+                border:
+                    Border.all(
+                  color:
+                      const Color(
+                    0xFFD8C392,
+                  ),
+                ),
+              ),
+
+              child: Text(
+                '${pagos.length}',
+
+                style:
+                    TextStyle(
+                  color:
+                      goldDark,
+
+                  fontSize:
+                      12,
+
+                  fontWeight:
+                      FontWeight.w700,
+                ),
+              ),
+            ),
+          ],
         ),
 
         const SizedBox(
@@ -814,22 +1098,13 @@ class _MisPagosPageState
           _buildPagoCard(
             pago:
                 pagos[i],
-
-            gold:
-                gold,
-
-            silver:
-                silver,
           ),
 
-          if (
-            i <
-                pagos.length -
-                    1
-          )
+          if (i <
+              pagos.length - 1)
             const SizedBox(
               height:
-                  14,
+                  12,
             ),
         ],
       ],
@@ -838,8 +1113,6 @@ class _MisPagosPageState
 
   Widget _buildPagoCard({
     required PagoCliente pago,
-    required Color gold,
-    required Color silver,
   }) {
     return Container(
       width:
@@ -854,55 +1127,175 @@ class _MisPagosPageState
           BoxDecoration(
         color:
             const Color(
-          0xFF101012,
+          0xFFFFFDF8,
         ),
 
         borderRadius:
             BorderRadius.circular(
-          12,
+          15,
         ),
 
         border:
             Border.all(
           color:
-              gold.withValues(
-            alpha:
-                0.16,
+              const Color(
+            0xFFE5DDCF,
           ),
         ),
+
+        boxShadow: [
+          BoxShadow(
+            color:
+                const Color(
+              0xFF4C3E24,
+            ).withValues(
+              alpha:
+                  0.035,
+            ),
+
+            blurRadius:
+                12,
+
+            offset:
+                const Offset(
+              0,
+              4,
+            ),
+          ),
+        ],
       ),
 
-      child:
-          Column(
+      child: Column(
         crossAxisAlignment:
             CrossAxisAlignment.start,
 
         children: [
-          Text(
-            'PAGO #${pago.idPago}',
+          Row(
+            children: [
+              Container(
+                width:
+                    42,
 
-            style:
-                TextStyle(
-              color:
-                  gold,
+                height:
+                    42,
 
-              fontSize:
-                  13,
+                decoration:
+                    BoxDecoration(
+                  color:
+                      const Color(
+                    0xFFF3EAD8,
+                  ),
 
-              fontWeight:
-                  FontWeight.bold,
+                  borderRadius:
+                      BorderRadius.circular(
+                    12,
+                  ),
 
-              letterSpacing:
-                  0.6,
-            ),
+                  border:
+                      Border.all(
+                    color:
+                        const Color(
+                      0xFFE4D2AA,
+                    ),
+                  ),
+                ),
+
+                child:
+                    const Icon(
+                  Icons
+                      .receipt_long_outlined,
+
+                  color:
+                      Color(
+                    0xFF8A6814,
+                  ),
+
+                  size:
+                      22,
+                ),
+              ),
+
+              const SizedBox(
+                width:
+                    12,
+              ),
+
+              Expanded(
+                child: Text(
+                  'Pago #${pago.idPago}',
+
+                  style:
+                      const TextStyle(
+                    color:
+                        Color(
+                      0xFF2F2A24,
+                    ),
+
+                    fontSize:
+                        15,
+
+                    fontWeight:
+                        FontWeight.w700,
+                  ),
+                ),
+              ),
+
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(
+                  horizontal:
+                      10,
+
+                  vertical:
+                      5,
+                ),
+
+                decoration:
+                    BoxDecoration(
+                  color:
+                      const Color(
+                    0xFFF3EAD8,
+                  ),
+
+                  borderRadius:
+                      BorderRadius.circular(
+                    30,
+                  ),
+                ),
+
+                child: Text(
+                  formatearMonto(
+                    pago.monto,
+                  ),
+
+                  style:
+                      const TextStyle(
+                    color:
+                        Color(
+                      0xFF8A6814,
+                    ),
+
+                    fontSize:
+                        11,
+
+                    fontWeight:
+                        FontWeight.w800,
+                  ),
+                ),
+              ),
+            ],
           ),
 
           const SizedBox(
             height:
-                13,
+                15,
           ),
 
           _buildFila(
+            icon:
+                Icons
+                    .calendar_today_outlined,
+
             etiqueta:
                 'Fecha',
 
@@ -910,12 +1303,13 @@ class _MisPagosPageState
                 formatearFecha(
               pago,
             ),
-
-            silver:
-                silver,
           ),
 
           _buildFila(
+            icon:
+                Icons
+                    .schedule_outlined,
+
             etiqueta:
                 'Hora',
 
@@ -923,12 +1317,13 @@ class _MisPagosPageState
                 formatearHora(
               pago,
             ),
-
-            silver:
-                silver,
           ),
 
           _buildFila(
+            icon:
+                Icons
+                    .attach_money_rounded,
+
             etiqueta:
                 'Monto',
 
@@ -936,22 +1331,22 @@ class _MisPagosPageState
                 formatearMonto(
               pago.monto,
             ),
-
-            silver:
-                silver,
           ),
 
           _buildFila(
+            icon:
+                Icons
+                    .receipt_long_outlined,
+
             etiqueta:
                 'Concepto',
 
             valor:
-                pago.tipoPago.trim().isNotEmpty
+                pago.tipoPago
+                        .trim()
+                        .isNotEmpty
                     ? pago.tipoPago
                     : 'Sin concepto',
-
-            silver:
-                silver,
           ),
         ],
       ),
@@ -959,9 +1354,9 @@ class _MisPagosPageState
   }
 
   Widget _buildFila({
+    required IconData icon,
     required String etiqueta,
     required String valor,
-    required Color silver,
   }) {
     return Padding(
       padding:
@@ -970,24 +1365,44 @@ class _MisPagosPageState
             7,
       ),
 
-      child:
-          Row(
+      child: Row(
         crossAxisAlignment:
             CrossAxisAlignment.start,
 
         children: [
+          Icon(
+            icon,
+
+            color:
+                const Color(
+              0xFF8A6814,
+            ),
+
+            size:
+                18,
+          ),
+
+          const SizedBox(
+            width:
+                10,
+          ),
+
           Expanded(
-            child:
-                Text(
+            child: Text(
               etiqueta,
 
               style:
-                  TextStyle(
+                  const TextStyle(
                 color:
-                    silver,
+                    Color(
+                  0xFF777067,
+                ),
 
                 fontSize:
                     13,
+
+                fontWeight:
+                    FontWeight.w500,
               ),
             ),
           ),
@@ -998,8 +1413,7 @@ class _MisPagosPageState
           ),
 
           Flexible(
-            child:
-                Text(
+            child: Text(
               valor,
 
               textAlign:
@@ -1008,13 +1422,15 @@ class _MisPagosPageState
               style:
                   const TextStyle(
                 color:
-                    Colors.white,
+                    Color(
+                  0xFF2F2A24,
+                ),
 
                 fontSize:
                     13,
 
                 fontWeight:
-                    FontWeight.bold,
+                    FontWeight.w700,
               ),
             ),
           ),
