@@ -3,15 +3,22 @@ import {
   Component
 } from '@angular/core';
 
-import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
+import {
+  CommonModule
+} from '@angular/common';
+
+import {
+  FormsModule
+} from '@angular/forms';
 
 import {
   HttpClient,
   HttpErrorResponse
 } from '@angular/common/http';
 
-import { Router } from '@angular/router';
+import {
+  Router
+} from '@angular/router';
 
 import {
   environment
@@ -30,19 +37,23 @@ import {
 export class RegistrarCliente {
 
   nombreCompleto = '';
-  correo = '';
-  password = '';
-  telefono = '';
 
+  correo = '';
+
+  password = '';
+
+  telefono = '';
 
   idMembresia: number | null = null;
 
   costoMensual: number | null = null;
+
   costoAnual: number | null = null;
 
   cargando = false;
 
   error = '';
+
   exito = '';
 
   constructor(
@@ -51,54 +62,110 @@ export class RegistrarCliente {
     private changeDetector: ChangeDetectorRef
   ) {}
 
+
   volver(): void {
-    this.router.navigate(['/home']);
+
+    this.router.navigate([
+      '/home'
+    ]);
+
   }
+
 
   registrarCliente(): void {
 
     this.error = '';
+
     this.exito = '';
+
+
+    /* =========================
+       NOMBRE COMPLETO
+    ========================= */
 
     if (!this.nombreCompleto.trim()) {
 
       this.error =
         'El nombre completo es obligatorio.';
 
+      this.enfocarCampo(
+        'nombreCompleto'
+      );
+
       return;
+
     }
+
+
+    /* =========================
+       CORREO
+    ========================= */
 
     if (!this.correo.trim()) {
 
       this.error =
         'El correo es obligatorio.';
 
+      this.enfocarCampo(
+        'correo'
+      );
+
       return;
+
     }
 
-    if (!this.correoValido(this.correo)) {
+
+    if (!this.correoValido(
+      this.correo
+    )) {
 
       this.error =
         'Ingresa un correo electrónico válido.';
 
+      this.enfocarCampo(
+        'correo'
+      );
+
       return;
+
     }
+
+
+    /* =========================
+       CONTRASEÑA
+    ========================= */
 
     if (!this.password.trim()) {
 
       this.error =
         'La contraseña es obligatoria.';
 
+      this.enfocarCampo(
+        'password'
+      );
+
       return;
+
     }
+
 
     if (this.password.length < 6) {
 
       this.error =
         'La contraseña debe tener al menos 6 caracteres.';
 
+      this.enfocarCampo(
+        'password'
+      );
+
       return;
+
     }
+
+
+    /* =========================
+       MEMBRESÍA
+    ========================= */
 
     if (
       this.idMembresia === null ||
@@ -108,8 +175,18 @@ export class RegistrarCliente {
       this.error =
         'Selecciona una membresía válida.';
 
+      this.enfocarCampo(
+        'idMembresia'
+      );
+
       return;
+
     }
+
+
+    /* =========================
+       COSTO MENSUAL
+    ========================= */
 
     if (
       this.costoMensual === null ||
@@ -119,8 +196,18 @@ export class RegistrarCliente {
       this.error =
         'Ingresa un costo mensual válido.';
 
+      this.enfocarCampo(
+        'costoMensual'
+      );
+
       return;
+
     }
+
+
+    /* =========================
+       COSTO ANUAL
+    ========================= */
 
     if (
       this.costoAnual === null ||
@@ -130,14 +217,24 @@ export class RegistrarCliente {
       this.error =
         'Ingresa un costo anual válido.';
 
+      this.enfocarCampo(
+        'costoAnual'
+      );
+
       return;
+
     }
+
 
     if (this.cargando) {
+
       return;
+
     }
 
+
     this.cargando = true;
+
 
     const cliente = {
 
@@ -146,8 +243,6 @@ export class RegistrarCliente {
 
       password:
         this.password,
-
-
 
       nombreCompleto:
         this.nombreCompleto.trim(),
@@ -163,7 +258,9 @@ export class RegistrarCliente {
 
       costoAnual:
         this.costoAnual
+
     };
+
 
     this.http
       .post(
@@ -172,7 +269,9 @@ export class RegistrarCliente {
       )
       .subscribe({
 
-        next: (response: any) => {
+        next: (
+          response: any
+        ) => {
 
           this.cargando = false;
 
@@ -182,7 +281,11 @@ export class RegistrarCliente {
 
           this.limpiarFormulario();
 
-          this.changeDetector.detectChanges();
+          this.changeDetector
+            .detectChanges();
+
+          this.irAlInicio();
+
         },
 
         error: (
@@ -196,24 +299,31 @@ export class RegistrarCliente {
 
           this.cargando = false;
 
+
           if (error.status === 401) {
 
             this.error =
               'Tu sesión no es válida. Inicia sesión nuevamente.';
 
-          } else if (error.status === 403) {
+          } else if (
+            error.status === 403
+          ) {
 
             this.error =
               'No tienes permisos para registrar clientes.';
 
-          } else if (error.status === 400) {
+          } else if (
+            error.status === 400
+          ) {
 
             this.error =
               error.error?.mensaje ||
               error.error?.message ||
               'Verifica los datos ingresados.';
 
-          } else if (error.status === 0) {
+          } else if (
+            error.status === 0
+          ) {
 
             this.error =
               'No se pudo conectar con el servicio de registro.';
@@ -222,12 +332,25 @@ export class RegistrarCliente {
 
             this.error =
               'Ocurrió un error al registrar el cliente.';
+
           }
 
-          this.changeDetector.detectChanges();
+
+          this.changeDetector
+            .detectChanges();
+
+          this.irAlInicio();
+
         }
+
       });
+
   }
+
+
+  /* =========================
+     VALIDAR CORREO
+  ========================= */
 
   correoValido(
     correo: string
@@ -239,19 +362,101 @@ export class RegistrarCliente {
     return expresion.test(
       correo.trim()
     );
+
   }
+
+
+  /* =========================
+     DIRIGIR AL CAMPO CON ERROR
+  ========================= */
+
+  private enfocarCampo(
+    idCampo: string
+  ): void {
+
+    this.changeDetector
+      .detectChanges();
+
+    setTimeout(
+      () => {
+
+        const campo =
+          document.getElementById(
+            idCampo
+          );
+
+        if (!campo) {
+
+          return;
+
+        }
+
+
+        campo.scrollIntoView({
+          behavior: 'smooth',
+          block: 'center'
+        });
+
+
+        setTimeout(
+          () => {
+
+            campo.focus({
+              preventScroll: true
+            });
+
+          },
+          350
+        );
+
+      },
+      0
+    );
+
+  }
+
+
+  /* =========================
+     MOSTRAR MENSAJE SUPERIOR
+  ========================= */
+
+  private irAlInicio(): void {
+
+    setTimeout(
+      () => {
+
+        window.scrollTo({
+          top: 0,
+          behavior: 'smooth'
+        });
+
+      },
+      0
+    );
+
+  }
+
+
+  /* =========================
+     LIMPIAR FORMULARIO
+  ========================= */
 
   limpiarFormulario(): void {
 
     this.nombreCompleto = '';
+
     this.correo = '';
+
     this.password = '';
+
     this.telefono = '';
-    
 
     this.idMembresia = null;
 
     this.costoMensual = null;
+
     this.costoAnual = null;
+
   }
+
 }

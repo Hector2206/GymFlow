@@ -1,35 +1,33 @@
 :host {
   display: block;
-
-  --gold: #d4af37;
-  --brass: #b5a642;
-  --coal: #1a1a1d;
-  --graphite: #404040;
-  --silver: #a9a9a9;
-  --white: #ffffff;
-  --dark: #101012;
 }
 
 * {
   box-sizing: border-box;
 }
 
+
+/* =========================
+   PÁGINA
+========================= */
+
 .historial-page {
   min-height: 100vh;
 
   background:
-    radial-gradient(
-      circle at top,
-      #29292e 0%,
-      var(--coal) 35%,
-      #0d0d0f 100%
+    linear-gradient(
+      180deg,
+      #f8f5ef 0%,
+      #f2ede4 100%
     );
 
-  color: var(--white);
+  color: #2f2a24;
 }
 
 
-/* HEADER */
+/* =========================
+   HEADER
+========================= */
 
 .topbar {
   min-height: 88px;
@@ -37,30 +35,43 @@
   display: flex;
   align-items: center;
 
-  padding: 12px 42px;
+  padding: 10px 42px;
 
-  background: var(--dark);
+  position: sticky;
+  top: 0;
+  z-index: 20;
 
-  border-bottom:
-    1px solid rgba(212, 175, 55, 0.35);
+  background: rgba(255, 253, 248, 0.94);
+
+  border-bottom: 1px solid #e7dfd2;
 
   box-shadow:
-    0 8px 30px rgba(0, 0, 0, 0.3);
+    0 5px 24px rgba(76, 62, 36, 0.06);
+
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
 }
 
 .header-left {
   display: flex;
   align-items: center;
 
-  gap: 18px;
+  gap: 16px;
 }
 
 .logo {
   width: 145px;
   height: 58px;
 
+  display: block;
+
   object-fit: contain;
 }
+
+
+/* =========================
+   BOTÓN REGRESAR
+========================= */
 
 .back-button {
   width: 42px;
@@ -70,28 +81,46 @@
   align-items: center;
   justify-content: center;
 
-  border:
-    1px solid rgba(212, 175, 55, 0.45);
+  border: 1px solid #d8c8a5;
+  border-radius: 12px;
 
-  border-radius: 10px;
+  background: #fffdf8;
 
-  background: transparent;
+  color: #8a6814;
 
-  color: var(--gold);
-
-  font-size: 23px;
+  font-size: 21px;
 
   cursor: pointer;
+
+  transition:
+    background 0.18s ease,
+    border-color 0.18s ease,
+    color 0.18s ease,
+    transform 0.18s ease,
+    box-shadow 0.18s ease;
 }
 
 .back-button:hover {
-  background: var(--gold);
+  background: #f3ead8;
 
-  color: var(--coal);
+  border-color: #b58a2a;
+
+  color: #6e5012;
+
+  transform: translateX(-2px);
+
+  box-shadow:
+    0 5px 14px rgba(181, 138, 42, 0.12);
+}
+
+.back-button:active {
+  transform: translateX(0);
 }
 
 
-/* CONTENIDO */
+/* =========================
+   CONTENIDO
+========================= */
 
 .content {
   width: 100%;
@@ -99,19 +128,19 @@
 
   margin: 0 auto;
 
-  padding: 55px 30px 70px;
+  padding: 48px 30px 70px;
 }
 
 .page-header {
-  margin-bottom: 35px;
+  margin-bottom: 32px;
 }
 
 .section-label {
   margin: 0 0 7px;
 
-  color: var(--gold);
+  color: #9a7728;
 
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 700;
 
   text-transform: uppercase;
@@ -122,65 +151,68 @@
 .page-header h1 {
   margin: 0;
 
-  color: var(--white);
+  color: #2f2a24;
 
-  font-size: clamp(
-    30px,
-    4vw,
-    42px
-  );
+  font-size:
+    clamp(
+      30px,
+      4vw,
+      42px
+    );
+
+  font-weight: 700;
+
+  letter-spacing: -0.8px;
 }
 
 .subtitle {
-  margin-top: 8px;
+  margin: 8px 0 0;
 
-  color: var(--silver);
-
-  font-size: 15px;
-}
-
-
-/* SECCIÓN */
-
-.history-section {
-  padding: 27px;
-
-  border:
-    1px solid rgba(212, 175, 55, 0.16);
-
-  border-radius: 20px;
-
-  background:
-    linear-gradient(
-      145deg,
-      #1d1d20,
-      #151517
-    );
-
-  box-shadow:
-    0 18px 35px rgba(0, 0, 0, 0.28);
-}
-
-.history-section h2 {
-  margin:
-    0 0 8px;
-
-  color: var(--gold);
-
-  font-size: 18px;
-}
-
-.section-description {
-  margin:
-    0 0 22px;
-
-  color: var(--silver);
+  color: #777067;
 
   font-size: 14px;
 }
 
 
-/* BUSCADOR */
+/* =========================
+   SECCIÓN PRINCIPAL
+========================= */
+
+.history-section {
+  padding: 27px;
+
+  border: 1px solid #e5ddcf;
+  border-radius: 20px;
+
+  background: #fffdf8;
+
+  box-shadow:
+    0 8px 26px rgba(76, 62, 36, 0.05);
+}
+
+.history-section h2 {
+  margin: 0 0 8px;
+
+  color: #2f2a24;
+
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.section-description {
+  margin: 0 0 22px;
+
+  color: #777067;
+
+  font-size: 13px;
+
+  line-height: 1.5;
+}
+
+
+/* =========================
+   BUSCADOR
+========================= */
 
 .search-row {
   display: grid;
@@ -195,14 +227,13 @@
 
 .field {
   display: flex;
-
   flex-direction: column;
 }
 
 .field label {
   margin-bottom: 8px;
 
-  color: #dedede;
+  color: #3c362f;
 
   font-size: 13px;
   font-weight: 600;
@@ -213,134 +244,241 @@
   width: 100%;
   height: 52px;
 
-  padding:
-    0 14px;
+  padding: 0 14px;
 
-  border:
-    1px solid var(--graphite);
-
-  border-radius: 11px;
+  border: 1px solid #ddd4c6;
+  border-radius: 13px;
 
   outline: none;
 
-  background: #101012;
+  background: #f4efe6;
 
-  color: var(--white);
+  color: #2f2a24;
 
   font-size: 14px;
+
+  transition:
+    background 0.18s ease,
+    border-color 0.18s ease,
+    box-shadow 0.18s ease;
+}
+
+.field input::placeholder {
+  color: #a39a8d;
+}
+
+.field input:hover,
+.field select:hover:not(:disabled) {
+  background: #f1ebdf;
 }
 
 .field input:focus,
 .field select:focus {
-  border-color: var(--gold);
+  border-color: #b58a2a;
+
+  background: #fffdf8;
 
   box-shadow:
-    0 0 0 3px
-    rgba(212, 175, 55, 0.1);
+    0 0 0 3px rgba(181, 138, 42, 0.13);
 }
+
+.field select {
+  cursor: pointer;
+}
+
 .field select:disabled {
-  opacity: 0.6;
+  opacity: 0.62;
+
   cursor: not-allowed;
+
+  background: #eee9e0;
 }
+
+
+/* =========================
+   BOTÓN BUSCAR
+========================= */
 
 .search-button {
   height: 52px;
 
-  padding:
-    0 24px;
+  padding: 0 24px;
 
   border: none;
+  border-radius: 13px;
 
-  border-radius: 11px;
+  background: #b58a2a;
 
-  background:
-    linear-gradient(
-      135deg,
-      var(--gold),
-      var(--brass)
-    );
+  color: #fffdf8;
 
-  color: var(--coal);
-
-  font-weight: 800;
+  font-size: 13px;
+  font-weight: 700;
 
   cursor: pointer;
+
+  box-shadow:
+    0 6px 16px rgba(181, 138, 42, 0.15);
+
+  transition:
+    background 0.18s ease,
+    transform 0.18s ease,
+    box-shadow 0.18s ease,
+    opacity 0.18s ease;
+}
+
+.search-button:hover:not(:disabled) {
+  background: #a47a1f;
+
+  transform: translateY(-1px);
+
+  box-shadow:
+    0 8px 20px rgba(181, 138, 42, 0.2);
+}
+
+.search-button:active:not(:disabled) {
+  transform: translateY(0);
 }
 
 .search-button:disabled {
   opacity: 0.55;
 
   cursor: not-allowed;
+
+  box-shadow: none;
 }
 
 
-/* MENSAJES */
+/* =========================
+   MENSAJES
+========================= */
 
 .message {
+  min-height: 58px;
+
   margin-top: 20px;
 
-  padding:
-    14px 17px;
+  padding: 13px 16px;
 
-  border-radius: 11px;
+  display: flex;
+  align-items: center;
 
-  font-size: 14px;
+  gap: 12px;
+
+  border-radius: 14px;
+
+  font-size: 13px;
+  font-weight: 600;
+
+  line-height: 1.45;
 }
 
 .error-message {
-  border:
-    1px solid rgba(153, 0, 0, 0.8);
+  border: 1px solid #edb9bf;
+  border-left: 4px solid #c21b2e;
 
-  background:
-    rgba(153, 0, 0, 0.17);
+  background: #fff6f6;
 
-  color: #ffaaaa;
+  color: #8f2030;
+
+  box-shadow:
+    0 5px 16px rgba(194, 27, 46, 0.06);
 }
+
+.error-message::before {
+  content: "!";
+
+  width: 30px;
+  height: 30px;
+
+  flex-shrink: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 50%;
+
+  background: #c21b2e;
+
+  color: #ffffff;
+
+  font-size: 16px;
+  font-weight: 800;
+}
+
+
+/* =========================
+   SIN RESULTADOS
+========================= */
 
 .empty-state {
   margin-top: 22px;
 
-  padding: 24px;
+  padding: 26px;
 
-  border:
-    1px dashed rgba(212, 175, 55, 0.25);
+  border: 1px dashed #d8c8a5;
+  border-radius: 14px;
 
-  border-radius: 12px;
+  background: #f8f4ec;
 
-  background: #101012;
-
-  color: #77777c;
+  color: #8a8176;
 
   text-align: center;
+
+  font-size: 13px;
+
+  line-height: 1.5;
 }
 
 
-/* RESULTADOS */
+/* =========================
+   RESULTADOS
+========================= */
 
 .results {
   margin-top: 24px;
 }
 
 .results-count {
-  margin:
-    0 0 14px;
+  margin: 0 0 14px;
 
-  color: var(--silver);
+  color: #777067;
 
-  font-size: 13px;
+  font-size: 12px;
+  font-weight: 600;
 }
+
+
+/* =========================
+   TARJETAS DE ASISTENCIA
+========================= */
 
 .attendance-card {
   margin-bottom: 14px;
 
-  padding: 18px;
+  padding: 19px;
 
-  border:
-    1px solid rgba(212, 175, 55, 0.16);
+  border: 1px solid #e5ddcf;
+  border-radius: 15px;
 
-  border-radius: 12px;
+  background: #fffdf8;
 
-  background: #101012;
+  box-shadow:
+    0 5px 18px rgba(76, 62, 36, 0.04);
+
+  transition:
+    border-color 0.18s ease,
+    transform 0.18s ease,
+    box-shadow 0.18s ease;
+}
+
+.attendance-card:hover {
+  border-color: #d8c392;
+
+  transform: translateY(-2px);
+
+  box-shadow:
+    0 9px 22px rgba(76, 62, 36, 0.07);
 }
 
 .attendance-label {
@@ -348,9 +486,9 @@
 
   margin-bottom: 13px;
 
-  color: var(--gold);
+  color: #9a7728;
 
-  font-size: 13px;
+  font-size: 11px;
   font-weight: 700;
 
   text-transform: uppercase;
@@ -360,56 +498,89 @@
 
 .attendance-row {
   display: flex;
-
   justify-content: space-between;
 
   gap: 20px;
 
-  padding:
-    7px 0;
+  padding: 8px 0;
 
-  color: var(--silver);
+  border-bottom:
+    1px solid rgba(181, 138, 42, 0.1);
+
+  color: #777067;
 
   font-size: 13px;
 }
 
+.attendance-row:last-child {
+  border-bottom: none;
+}
+
 .attendance-row strong {
-  color: var(--white);
+  color: #2f2a24;
+
+  font-weight: 700;
+
+  text-align: right;
 }
 
 
-/* RESPONSIVE */
+/* =========================
+   RESPONSIVE
+========================= */
 
 @media (max-width: 700px) {
 
   .topbar {
-    padding:
-      10px 17px;
+    min-height: 74px;
+
+    padding: 8px 17px;
   }
 
   .logo {
-    width: 110px;
+    width: 115px;
     height: 48px;
+  }
+
+  .back-button {
+    width: 39px;
+    height: 39px;
+
+    font-size: 19px;
   }
 
   .content {
     padding:
-      38px 18px
+      34px 18px
       55px;
+  }
+
+  .page-header {
+    margin-bottom: 27px;
   }
 
   .history-section {
     padding:
-      22px 18px;
+      21px 18px;
   }
 
   .search-row {
-    grid-template-columns:
-      1fr;
+    grid-template-columns: 1fr;
   }
 
   .search-button {
     width: 100%;
+  }
+
+  .message {
+    min-height: 54px;
+
+    padding: 12px 13px;
+  }
+
+  .error-message::before {
+    width: 28px;
+    height: 28px;
   }
 
   .attendance-row {
@@ -417,4 +588,9 @@
 
     gap: 4px;
   }
+
+  .attendance-row strong {
+    text-align: left;
+  }
+
 }

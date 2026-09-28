@@ -1,35 +1,33 @@
 :host {
   display: block;
-
-  --gold: #d4af37;
-  --brass: #b5a642;
-  --coal: #1a1a1d;
-  --graphite: #404040;
-  --silver: #a9a9a9;
-  --white: #ffffff;
-  --dark: #101012;
 }
 
 * {
   box-sizing: border-box;
 }
 
+
+/* =========================
+   PÁGINA
+========================= */
+
 .control-acceso-page {
   min-height: 100vh;
 
   background:
-    radial-gradient(
-      circle at top,
-      #29292e 0%,
-      var(--coal) 35%,
-      #0d0d0f 100%
+    linear-gradient(
+      180deg,
+      #f8f5ef 0%,
+      #f2ede4 100%
     );
 
-  color: var(--white);
+  color: #2f2a24;
 }
 
 
-/* HEADER */
+/* =========================
+   HEADER
+========================= */
 
 .topbar {
   min-height: 88px;
@@ -37,30 +35,43 @@
   display: flex;
   align-items: center;
 
-  padding: 12px 42px;
+  padding: 10px 42px;
 
-  background: var(--dark);
+  position: sticky;
+  top: 0;
+  z-index: 20;
 
-  border-bottom:
-    1px solid rgba(212, 175, 55, 0.35);
+  background: rgba(255, 253, 248, 0.94);
+
+  border-bottom: 1px solid #e7dfd2;
 
   box-shadow:
-    0 8px 30px rgba(0, 0, 0, 0.3);
+    0 5px 24px rgba(76, 62, 36, 0.06);
+
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
 }
 
 .header-left {
   display: flex;
   align-items: center;
 
-  gap: 18px;
+  gap: 16px;
 }
 
 .logo {
   width: 145px;
   height: 58px;
 
+  display: block;
+
   object-fit: contain;
 }
+
+
+/* =========================
+   BOTÓN REGRESAR
+========================= */
 
 .back-button {
   width: 42px;
@@ -70,31 +81,46 @@
   align-items: center;
   justify-content: center;
 
-  border:
-    1px solid rgba(212, 175, 55, 0.45);
+  border: 1px solid #d8c8a5;
+  border-radius: 12px;
 
-  border-radius: 10px;
+  background: #fffdf8;
 
-  background: transparent;
+  color: #8a6814;
 
-  color: var(--gold);
-
-  font-size: 23px;
+  font-size: 21px;
 
   cursor: pointer;
 
   transition:
-    background 0.2s ease,
-    color 0.2s ease;
+    background 0.18s ease,
+    border-color 0.18s ease,
+    color 0.18s ease,
+    transform 0.18s ease,
+    box-shadow 0.18s ease;
 }
 
 .back-button:hover {
-  background: var(--gold);
-  color: var(--coal);
+  background: #f3ead8;
+
+  border-color: #b58a2a;
+
+  color: #6e5012;
+
+  transform: translateX(-2px);
+
+  box-shadow:
+    0 5px 14px rgba(181, 138, 42, 0.12);
+}
+
+.back-button:active {
+  transform: translateX(0);
 }
 
 
-/* CONTENIDO */
+/* =========================
+   CONTENIDO
+========================= */
 
 .content {
   width: 100%;
@@ -102,19 +128,19 @@
 
   margin: 0 auto;
 
-  padding: 55px 30px 70px;
+  padding: 48px 30px 70px;
 }
 
 .page-header {
-  margin-bottom: 35px;
+  margin-bottom: 32px;
 }
 
 .section-label {
   margin: 0 0 7px;
 
-  color: var(--gold);
+  color: #9a7728;
 
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 700;
 
   text-transform: uppercase;
@@ -125,65 +151,68 @@
 .page-header h1 {
   margin: 0;
 
-  color: var(--white);
+  color: #2f2a24;
 
-  font-size: clamp(
-    30px,
-    4vw,
-    42px
-  );
+  font-size:
+    clamp(
+      30px,
+      4vw,
+      42px
+    );
+
+  font-weight: 700;
+
+  letter-spacing: -0.8px;
 }
 
 .subtitle {
-  margin-top: 8px;
+  margin: 8px 0 0;
 
-  color: var(--silver);
-
-  font-size: 15px;
-}
-
-
-/* SECCIÓN */
-
-.control-section {
-  padding: 27px;
-
-  border:
-    1px solid rgba(212, 175, 55, 0.16);
-
-  border-radius: 20px;
-
-  background:
-    linear-gradient(
-      145deg,
-      #1d1d20,
-      #151517
-    );
-
-  box-shadow:
-    0 18px 35px rgba(0, 0, 0, 0.28);
-}
-
-.control-section h2 {
-  margin:
-    0 0 8px;
-
-  color: var(--gold);
-
-  font-size: 18px;
-}
-
-.section-description {
-  margin:
-    0 0 22px;
-
-  color: var(--silver);
+  color: #777067;
 
   font-size: 14px;
 }
 
 
-/* INPUT */
+/* =========================
+   SECCIÓN PRINCIPAL
+========================= */
+
+.control-section {
+  padding: 27px;
+
+  border: 1px solid #e5ddcf;
+  border-radius: 20px;
+
+  background: #fffdf8;
+
+  box-shadow:
+    0 8px 26px rgba(76, 62, 36, 0.05);
+}
+
+.control-section h2 {
+  margin: 0 0 8px;
+
+  color: #2f2a24;
+
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.section-description {
+  margin: 0 0 22px;
+
+  color: #777067;
+
+  font-size: 13px;
+
+  line-height: 1.5;
+}
+
+
+/* =========================
+   CAMPO DE CÓDIGO
+========================= */
 
 .field {
   display: flex;
@@ -193,7 +222,7 @@
 .field label {
   margin-bottom: 8px;
 
-  color: #dedede;
+  color: #3c362f;
 
   font-size: 13px;
   font-weight: 600;
@@ -201,61 +230,70 @@
 
 .field input {
   width: 100%;
-  height: 52px;
+  height: 54px;
 
-  padding:
-    0 14px;
+  padding: 0 15px;
 
-  border:
-    1px solid var(--graphite);
-
-  border-radius: 11px;
+  border: 1px solid #ddd4c6;
+  border-radius: 13px;
 
   outline: none;
 
-  background: #101012;
+  background: #f4efe6;
 
-  color: var(--white);
+  color: #2f2a24;
 
-  font-size: 14px;
+  font-size: 15px;
 
   transition:
-    border-color 0.2s ease,
-    box-shadow 0.2s ease;
+    background 0.18s ease,
+    border-color 0.18s ease,
+    box-shadow 0.18s ease;
 }
 
 .field input::placeholder {
-  color: #727277;
+  color: #a39a8d;
+}
+
+.field input:hover {
+  background: #f1ebdf;
 }
 
 .field input:focus {
-  border-color: var(--gold);
+  border-color: #b58a2a;
+
+  background: #fffdf8;
 
   box-shadow:
-    0 0 0 3px
-    rgba(212, 175, 55, 0.1);
+    0 0 0 3px rgba(181, 138, 42, 0.13);
 }
 
 .field input:disabled {
-  opacity: 0.55;
-
   cursor: not-allowed;
+
+  opacity: 0.62;
 }
 
 .field small {
-  margin-top: 7px;
+  margin-top: 8px;
 
-  color: #77777c;
+  color: #8a8176;
 
   font-size: 11px;
+
+  line-height: 1.5;
 }
 
 .procesando-texto {
-  color: var(--gold) !important;
+  color: #8a6814 !important;
+
+  font-weight: 600;
 }
 
 
-/* RESULTADOS */
+/* =========================
+   RESULTADOS
+========================= */
 
 .acceso-aprobado,
 .acceso-rechazado,
@@ -264,8 +302,13 @@
 
   padding: 17px;
 
-  border-radius: 11px;
+  border-radius: 14px;
 }
+
+
+/* =========================
+   ACCESO APROBADO
+========================= */
 
 .acceso-aprobado {
   display: flex;
@@ -273,16 +316,20 @@
 
   gap: 12px;
 
-  border:
-    1px solid rgba(46, 160, 67, 0.5);
+  border: 1px solid #b9d8c0;
+  border-left: 4px solid #247a39;
 
-  background:
-    rgba(46, 160, 67, 0.12);
+  background: #f3fbf5;
+
+  box-shadow:
+    0 5px 16px rgba(36, 122, 57, 0.06);
 }
 
 .acceso-icono {
-  width: 32px;
-  height: 32px;
+  width: 34px;
+  height: 34px;
+
+  flex-shrink: 0;
 
   display: flex;
   align-items: center;
@@ -290,26 +337,36 @@
 
   border-radius: 50%;
 
-  background: #2ea043;
+  background: #247a39;
 
-  color: var(--white);
+  color: #ffffff;
 
-  font-weight: bold;
+  font-size: 15px;
+  font-weight: 800;
 }
 
 .acceso-texto {
-  color: #5dd879;
+  color: #216b34;
 
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 700;
+
+  letter-spacing: 0.4px;
 }
 
-.acceso-rechazado {
-  border:
-    1px solid rgba(220, 53, 69, 0.45);
 
-  background:
-    rgba(220, 53, 69, 0.12);
+/* =========================
+   ACCESO RECHAZADO
+========================= */
+
+.acceso-rechazado {
+  border: 1px solid #edb9bf;
+  border-left: 4px solid #c21b2e;
+
+  background: #fff6f6;
+
+  box-shadow:
+    0 5px 16px rgba(194, 27, 46, 0.06);
 }
 
 .rechazo-titulo {
@@ -320,8 +377,10 @@
 }
 
 .rechazo-icono {
-  width: 32px;
-  height: 32px;
+  width: 34px;
+  height: 34px;
+
+  flex-shrink: 0;
 
   display: flex;
   align-items: center;
@@ -329,62 +388,84 @@
 
   border-radius: 50%;
 
-  background: #dc3545;
+  background: #c21b2e;
 
-  color: var(--white);
+  color: #ffffff;
 
-  font-weight: bold;
+  font-size: 14px;
+  font-weight: 800;
 }
 
 .rechazo-texto {
-  color: #ff6b78;
+  color: #8f2030;
 
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 700;
+
+  letter-spacing: 0.4px;
 }
 
 .rechazo-motivo {
-  margin:
-    12px 0 0;
+  margin: 13px 0 0 46px;
 
-  color: #ffb0b7;
+  color: #8f2030;
 
-  font-size: 13px;
+  font-size: 12px;
+
+  line-height: 1.5;
 }
 
+
+/* =========================
+   CLIENTE IDENTIFICADO
+========================= */
+
 .cliente-identificado {
-  border:
-    1px solid rgba(212, 175, 55, 0.2);
+  border: 1px solid #dfcfaa;
 
   background:
-    rgba(212, 175, 55, 0.07);
+    linear-gradient(
+      145deg,
+      #fffaf0,
+      #f7edda
+    );
+
+  box-shadow:
+    0 7px 20px rgba(76, 62, 36, 0.05);
 }
 
 .resultado-label {
   display: block;
 
-  margin-bottom: 5px;
+  margin-bottom: 6px;
 
-  color: var(--silver);
+  color: #8a8176;
 
-  font-size: 12px;
+  font-size: 11px;
+  font-weight: 600;
+
+  text-transform: uppercase;
+
+  letter-spacing: 0.8px;
 }
 
 .resultado-nombre {
-  color: var(--gold);
+  color: #2f2a24;
 
-  font-size: 18px;
+  font-size: 19px;
+  font-weight: 700;
 }
 
 
-/* MEMBRESÍA */
+/* =========================
+   MEMBRESÍA
+========================= */
 
 .membresia-info {
-  margin-top: 15px;
+  margin-top: 16px;
   padding-top: 14px;
 
-  border-top:
-    1px solid rgba(212, 175, 55, 0.15);
+  border-top: 1px solid #e2d3b4;
 }
 
 .membresia-fila {
@@ -393,51 +474,80 @@
 
   gap: 20px;
 
-  padding: 5px 0;
+  padding: 7px 0;
 }
 
 .membresia-label {
-  color: var(--silver);
+  color: #777067;
 
   font-size: 13px;
 }
 
 .membresia-valor {
-  color: var(--white);
+  color: #2f2a24;
 
   font-size: 13px;
-  font-weight: 600;
+  font-weight: 700;
+
+  text-align: right;
 }
 
 
-/* RESPONSIVE */
+/* =========================
+   RESPONSIVE
+========================= */
 
 @media (max-width: 700px) {
 
   .topbar {
-    padding:
-      10px 17px;
+    min-height: 74px;
+
+    padding: 8px 17px;
   }
 
   .logo {
-    width: 110px;
+    width: 115px;
     height: 48px;
+  }
+
+  .back-button {
+    width: 39px;
+    height: 39px;
+
+    font-size: 19px;
   }
 
   .content {
     padding:
-      38px 18px
+      34px 18px
       55px;
+  }
+
+  .page-header {
+    margin-bottom: 27px;
   }
 
   .control-section {
     padding:
-      22px 18px;
+      21px 18px;
+  }
+
+  .field input {
+    height: 50px;
   }
 
   .membresia-fila {
     flex-direction: column;
 
-    gap: 3px;
+    gap: 4px;
   }
+
+  .membresia-valor {
+    text-align: left;
+  }
+
+  .rechazo-motivo {
+    margin-left: 0;
+  }
+
 }

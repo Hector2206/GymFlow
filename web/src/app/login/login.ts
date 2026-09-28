@@ -44,9 +44,11 @@ declare const google: any;
 export class Login implements AfterViewInit {
 
   correo = '';
+
   password = '';
 
   cargando = false;
+
   cargandoGoogle = false;
 
   error = '';
@@ -62,7 +64,9 @@ export class Login implements AfterViewInit {
   ) {}
 
   ngAfterViewInit(): void {
+
     this.inicializarGoogle();
+
   }
 
   iniciarSesion(): void {
@@ -70,31 +74,45 @@ export class Login implements AfterViewInit {
     this.error = '';
 
     if (!this.correo.trim()) {
+
       this.error =
         'El correo es obligatorio.';
+
       return;
+
     }
 
     if (!this.correoValido(this.correo)) {
+
       this.error =
         'Ingresa un correo electrónico válido.';
+
       return;
+
     }
 
     if (!this.password.trim()) {
+
       this.error =
         'La contraseña es obligatoria.';
+
       return;
+
     }
 
     if (this.password.length < 6) {
+
       this.error =
         'La contraseña debe tener al menos 6 caracteres.';
+
       return;
+
     }
 
     if (this.cargando) {
+
       return;
+
     }
 
     this.cargando = true;
@@ -113,6 +131,7 @@ export class Login implements AfterViewInit {
           this.router.navigate([
             '/home'
           ]);
+
         },
 
         error: (
@@ -140,12 +159,16 @@ export class Login implements AfterViewInit {
 
             this.error =
               'Ocurrió un error al iniciar sesión.';
+
           }
 
           this.changeDetector
             .detectChanges();
+
         }
+
       });
+
   }
 
   inicializarGoogle(): void {
@@ -160,6 +183,7 @@ export class Login implements AfterViewInit {
         );
 
         return;
+
       }
 
       google.accounts.id.initialize({
@@ -173,7 +197,9 @@ export class Login implements AfterViewInit {
             this.loginGoogle(
               response.credential
             );
+
           }
+
       });
 
       const contenedor =
@@ -182,14 +208,17 @@ export class Login implements AfterViewInit {
         );
 
       if (!contenedor) {
+
         return;
+
       }
 
       google.accounts.id.renderButton(
         contenedor,
         {
+
           theme:
-            'filled_black',
+            'outline',
 
           size:
             'large',
@@ -202,11 +231,14 @@ export class Login implements AfterViewInit {
 
           width:
             320
+
         }
       );
+
     };
 
     intentarInicializar();
+
   }
 
   loginGoogle(
@@ -222,17 +254,23 @@ export class Login implements AfterViewInit {
         .detectChanges();
 
       return;
+
     }
 
     if (this.cargandoGoogle) {
+
       return;
+
     }
 
     this.error = '';
+
     this.cargandoGoogle = true;
 
     const body = {
+
       token: credential
+
     };
 
     this.http
@@ -258,6 +296,7 @@ export class Login implements AfterViewInit {
               .detectChanges();
 
             return;
+
           }
 
           localStorage.setItem(
@@ -273,11 +312,13 @@ export class Login implements AfterViewInit {
                 response.usuario
               )
             );
+
           }
 
           this.router.navigate([
             '/home'
           ]);
+
         },
 
         error: (
@@ -319,12 +360,16 @@ export class Login implements AfterViewInit {
             this.error =
               error.error?.detail ||
               'No fue posible iniciar sesión con Google.';
+
           }
 
           this.changeDetector
             .detectChanges();
+
         }
+
       });
+
   }
 
   correoValido(
@@ -337,5 +382,7 @@ export class Login implements AfterViewInit {
     return expresion.test(
       correo.trim()
     );
+
   }
+
 }
