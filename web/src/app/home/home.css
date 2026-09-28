@@ -1,19 +1,15 @@
 :host {
   display: block;
-
-  --gold: #d4af37;
-  --brass: #b5a642;
-  --coal: #1a1a1d;
-  --graphite: #404040;
-  --silver: #a9a9a9;
-  --crimson: #990000;
-  --dark: #101012;
-  --white: #ffffff;
 }
 
 * {
   box-sizing: border-box;
 }
+
+
+/* =========================
+   PÁGINA
+========================= */
 
 .home-page {
   min-height: 100vh;
@@ -22,14 +18,13 @@
   flex-direction: column;
 
   background:
-    radial-gradient(
-      circle at top,
-      #29292e 0%,
-      var(--coal) 36%,
-      #0d0d0f 100%
+    linear-gradient(
+      180deg,
+      #f8f5ef 0%,
+      #f2ede4 100%
     );
 
-  color: var(--white);
+  color: #2f2a24;
 }
 
 
@@ -38,21 +33,27 @@
 ========================= */
 
 .topbar {
-  min-height: 96px;
+  min-height: 88px;
 
   display: flex;
   align-items: center;
   justify-content: space-between;
 
-  padding: 12px 42px;
+  padding: 10px 42px;
 
-  background: #101012;
+  position: sticky;
+  top: 0;
+  z-index: 20;
 
-  border-bottom:
-    1px solid rgba(212, 175, 55, 0.35);
+  background: rgba(255, 253, 248, 0.94);
+
+  border-bottom: 1px solid #e7dfd2;
 
   box-shadow:
-    0 8px 30px rgba(0, 0, 0, 0.3);
+    0 5px 24px rgba(76, 62, 36, 0.06);
+
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
 }
 
 .brand {
@@ -61,11 +62,12 @@
 }
 
 .logo {
-  width: 200px;
-  height: 78px;
+  width: 165px;
+  height: 66px;
+
+  display: block;
 
   object-fit: contain;
-  display: block;
 }
 
 
@@ -77,7 +79,7 @@
   display: flex;
   align-items: center;
 
-  gap: 20px;
+  gap: 18px;
 }
 
 .user-data {
@@ -88,7 +90,7 @@
 }
 
 .user-name {
-  color: var(--white);
+  color: #2f2a24;
 
   font-size: 14px;
   font-weight: 700;
@@ -97,39 +99,50 @@
 .user-role {
   margin-top: 3px;
 
-  color: var(--gold);
+  color: #9a7728;
 
   font-size: 12px;
+  font-weight: 600;
 }
 
 .logout-button {
-  padding: 10px 18px;
+  padding: 10px 17px;
 
-  border:
-    1px solid rgba(212, 175, 55, 0.5);
+  border: 1px solid #d8c8a5;
+  border-radius: 12px;
 
-  border-radius: 9px;
+  background: #fffdf8;
 
-  background: transparent;
-
-  color: var(--gold);
+  color: #8a6814;
 
   cursor: pointer;
 
+  font-size: 13px;
   font-weight: 600;
 
   transition:
-    background 0.2s ease,
-    color 0.2s ease,
-    transform 0.2s ease;
+    background 0.18s ease,
+    color 0.18s ease,
+    border-color 0.18s ease,
+    transform 0.18s ease,
+    box-shadow 0.18s ease;
 }
 
 .logout-button:hover {
-  background: var(--gold);
+  background: #f3ead8;
 
-  color: var(--coal);
+  border-color: #b58a2a;
+
+  color: #6e5012;
 
   transform: translateY(-1px);
+
+  box-shadow:
+    0 5px 14px rgba(181, 138, 42, 0.12);
+}
+
+.logout-button:active {
+  transform: translateY(0);
 }
 
 
@@ -145,7 +158,7 @@
 
   margin: 0 auto;
 
-  padding: 55px 35px 70px;
+  padding: 52px 35px 70px;
 }
 
 
@@ -154,30 +167,33 @@
 ========================= */
 
 .welcome {
-  margin-bottom: 40px;
+  margin-bottom: 38px;
 }
 
 .welcome-text {
-  margin: 0 0 8px;
+  margin: 0 0 7px;
 
-  color: var(--silver);
+  color: #8a8176;
 
-  font-size: 16px;
+  font-size: 15px;
+  font-weight: 500;
 }
 
 .welcome h1 {
   margin: 0;
 
-  color: var(--white);
+  color: #2f2a24;
 
   font-size:
     clamp(
       30px,
       4vw,
-      45px
+      44px
     );
 
-  font-weight: 800;
+  font-weight: 700;
+
+  letter-spacing: -1px;
 }
 
 .role-badge {
@@ -187,17 +203,14 @@
 
   padding: 7px 14px;
 
-  border:
-    1px solid rgba(212, 175, 55, 0.45);
-
+  border: 1px solid #dfcfaa;
   border-radius: 30px;
 
-  background:
-    rgba(212, 175, 55, 0.08);
+  background: #f4ead5;
 
-  color: var(--gold);
+  color: #87671d;
 
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 700;
 }
 
@@ -212,11 +225,11 @@
   grid-template-columns:
     repeat(2, minmax(0, 1fr));
 
-  gap: 24px;
+  gap: 22px;
 }
 
 .dashboard-card {
-  min-height: 220px;
+  min-height: 210px;
 
   display: flex;
   flex-direction: column;
@@ -225,83 +238,90 @@
 
   padding: 30px;
 
-  border:
-    1px solid rgba(212, 175, 55, 0.18);
+  border: 1px solid #e5ddcf;
+  border-radius: 22px;
 
-  border-radius: 20px;
+  background: #fffdf8;
 
-  background:
-    linear-gradient(
-      145deg,
-      #1d1d20,
-      #151517
-    );
-
-  color: var(--white);
+  color: #2f2a24;
 
   cursor: pointer;
 
   box-shadow:
-    0 18px 35px rgba(0, 0, 0, 0.28);
+    0 10px 30px rgba(76, 62, 36, 0.06);
 
   transition:
     transform 0.2s ease,
     border-color 0.2s ease,
-    box-shadow 0.2s ease;
+    box-shadow 0.2s ease,
+    background 0.2s ease;
 }
 
 .dashboard-card:hover {
-  transform:
-    translateY(-5px);
+  transform: translateY(-4px);
 
-  border-color:
-    rgba(212, 175, 55, 0.7);
+  border-color: #d8c392;
+
+  background: #ffffff;
 
   box-shadow:
-    0 20px 45px rgba(0, 0, 0, 0.38),
-    0 0 22px rgba(212, 175, 55, 0.08);
+    0 16px 38px rgba(76, 62, 36, 0.1);
 }
 
+.dashboard-card:active {
+  transform: translateY(-1px);
+}
+
+
+/* =========================
+   ICONOS
+========================= */
+
 .card-icon {
-  width: 62px;
-  height: 62px;
+  width: 60px;
+  height: 60px;
 
   display: flex;
   align-items: center;
   justify-content: center;
 
-  margin-bottom: 18px;
+  margin-bottom: 17px;
 
-  border:
-    1px solid rgba(212, 175, 55, 0.3);
+  border: 1px solid #e2d3b4;
+  border-radius: 17px;
 
-  border-radius: 18px;
+  background: #f4ead5;
 
-  background:
-    rgba(212, 175, 55, 0.08);
-
-  font-size: 30px;
+  font-size: 28px;
 }
+
+
+/* =========================
+   TEXTO TARJETAS
+========================= */
 
 .dashboard-card h2 {
   margin: 0;
 
-  color: var(--gold);
+  color: #2f2a24;
 
-  font-size: 21px;
+  font-size: 20px;
+  font-weight: 700;
+
+  letter-spacing: -0.3px;
 }
 
 .dashboard-card p {
-  margin:
-    9px 0 0;
+  margin: 9px 0 0;
 
-  max-width: 270px;
+  max-width: 290px;
 
-  color: var(--silver);
+  color: #777067;
 
   font-size: 14px;
-
   line-height: 1.5;
+
+  text-align: center;
 }
 
 
@@ -310,23 +330,20 @@
 ========================= */
 
 .loading {
-  color: var(--gold);
+  color: #8a6814;
 
-  font-size: 17px;
+  font-size: 16px;
 }
 
 .error-message {
-  padding: 15px;
+  padding: 14px 16px;
 
-  border:
-    1px solid var(--crimson);
-
+  border: 1px solid rgba(194, 27, 46, 0.18);
   border-radius: 12px;
 
-  background:
-    rgba(153, 0, 0, 0.18);
+  background: rgba(194, 27, 46, 0.06);
 
-  color: #ffaaaa;
+  color: #c21b2e;
 }
 
 .notification {
@@ -334,15 +351,12 @@
 
   padding: 13px 17px;
 
-  border:
-    1px solid rgba(212, 175, 55, 0.4);
+  border: 1px solid #dfcfaa;
+  border-radius: 12px;
 
-  border-radius: 10px;
+  background: #f4ead5;
 
-  background:
-    rgba(212, 175, 55, 0.08);
-
-  color: var(--gold);
+  color: #87671d;
 
   text-align: center;
 }
@@ -353,12 +367,13 @@
 ========================= */
 
 footer {
-  padding: 25px;
+  padding: 24px;
 
-  border-top:
-    1px solid rgba(212, 175, 55, 0.12);
+  border-top: 1px solid #e7dfd2;
 
-  color: #68686c;
+  background: rgba(255, 253, 248, 0.72);
+
+  color: #938a7d;
 
   font-size: 12px;
 
@@ -373,13 +388,14 @@ footer {
 @media (max-width: 750px) {
 
   .topbar {
-    padding:
-      10px 18px;
+    min-height: 74px;
+
+    padding: 8px 17px;
   }
 
   .logo {
-    width: 145px;
-    height: 58px;
+    width: 125px;
+    height: 52px;
   }
 
   .user-data {
@@ -387,24 +403,44 @@ footer {
   }
 
   .logout-button {
-    padding:
-      8px 12px;
+    padding: 8px 12px;
 
     font-size: 12px;
   }
 
   .content {
     padding:
-      38px 18px
+      36px 18px
       55px;
+  }
+
+  .welcome {
+    margin-bottom: 30px;
   }
 
   .dashboard {
     grid-template-columns: 1fr;
+
+    gap: 16px;
   }
 
   .dashboard-card {
-    min-height: 180px;
+    min-height: 175px;
+
+    padding: 24px 20px;
+  }
+
+  .card-icon {
+    width: 54px;
+    height: 54px;
+
+    margin-bottom: 14px;
+
+    font-size: 25px;
+  }
+
+  .dashboard-card h2 {
+    font-size: 18px;
   }
 
 }
