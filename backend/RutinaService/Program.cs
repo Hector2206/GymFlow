@@ -2141,6 +2141,11 @@ app.MapGet(
 // #1279
 // ===============================
 
+// ===============================
+// MIS CLIENTES - ENTRENADOR
+// #1279
+// ===============================
+
 app.MapGet(
     "/api/entrenador/mis-clientes",
     async (
@@ -2189,15 +2194,17 @@ app.MapGet(
                 new NpgsqlCommand(
                     """
                     SELECT
-                        id_cliente,
-                        id_usuario,
-                        nombre_cliente,
-                        correo,
-                        telefono,
-                        estatus
-                    FROM vw_clientes_por_entrenador
-                    WHERE id_entrenador = @id_entrenador
-                    ORDER BY nombre_cliente;
+                        c.id_cliente,
+                        c.id_usuario,
+                        c.nombre_completo,
+                        u.correo,
+                        c.telefono,
+                        u.estatus
+                    FROM clientes c
+                    INNER JOIN usuarios u
+                        ON u.id_usuario = c.id_usuario
+                    WHERE c.id_entrenador = @id_entrenador
+                    ORDER BY c.nombre_completo;
                     """,
                     connection
                 );
@@ -2215,6 +2222,9 @@ app.MapGet(
 
             while (await reader.ReadAsync())
             {
+                var estatusTexto =
+                    reader.GetString(5);
+
                 clientes.Add(new
                 {
                     idCliente =
@@ -2233,13 +2243,17 @@ app.MapGet(
                         reader.GetString(4),
 
                     estatus =
-                        reader.GetBoolean(5)
+                        string.Equals(
+                            estatusTexto,
+                            "Activo",
+                            StringComparison.OrdinalIgnoreCase
+                        )
                 });
             }
 
             return Results.Ok(new
             {
-                idEntrenador,
+                idEntrenador = idEntrenador.Value,
                 clientes
             });
         }
@@ -2259,6 +2273,5 @@ app.MapGet(
 {
     policy.RequireRole("Entrenador");
 });
-
 
 app.Run();
