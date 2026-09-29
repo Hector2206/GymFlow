@@ -39,11 +39,16 @@ import {
 } from './registrar-pago/registrar-pago';
 
 import {
+  MisClientesEntrenador
+} from './mis-clientes-entrenador/mis-clientes-entrenador';
+
+import {
   authGuard
 } from './auth-guard';
 
 import {
-  recepcionistaGuard
+  recepcionistaGuard,
+  entrenadorGuard
 } from './role-guard';
 
 export const routes: Routes = [
@@ -140,6 +145,15 @@ export const routes: Routes = [
     component: MisPagos,
     canActivate: [
       authGuard
+    ]
+  },
+
+  {
+    path: 'entrenador/mis-clientes',
+    component: MisClientesEntrenador,
+    canActivate: [
+      authGuard,
+      entrenadorGuard
     ]
   },
 
