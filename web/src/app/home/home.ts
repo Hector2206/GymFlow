@@ -280,6 +280,24 @@ export class Home implements OnInit {
     ]);
   }
 
+  irMisClientesEntrenador(): void {
+
+    if (!this.esEntrenador()) {
+
+      this.mensaje =
+        'Esta opción está disponible únicamente para entrenadores.';
+
+      this.changeDetector
+        .detectChanges();
+
+      return;
+    }
+
+    this.router.navigate([
+      '/entrenador/mis-clientes'
+    ]);
+  }
+
   proximamente(
     opcion: string
   ): void {
