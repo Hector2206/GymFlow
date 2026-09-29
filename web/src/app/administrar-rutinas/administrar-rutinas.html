@@ -94,6 +94,7 @@
 
       <form class="routine-form">
 
+
         <div class="form-group">
 
           <label for="cliente">
@@ -205,7 +206,7 @@
               </h3>
 
               <p>
-                Agrega los días que formarán parte
+                Agrega los días y ejercicios
                 de esta rutina.
               </p>
 
@@ -245,25 +246,188 @@
           >
 
             <div
-              *ngFor="let dia of diasRutina"
+              *ngFor="
+                let dia of diasRutina;
+                let indiceDia = index
+              "
               class="day-card"
             >
 
-              <div class="day-number">
-                {{ dia }}
+              <div class="day-header">
+
+                <div class="day-title">
+
+                  <div class="day-number">
+                    {{ indiceDia + 1 }}
+                  </div>
+
+                  <div>
+
+                    <h4>
+                      Día de entrenamiento
+                    </h4>
+
+                    <p>
+                      Selecciona el día
+                      y agrega ejercicios.
+                    </p>
+
+                  </div>
+
+                </div>
+
+
+                <button
+                  type="button"
+                  class="add-exercise-button"
+                  (click)="agregarEjercicio(indiceDia)"
+                >
+                  + Agregar ejercicio
+                </button>
+
               </div>
 
-              <div class="day-info">
 
-                <h4>
-                  Día {{ dia }}
-                </h4>
+              <div class="day-select">
 
-                <p>
-                  Configura este día de entrenamiento.
-                </p>
+                <label
+                  [for]="'dia-' + indiceDia"
+                >
+                  Día
+                </label>
+
+                <select
+                  [id]="'dia-' + indiceDia"
+                  [name]="'dia-' + indiceDia"
+                  [(ngModel)]="dia.dia"
+                >
+
+                  <option value="">
+                    Selecciona un día
+                  </option>
+
+                  <option
+                    *ngFor="let opcion of opcionesDias"
+                    [value]="opcion"
+                  >
+                    {{ opcion }}
+                  </option>
+
+                </select>
 
               </div>
+
+
+              <div
+                *ngIf="dia.ejercicios.length === 0"
+                class="exercises-empty"
+              >
+                Aún no has agregado ejercicios
+                a este día.
+              </div>
+
+
+              <div
+                *ngIf="dia.ejercicios.length > 0"
+                class="exercises-list"
+              >
+
+                <div
+                  *ngFor="
+                    let ejercicioDia of dia.ejercicios;
+                    let indiceEjercicio = index
+                  "
+                  class="exercise-card"
+                >
+
+                  <div class="exercise-number">
+                    {{ indiceEjercicio + 1 }}
+                  </div>
+
+
+                  <div class="exercise-content">
+
+                    <label
+                      [for]="
+                        'ejercicio-' +
+                        indiceDia +
+                        '-' +
+                        indiceEjercicio
+                      "
+                    >
+                      Ejercicio
+                    </label>
+
+                    <select
+                      [id]="
+                        'ejercicio-' +
+                        indiceDia +
+                        '-' +
+                        indiceEjercicio
+                      "
+                      [name]="
+                        'ejercicio-' +
+                        indiceDia +
+                        '-' +
+                        indiceEjercicio
+                      "
+                      [(ngModel)]="
+                        ejercicioDia.idEjercicio
+                      "
+                      [disabled]="
+                        cargandoEjercicios ||
+                        ejerciciosDisponibles.length === 0
+                      "
+                    >
+
+                      <option
+                        [ngValue]="null"
+                      >
+                        Selecciona un ejercicio
+                      </option>
+
+                      <option
+                        *ngFor="
+                          let ejercicio of ejerciciosDisponibles
+                        "
+                        [ngValue]="ejercicio.idEjercicio"
+                      >
+                        {{ ejercicio.nombre }}
+                      </option>
+
+                    </select>
+
+                  </div>
+
+                </div>
+
+              </div>
+
+
+              <p
+                *ngIf="cargandoEjercicios"
+                class="field-message"
+              >
+                Cargando ejercicios...
+              </p>
+
+              <p
+                *ngIf="
+                  !cargandoEjercicios &&
+                  !errorEjercicios &&
+                  ejerciciosDisponibles.length === 0
+                "
+                class="field-message"
+              >
+                No hay ejercicios disponibles.
+              </p>
+
+              <p
+                *ngIf="errorEjercicios"
+                class="field-message field-error"
+              >
+                {{ errorEjercicios }}
+              </p>
 
             </div>
 

@@ -25,6 +25,10 @@ import {
 } from '../services/entrenador.service';
 
 import {
+  EjercicioService
+} from '../services/ejercicio.service';
+
+import {
   RutinaResumen
 } from '../models/rutina.model';
 
@@ -32,6 +36,31 @@ import {
   ClienteAsignado,
   ClientesEntrenadorResponse
 } from '../models/cliente-asignado.model';
+
+import {
+  Ejercicio
+} from '../models/ejercicio.model';
+
+
+interface EjercicioFormulario {
+
+  idEjercicio: number | null;
+
+  series: number | null;
+
+  repeticiones: number | null;
+
+  orden: number;
+}
+
+
+interface DiaFormulario {
+
+  dia: string;
+
+  ejercicios: EjercicioFormulario[];
+}
+
 
 @Component({
   selector: 'app-administrar-rutinas',
@@ -50,28 +79,47 @@ implements OnInit {
 
   clientesAsignados: ClienteAsignado[] = [];
 
-  idClienteSeleccionado: number | null = null;
+  ejerciciosDisponibles: Ejercicio[] = [];
+
+  diasRutina: DiaFormulario[] = [];
+
+  opcionesDias: string[] = [
+    'Lunes',
+    'Martes',
+    'Miércoles',
+    'Jueves',
+    'Viernes',
+    'Sábado',
+    'Domingo'
+  ];
+
+  idClienteSeleccionado:
+    number | null = null;
 
   nombreRutina = '';
 
   descripcionRutina = '';
 
-  diasRutina: number[] = [];
-
   cargando = true;
 
   cargandoClientes = false;
+
+  cargandoEjercicios = false;
 
   error = '';
 
   errorClientes = '';
 
-  mostrarFormularioNuevaRutina = false;
+  errorEjercicios = '';
+
+  mostrarFormularioNuevaRutina =
+    false;
 
   constructor(
     private router: Router,
     private rutinaService: RutinaService,
     private entrenadorService: EntrenadorService,
+    private ejercicioService: EjercicioService,
     private changeDetector: ChangeDetectorRef
   ) {}
 
@@ -80,9 +128,11 @@ implements OnInit {
     this.cargarRutinas();
   }
 
+
   cargarRutinas(): void {
 
     this.cargando = true;
+
     this.error = '';
 
     this.rutinaService
@@ -110,6 +160,7 @@ implements OnInit {
           );
 
           this.cargando = false;
+
           this.rutinas = [];
 
           if (
@@ -145,16 +196,22 @@ implements OnInit {
       });
   }
 
+
   abrirFormularioNuevaRutina(): void {
 
-    this.mostrarFormularioNuevaRutina = true;
+    this.mostrarFormularioNuevaRutina =
+      true;
 
     this.cargarClientesAsignados();
+
+    this.cargarEjercicios();
   }
+
 
   cerrarFormularioNuevaRutina(): void {
 
-    this.mostrarFormularioNuevaRutina = false;
+    this.mostrarFormularioNuevaRutina =
+      false;
 
     this.idClienteSeleccionado = null;
 
@@ -165,7 +222,10 @@ implements OnInit {
     this.diasRutina = [];
 
     this.errorClientes = '';
+
+    this.errorEjercicios = '';
   }
+
 
   cargarClientesAsignados(): void {
 
@@ -219,8 +279,7 @@ implements OnInit {
             error.status === 404
           ) {
 
-            this.errorClientes =
-              'No se encontró información del entrenador.';
+            this.errorClientes = '';
 
           } else if (
             error.status === 0
@@ -241,15 +300,111 @@ implements OnInit {
       });
   }
 
+
+  cargarEjercicios(): void {
+
+    this.cargandoEjercicios = true;
+
+    this.errorEjercicios = '';
+
+    this.ejercicioService
+      .listarEjercicios()
+      .subscribe({
+
+        next: (
+          ejercicios: Ejercicio[]
+        ) => {
+
+          this.ejerciciosDisponibles =
+            (ejercicios ?? [])
+              .filter(
+                ejercicio =>
+                  ejercicio.estado
+              );
+
+          this.cargandoEjercicios =
+            false;
+
+          this.changeDetector
+            .detectChanges();
+        },
+
+        error: (error) => {
+
+          console.error(
+            'Error al consultar ejercicios:',
+            error
+          );
+
+          this.ejerciciosDisponibles = [];
+
+          this.cargandoEjercicios =
+            false;
+
+          if (
+            error.status === 401
+          ) {
+
+            this.errorEjercicios =
+              'Tu sesión no es válida.';
+
+          } else if (
+            error.status === 403
+          ) {
+
+            this.errorEjercicios =
+              'No tienes permiso para consultar ejercicios.';
+
+          } else if (
+            error.status === 0
+          ) {
+
+            this.errorEjercicios =
+              'No fue posible conectar con el servidor.';
+
+          } else {
+
+            this.errorEjercicios =
+              'No fue posible cargar los ejercicios.';
+          }
+
+          this.changeDetector
+            .detectChanges();
+        }
+      });
+  }
+
+
   agregarDia(): void {
 
-    const numeroDia =
-      this.diasRutina.length + 1;
-
-    this.diasRutina.push(
-      numeroDia
-    );
+    this.diasRutina.push({
+      dia: '',
+      ejercicios: []
+    });
   }
+
+
+  agregarEjercicio(
+    indiceDia: number
+  ): void {
+
+    this.diasRutina[
+      indiceDia
+    ].ejercicios.push({
+
+      idEjercicio: null,
+
+      series: null,
+
+      repeticiones: null,
+
+      orden:
+        this.diasRutina[
+          indiceDia
+        ].ejercicios.length + 1
+    });
+  }
+
 
   volverInicio(): void {
 
