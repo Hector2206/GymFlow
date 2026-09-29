@@ -185,11 +185,13 @@ app.MapPost(
                     """
                     INSERT INTO ejercicios (
                         nombre,
-                        descripcion
+                        descripcion,
+                        imagen_url
                     )
                     VALUES (
                         @nombre,
-                        @descripcion
+                        @descripcion,
+                        @imagen_url
                     )
                     RETURNING id_ejercicio;
                     """,
@@ -207,6 +209,12 @@ app.MapPost(
                 ?? DBNull.Value
             );
 
+            command.Parameters.AddWithValue(
+                "imagen_url",
+                NpgsqlTypes.NpgsqlDbType.Text,
+                (object?)request.ImagenUrl ?? DBNull.Value
+            );
+
             var idEjercicio =
                 Convert.ToInt32(
                     await command.ExecuteScalarAsync()
@@ -219,6 +227,7 @@ app.MapPost(
                     idEjercicio,
                     nombre = request.Nombre,
                     descripcion = request.Descripcion,
+                    imagenUrl = request.ImagenUrl,
                     estado = true
                 }
             );
@@ -284,7 +293,8 @@ app.MapGet(
                         id_ejercicio,
                         nombre,
                         descripcion,
-                        estado
+                        estado,
+                        imagen_url
                     FROM ejercicios
                     ORDER BY nombre;
                     """,
@@ -313,7 +323,12 @@ app.MapGet(
                             : reader.GetString(2),
 
                     estado =
-                        reader.GetBoolean(3)
+                        reader.GetBoolean(3),
+
+                    imagenUrl =
+                        reader.IsDBNull(4)
+                            ? null
+                            : reader.GetString(4)
                 });
             }
 
@@ -380,7 +395,8 @@ app.MapGet(
                         id_ejercicio,
                         nombre,
                         descripcion,
-                        estado
+                        estado,
+                        imagen_url
                     FROM ejercicios
                     WHERE id_ejercicio = @id_ejercicio;
                     """,
@@ -417,7 +433,12 @@ app.MapGet(
                         : reader.GetString(2),
 
                 estado =
-                    reader.GetBoolean(3)
+                    reader.GetBoolean(3),
+
+                imagenUrl =
+                    reader.IsDBNull(4)
+                        ? null
+                        : reader.GetString(4)
             });
         }
         catch (Exception)
@@ -497,8 +518,10 @@ app.MapPut(
                     UPDATE ejercicios
                     SET
                         nombre = @nombre,
-                        descripcion = @descripcion
-                    WHERE id_ejercicio = @id_ejercicio;
+                        descripcion = @descripcion,
+                        imagen_url = CASE WHEN @actualizar_imagen THEN @imagen_url ELSE imagen_url END
+                    WHERE id_ejercicio = @id_ejercicio
+                    RETURNING imagen_url;
                     """,
                     connection
                 );
@@ -519,10 +542,21 @@ app.MapPut(
                 ?? DBNull.Value
             );
 
-            var filasAfectadas =
-                await command.ExecuteNonQueryAsync();
+            command.Parameters.AddWithValue(
+                "imagen_url",
+                NpgsqlTypes.NpgsqlDbType.Text,
+                (object?)request.ImagenUrl ?? DBNull.Value
+            );
 
-            if (filasAfectadas == 0)
+            command.Parameters.AddWithValue(
+                "actualizar_imagen",
+                request.ImagenUrlEspecificada
+            );
+
+            var imagenGuardada =
+                await command.ExecuteScalarAsync();
+
+            if (imagenGuardada is null)
             {
                 return Results.NotFound(new
                 {
@@ -535,6 +569,7 @@ app.MapPut(
                 idEjercicio,
                 nombre = request.Nombre,
                 descripcion = request.Descripcion,
+                imagenUrl = imagenGuardada is DBNull ? null : (string)imagenGuardada,
                 mensaje = "Ejercicio actualizado correctamente."
             });
         }
@@ -696,7 +731,8 @@ app.MapGet(
                         id_ejercicio,
                         nombre,
                         descripcion,
-                        estado
+                        estado,
+                        imagen_url
                     FROM ejercicios
                     WHERE nombre ILIKE @nombre
                     ORDER BY nombre;
@@ -731,7 +767,12 @@ app.MapGet(
                             : reader.GetString(2),
 
                     estado =
-                        reader.GetBoolean(3)
+                        reader.GetBoolean(3),
+
+                    imagenUrl =
+                        reader.IsDBNull(4)
+                            ? null
+                            : reader.GetString(4)
                 });
             }
 
@@ -1539,7 +1580,8 @@ app.MapGet(
                         e.descripcion,
                         er.series,
                         er.repeticiones,
-                        er.orden
+                        er.orden,
+                        e.imagen_url
                     FROM dias_rutina d
                     LEFT JOIN ejercicios_rutina er
                         ON er.id_dia = d.id_dia
@@ -1606,7 +1648,12 @@ app.MapGet(
                             detalleReader.GetInt32(7),
 
                         orden =
-                            detalleReader.GetInt32(8)
+                            detalleReader.GetInt32(8),
+
+                        imagenUrl =
+                            detalleReader.IsDBNull(9)
+                                ? null
+                                : detalleReader.GetString(9)
                     });
                 }
             }
@@ -1971,7 +2018,8 @@ app.MapGet(
                             e.descripcion,
                             er.series,
                             er.repeticiones,
-                            er.orden
+                            er.orden,
+                            e.imagen_url
                         FROM ejercicios_rutina er
                         INNER JOIN ejercicios e
                             ON e.id_ejercicio = er.id_ejercicio
@@ -2019,7 +2067,12 @@ app.MapGet(
                             ejerciciosReader.GetInt32(5),
 
                         orden =
-                            ejerciciosReader.GetInt32(6)
+                            ejerciciosReader.GetInt32(6),
+
+                        imagenUrl =
+                            ejerciciosReader.IsDBNull(7)
+                                ? null
+                                : ejerciciosReader.GetString(7)
                     });
                 }
 
