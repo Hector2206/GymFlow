@@ -406,6 +406,106 @@ implements OnInit {
   }
 
 
+  moverEjercicioArriba(
+    indiceDia: number,
+    indiceEjercicio: number
+  ): void {
+
+    if (
+      indiceEjercicio <= 0
+    ) {
+
+      return;
+    }
+
+    const ejercicios =
+      this.diasRutina[
+        indiceDia
+      ].ejercicios;
+
+    const temporal =
+      ejercicios[
+        indiceEjercicio - 1
+      ];
+
+    ejercicios[
+      indiceEjercicio - 1
+    ] =
+      ejercicios[
+        indiceEjercicio
+      ];
+
+    ejercicios[
+      indiceEjercicio
+    ] =
+      temporal;
+
+    this.actualizarOrdenes(
+      indiceDia
+    );
+  }
+
+
+  moverEjercicioAbajo(
+    indiceDia: number,
+    indiceEjercicio: number
+  ): void {
+
+    const ejercicios =
+      this.diasRutina[
+        indiceDia
+      ].ejercicios;
+
+    if (
+      indiceEjercicio >=
+      ejercicios.length - 1
+    ) {
+
+      return;
+    }
+
+    const temporal =
+      ejercicios[
+        indiceEjercicio + 1
+      ];
+
+    ejercicios[
+      indiceEjercicio + 1
+    ] =
+      ejercicios[
+        indiceEjercicio
+      ];
+
+    ejercicios[
+      indiceEjercicio
+    ] =
+      temporal;
+
+    this.actualizarOrdenes(
+      indiceDia
+    );
+  }
+
+
+  actualizarOrdenes(
+    indiceDia: number
+  ): void {
+
+    this.diasRutina[
+      indiceDia
+    ].ejercicios.forEach(
+      (
+        ejercicio,
+        indice
+      ) => {
+
+        ejercicio.orden =
+          indice + 1;
+      }
+    );
+  }
+
+
   volverInicio(): void {
 
     this.router.navigate([

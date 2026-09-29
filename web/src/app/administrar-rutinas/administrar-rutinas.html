@@ -340,62 +340,183 @@
                   class="exercise-card"
                 >
 
-                  <div class="exercise-number">
-                    {{ indiceEjercicio + 1 }}
+                  <div class="exercise-top">
+
+                    <div class="exercise-number">
+                      {{ ejercicioDia.orden }}
+                    </div>
+
+                    <div class="exercise-order">
+
+                      <button
+                        type="button"
+                        class="order-button"
+                        title="Subir ejercicio"
+                        [disabled]="indiceEjercicio === 0"
+                        (click)="
+                          moverEjercicioArriba(
+                            indiceDia,
+                            indiceEjercicio
+                          )
+                        "
+                      >
+                        ↑
+                      </button>
+
+                      <button
+                        type="button"
+                        class="order-button"
+                        title="Bajar ejercicio"
+                        [disabled]="
+                          indiceEjercicio ===
+                          dia.ejercicios.length - 1
+                        "
+                        (click)="
+                          moverEjercicioAbajo(
+                            indiceDia,
+                            indiceEjercicio
+                          )
+                        "
+                      >
+                        ↓
+                      </button>
+
+                    </div>
+
                   </div>
 
 
                   <div class="exercise-content">
 
-                    <label
-                      [for]="
-                        'ejercicio-' +
-                        indiceDia +
-                        '-' +
-                        indiceEjercicio
-                      "
-                    >
-                      Ejercicio
-                    </label>
+                    <div class="exercise-field exercise-main-field">
 
-                    <select
-                      [id]="
-                        'ejercicio-' +
-                        indiceDia +
-                        '-' +
-                        indiceEjercicio
-                      "
-                      [name]="
-                        'ejercicio-' +
-                        indiceDia +
-                        '-' +
-                        indiceEjercicio
-                      "
-                      [(ngModel)]="
-                        ejercicioDia.idEjercicio
-                      "
-                      [disabled]="
-                        cargandoEjercicios ||
-                        ejerciciosDisponibles.length === 0
-                      "
-                    >
-
-                      <option
-                        [ngValue]="null"
-                      >
-                        Selecciona un ejercicio
-                      </option>
-
-                      <option
-                        *ngFor="
-                          let ejercicio of ejerciciosDisponibles
+                      <label
+                        [for]="
+                          'ejercicio-' +
+                          indiceDia +
+                          '-' +
+                          indiceEjercicio
                         "
-                        [ngValue]="ejercicio.idEjercicio"
                       >
-                        {{ ejercicio.nombre }}
-                      </option>
+                        Ejercicio
+                      </label>
 
-                    </select>
+                      <select
+                        [id]="
+                          'ejercicio-' +
+                          indiceDia +
+                          '-' +
+                          indiceEjercicio
+                        "
+                        [name]="
+                          'ejercicio-' +
+                          indiceDia +
+                          '-' +
+                          indiceEjercicio
+                        "
+                        [(ngModel)]="
+                          ejercicioDia.idEjercicio
+                        "
+                        [disabled]="
+                          cargandoEjercicios ||
+                          ejerciciosDisponibles.length === 0
+                        "
+                      >
+
+                        <option
+                          [ngValue]="null"
+                        >
+                          Selecciona un ejercicio
+                        </option>
+
+                        <option
+                          *ngFor="
+                            let ejercicio of ejerciciosDisponibles
+                          "
+                          [ngValue]="ejercicio.idEjercicio"
+                        >
+                          {{ ejercicio.nombre }}
+                        </option>
+
+                      </select>
+
+                    </div>
+
+
+                    <div class="exercise-field">
+
+                      <label
+                        [for]="
+                          'series-' +
+                          indiceDia +
+                          '-' +
+                          indiceEjercicio
+                        "
+                      >
+                        Series
+                      </label>
+
+                      <input
+                        [id]="
+                          'series-' +
+                          indiceDia +
+                          '-' +
+                          indiceEjercicio
+                        "
+                        [name]="
+                          'series-' +
+                          indiceDia +
+                          '-' +
+                          indiceEjercicio
+                        "
+                        type="number"
+                        min="1"
+                        step="1"
+                        [(ngModel)]="
+                          ejercicioDia.series
+                        "
+                        placeholder="Ej. 4"
+                      />
+
+                    </div>
+
+
+                    <div class="exercise-field">
+
+                      <label
+                        [for]="
+                          'repeticiones-' +
+                          indiceDia +
+                          '-' +
+                          indiceEjercicio
+                        "
+                      >
+                        Repeticiones
+                      </label>
+
+                      <input
+                        [id]="
+                          'repeticiones-' +
+                          indiceDia +
+                          '-' +
+                          indiceEjercicio
+                        "
+                        [name]="
+                          'repeticiones-' +
+                          indiceDia +
+                          '-' +
+                          indiceEjercicio
+                        "
+                        type="number"
+                        min="1"
+                        step="1"
+                        [(ngModel)]="
+                          ejercicioDia.repeticiones
+                        "
+                        placeholder="Ej. 12"
+                      />
+
+                    </div>
 
                   </div>
 

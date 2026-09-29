@@ -54,7 +54,9 @@
 .logo {
   width: 145px;
   height: 58px;
+
   display: block;
+
   object-fit: contain;
 }
 
@@ -72,6 +74,7 @@
   border-radius: 12px;
 
   background: #fffdf8;
+
   color: #8a6814;
 
   font-size: 21px;
@@ -81,6 +84,7 @@
 
 .back-button:hover {
   background: #f3ead8;
+
   border-color: #b58a2a;
 }
 
@@ -165,6 +169,10 @@
   cursor: pointer;
 }
 
+.new-routine-button:hover {
+  background: #8a6814;
+}
+
 .new-routine-section,
 .rutinas-section {
   padding: 27px;
@@ -227,6 +235,10 @@
   cursor: pointer;
 }
 
+.close-form-button:hover {
+  background: #f3ead8;
+}
+
 .routine-form {
   display: flex;
   flex-direction: column;
@@ -243,7 +255,7 @@
 
 .form-group label,
 .day-select label,
-.exercise-content label {
+.exercise-field label {
   color: #2f2a24;
 
   font-size: 13px;
@@ -254,7 +266,8 @@
 .form-group input,
 .form-group textarea,
 .day-select select,
-.exercise-content select {
+.exercise-field select,
+.exercise-field input {
   width: 100%;
 
   border:
@@ -276,7 +289,8 @@
 .form-group select,
 .form-group input,
 .day-select select,
-.exercise-content select {
+.exercise-field select,
+.exercise-field input {
   min-height: 46px;
 
   padding: 0 13px;
@@ -294,7 +308,8 @@
 .form-group input:focus,
 .form-group textarea:focus,
 .day-select select:focus,
-.exercise-content select:focus {
+.exercise-field select:focus,
+.exercise-field input:focus {
   border-color: #b58a2a;
 
   background: #fffdf8;
@@ -513,28 +528,37 @@
   display: flex;
   flex-direction: column;
 
-  gap: 10px;
+  gap: 12px;
 }
 
 .exercise-card {
-  padding: 13px;
+  padding: 15px;
 
   display: flex;
-  align-items: flex-end;
+  align-items: stretch;
 
-  gap: 12px;
+  gap: 13px;
 
   border:
     1px solid #eee7dc;
 
-  border-radius: 12px;
+  border-radius: 13px;
 
   background: #faf7f1;
 }
 
+.exercise-top {
+  display: flex;
+  flex-direction: column;
+
+  align-items: center;
+
+  gap: 8px;
+}
+
 .exercise-number {
-  width: 34px;
-  height: 34px;
+  width: 36px;
+  height: 36px;
 
   display: flex;
   align-items: center;
@@ -542,7 +566,10 @@
 
   flex-shrink: 0;
 
-  border-radius: 9px;
+  border:
+    1px solid #e4d2aa;
+
+  border-radius: 10px;
 
   background: #f3ead8;
 
@@ -552,8 +579,65 @@
   font-weight: 700;
 }
 
+.exercise-order {
+  display: flex;
+  flex-direction: column;
+
+  gap: 5px;
+}
+
+.order-button {
+  width: 34px;
+  height: 29px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border:
+    1px solid #d8c8a5;
+
+  border-radius: 8px;
+
+  background: #fffdf8;
+
+  color: #8a6814;
+
+  font-size: 15px;
+  font-weight: 700;
+
+  cursor: pointer;
+}
+
+.order-button:hover:not(:disabled) {
+  border-color: #b58a2a;
+
+  background: #f3ead8;
+}
+
+.order-button:disabled {
+  opacity: 0.35;
+
+  cursor: not-allowed;
+}
+
 .exercise-content {
   width: 100%;
+
+  display: grid;
+
+  grid-template-columns:
+    minmax(0, 2fr)
+    minmax(110px, 0.7fr)
+    minmax(130px, 0.8fr);
+
+  gap: 12px;
+
+  align-items: end;
+}
+
+.exercise-field {
+  min-width: 0;
 
   display: flex;
   flex-direction: column;
@@ -561,8 +645,17 @@
   gap: 7px;
 }
 
+.exercise-field input[type="number"] {
+  appearance: textfield;
+}
 
-/* LISTADO */
+.exercise-field input[type="number"]::-webkit-inner-spin-button,
+.exercise-field input[type="number"]::-webkit-outer-spin-button {
+  opacity: 1;
+}
+
+
+/* LISTADO DE RUTINAS */
 
 .section-heading {
   display: flex;
@@ -795,6 +888,22 @@
 
 
 @media (
+  max-width: 850px
+) {
+
+  .exercise-content {
+    grid-template-columns:
+      1fr 1fr;
+  }
+
+  .exercise-main-field {
+    grid-column:
+      1 / -1;
+  }
+}
+
+
+@media (
   max-width: 760px
 ) {
 
@@ -843,7 +952,25 @@
   }
 
   .exercise-card {
-    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .exercise-top {
+    flex-direction: row;
+
+    justify-content: space-between;
+  }
+
+  .exercise-order {
+    flex-direction: row;
+  }
+
+  .exercise-content {
+    grid-template-columns: 1fr;
+  }
+
+  .exercise-main-field {
+    grid-column: auto;
   }
 
   .message {
