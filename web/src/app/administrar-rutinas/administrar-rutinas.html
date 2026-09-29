@@ -193,6 +193,84 @@
 
         </div>
 
+
+        <div class="days-section">
+
+          <div class="days-header">
+
+            <div>
+
+              <h3>
+                Días de entrenamiento
+              </h3>
+
+              <p>
+                Agrega los días que formarán parte
+                de esta rutina.
+              </p>
+
+            </div>
+
+
+            <button
+              type="button"
+              class="add-day-button"
+              (click)="agregarDia()"
+            >
+              + Agregar día
+            </button>
+
+          </div>
+
+
+          <div
+            *ngIf="diasRutina.length === 0"
+            class="days-empty"
+          >
+
+            <div class="days-empty-icon">
+              📅
+            </div>
+
+            <p>
+              Aún no has agregado días a la rutina.
+            </p>
+
+          </div>
+
+
+          <div
+            *ngIf="diasRutina.length > 0"
+            class="days-list"
+          >
+
+            <div
+              *ngFor="let dia of diasRutina"
+              class="day-card"
+            >
+
+              <div class="day-number">
+                {{ dia }}
+              </div>
+
+              <div class="day-info">
+
+                <h4>
+                  Día {{ dia }}
+                </h4>
+
+                <p>
+                  Configura este día de entrenamiento.
+                </p>
+
+              </div>
+
+            </div>
+
+          </div>
+
+        </div>
+
       </form>
 
     </section>

@@ -8,39 +8,30 @@
 
 .rutinas-page {
   min-height: 100vh;
-
   background:
     linear-gradient(
       180deg,
       #f8f5ef 0%,
       #f2ede4 100%
     );
-
   color: #2f2a24;
 }
 
 .topbar {
   min-height: 88px;
-
   display: flex;
   align-items: center;
-
   padding: 10px 42px;
-
   position: sticky;
   top: 0;
   z-index: 20;
-
   background:
     rgba(255, 253, 248, 0.94);
-
   border-bottom:
     1px solid #e7dfd2;
-
   box-shadow:
     0 5px 24px
     rgba(76, 62, 36, 0.06);
-
   backdrop-filter: blur(18px);
   -webkit-backdrop-filter: blur(18px);
 }
@@ -61,19 +52,15 @@
 .back-button {
   width: 42px;
   height: 42px;
-
   display: flex;
   align-items: center;
   justify-content: center;
-
-  border: 1px solid #d8c8a5;
+  border:
+    1px solid #d8c8a5;
   border-radius: 12px;
-
   background: #fffdf8;
   color: #8a6814;
-
   font-size: 21px;
-
   cursor: pointer;
 }
 
@@ -85,79 +72,60 @@
 .content {
   width: 100%;
   max-width: 1100px;
-
   margin: 0 auto;
-
   padding: 48px 30px 70px;
 }
 
 .page-header {
   margin-bottom: 32px;
-
   display: flex;
   align-items: flex-end;
   justify-content: space-between;
-
   gap: 25px;
 }
 
 .section-label,
 .form-label {
   margin: 0 0 7px;
-
   color: #9a7728;
-
   font-size: 12px;
   font-weight: 700;
-
   text-transform: uppercase;
   letter-spacing: 2px;
 }
 
 .page-header h1 {
   margin: 0;
-
   color: #2f2a24;
-
   font-size:
     clamp(
       30px,
       4vw,
       42px
     );
-
   font-weight: 700;
 }
 
 .subtitle {
   max-width: 650px;
-
   margin: 8px 0 0;
-
   color: #777067;
-
   font-size: 14px;
   line-height: 1.6;
 }
 
 .new-routine-button {
   min-height: 44px;
-
   padding: 11px 19px;
-
   flex-shrink: 0;
-
-  border: 1px solid #b58a2a;
+  border:
+    1px solid #b58a2a;
   border-radius: 13px;
-
   background: #b58a2a;
   color: #ffffff;
-
   font-size: 13px;
   font-weight: 700;
-
   cursor: pointer;
-
   box-shadow:
     0 6px 16px
     rgba(181, 138, 42, 0.18);
@@ -170,12 +138,10 @@
 .new-routine-section,
 .rutinas-section {
   padding: 27px;
-
-  border: 1px solid #e5ddcf;
+  border:
+    1px solid #e5ddcf;
   border-radius: 20px;
-
   background: #fffdf8;
-
   box-shadow:
     0 8px 26px
     rgba(76, 62, 36, 0.05);
@@ -189,23 +155,18 @@
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-
   gap: 20px;
-
   margin-bottom: 22px;
 }
 
 .form-header h2 {
   margin: 0 0 5px;
-
   font-size: 20px;
 }
 
 .form-header p {
   margin: 0;
-
   color: #777067;
-
   font-size: 13px;
   line-height: 1.5;
 }
@@ -213,17 +174,13 @@
 .close-form-button {
   width: 38px;
   height: 38px;
-
   flex-shrink: 0;
-
-  border: 1px solid #d8c8a5;
+  border:
+    1px solid #d8c8a5;
   border-radius: 11px;
-
   background: #fffdf8;
   color: #8a6814;
-
   font-size: 24px;
-
   cursor: pointer;
 }
 
@@ -233,23 +190,19 @@
 
 .routine-form {
   width: 100%;
-
   display: flex;
   flex-direction: column;
-
   gap: 18px;
 }
 
 .form-group {
   display: flex;
   flex-direction: column;
-
   gap: 8px;
 }
 
 .form-group label {
   color: #2f2a24;
-
   font-size: 13px;
   font-weight: 700;
 }
@@ -258,21 +211,15 @@
 .form-group input,
 .form-group textarea {
   width: 100%;
-
   padding: 0 13px;
-
-  border: 1px solid #e5ddcf;
+  border:
+    1px solid #e5ddcf;
   border-radius: 13px;
-
   outline: none;
-
   background: #f8f4ec;
-
   color: #2f2a24;
-
   font-family: inherit;
   font-size: 13px;
-
   transition:
     border-color 0.18s ease,
     box-shadow 0.18s ease,
@@ -286,12 +233,9 @@
 
 .form-group textarea {
   min-height: 105px;
-
   padding-top: 12px;
   padding-bottom: 12px;
-
   resize: vertical;
-
   line-height: 1.5;
 }
 
@@ -299,9 +243,7 @@
 .form-group input:focus,
 .form-group textarea:focus {
   border-color: #b58a2a;
-
   background: #fffdf8;
-
   box-shadow:
     0 0 0 3px
     rgba(181, 138, 42, 0.1);
@@ -319,9 +261,7 @@
 
 .field-message {
   margin: 2px 0 0;
-
   color: #777067;
-
   font-size: 12px;
 }
 
@@ -329,136 +269,234 @@
   color: #c21b2e;
 }
 
+
+/* =========================
+   DÍAS
+========================= */
+
+.days-section {
+  margin-top: 5px;
+  padding: 20px;
+  border:
+    1px solid #e5ddcf;
+  border-radius: 16px;
+  background: #faf7f1;
+}
+
+.days-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 18px;
+}
+
+.days-header h3 {
+  margin: 0 0 5px;
+  color: #2f2a24;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.days-header p {
+  margin: 0;
+  color: #777067;
+  font-size: 12px;
+}
+
+.add-day-button {
+  min-height: 40px;
+  padding: 9px 15px;
+  flex-shrink: 0;
+  border:
+    1px solid #d8c392;
+  border-radius: 11px;
+  background: #f3ead8;
+  color: #8a6814;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.add-day-button:hover {
+  border-color: #b58a2a;
+  background: #eadcbf;
+}
+
+.days-empty {
+  padding: 25px 15px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  border:
+    1px dashed #d8c8a5;
+  border-radius: 13px;
+  background: #fffdf8;
+  text-align: center;
+}
+
+.days-empty-icon {
+  margin-bottom: 8px;
+  font-size: 25px;
+}
+
+.days-empty p {
+  margin: 0;
+  color: #777067;
+  font-size: 12px;
+}
+
+.days-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.day-card {
+  padding: 14px;
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  border:
+    1px solid #e5ddcf;
+  border-radius: 13px;
+  background: #fffdf8;
+}
+
+.day-number {
+  width: 38px;
+  height: 38px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border:
+    1px solid #e4d2aa;
+  border-radius: 11px;
+  background: #f3ead8;
+  color: #8a6814;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.day-info h4 {
+  margin: 0 0 3px;
+  color: #2f2a24;
+  font-size: 13px;
+}
+
+.day-info p {
+  margin: 0;
+  color: #777067;
+  font-size: 11px;
+}
+
+
+/* =========================
+   LISTADO
+========================= */
+
 .section-heading {
   display: flex;
   align-items: flex-start;
-
   gap: 14px;
-
   margin-bottom: 24px;
 }
 
 .section-icon {
   width: 46px;
   height: 46px;
-
   flex-shrink: 0;
-
   display: flex;
   align-items: center;
   justify-content: center;
-
-  border: 1px solid #e4d2aa;
+  border:
+    1px solid #e4d2aa;
   border-radius: 13px;
-
   background: #f3ead8;
-
   font-size: 21px;
 }
 
 .section-heading h2 {
   margin: 0 0 5px;
-
   color: #2f2a24;
-
   font-size: 18px;
   font-weight: 700;
 }
 
 .section-heading p {
   margin: 0;
-
   color: #777067;
-
   font-size: 13px;
   line-height: 1.5;
 }
 
 .loading-state {
   padding: 28px;
-
-  border: 1px solid #e7dfd2;
+  border:
+    1px solid #e7dfd2;
   border-radius: 14px;
-
   background: #f8f4ec;
-
   color: #8a8176;
-
   text-align: center;
-
   font-size: 13px;
 }
 
 .message {
   padding: 16px;
-
   display: flex;
   align-items: center;
   justify-content: space-between;
-
   gap: 16px;
-
   border-radius: 14px;
-
   font-size: 13px;
   font-weight: 600;
 }
 
 .error-message {
-  border: 1px solid #edb9bf;
-  border-left: 4px solid #c21b2e;
-
+  border:
+    1px solid #edb9bf;
+  border-left:
+    4px solid #c21b2e;
   background: #fff6f6;
-
   color: #8f2030;
 }
 
 .retry-button {
   padding: 9px 14px;
-
-  border: 1px solid #d8c8a5;
+  border:
+    1px solid #d8c8a5;
   border-radius: 10px;
-
   background: #fffdf8;
-
   color: #8a6814;
-
   font-size: 12px;
   font-weight: 700;
-
   cursor: pointer;
 }
 
 .empty-state {
   padding: 36px 20px;
-
   display: flex;
   flex-direction: column;
   align-items: center;
-
-  border: 1px dashed #d8c8a5;
+  border:
+    1px dashed #d8c8a5;
   border-radius: 16px;
-
   background: #f8f4ec;
-
   text-align: center;
 }
 
 .empty-icon {
   width: 58px;
   height: 58px;
-
   display: flex;
   align-items: center;
   justify-content: center;
-
   margin-bottom: 14px;
-
-  border: 1px solid #e4d2aa;
+  border:
+    1px solid #e4d2aa;
   border-radius: 50%;
-
   background: #f3ead8;
-
   font-size: 26px;
 }
 
@@ -468,9 +506,7 @@
 
 .empty-state p {
   margin: 0;
-
   color: #777067;
-
   font-size: 13px;
 }
 
@@ -480,9 +516,7 @@
 
 .results-count {
   margin: 0;
-
   color: #777067;
-
   font-size: 12px;
   font-weight: 600;
 }
@@ -493,24 +527,20 @@
 
 .rutinas-grid {
   display: grid;
-
   grid-template-columns:
     repeat(
       2,
       minmax(0, 1fr)
     );
-
   gap: 17px;
 }
 
 .rutina-card {
   padding: 20px;
-
-  border: 1px solid #e5ddcf;
+  border:
+    1px solid #e5ddcf;
   border-radius: 16px;
-
   background: #fffdf8;
-
   box-shadow:
     0 5px 18px
     rgba(76, 62, 36, 0.04);
@@ -519,27 +549,21 @@
 .rutina-card-header {
   display: flex;
   align-items: center;
-
   gap: 13px;
-
   margin-bottom: 15px;
 }
 
 .rutina-icon {
   width: 48px;
   height: 48px;
-
   flex-shrink: 0;
-
   display: flex;
   align-items: center;
   justify-content: center;
-
-  border: 1px solid #e4d2aa;
+  border:
+    1px solid #e4d2aa;
   border-radius: 14px;
-
   background: #f3ead8;
-
   font-size: 21px;
 }
 
@@ -549,41 +573,32 @@
 
 .rutina-id {
   display: block;
-
   margin-bottom: 4px;
-
   color: #9a7728;
-
   font-size: 10px;
   font-weight: 700;
-
   text-transform: uppercase;
 }
 
 .rutina-title h3 {
   margin: 0;
-
   color: #2f2a24;
-
   font-size: 16px;
 }
 
 .rutina-description {
   min-height: 48px;
-
   margin-bottom: 15px;
-
   padding: 12px 0;
-
-  border-top: 1px solid #eee7dc;
-  border-bottom: 1px solid #eee7dc;
+  border-top:
+    1px solid #eee7dc;
+  border-bottom:
+    1px solid #eee7dc;
 }
 
 .rutina-description p {
   margin: 0;
-
   color: #777067;
-
   font-size: 12px;
   line-height: 1.55;
 }
@@ -595,21 +610,15 @@
 .detail-row {
   display: flex;
   justify-content: space-between;
-
   gap: 15px;
-
   padding: 7px 0;
-
   color: #777067;
-
   font-size: 12px;
 }
 
 .detail-row strong {
   max-width: 65%;
-
   color: #2f2a24;
-
   text-align: right;
 }
 
@@ -628,7 +637,6 @@
 
   .topbar {
     min-height: 74px;
-
     padding: 8px 17px;
   }
 
@@ -655,6 +663,15 @@
     padding: 21px 18px;
   }
 
+  .days-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .add-day-button {
+    width: 100%;
+  }
+
   .message {
     flex-direction: column;
     align-items: stretch;
@@ -670,7 +687,6 @@
 
   .detail-row strong {
     max-width: 100%;
-
     text-align: left;
   }
 }

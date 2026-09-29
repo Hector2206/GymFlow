@@ -56,6 +56,8 @@ implements OnInit {
 
   descripcionRutina = '';
 
+  diasRutina: number[] = [];
+
   cargando = true;
 
   cargandoClientes = false;
@@ -160,6 +162,8 @@ implements OnInit {
 
     this.descripcionRutina = '';
 
+    this.diasRutina = [];
+
     this.errorClientes = '';
   }
 
@@ -235,6 +239,16 @@ implements OnInit {
             .detectChanges();
         }
       });
+  }
+
+  agregarDia(): void {
+
+    const numeroDia =
+      this.diasRutina.length + 1;
+
+    this.diasRutina.push(
+      numeroDia
+    );
   }
 
   volverInicio(): void {
