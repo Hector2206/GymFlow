@@ -3,6 +3,7 @@ export const environment = {
   authGoogleUrl: 'https://gymflow-auth-google.onrender.com',
   clienteAltaUrl: 'https://gymflow-cliente-alta.onrender.com',
   usuarioConsultaUrl: 'https://gymflow-usuario-consulta.onrender.com',
+  rutinaServiceUrl: 'https://gymflow-rutina-service.onrender.com',
 
   googleClientId:
     '403800585371-gvse8f49bhq6gqh1tmvmk1t8sebg6rvs.apps.googleusercontent.com'
