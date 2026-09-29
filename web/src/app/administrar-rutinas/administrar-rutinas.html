@@ -74,16 +74,42 @@
         <div>
 
           <p class="form-label">
-            Nueva rutina
+
+            {{
+              modoFormulario === 'crear'
+                ? 'Nueva rutina'
+                : modoFormulario === 'editar'
+                  ? 'Editar rutina'
+                  : 'Asignar rutina'
+            }}
+
           </p>
 
           <h2>
-            Crear rutina de entrenamiento
+
+            {{
+              modoFormulario === 'crear'
+                ? 'Crear rutina de entrenamiento'
+                : modoFormulario === 'editar'
+                  ? 'Editar rutina de entrenamiento'
+                  : 'Asignar rutina a cliente'
+            }}
+
           </h2>
 
-          <p>
+          <p *ngIf="modoFormulario === 'crear'">
             Completa la información necesaria para crear
             una nueva rutina.
+          </p>
+
+          <p *ngIf="modoFormulario === 'editar'">
+            Modifica el nombre, descripción o cliente
+            asignado a esta rutina.
+          </p>
+
+          <p *ngIf="modoFormulario === 'asignar'">
+            Selecciona el cliente al que deseas
+            asignar esta rutina.
           </p>
 
         </div>
@@ -104,6 +130,24 @@
         class="routine-form"
         (ngSubmit)="guardarRutina()"
       >
+
+        <div
+          *ngIf="modoFormulario === 'asignar'"
+          class="days-empty"
+        >
+
+          <div class="days-empty-icon">
+            🏋️
+          </div>
+
+          <p>
+            Rutina:
+            <strong>
+              {{ nombreRutina }}
+            </strong>
+          </p>
+
+        </div>
 
 
         <div class="form-group">
@@ -165,7 +209,10 @@
         </div>
 
 
-        <div class="form-group">
+        <div
+          *ngIf="modoFormulario !== 'asignar'"
+          class="form-group"
+        >
 
           <label for="nombreRutina">
             Nombre de la rutina
@@ -184,7 +231,10 @@
         </div>
 
 
-        <div class="form-group">
+        <div
+          *ngIf="modoFormulario !== 'asignar'"
+          class="form-group"
+        >
 
           <label for="descripcionRutina">
             Descripción
@@ -206,7 +256,28 @@
         </div>
 
 
-        <div class="days-section">
+        <div
+          *ngIf="modoFormulario === 'editar'"
+          class="days-empty"
+        >
+
+          <div class="days-empty-icon">
+            ℹ️
+          </div>
+
+          <p>
+            Esta acción modifica el nombre, descripción
+            y cliente asignado. Los días y ejercicios
+            actuales de la rutina se conservan.
+          </p>
+
+        </div>
+
+
+        <div
+          *ngIf="modoFormulario === 'crear'"
+          class="days-section"
+        >
 
           <div class="days-header">
 
@@ -583,11 +654,17 @@
             class="save-routine-button"
             [disabled]="guardandoRutina"
           >
+
             {{
               guardandoRutina
-                ? 'Guardando rutina...'
-                : 'Guardar rutina'
+                ? 'Guardando...'
+                : modoFormulario === 'crear'
+                  ? 'Guardar rutina'
+                  : modoFormulario === 'editar'
+                    ? 'Guardar cambios'
+                    : 'Asignar cliente'
             }}
+
           </button>
 
         </div>
@@ -767,6 +844,28 @@
                 </strong>
 
               </div>
+
+            </div>
+
+
+            <div class="form-actions">
+
+              <button
+                type="button"
+                class="add-exercise-button"
+                (click)="editarRutina(rutina)"
+              >
+                Editar rutina
+              </button>
+
+              <button
+                type="button"
+                class="add-exercise-button"
+                style="margin-left: 8px;"
+                (click)="asignarRutina(rutina)"
+              >
+                Asignar cliente
+              </button>
 
             </div>
 

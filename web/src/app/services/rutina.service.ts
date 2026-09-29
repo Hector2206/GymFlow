@@ -56,4 +56,15 @@ export class RutinaService {
       request
     );
   }
+
+  actualizarRutina(
+    idRutina: number,
+    request: CrearRutinaRequest
+  ): Observable<RutinaGuardadaResponse> {
+
+    return this.http.put<RutinaGuardadaResponse>(
+      `${environment.rutinaServiceUrl}/api/rutinas/${idRutina}`,
+      request
+    );
+  }
 }
