@@ -38,6 +38,8 @@ implements OnInit {
 
   error = '';
 
+  mostrarFormularioNuevaRutina = false;
+
   constructor(
     private router: Router,
     private rutinaService: RutinaService,
@@ -112,6 +114,16 @@ implements OnInit {
             .detectChanges();
         }
       });
+  }
+
+  abrirFormularioNuevaRutina(): void {
+
+    this.mostrarFormularioNuevaRutina = true;
+  }
+
+  cerrarFormularioNuevaRutina(): void {
+
+    this.mostrarFormularioNuevaRutina = false;
   }
 
   volverInicio(): void {

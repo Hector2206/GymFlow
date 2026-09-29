@@ -1,4 +1,4 @@
-v<div class="rutinas-page">
+<div class="rutinas-page">
 
   <header class="topbar">
 
@@ -27,18 +27,91 @@ v<div class="rutinas-page">
 
     <section class="page-header">
 
-      <p class="section-label">
-        Entrenador
-      </p>
+      <div>
 
-      <h1>
-        Administrar Rutinas
-      </h1>
+        <p class="section-label">
+          Entrenador
+        </p>
 
-      <p class="subtitle">
-        Consulta, crea y administra las rutinas de entrenamiento
-        de tus clientes.
-      </p>
+        <h1>
+          Administrar Rutinas
+        </h1>
+
+        <p class="subtitle">
+          Consulta, crea y administra las rutinas de entrenamiento
+          de tus clientes.
+        </p>
+
+      </div>
+
+
+      <button
+        type="button"
+        class="new-routine-button"
+        (click)="abrirFormularioNuevaRutina()"
+      >
+        + Nueva Rutina
+      </button>
+
+    </section>
+
+
+    <section
+      *ngIf="mostrarFormularioNuevaRutina"
+      class="new-routine-section"
+    >
+
+      <div class="form-header">
+
+        <div>
+
+          <p class="form-label">
+            Nueva rutina
+          </p>
+
+          <h2>
+            Crear rutina de entrenamiento
+          </h2>
+
+          <p>
+            Completa la información necesaria para crear
+            una nueva rutina.
+          </p>
+
+        </div>
+
+
+        <button
+          type="button"
+          class="close-form-button"
+          (click)="cerrarFormularioNuevaRutina()"
+        >
+          ×
+        </button>
+
+      </div>
+
+
+      <form class="routine-form">
+
+        <div class="form-placeholder">
+
+          <div class="placeholder-icon">
+            📝
+          </div>
+
+          <h3>
+            Nueva Rutina
+          </h3>
+
+          <p>
+            Agrega la información de la rutina
+            para comenzar.
+          </p>
+
+        </div>
+
+      </form>
 
     </section>
 
