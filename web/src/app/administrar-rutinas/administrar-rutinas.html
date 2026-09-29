@@ -74,7 +74,6 @@
         <div>
 
           <p class="form-label">
-
             {{
               modoFormulario === 'crear'
                 ? 'Nueva rutina'
@@ -82,11 +81,9 @@
                   ? 'Editar rutina'
                   : 'Asignar rutina'
             }}
-
           </p>
 
           <h2>
-
             {{
               modoFormulario === 'crear'
                 ? 'Crear rutina de entrenamiento'
@@ -94,7 +91,6 @@
                   ? 'Editar rutina de entrenamiento'
                   : 'Asignar rutina a cliente'
             }}
-
           </h2>
 
           <p *ngIf="modoFormulario === 'crear'">
@@ -599,6 +595,60 @@
                       />
 
                     </div>
+
+
+                    <ng-container
+                      *ngIf="
+                        obtenerEjercicioSeleccionado(
+                          ejercicioDia.idEjercicio
+                        ) as ejercicioSeleccionado
+                      "
+                    >
+
+                      <div class="exercise-demo">
+
+                        <div class="exercise-demo-title">
+
+                          <span>
+                            Imagen demostrativa
+                          </span>
+
+                          <strong>
+                            {{ ejercicioSeleccionado.nombre }}
+                          </strong>
+
+                        </div>
+
+
+                        <img
+                          *ngIf="ejercicioSeleccionado.imagenUrl"
+                          class="exercise-demo-image"
+                          [src]="ejercicioSeleccionado.imagenUrl"
+                          [alt]="
+                            'Demostración de ' +
+                            ejercicioSeleccionado.nombre
+                          "
+                        />
+
+
+                        <div
+                          *ngIf="!ejercicioSeleccionado.imagenUrl"
+                          class="exercise-demo-empty"
+                        >
+
+                          <div class="exercise-demo-empty-icon">
+                            🖼️
+                          </div>
+
+                          <p>
+                            Sin imagen demostrativa
+                          </p>
+
+                        </div>
+
+                      </div>
+
+                    </ng-container>
 
                   </div>
 

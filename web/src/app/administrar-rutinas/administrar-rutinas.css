@@ -55,8 +55,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  border:
-    1px solid #d8c8a5;
+  border: 1px solid #d8c8a5;
   border-radius: 12px;
   background: #fffdf8;
   color: #8a6814;
@@ -97,12 +96,7 @@
 .page-header h1 {
   margin: 0;
   color: #2f2a24;
-  font-size:
-    clamp(
-      30px,
-      4vw,
-      42px
-    );
+  font-size: clamp(30px, 4vw, 42px);
   font-weight: 700;
 }
 
@@ -118,8 +112,7 @@
   min-height: 44px;
   padding: 11px 19px;
   flex-shrink: 0;
-  border:
-    1px solid #b58a2a;
+  border: 1px solid #b58a2a;
   border-radius: 13px;
   background: #b58a2a;
   color: #ffffff;
@@ -135,8 +128,7 @@
 .new-routine-section,
 .rutinas-section {
   padding: 27px;
-  border:
-    1px solid #e5ddcf;
+  border: 1px solid #e5ddcf;
   border-radius: 20px;
   background: #fffdf8;
   box-shadow:
@@ -170,8 +162,7 @@
 .close-form-button {
   width: 38px;
   height: 38px;
-  border:
-    1px solid #d8c8a5;
+  border: 1px solid #d8c8a5;
   border-radius: 11px;
   background: #fffdf8;
   color: #8a6814;
@@ -210,8 +201,7 @@
 .exercise-field select,
 .exercise-field input {
   width: 100%;
-  border:
-    1px solid #e5ddcf;
+  border: 1px solid #e5ddcf;
   border-radius: 13px;
   outline: none;
   background: #f8f4ec;
@@ -263,8 +253,7 @@
 
 .days-section {
   padding: 20px;
-  border:
-    1px solid #e5ddcf;
+  border: 1px solid #e5ddcf;
   border-radius: 16px;
   background: #faf7f1;
 }
@@ -292,8 +281,7 @@
 .add-exercise-button {
   min-height: 40px;
   padding: 9px 15px;
-  border:
-    1px solid #d8c392;
+  border: 1px solid #d8c392;
   border-radius: 11px;
   background: #f3ead8;
   color: #8a6814;
@@ -310,8 +298,7 @@
 
 .days-empty {
   padding: 25px;
-  border:
-    1px dashed #d8c8a5;
+  border: 1px dashed #d8c8a5;
   border-radius: 13px;
   background: #fffdf8;
   text-align: center;
@@ -336,8 +323,7 @@
 
 .day-card {
   padding: 18px;
-  border:
-    1px solid #e5ddcf;
+  border: 1px solid #e5ddcf;
   border-radius: 15px;
   background: #fffdf8;
 }
@@ -363,8 +349,7 @@
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  border:
-    1px solid #e4d2aa;
+  border: 1px solid #e4d2aa;
   border-radius: 11px;
   background: #f3ead8;
   color: #8a6814;
@@ -394,8 +379,7 @@
 
 .exercises-empty {
   padding: 18px;
-  border:
-    1px dashed #d8c8a5;
+  border: 1px dashed #d8c8a5;
   border-radius: 12px;
   background: #f8f4ec;
   color: #777067;
@@ -414,8 +398,7 @@
   display: flex;
   align-items: stretch;
   gap: 13px;
-  border:
-    1px solid #eee7dc;
+  border: 1px solid #eee7dc;
   border-radius: 13px;
   background: #faf7f1;
 }
@@ -434,8 +417,7 @@
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  border:
-    1px solid #e4d2aa;
+  border: 1px solid #e4d2aa;
   border-radius: 10px;
   background: #f3ead8;
   color: #8a6814;
@@ -455,8 +437,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  border:
-    1px solid #d8c8a5;
+  border: 1px solid #d8c8a5;
   border-radius: 8px;
   background: #fffdf8;
   color: #8a6814;
@@ -503,6 +484,64 @@
 }
 
 
+/* IMAGEN DEMOSTRATIVA */
+
+.exercise-demo {
+  grid-column: 1 / -1;
+  margin-top: 3px;
+  padding: 13px;
+  border: 1px solid #e5ddcf;
+  border-radius: 13px;
+  background: #fffdf8;
+}
+
+.exercise-demo-title {
+  margin-bottom: 10px;
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  color: #777067;
+  font-size: 11px;
+}
+
+.exercise-demo-title strong {
+  color: #2f2a24;
+  text-align: right;
+}
+
+.exercise-demo-image {
+  width: 100%;
+  max-height: 260px;
+  display: block;
+  border-radius: 11px;
+  object-fit: contain;
+  background: #f4efe6;
+}
+
+.exercise-demo-empty {
+  min-height: 110px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border: 1px dashed #d8c8a5;
+  border-radius: 11px;
+  background: #f8f4ec;
+  color: #777067;
+  text-align: center;
+}
+
+.exercise-demo-empty-icon {
+  margin-bottom: 7px;
+  font-size: 24px;
+}
+
+.exercise-demo-empty p {
+  margin: 0;
+  font-size: 12px;
+}
+
+
 /* MENSAJES Y GUARDAR */
 
 .message {
@@ -514,19 +553,15 @@
 
 .success-message {
   margin-bottom: 22px;
-  border:
-    1px solid #b7d7bc;
-  border-left:
-    4px solid #2e7d32;
+  border: 1px solid #b7d7bc;
+  border-left: 4px solid #2e7d32;
   background: #f2f8f2;
   color: #2e6b32;
 }
 
 .form-error-message {
-  border:
-    1px solid #edb9bf;
-  border-left:
-    4px solid #c21b2e;
+  border: 1px solid #edb9bf;
+  border-left: 4px solid #c21b2e;
   background: #fff5f5;
   color: #8f2030;
 }
@@ -540,8 +575,7 @@
   min-width: 170px;
   min-height: 44px;
   padding: 10px 20px;
-  border:
-    1px solid #b58a2a;
+  border: 1px solid #b58a2a;
   border-radius: 13px;
   background: #b58a2a;
   color: #ffffff;
@@ -574,8 +608,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  border:
-    1px solid #e4d2aa;
+  border: 1px solid #e4d2aa;
   background: #f3ead8;
 }
 
@@ -598,8 +631,7 @@
 
 .loading-state {
   padding: 28px;
-  border:
-    1px solid #e7dfd2;
+  border: 1px solid #e7dfd2;
   border-radius: 14px;
   background: #f8f4ec;
   text-align: center;
@@ -609,16 +641,14 @@
   display: flex;
   justify-content: space-between;
   gap: 16px;
-  border:
-    1px solid #edb9bf;
+  border: 1px solid #edb9bf;
   background: #fff6f6;
   color: #8f2030;
 }
 
 .retry-button {
   padding: 9px 14px;
-  border:
-    1px solid #d8c8a5;
+  border: 1px solid #d8c8a5;
   border-radius: 10px;
   background: #fffdf8;
   color: #8a6814;
@@ -627,8 +657,7 @@
 
 .empty-state {
   padding: 36px 20px;
-  border:
-    1px dashed #d8c8a5;
+  border: 1px dashed #d8c8a5;
   border-radius: 16px;
   background: #f8f4ec;
   text-align: center;
@@ -670,8 +699,7 @@
 
 .rutina-card {
   padding: 20px;
-  border:
-    1px solid #e5ddcf;
+  border: 1px solid #e5ddcf;
   border-radius: 16px;
   background: #fffdf8;
 }
@@ -705,10 +733,8 @@
 .rutina-description {
   padding: 12px 0;
   margin-bottom: 15px;
-  border-top:
-    1px solid #eee7dc;
-  border-bottom:
-    1px solid #eee7dc;
+  border-top: 1px solid #eee7dc;
+  border-bottom: 1px solid #eee7dc;
 }
 
 .rutina-description p {
@@ -817,6 +843,18 @@
 
   .exercise-main-field {
     grid-column: auto;
+  }
+
+  .exercise-demo {
+    grid-column: auto;
+  }
+
+  .exercise-demo-title {
+    flex-direction: column;
+  }
+
+  .exercise-demo-title strong {
+    text-align: left;
   }
 
   .form-actions {

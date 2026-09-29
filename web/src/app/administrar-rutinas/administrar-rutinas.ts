@@ -487,6 +487,29 @@ implements OnInit {
   }
 
 
+  obtenerEjercicioSeleccionado(
+    idEjercicio: number | null
+  ): Ejercicio | null {
+
+    if (
+      idEjercicio === null
+    ) {
+
+      return null;
+    }
+
+    return (
+      this.ejerciciosDisponibles
+        .find(
+          ejercicio =>
+            ejercicio.idEjercicio ===
+            idEjercicio
+        )
+      ?? null
+    );
+  }
+
+
   agregarDia(): void {
 
     this.errorFormulario = '';
