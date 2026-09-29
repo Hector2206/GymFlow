@@ -29,6 +29,8 @@ import {
 } from '../services/ejercicio.service';
 
 import {
+  CrearRutinaRequest,
+  RutinaGuardadaResponse,
   RutinaResumen
 } from '../models/rutina.model';
 
@@ -106,11 +108,17 @@ implements OnInit {
 
   cargandoEjercicios = false;
 
+  guardandoRutina = false;
+
   error = '';
 
   errorClientes = '';
 
   errorEjercicios = '';
+
+  errorFormulario = '';
+
+  mensajeExito = '';
 
   mostrarFormularioNuevaRutina =
     false;
@@ -202,6 +210,10 @@ implements OnInit {
     this.mostrarFormularioNuevaRutina =
       true;
 
+    this.errorFormulario = '';
+
+    this.mensajeExito = '';
+
     this.cargarClientesAsignados();
 
     this.cargarEjercicios();
@@ -212,6 +224,12 @@ implements OnInit {
 
     this.mostrarFormularioNuevaRutina =
       false;
+
+    this.limpiarFormulario();
+  }
+
+
+  limpiarFormulario(): void {
 
     this.idClienteSeleccionado = null;
 
@@ -224,6 +242,10 @@ implements OnInit {
     this.errorClientes = '';
 
     this.errorEjercicios = '';
+
+    this.errorFormulario = '';
+
+    this.guardandoRutina = false;
   }
 
 
@@ -377,6 +399,8 @@ implements OnInit {
 
   agregarDia(): void {
 
+    this.errorFormulario = '';
+
     this.diasRutina.push({
       dia: '',
       ejercicios: []
@@ -387,6 +411,8 @@ implements OnInit {
   agregarEjercicio(
     indiceDia: number
   ): void {
+
+    this.errorFormulario = '';
 
     this.diasRutina[
       indiceDia
@@ -503,6 +529,269 @@ implements OnInit {
           indice + 1;
       }
     );
+  }
+
+
+  validarFormulario(): boolean {
+
+    this.errorFormulario = '';
+
+    if (
+      this.idClienteSeleccionado === null
+    ) {
+
+      this.errorFormulario =
+        'Selecciona un cliente para la rutina.';
+
+      return false;
+    }
+
+    if (
+      !this.nombreRutina.trim()
+    ) {
+
+      this.errorFormulario =
+        'El nombre de la rutina es obligatorio.';
+
+      return false;
+    }
+
+    if (
+      this.diasRutina.length === 0
+    ) {
+
+      this.errorFormulario =
+        'La rutina debe tener al menos un día de entrenamiento.';
+
+      return false;
+    }
+
+    for (
+      let indiceDia = 0;
+      indiceDia < this.diasRutina.length;
+      indiceDia++
+    ) {
+
+      const dia =
+        this.diasRutina[
+          indiceDia
+        ];
+
+      if (
+        !dia.dia.trim()
+      ) {
+
+        this.errorFormulario =
+          `Selecciona el día de entrenamiento en el bloque ${indiceDia + 1}.`;
+
+        return false;
+      }
+
+      if (
+        dia.ejercicios.length === 0
+      ) {
+
+        this.errorFormulario =
+          `${dia.dia} debe tener al menos un ejercicio.`;
+
+        return false;
+      }
+
+      for (
+        let indiceEjercicio = 0;
+        indiceEjercicio < dia.ejercicios.length;
+        indiceEjercicio++
+      ) {
+
+        const ejercicio =
+          dia.ejercicios[
+            indiceEjercicio
+          ];
+
+        if (
+          ejercicio.idEjercicio === null
+        ) {
+
+          this.errorFormulario =
+            `Selecciona el ejercicio ${indiceEjercicio + 1} de ${dia.dia}.`;
+
+          return false;
+        }
+
+        if (
+          ejercicio.series === null ||
+          ejercicio.series <= 0
+        ) {
+
+          this.errorFormulario =
+            `Las series del ejercicio ${indiceEjercicio + 1} de ${dia.dia} deben ser mayores a 0.`;
+
+          return false;
+        }
+
+        if (
+          ejercicio.repeticiones === null ||
+          ejercicio.repeticiones <= 0
+        ) {
+
+          this.errorFormulario =
+            `Las repeticiones del ejercicio ${indiceEjercicio + 1} de ${dia.dia} deben ser mayores a 0.`;
+
+          return false;
+        }
+      }
+    }
+
+    return true;
+  }
+
+
+  guardarRutina(): void {
+
+    this.mensajeExito = '';
+
+    if (
+      !this.validarFormulario()
+    ) {
+
+      this.changeDetector
+        .detectChanges();
+
+      return;
+    }
+
+    const request:
+      CrearRutinaRequest = {
+
+      idCliente:
+        this.idClienteSeleccionado!,
+
+      nombre:
+        this.nombreRutina.trim(),
+
+      descripcion:
+        this.descripcionRutina.trim()
+          ? this.descripcionRutina.trim()
+          : null,
+
+      dias:
+        this.diasRutina.map(
+          dia => ({
+
+            dia:
+              dia.dia,
+
+            ejercicios:
+              dia.ejercicios.map(
+                ejercicio => ({
+
+                  idEjercicio:
+                    ejercicio.idEjercicio!,
+
+                  series:
+                    ejercicio.series!,
+
+                  repeticiones:
+                    ejercicio.repeticiones!,
+
+                  orden:
+                    ejercicio.orden
+                })
+              )
+          })
+        )
+    };
+
+    this.guardandoRutina = true;
+
+    this.errorFormulario = '';
+
+    this.rutinaService
+      .crearRutina(
+        request
+      )
+      .subscribe({
+
+        next: (
+          respuesta:
+            RutinaGuardadaResponse
+        ) => {
+
+          this.guardandoRutina =
+            false;
+
+          this.mensajeExito =
+            `Rutina "${respuesta.nombre}" creada correctamente.`;
+
+          this.mostrarFormularioNuevaRutina =
+            false;
+
+          this.limpiarFormulario();
+
+          this.cargarRutinas();
+
+          this.changeDetector
+            .detectChanges();
+        },
+
+        error: (error) => {
+
+          console.error(
+            'Error al crear rutina:',
+            error
+          );
+
+          this.guardandoRutina =
+            false;
+
+          if (
+            error.status === 400
+          ) {
+
+            this.errorFormulario =
+              error.error?.mensaje ??
+              'Los datos de la rutina no son válidos.';
+
+          } else if (
+            error.status === 401
+          ) {
+
+            this.errorFormulario =
+              'Tu sesión no es válida. Inicia sesión nuevamente.';
+
+          } else if (
+            error.status === 403
+          ) {
+
+            this.errorFormulario =
+              error.error?.mensaje ??
+              'No tienes permiso para crear esta rutina.';
+
+          } else if (
+            error.status === 404
+          ) {
+
+            this.errorFormulario =
+              error.error?.mensaje ??
+              'No se encontró información del entrenador.';
+
+          } else if (
+            error.status === 0
+          ) {
+
+            this.errorFormulario =
+              'No fue posible conectar con el servidor.';
+
+          } else {
+
+            this.errorFormulario =
+              'No fue posible crear la rutina.';
+          }
+
+          this.changeDetector
+            .detectChanges();
+        }
+      });
   }
 
 

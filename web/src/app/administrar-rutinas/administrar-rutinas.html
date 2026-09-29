@@ -56,6 +56,14 @@
     </section>
 
 
+    <div
+      *ngIf="mensajeExito"
+      class="message success-message"
+    >
+      {{ mensajeExito }}
+    </div>
+
+
     <section
       *ngIf="mostrarFormularioNuevaRutina"
       class="new-routine-section"
@@ -92,7 +100,10 @@
       </div>
 
 
-      <form class="routine-form">
+      <form
+        class="routine-form"
+        (ngSubmit)="guardarRutina()"
+      >
 
 
         <div class="form-group">
@@ -553,6 +564,31 @@
             </div>
 
           </div>
+
+        </div>
+
+
+        <div
+          *ngIf="errorFormulario"
+          class="message form-error-message"
+        >
+          {{ errorFormulario }}
+        </div>
+
+
+        <div class="form-actions">
+
+          <button
+            type="submit"
+            class="save-routine-button"
+            [disabled]="guardandoRutina"
+          >
+            {{
+              guardandoRutina
+                ? 'Guardando rutina...'
+                : 'Guardar rutina'
+            }}
+          </button>
 
         </div>
 

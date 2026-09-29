@@ -15,7 +15,9 @@ import {
 } from '../../environments/environment';
 
 import {
+  CrearRutinaRequest,
   RutinaDetalle,
+  RutinaGuardadaResponse,
   RutinaResumen
 } from '../models/rutina.model';
 
@@ -42,6 +44,16 @@ export class RutinaService {
 
     return this.http.get<RutinaDetalle>(
       `${environment.rutinaServiceUrl}/api/rutinas/${idRutina}`
+    );
+  }
+
+  crearRutina(
+    request: CrearRutinaRequest
+  ): Observable<RutinaGuardadaResponse> {
+
+    return this.http.post<RutinaGuardadaResponse>(
+      `${environment.rutinaServiceUrl}/api/rutinas`,
+      request
     );
   }
 }
