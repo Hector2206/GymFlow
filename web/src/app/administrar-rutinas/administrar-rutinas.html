@@ -94,19 +94,60 @@
 
       <form class="routine-form">
 
-        <div class="form-placeholder">
+        <div class="form-group">
 
-          <div class="placeholder-icon">
-            📝
-          </div>
+          <label for="cliente">
+            Cliente
+          </label>
 
-          <h3>
-            Nueva Rutina
-          </h3>
+          <select
+            id="cliente"
+            name="idCliente"
+            [(ngModel)]="idClienteSeleccionado"
+            [disabled]="
+              cargandoClientes ||
+              clientesAsignados.length === 0
+            "
+          >
 
-          <p>
-            Agrega la información de la rutina
-            para comenzar.
+            <option
+              [ngValue]="null"
+            >
+              Selecciona un cliente
+            </option>
+
+            <option
+              *ngFor="let cliente of clientesAsignados"
+              [ngValue]="cliente.idCliente"
+            >
+              {{ cliente.nombre }}
+            </option>
+
+          </select>
+
+          <p
+            *ngIf="cargandoClientes"
+            class="field-message"
+          >
+            Cargando clientes asignados...
+          </p>
+
+          <p
+            *ngIf="
+              !cargandoClientes &&
+              !errorClientes &&
+              clientesAsignados.length === 0
+            "
+            class="field-message"
+          >
+            No tienes clientes asignados.
+          </p>
+
+          <p
+            *ngIf="errorClientes"
+            class="field-message field-error"
+          >
+            {{ errorClientes }}
           </p>
 
         </div>

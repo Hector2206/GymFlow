@@ -9,6 +9,10 @@ import {
 } from '@angular/common';
 
 import {
+  FormsModule
+} from '@angular/forms';
+
+import {
   Router
 } from '@angular/router';
 
@@ -17,14 +21,24 @@ import {
 } from '../services/rutina.service';
 
 import {
+  EntrenadorService
+} from '../services/entrenador.service';
+
+import {
   RutinaResumen
 } from '../models/rutina.model';
+
+import {
+  ClienteAsignado,
+  ClientesEntrenadorResponse
+} from '../models/cliente-asignado.model';
 
 @Component({
   selector: 'app-administrar-rutinas',
   standalone: true,
   imports: [
-    CommonModule
+    CommonModule,
+    FormsModule
   ],
   templateUrl: './administrar-rutinas.html',
   styleUrl: './administrar-rutinas.css'
@@ -34,15 +48,24 @@ implements OnInit {
 
   rutinas: RutinaResumen[] = [];
 
+  clientesAsignados: ClienteAsignado[] = [];
+
+  idClienteSeleccionado: number | null = null;
+
   cargando = true;
 
+  cargandoClientes = false;
+
   error = '';
+
+  errorClientes = '';
 
   mostrarFormularioNuevaRutina = false;
 
   constructor(
     private router: Router,
     private rutinaService: RutinaService,
+    private entrenadorService: EntrenadorService,
     private changeDetector: ChangeDetectorRef
   ) {}
 
@@ -119,11 +142,91 @@ implements OnInit {
   abrirFormularioNuevaRutina(): void {
 
     this.mostrarFormularioNuevaRutina = true;
+
+    this.cargarClientesAsignados();
   }
 
   cerrarFormularioNuevaRutina(): void {
 
     this.mostrarFormularioNuevaRutina = false;
+
+    this.idClienteSeleccionado = null;
+
+    this.errorClientes = '';
+  }
+
+  cargarClientesAsignados(): void {
+
+    this.cargandoClientes = true;
+
+    this.errorClientes = '';
+
+    this.entrenadorService
+      .obtenerMisClientes()
+      .subscribe({
+
+        next: (
+          respuesta: ClientesEntrenadorResponse
+        ) => {
+
+          this.clientesAsignados =
+            respuesta.clientes ?? [];
+
+          this.cargandoClientes = false;
+
+          this.changeDetector
+            .detectChanges();
+        },
+
+        error: (error) => {
+
+          console.error(
+            'Error al consultar clientes asignados:',
+            error
+          );
+
+          this.cargandoClientes = false;
+
+          this.clientesAsignados = [];
+
+          if (
+            error.status === 401
+          ) {
+
+            this.errorClientes =
+              'Tu sesión no es válida.';
+
+          } else if (
+            error.status === 403
+          ) {
+
+            this.errorClientes =
+              'No tienes permiso para consultar clientes.';
+
+          } else if (
+            error.status === 404
+          ) {
+
+            this.errorClientes =
+              'No se encontró información del entrenador.';
+
+          } else if (
+            error.status === 0
+          ) {
+
+            this.errorClientes =
+              'No fue posible conectar con el servidor.';
+
+          } else {
+
+            this.errorClientes =
+              'No fue posible cargar tus clientes.';
+          }
+
+          this.changeDetector
+            .detectChanges();
+        }
+      });
   }
 
   volverInicio(): void {
