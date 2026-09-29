@@ -54,6 +54,8 @@ implements OnInit {
 
   nombreRutina = '';
 
+  descripcionRutina = '';
+
   cargando = true;
 
   cargandoClientes = false;
@@ -155,6 +157,8 @@ implements OnInit {
     this.idClienteSeleccionado = null;
 
     this.nombreRutina = '';
+
+    this.descripcionRutina = '';
 
     this.errorClientes = '';
   }

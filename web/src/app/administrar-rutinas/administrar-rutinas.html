@@ -171,6 +171,28 @@
 
         </div>
 
+
+        <div class="form-group">
+
+          <label for="descripcionRutina">
+            Descripción
+          </label>
+
+          <textarea
+            id="descripcionRutina"
+            name="descripcionRutina"
+            [(ngModel)]="descripcionRutina"
+            placeholder="Ej. Rutina enfocada en fuerza de tren superior."
+            rows="4"
+            maxlength="500"
+          ></textarea>
+
+          <p class="field-message">
+            La descripción es opcional.
+          </p>
+
+        </div>
+
       </form>
 
     </section>
