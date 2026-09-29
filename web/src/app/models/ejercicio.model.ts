@@ -3,4 +3,6 @@ export interface Ejercicio {
   nombre: string;
   descripcion: string | null;
   estado: boolean;
+
+  imagenUrl?: string | null;
 }

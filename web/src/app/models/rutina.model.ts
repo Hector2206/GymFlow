@@ -11,6 +11,9 @@ export interface EjercicioRutinaDetalle {
   idEjercicio: number;
   nombre: string;
   descripcion: string | null;
+
+  imagenUrl?: string | null;
+
   series: number;
   repeticiones: number;
   orden: number;
