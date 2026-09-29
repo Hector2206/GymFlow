@@ -1,4 +1,4 @@
-<div class="rutinas-page">
+v<div class="rutinas-page">
 
   <header class="topbar">
 
@@ -58,8 +58,8 @@
           </h2>
 
           <p>
-            Desde esta sección podrás administrar las rutinas
-            registradas en GymFlow.
+            Consulta las rutinas registradas actualmente
+            en GymFlow.
           </p>
 
         </div>
@@ -67,19 +67,158 @@
       </div>
 
 
-      <div class="initial-state">
+      <div
+        *ngIf="cargando"
+        class="loading-state"
+      >
+        Cargando rutinas...
+      </div>
 
-        <div class="initial-icon">
+
+      <div
+        *ngIf="error"
+        class="message error-message"
+      >
+
+        <span>
+          {{ error }}
+        </span>
+
+        <button
+          type="button"
+          class="retry-button"
+          (click)="cargarRutinas()"
+        >
+          Reintentar
+        </button>
+
+      </div>
+
+
+      <div
+        *ngIf="
+          !cargando &&
+          !error &&
+          rutinas.length === 0
+        "
+        class="empty-state"
+      >
+
+        <div class="empty-icon">
           📋
         </div>
 
         <h3>
-          Administración de rutinas
+          No hay rutinas registradas
         </h3>
 
         <p>
-          Las rutinas registradas se mostrarán en esta sección.
+          Cuando existan rutinas de entrenamiento,
+          aparecerán en esta sección.
         </p>
+
+      </div>
+
+
+      <div
+        *ngIf="
+          !cargando &&
+          !error &&
+          rutinas.length > 0
+        "
+        class="results"
+      >
+
+        <div class="results-header">
+
+          <p class="results-count">
+            Rutinas registradas:
+            <strong>
+              {{ rutinas.length }}
+            </strong>
+          </p>
+
+        </div>
+
+
+        <div class="rutinas-grid">
+
+          <article
+            class="rutina-card"
+            *ngFor="let rutina of rutinas"
+          >
+
+            <div class="rutina-card-header">
+
+              <div class="rutina-icon">
+                🏋️
+              </div>
+
+              <div class="rutina-title">
+
+                <span class="rutina-id">
+                  Rutina #{{ rutina.idRutina }}
+                </span>
+
+                <h3>
+                  {{ rutina.nombre }}
+                </h3>
+
+              </div>
+
+            </div>
+
+
+            <div class="rutina-description">
+
+              <p
+                *ngIf="rutina.descripcion"
+              >
+                {{ rutina.descripcion }}
+              </p>
+
+              <p
+                *ngIf="!rutina.descripcion"
+                class="without-description"
+              >
+                Sin descripción.
+              </p>
+
+            </div>
+
+
+            <div class="rutina-details">
+
+              <div class="detail-row">
+
+                <span>
+                  Cliente
+                </span>
+
+                <strong>
+                  {{ rutina.nombreCliente }}
+                </strong>
+
+              </div>
+
+
+              <div class="detail-row">
+
+                <span>
+                  ID Cliente
+                </span>
+
+                <strong>
+                  {{ rutina.idCliente }}
+                </strong>
+
+              </div>
+
+            </div>
+
+          </article>
+
+        </div>
 
       </div>
 
