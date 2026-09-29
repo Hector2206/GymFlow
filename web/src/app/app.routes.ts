@@ -43,6 +43,10 @@ import {
 } from './mis-clientes-entrenador/mis-clientes-entrenador';
 
 import {
+  AdministrarRutinas
+} from './administrar-rutinas/administrar-rutinas';
+
+import {
   authGuard
 } from './auth-guard';
 
@@ -151,6 +155,15 @@ export const routes: Routes = [
   {
     path: 'entrenador/mis-clientes',
     component: MisClientesEntrenador,
+    canActivate: [
+      authGuard,
+      entrenadorGuard
+    ]
+  },
+
+  {
+    path: 'entrenador/rutinas',
+    component: AdministrarRutinas,
     canActivate: [
       authGuard,
       entrenadorGuard

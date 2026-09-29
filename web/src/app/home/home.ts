@@ -4,8 +4,13 @@ import {
   OnInit
 } from '@angular/core';
 
-import { CommonModule } from '@angular/common';
-import { Router } from '@angular/router';
+import {
+  CommonModule
+} from '@angular/common';
+
+import {
+  Router
+} from '@angular/router';
 
 import {
   UsuarioService
@@ -33,7 +38,9 @@ export class Home implements OnInit {
   usuario: Usuario | null = null;
 
   cargando = true;
+
   error = '';
+
   mensaje = '';
 
   constructor(
@@ -44,43 +51,57 @@ export class Home implements OnInit {
   ) {}
 
   ngOnInit(): void {
+
     this.cargarUsuario();
   }
+
 
   cargarUsuario(): void {
 
     this.cargando = true;
+
     this.error = '';
 
     this.usuarioService
       .obtenerUsuarioActual()
       .subscribe({
 
-        next: (usuario) => {
+        next: (
+          usuario
+        ) => {
 
-          this.usuario = usuario;
+          this.usuario =
+            usuario;
 
           localStorage.setItem(
             'usuario',
-            JSON.stringify(usuario)
+            JSON.stringify(
+              usuario
+            )
           );
 
-          this.cargando = false;
+          this.cargando =
+            false;
 
           this.changeDetector
             .detectChanges();
         },
 
-        error: (error) => {
+        error: (
+          error
+        ) => {
 
           console.error(
             'Error al obtener usuario:',
             error
           );
 
-          this.cargando = false;
+          this.cargando =
+            false;
 
-          if (error.status === 401) {
+          if (
+            error.status === 401
+          ) {
 
             this.authService
               .cerrarSesion();
@@ -101,12 +122,14 @@ export class Home implements OnInit {
       });
   }
 
+
   esRecepcionista(): boolean {
 
     return this.usuario?.role
       ?.toLowerCase() ===
       'recepcionista';
   }
+
 
   esCliente(): boolean {
 
@@ -115,12 +138,14 @@ export class Home implements OnInit {
       'cliente';
   }
 
+
   esAdministrador(): boolean {
 
     return this.usuario?.role
       ?.toLowerCase() ===
       'administrador';
   }
+
 
   esEntrenador(): boolean {
 
@@ -129,6 +154,7 @@ export class Home implements OnInit {
       'entrenador';
   }
 
+
   irPerfil(): void {
 
     this.router.navigate([
@@ -136,9 +162,12 @@ export class Home implements OnInit {
     ]);
   }
 
+
   irRegistrarCliente(): void {
 
-    if (!this.esRecepcionista()) {
+    if (
+      !this.esRecepcionista()
+    ) {
 
       this.mensaje =
         'No tienes permisos para registrar clientes.';
@@ -154,9 +183,12 @@ export class Home implements OnInit {
     ]);
   }
 
+
   irControlAcceso(): void {
 
-    if (!this.esRecepcionista()) {
+    if (
+      !this.esRecepcionista()
+    ) {
 
       this.mensaje =
         'No tienes permisos para registrar asistencias.';
@@ -172,9 +204,12 @@ export class Home implements OnInit {
     ]);
   }
 
+
   irHistorialAsistencias(): void {
 
-    if (!this.esRecepcionista()) {
+    if (
+      !this.esRecepcionista()
+    ) {
 
       this.mensaje =
         'No tienes permisos para consultar asistencias.';
@@ -190,9 +225,12 @@ export class Home implements OnInit {
     ]);
   }
 
+
   irRegistrarPago(): void {
 
-    if (!this.esRecepcionista()) {
+    if (
+      !this.esRecepcionista()
+    ) {
 
       this.mensaje =
         'No tienes permisos para registrar pagos.';
@@ -208,9 +246,12 @@ export class Home implements OnInit {
     ]);
   }
 
+
   irHistorialPagos(): void {
 
-    if (!this.esRecepcionista()) {
+    if (
+      !this.esRecepcionista()
+    ) {
 
       this.mensaje =
         'No tienes permisos para consultar pagos.';
@@ -226,9 +267,12 @@ export class Home implements OnInit {
     ]);
   }
 
+
   irMiCodigoAcceso(): void {
 
-    if (!this.esCliente()) {
+    if (
+      !this.esCliente()
+    ) {
 
       this.mensaje =
         'Esta opción está disponible únicamente para clientes.';
@@ -244,9 +288,12 @@ export class Home implements OnInit {
     ]);
   }
 
+
   irMisAsistencias(): void {
 
-    if (!this.esCliente()) {
+    if (
+      !this.esCliente()
+    ) {
 
       this.mensaje =
         'Esta opción está disponible únicamente para clientes.';
@@ -262,9 +309,12 @@ export class Home implements OnInit {
     ]);
   }
 
+
   irMisPagos(): void {
 
-    if (!this.esCliente()) {
+    if (
+      !this.esCliente()
+    ) {
 
       this.mensaje =
         'Esta opción está disponible únicamente para clientes.';
@@ -280,9 +330,12 @@ export class Home implements OnInit {
     ]);
   }
 
+
   irMisClientesEntrenador(): void {
 
-    if (!this.esEntrenador()) {
+    if (
+      !this.esEntrenador()
+    ) {
 
       this.mensaje =
         'Esta opción está disponible únicamente para entrenadores.';
@@ -298,6 +351,28 @@ export class Home implements OnInit {
     ]);
   }
 
+
+  irRutinasEntrenador(): void {
+
+    if (
+      !this.esEntrenador()
+    ) {
+
+      this.mensaje =
+        'Esta opción está disponible únicamente para entrenadores.';
+
+      this.changeDetector
+        .detectChanges();
+
+      return;
+    }
+
+    this.router.navigate([
+      '/entrenador/rutinas'
+    ]);
+  }
+
+
   proximamente(
     opcion: string
   ): void {
@@ -308,15 +383,19 @@ export class Home implements OnInit {
     this.changeDetector
       .detectChanges();
 
-    setTimeout(() => {
+    setTimeout(
+      () => {
 
-      this.mensaje = '';
+        this.mensaje = '';
 
-      this.changeDetector
-        .detectChanges();
+        this.changeDetector
+          .detectChanges();
 
-    }, 3000);
+      },
+      3000
+    );
   }
+
 
   cerrarSesion(): void {
 
