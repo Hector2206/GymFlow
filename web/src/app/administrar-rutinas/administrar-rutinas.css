@@ -320,6 +320,15 @@
 .routine-form {
   width:
     100%;
+
+  display:
+    flex;
+
+  flex-direction:
+    column;
+
+  gap:
+    18px;
 }
 
 .form-group {
@@ -344,7 +353,8 @@
     700;
 }
 
-.form-group select {
+.form-group select,
+.form-group input {
   width:
     100%;
 
@@ -369,6 +379,9 @@
   color:
     #2f2a24;
 
+  font-family:
+    inherit;
+
   font-size:
     13px;
 
@@ -378,7 +391,8 @@
     background 0.18s ease;
 }
 
-.form-group select:focus {
+.form-group select:focus,
+.form-group input:focus {
   border-color:
     #b58a2a;
 
@@ -388,6 +402,11 @@
   box-shadow:
     0 0 0 3px
     rgba(181, 138, 42, 0.1);
+}
+
+.form-group input::placeholder {
+  color:
+    #a29a90;
 }
 
 .form-group select:disabled {

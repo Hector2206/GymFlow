@@ -52,6 +52,8 @@ implements OnInit {
 
   idClienteSeleccionado: number | null = null;
 
+  nombreRutina = '';
+
   cargando = true;
 
   cargandoClientes = false;
@@ -151,6 +153,8 @@ implements OnInit {
     this.mostrarFormularioNuevaRutina = false;
 
     this.idClienteSeleccionado = null;
+
+    this.nombreRutina = '';
 
     this.errorClientes = '';
   }
