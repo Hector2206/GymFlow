@@ -55,7 +55,10 @@ implements OnInit {
   cargarClientes(): void {
 
     this.cargando = true;
+
     this.error = '';
+
+    this.clientes = [];
 
     this.entrenadorService
       .obtenerMisClientes()
@@ -66,10 +69,10 @@ implements OnInit {
         ) => {
 
           this.idEntrenador =
-            respuesta.idEntrenador;
+            respuesta?.idEntrenador ?? null;
 
           this.clientes =
-            respuesta.clientes ?? [];
+            respuesta?.clientes ?? [];
 
           this.cargando = false;
 
@@ -85,6 +88,7 @@ implements OnInit {
           );
 
           this.cargando = false;
+
           this.clientes = [];
 
           if (
@@ -99,14 +103,7 @@ implements OnInit {
           ) {
 
             this.error =
-              'No tienes permiso para consultar los clientes del entrenador.';
-
-          } else if (
-            error.status === 404
-          ) {
-
-            this.error =
-              'No se encontró información del entrenador.';
+              'No tienes permiso para consultar esta información.';
 
           } else if (
             error.status === 0
@@ -115,10 +112,16 @@ implements OnInit {
             this.error =
               'No fue posible conectar con el servidor.';
 
+          } else if (
+            error.status === 404
+          ) {
+
+            this.error = '';
+
           } else {
 
             this.error =
-              'No fue posible cargar tus clientes asignados.';
+              'No fue posible consultar tus clientes en este momento.';
           }
 
           this.changeDetector
@@ -143,12 +146,14 @@ implements OnInit {
     if (
       partes.length === 0
     ) {
+
       return '?';
     }
 
     if (
       partes.length === 1
     ) {
+
       return partes[0]
         .charAt(0)
         .toUpperCase();
