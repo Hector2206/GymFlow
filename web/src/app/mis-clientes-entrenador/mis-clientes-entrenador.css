@@ -1,0 +1,473 @@
+:host {
+  display: block;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+
+/* =========================
+   PÁGINA
+========================= */
+
+.mis-clientes-page {
+  min-height: 100vh;
+
+  background:
+    linear-gradient(
+      180deg,
+      #f8f5ef 0%,
+      #f2ede4 100%
+    );
+
+  color: #2f2a24;
+}
+
+
+/* =========================
+   HEADER
+========================= */
+
+.topbar {
+  min-height: 88px;
+
+  display: flex;
+  align-items: center;
+
+  padding: 10px 42px;
+
+  position: sticky;
+  top: 0;
+  z-index: 20;
+
+  background:
+    rgba(255, 253, 248, 0.94);
+
+  border-bottom:
+    1px solid #e7dfd2;
+
+  box-shadow:
+    0 5px 24px
+    rgba(76, 62, 36, 0.06);
+
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+
+  gap: 16px;
+}
+
+.logo {
+  width: 145px;
+  height: 58px;
+
+  display: block;
+
+  object-fit: contain;
+}
+
+
+/* =========================
+   REGRESAR
+========================= */
+
+.back-button {
+  width: 42px;
+  height: 42px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border:
+    1px solid #d8c8a5;
+
+  border-radius:
+    12px;
+
+  background:
+    #fffdf8;
+
+  color:
+    #8a6814;
+
+  font-size:
+    21px;
+
+  cursor:
+    pointer;
+
+  transition:
+    background 0.18s ease,
+    border-color 0.18s ease,
+    color 0.18s ease,
+    transform 0.18s ease,
+    box-shadow 0.18s ease;
+}
+
+.back-button:hover {
+  background:
+    #f3ead8;
+
+  border-color:
+    #b58a2a;
+
+  color:
+    #6e5012;
+
+  transform:
+    translateX(-2px);
+
+  box-shadow:
+    0 5px 14px
+    rgba(181, 138, 42, 0.12);
+}
+
+.back-button:active {
+  transform:
+    translateX(0);
+}
+
+
+/* =========================
+   CONTENIDO
+========================= */
+
+.content {
+  width: 100%;
+  max-width: 1000px;
+
+  margin: 0 auto;
+
+  padding:
+    48px 30px 70px;
+}
+
+.page-header {
+  margin-bottom:
+    32px;
+}
+
+.section-label {
+  margin:
+    0 0 7px;
+
+  color:
+    #9a7728;
+
+  font-size:
+    12px;
+
+  font-weight:
+    700;
+
+  text-transform:
+    uppercase;
+
+  letter-spacing:
+    2px;
+}
+
+.page-header h1 {
+  margin:
+    0;
+
+  color:
+    #2f2a24;
+
+  font-size:
+    clamp(
+      30px,
+      4vw,
+      42px
+    );
+
+  font-weight:
+    700;
+
+  letter-spacing:
+    -0.8px;
+}
+
+.subtitle {
+  margin:
+    8px 0 0;
+
+  color:
+    #777067;
+
+  font-size:
+    14px;
+
+  line-height:
+    1.5;
+}
+
+
+/* =========================
+   SECCIÓN CLIENTES
+========================= */
+
+.clients-section {
+  padding:
+    27px;
+
+  border:
+    1px solid #e5ddcf;
+
+  border-radius:
+    20px;
+
+  background:
+    #fffdf8;
+
+  box-shadow:
+    0 8px 26px
+    rgba(76, 62, 36, 0.05);
+}
+
+.section-heading {
+  display:
+    flex;
+
+  align-items:
+    flex-start;
+
+  gap:
+    14px;
+
+  margin-bottom:
+    24px;
+}
+
+.section-icon {
+  width:
+    46px;
+
+  height:
+    46px;
+
+  flex-shrink:
+    0;
+
+  display:
+    flex;
+
+  align-items:
+    center;
+
+  justify-content:
+    center;
+
+  border:
+    1px solid #e4d2aa;
+
+  border-radius:
+    13px;
+
+  background:
+    #f3ead8;
+
+  font-size:
+    21px;
+}
+
+.section-heading h2 {
+  margin:
+    0 0 5px;
+
+  color:
+    #2f2a24;
+
+  font-size:
+    18px;
+
+  font-weight:
+    700;
+}
+
+.section-heading p {
+  margin:
+    0;
+
+  color:
+    #777067;
+
+  font-size:
+    13px;
+
+  line-height:
+    1.5;
+}
+
+
+/* =========================
+   ESTADO INICIAL
+========================= */
+
+.initial-state {
+  padding:
+    34px 20px;
+
+  display:
+    flex;
+
+  flex-direction:
+    column;
+
+  align-items:
+    center;
+
+  justify-content:
+    center;
+
+  border:
+    1px dashed #d8c8a5;
+
+  border-radius:
+    16px;
+
+  background:
+    #f8f4ec;
+
+  text-align:
+    center;
+}
+
+.initial-icon {
+  width:
+    58px;
+
+  height:
+    58px;
+
+  display:
+    flex;
+
+  align-items:
+    center;
+
+  justify-content:
+    center;
+
+  margin-bottom:
+    14px;
+
+  border:
+    1px solid #e4d2aa;
+
+  border-radius:
+    50%;
+
+  background:
+    #f3ead8;
+
+  font-size:
+    26px;
+}
+
+.initial-state h3 {
+  margin:
+    0 0 7px;
+
+  color:
+    #2f2a24;
+
+  font-size:
+    16px;
+
+  font-weight:
+    700;
+}
+
+.initial-state p {
+  max-width:
+    480px;
+
+  margin:
+    0;
+
+  color:
+    #777067;
+
+  font-size:
+    13px;
+
+  line-height:
+    1.5;
+}
+
+
+/* =========================
+   RESPONSIVE
+========================= */
+
+@media (
+  max-width: 700px
+) {
+
+  .topbar {
+    min-height:
+      74px;
+
+    padding:
+      8px 17px;
+  }
+
+  .logo {
+    width:
+      115px;
+
+    height:
+      48px;
+  }
+
+  .back-button {
+    width:
+      39px;
+
+    height:
+      39px;
+
+    font-size:
+      19px;
+  }
+
+  .content {
+    padding:
+      34px 18px 55px;
+  }
+
+  .page-header {
+    margin-bottom:
+      27px;
+  }
+
+  .clients-section {
+    padding:
+      21px 18px;
+  }
+
+  .section-heading {
+    gap:
+      11px;
+  }
+
+  .section-icon {
+    width:
+      42px;
+
+    height:
+      42px;
+  }
+
+  .initial-state {
+    padding:
+      28px 17px;
+  }
+}
