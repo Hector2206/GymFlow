@@ -203,6 +203,10 @@ implements AfterViewInit {
 
   inicializarGoogle(): void {
 
+    let intentos = 0;
+
+    const maxIntentos = 34;
+
     const intentarInicializar =
       () => {
 
@@ -210,6 +214,24 @@ implements AfterViewInit {
           typeof google ===
           'undefined'
         ) {
+
+          intentos++;
+
+          if (
+            intentos >= maxIntentos
+          ) {
+
+            this.estadoGoogle =
+              'error';
+
+            this.mensajeGoogle =
+              'No fue posible cargar el inicio de sesión con Google. Puedes usar correo y contraseña o intentarlo nuevamente.';
+
+            this.changeDetector
+              .detectChanges();
+
+            return;
+          }
 
           setTimeout(
             intentarInicializar,
