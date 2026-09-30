@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import '../models/ejercicio.dart';
 import '../services/ejercicio_service.dart';
 import 'crear_ejercicio_page.dart';
+import 'editar_ejercicio_page.dart';
 
 
 class EjerciciosPage extends StatefulWidget {
@@ -520,6 +521,28 @@ class _EjerciciosPageState
                   _construirEstado(
                     ejercicio,
                   ),
+
+                  const SizedBox(
+                    height: 8,
+                  ),
+
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: IconButton(
+                      tooltip: 'Editar ejercicio',
+                      onPressed: () {
+                        _editarEjercicio(
+                          ejercicio,
+                        );
+                      },
+                      icon: const Icon(
+                        Icons.edit_rounded,
+                      ),
+                      color: _doradoOscuro,
+                    ),
+                  ),
+
+
                 ],
               ),
             ),
@@ -816,4 +839,23 @@ class _EjerciciosPageState
       await _cargarEjercicios();
     }
   }
+
+  Future<void> _editarEjercicio(
+  Ejercicio ejercicio,
+) async {
+  final actualizado =
+      await Navigator.push(
+    context,
+    MaterialPageRoute(
+      builder: (_) =>
+          EditarEjercicioPage(
+        ejercicio: ejercicio,
+      ),
+    ),
+  );
+
+  if (actualizado == true) {
+    await _cargarEjercicios();
+  }
+}
 }
