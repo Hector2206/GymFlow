@@ -2715,4 +2715,91 @@ app.MapGet(
     policy.RequireRole("Entrenador");
 });
 
+// ===============================
+// VERSION DEL SISTEMA
+// ===============================
+
+app.MapGet(
+    "/api/sistema/version",
+    async (
+        IConfiguration configuration
+    ) =>
+    {
+        var connectionString =
+            configuration.GetConnectionString(
+                "PostgreSQL"
+            );
+
+        if (string.IsNullOrWhiteSpace(connectionString))
+        {
+            return Results.Problem(
+                title: "Configuración faltante",
+                detail:
+                    "No existe la cadena de conexión PostgreSQL.",
+                statusCode: 500
+            );
+        }
+
+        try
+        {
+            await using var connection =
+                new NpgsqlConnection(connectionString);
+
+            await connection.OpenAsync();
+
+            await using var command =
+                new NpgsqlCommand(
+                    """
+                    SELECT version
+                    FROM system_versions
+                    ORDER BY id DESC
+                    LIMIT 1;
+                    """,
+                    connection
+                );
+
+            var resultado =
+                await command.ExecuteScalarAsync();
+
+            if (resultado is null ||
+                resultado == DBNull.Value)
+            {
+                return Results.NotFound(new
+                {
+                    mensaje =
+                        "No se encontró una versión del sistema."
+                });
+            }
+
+            return Results.Ok(new
+            {
+                version =
+                    Convert.ToString(resultado)
+            });
+        }
+        catch (PostgresException ex)
+        {
+            return Results.BadRequest(new
+            {
+                mensaje =
+                    "No se pudo consultar la versión del sistema.",
+                detalle =
+                    ex.MessageText
+            });
+        }
+        catch (Exception)
+        {
+            return Results.Problem(
+                title:
+                    "Error al consultar versión",
+                detail:
+                    "Ocurrió un error interno.",
+                statusCode: 500
+            );
+        }
+    }
+)
+.RequireAuthorization();
+
 app.Run();
+
