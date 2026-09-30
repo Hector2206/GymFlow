@@ -462,7 +462,7 @@ app.MapPut(
     "/api/ejercicios/{idEjercicio:int}",
     async (
         int idEjercicio,
-        CrearEjercicioRequest request,
+        EditarEjercicioRequest request,
         IConfiguration configuration
     ) =>
     {
@@ -514,14 +514,18 @@ app.MapPut(
 
             await using var command =
                 new NpgsqlCommand(
-                    """
+                   """
                     UPDATE ejercicios
                     SET
                         nombre = @nombre,
                         descripcion = @descripcion,
-                        imagen_url = CASE WHEN @actualizar_imagen THEN @imagen_url ELSE imagen_url END
+                        imagen_url = CASE
+                            WHEN @actualizar_imagen THEN @imagen_url
+                            ELSE imagen_url
+                        END,
+                        estado = COALESCE(@estado, estado)
                     WHERE id_ejercicio = @id_ejercicio
-                    RETURNING imagen_url;
+                    RETURNING imagen_url, estado;
                     """,
                     connection
                 );
@@ -552,11 +556,16 @@ app.MapPut(
                 "actualizar_imagen",
                 request.ImagenUrlEspecificada
             );
+            command.Parameters.AddWithValue(
+                "estado",
+                NpgsqlTypes.NpgsqlDbType.Boolean,
+                (object?)request.Estado ?? DBNull.Value
+            );
 
-            var imagenGuardada =
-                await command.ExecuteScalarAsync();
+            await using var reader =
+                await command.ExecuteReaderAsync();
 
-            if (imagenGuardada is null)
+            if (!await reader.ReadAsync())
             {
                 return Results.NotFound(new
                 {
@@ -564,12 +573,21 @@ app.MapPut(
                 });
             }
 
+            var imagenGuardada =
+                reader.IsDBNull(0)
+                    ? null
+                    : reader.GetString(0);
+
+            var estadoGuardado =
+                reader.GetBoolean(1);
+
             return Results.Ok(new
             {
                 idEjercicio,
                 nombre = request.Nombre,
                 descripcion = request.Descripcion,
-                imagenUrl = imagenGuardada is DBNull ? null : (string)imagenGuardada,
+                imagenUrl = imagenGuardada,
+                estado = estadoGuardado,
                 mensaje = "Ejercicio actualizado correctamente."
             });
         }
@@ -1158,6 +1176,47 @@ app.MapPut(
                     "El nombre de la rutina es obligatorio."
             });
         }
+        foreach (var dia in request.Dias)
+        {
+            if (string.IsNullOrWhiteSpace(dia.Dia))
+            {
+                return Results.BadRequest(new
+                {
+                    mensaje =
+                        "El nombre del día es obligatorio."
+                });
+            }
+
+            foreach (var ejercicio in dia.Ejercicios)
+            {
+                if (ejercicio.IdEjercicio <= 0)
+                {
+                    return Results.BadRequest(new
+                    {
+                        mensaje =
+                            "El id del ejercicio no es válido."
+                    });
+                }
+
+                if (ejercicio.Series <= 0)
+                {
+                    return Results.BadRequest(new
+                    {
+                        mensaje =
+                            "La cantidad de series debe ser mayor a 0."
+                    });
+                }
+
+                if (ejercicio.Repeticiones <= 0)
+                {
+                    return Results.BadRequest(new
+                    {
+                        mensaje =
+                            "La cantidad de repeticiones debe ser mayor a 0."
+                    });
+                }
+            }
+        }
 
         var idEntrenador =
             await entrenadorService.ObtenerIdPersonalAsync(
@@ -1196,6 +1255,9 @@ app.MapPut(
 
             await connection.OpenAsync();
 
+            await using var transaction =
+                await connection.BeginTransactionAsync();
+
             // ===============================
             // VALIDAR QUE LA RUTINA PERTENEZCA
             // A UN CLIENTE DEL ENTRENADOR
@@ -1212,7 +1274,8 @@ app.MapPut(
                     WHERE r.id_rutina = @id_rutina
                       AND c.id_entrenador = @id_entrenador;
                     """,
-                    connection
+                    connection,
+                    transaction
                 );
 
             rutinaCommand.Parameters.AddWithValue(
@@ -1256,7 +1319,8 @@ app.MapPut(
                     WHERE id_cliente = @id_cliente
                       AND id_entrenador = @id_entrenador;
                     """,
-                    connection
+                    connection,
+                    transaction
                 );
 
             clienteCommand.Parameters.AddWithValue(
@@ -1301,7 +1365,8 @@ app.MapPut(
                         id_cliente = @id_cliente
                     WHERE id_rutina = @id_rutina;
                     """,
-                    connection
+                    connection,
+                    transaction
                 );
 
             command.Parameters.AddWithValue(
@@ -1336,6 +1401,144 @@ app.MapPut(
                         "La rutina no existe."
                 });
             }
+            // ===============================
+            // ELIMINAR DETALLE ACTUAL
+            // ===============================
+
+            await using var eliminarEjerciciosCommand =
+                new NpgsqlCommand(
+                    """
+                    DELETE FROM ejercicios_rutina
+                    WHERE id_dia IN (
+                        SELECT id_dia
+                        FROM dias_rutina
+                        WHERE id_rutina = @id_rutina
+                    );
+                    """,
+                    connection,
+                    transaction
+                );
+
+            eliminarEjerciciosCommand.Parameters.AddWithValue(
+                "id_rutina",
+                idRutina
+            );
+
+            await eliminarEjerciciosCommand.ExecuteNonQueryAsync();
+
+            await using var eliminarDiasCommand =
+                new NpgsqlCommand(
+                    """
+                    DELETE FROM dias_rutina
+                    WHERE id_rutina = @id_rutina;
+                    """,
+                    connection,
+                    transaction
+                );
+
+            eliminarDiasCommand.Parameters.AddWithValue(
+                "id_rutina",
+                idRutina
+            );
+
+            await eliminarDiasCommand.ExecuteNonQueryAsync();
+
+            // ===============================
+            // CREAR NUEVAMENTE LOS DÍAS
+            // ===============================
+
+            foreach (var dia in request.Dias)
+            {
+                await using var diaCommand =
+                    new NpgsqlCommand(
+                        """
+                        INSERT INTO dias_rutina (
+                            dia,
+                            id_rutina
+                        )
+                        VALUES (
+                            @dia,
+                            @id_rutina
+                        )
+                        RETURNING id_dia;
+                        """,
+                        connection,
+                        transaction
+                    );
+
+                diaCommand.Parameters.AddWithValue(
+                    "dia",
+                    dia.Dia
+                );
+
+                diaCommand.Parameters.AddWithValue(
+                    "id_rutina",
+                    idRutina
+                );
+
+                var idDia =
+                    Convert.ToInt32(
+                        await diaCommand.ExecuteScalarAsync()
+                    );
+
+                // ===============================
+                // CREAR NUEVAMENTE LOS EJERCICIOS
+                // ===============================
+
+                foreach (var ejercicio in dia.Ejercicios)
+                {
+                    await using var ejercicioCommand =
+                        new NpgsqlCommand(
+                            """
+                            INSERT INTO ejercicios_rutina (
+                                id_dia,
+                                id_ejercicio,
+                                series,
+                                repeticiones,
+                                orden
+                            )
+                            VALUES (
+                                @id_dia,
+                                @id_ejercicio,
+                                @series,
+                                @repeticiones,
+                                @orden
+                            );
+                            """,
+                            connection,
+                            transaction
+                        );
+
+                    ejercicioCommand.Parameters.AddWithValue(
+                        "id_dia",
+                        idDia
+                    );
+
+                    ejercicioCommand.Parameters.AddWithValue(
+                        "id_ejercicio",
+                        ejercicio.IdEjercicio
+                    );
+
+                    ejercicioCommand.Parameters.AddWithValue(
+                        "series",
+                        ejercicio.Series
+                    );
+
+                    ejercicioCommand.Parameters.AddWithValue(
+                        "repeticiones",
+                        ejercicio.Repeticiones
+                    );
+
+                    ejercicioCommand.Parameters.AddWithValue(
+                        "orden",
+                        ejercicio.Orden
+                    );
+
+                    await ejercicioCommand.ExecuteNonQueryAsync();
+                }
+            }
+            await transaction.CommitAsync();
+
 
             return Results.Ok(new
             {
