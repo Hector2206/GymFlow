@@ -1,16 +1,24 @@
-import { inject } from '@angular/core';
+import {
+  inject
+} from '@angular/core';
 
 import {
   CanActivateFn,
   Router
 } from '@angular/router';
 
-export const recepcionistaGuard: CanActivateFn = () => {
 
-  const router = inject(Router);
+function validarRol(
+  rolPermitido: string
+): boolean | ReturnType<Router['createUrlTree']> {
+
+  const router =
+    inject(Router);
 
   const usuarioGuardado =
-    localStorage.getItem('usuario');
+    localStorage.getItem(
+      'usuario'
+    );
 
   if (!usuarioGuardado) {
 
@@ -22,14 +30,20 @@ export const recepcionistaGuard: CanActivateFn = () => {
   try {
 
     const usuario =
-      JSON.parse(usuarioGuardado);
+      JSON.parse(
+        usuarioGuardado
+      );
 
     const role =
       usuario?.role
         ?.toString()
+        .trim()
         .toLowerCase();
 
-    if (role === 'recepcionista') {
+    if (
+      role ===
+      rolPermitido.toLowerCase()
+    ) {
 
       return true;
     }
@@ -48,50 +62,31 @@ export const recepcionistaGuard: CanActivateFn = () => {
       '/login'
     ]);
   }
+}
+
+
+export const recepcionistaGuard:
+  CanActivateFn = () => {
+
+  return validarRol(
+    'recepcionista'
+  );
 };
 
 
-export const entrenadorGuard: CanActivateFn = () => {
+export const entrenadorGuard:
+  CanActivateFn = () => {
 
-  const router = inject(Router);
+  return validarRol(
+    'entrenador'
+  );
+};
 
-  const usuarioGuardado =
-    localStorage.getItem('usuario');
 
-  if (!usuarioGuardado) {
+export const clienteGuard:
+  CanActivateFn = () => {
 
-    return router.createUrlTree([
-      '/login'
-    ]);
-  }
-
-  try {
-
-    const usuario =
-      JSON.parse(usuarioGuardado);
-
-    const role =
-      usuario?.role
-        ?.toString()
-        .toLowerCase();
-
-    if (role === 'entrenador') {
-
-      return true;
-    }
-
-    return router.createUrlTree([
-      '/home'
-    ]);
-
-  } catch {
-
-    localStorage.removeItem(
-      'usuario'
-    );
-
-    return router.createUrlTree([
-      '/login'
-    ]);
-  }
+  return validarRol(
+    'cliente'
+  );
 };
