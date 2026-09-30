@@ -68,6 +68,8 @@ interface DiaFormulario {
 
   dia: string;
 
+  corto: string;
+
   ejercicios:
     EjercicioFormulario[];
 }
@@ -100,18 +102,11 @@ implements OnInit {
     Ejercicio[] = [];
 
   diasRutina:
-    DiaFormulario[] = [];
+    DiaFormulario[] =
+      this.crearSemanaVacia();
 
-  opcionesDias:
-    string[] = [
-      'Lunes',
-      'Martes',
-      'Miércoles',
-      'Jueves',
-      'Viernes',
-      'Sábado',
-      'Domingo'
-    ];
+  diaSeleccionado =
+    'Lunes';
 
   idClienteSeleccionado:
     number | null = null;
@@ -188,11 +183,57 @@ implements OnInit {
   }
 
 
+  crearSemanaVacia():
+    DiaFormulario[] {
+
+    return [
+      {
+        dia: 'Lunes',
+        corto: 'Lun',
+        ejercicios: []
+      },
+      {
+        dia: 'Martes',
+        corto: 'Mar',
+        ejercicios: []
+      },
+      {
+        dia: 'Miércoles',
+        corto: 'Mié',
+        ejercicios: []
+      },
+      {
+        dia: 'Jueves',
+        corto: 'Jue',
+        ejercicios: []
+      },
+      {
+        dia: 'Viernes',
+        corto: 'Vie',
+        ejercicios: []
+      },
+      {
+        dia: 'Sábado',
+        corto: 'Sáb',
+        ejercicios: []
+      },
+      {
+        dia: 'Domingo',
+        corto: 'Dom',
+        ejercicios: []
+      }
+    ];
+  }
+
+
   cargarNuevaRutina(): void {
 
     this.cargando = true;
 
     this.error = '';
+
+    this.diasRutina =
+      this.crearSemanaVacia();
 
     forkJoin({
 
@@ -328,102 +369,165 @@ implements OnInit {
       ?? '';
 
     this.diasRutina =
-      (rutina.dias ?? [])
-        .map(
-          dia => ({
+      this.crearSemanaVacia();
 
-            dia:
-              dia.dia,
-
-            ejercicios:
-              (dia.ejercicios ?? [])
-                .map(
-                  ejercicio => ({
-
-                    idEjercicio:
-                      ejercicio.idEjercicio,
-
-                    series:
-                      ejercicio.series,
-
-                    repeticiones:
-                      ejercicio.repeticiones,
-
-                    orden:
-                      ejercicio.orden
-                  })
-                )
-                .sort(
-                  (
-                    a,
-                    b
-                  ) =>
-                    a.orden -
-                    b.orden
-                )
-          })
-        );
-  }
-
-
-  agregarDia(): void {
-
-    this.errorFormulario = '';
-
-    this.diasRutina.push({
-
-      dia: '',
-
-      ejercicios: []
-    });
-  }
-
-
-  eliminarDia(
-    indiceDia: number
-  ): void {
-
-    const dia =
-      this.diasRutina[
-        indiceDia
-      ];
-
-    if (
-      dia.ejercicios.length > 0
+    for (
+      const diaGuardado
+      of rutina.dias ?? []
     ) {
 
-      const confirmar =
-        window.confirm(
-          'Este día contiene ejercicios. ¿Deseas eliminarlo?'
+      const diaFormulario =
+        this.diasRutina.find(
+          dia =>
+            this.normalizarDia(
+              dia.dia
+            ) ===
+            this.normalizarDia(
+              diaGuardado.dia
+            )
         );
 
       if (
-        !confirmar
+        !diaFormulario
       ) {
 
-        return;
+        continue;
       }
+
+      diaFormulario.ejercicios =
+        (diaGuardado.ejercicios ?? [])
+          .map(
+            ejercicio => ({
+
+              idEjercicio:
+                ejercicio.idEjercicio,
+
+              series:
+                ejercicio.series,
+
+              repeticiones:
+                ejercicio.repeticiones,
+
+              orden:
+                ejercicio.orden
+            })
+          )
+          .sort(
+            (
+              a,
+              b
+            ) =>
+              a.orden -
+              b.orden
+          );
     }
 
-    this.diasRutina.splice(
-      indiceDia,
-      1
+    const primerDiaConRutina =
+      this.diasRutina.find(
+        dia =>
+          dia.ejercicios.length > 0
+      );
+
+    this.diaSeleccionado =
+      primerDiaConRutina?.dia
+      ?? 'Lunes';
+  }
+
+
+  normalizarDia(
+    dia: string
+  ): string {
+
+    return dia
+      .normalize('NFD')
+      .replace(
+        /[\u0300-\u036f]/g,
+        ''
+      )
+      .trim()
+      .toLowerCase();
+  }
+
+
+  seleccionarDia(
+    dia: DiaFormulario
+  ): void {
+
+    this.diaSeleccionado =
+      dia.dia;
+
+    this.errorFormulario = '';
+
+    this.changeDetector
+      .detectChanges();
+  }
+
+
+  esDiaSeleccionado(
+    dia: DiaFormulario
+  ): boolean {
+
+    return (
+      this.normalizarDia(
+        dia.dia
+      ) ===
+      this.normalizarDia(
+        this.diaSeleccionado
+      )
     );
   }
 
 
-  agregarEjercicio(
-    indiceDia: number
-  ): void {
+  obtenerDiaSeleccionado():
+    DiaFormulario {
+
+    return (
+      this.diasRutina.find(
+        dia =>
+          this.esDiaSeleccionado(
+            dia
+          )
+      )
+      ?? this.diasRutina[0]
+    );
+  }
+
+
+  obtenerIndiceDiaSeleccionado():
+    number {
+
+    const indice =
+      this.diasRutina.findIndex(
+        dia =>
+          this.esDiaSeleccionado(
+            dia
+          )
+      );
+
+    return indice >= 0
+      ? indice
+      : 0;
+  }
+
+
+  tieneEntrenamiento(
+    dia: DiaFormulario
+  ): boolean {
+
+    return (
+      dia.ejercicios.length > 0
+    );
+  }
+
+
+  agregarEjercicio(): void {
 
     this.errorFormulario = '';
 
-    const ejercicios =
-      this.diasRutina[
-        indiceDia
-      ].ejercicios;
+    const dia =
+      this.obtenerDiaSeleccionado();
 
-    ejercicios.push({
+    dia.ejercicios.push({
 
       idEjercicio: null,
 
@@ -432,31 +536,36 @@ implements OnInit {
       repeticiones: null,
 
       orden:
-        ejercicios.length + 1
+        dia.ejercicios.length + 1
     });
+
+    this.changeDetector
+      .detectChanges();
   }
 
 
   eliminarEjercicio(
-    indiceDia: number,
     indiceEjercicio: number
   ): void {
 
-    this.diasRutina[
-      indiceDia
-    ].ejercicios.splice(
+    const dia =
+      this.obtenerDiaSeleccionado();
+
+    dia.ejercicios.splice(
       indiceEjercicio,
       1
     );
 
     this.actualizarOrdenes(
-      indiceDia
+      dia
     );
+
+    this.changeDetector
+      .detectChanges();
   }
 
 
   moverEjercicioArriba(
-    indiceDia: number,
     indiceEjercicio: number
   ): void {
 
@@ -467,43 +576,46 @@ implements OnInit {
       return;
     }
 
-    const ejercicios =
-      this.diasRutina[
-        indiceDia
-      ].ejercicios;
+    const dia =
+      this.obtenerDiaSeleccionado();
 
-    const temporal =
+    const ejercicios =
+      dia.ejercicios;
+
+    [
       ejercicios[
         indiceEjercicio - 1
-      ];
-
-    ejercicios[
-      indiceEjercicio - 1
-    ] =
+      ],
       ejercicios[
         indiceEjercicio
-      ];
-
-    ejercicios[
-      indiceEjercicio
-    ] =
-      temporal;
+      ]
+    ] = [
+      ejercicios[
+        indiceEjercicio
+      ],
+      ejercicios[
+        indiceEjercicio - 1
+      ]
+    ];
 
     this.actualizarOrdenes(
-      indiceDia
+      dia
     );
+
+    this.changeDetector
+      .detectChanges();
   }
 
 
   moverEjercicioAbajo(
-    indiceDia: number,
     indiceEjercicio: number
   ): void {
 
+    const dia =
+      this.obtenerDiaSeleccionado();
+
     const ejercicios =
-      this.diasRutina[
-        indiceDia
-      ].ejercicios;
+      dia.ejercicios;
 
     if (
       indiceEjercicio >=
@@ -513,36 +625,36 @@ implements OnInit {
       return;
     }
 
-    const temporal =
-      ejercicios[
-        indiceEjercicio + 1
-      ];
-
-    ejercicios[
-      indiceEjercicio + 1
-    ] =
+    [
       ejercicios[
         indiceEjercicio
-      ];
-
-    ejercicios[
-      indiceEjercicio
-    ] =
-      temporal;
+      ],
+      ejercicios[
+        indiceEjercicio + 1
+      ]
+    ] = [
+      ejercicios[
+        indiceEjercicio + 1
+      ],
+      ejercicios[
+        indiceEjercicio
+      ]
+    ];
 
     this.actualizarOrdenes(
-      indiceDia
+      dia
     );
+
+    this.changeDetector
+      .detectChanges();
   }
 
 
   actualizarOrdenes(
-    indiceDia: number
+    dia: DiaFormulario
   ): void {
 
-    this.diasRutina[
-      indiceDia
-    ].ejercicios
+    dia.ejercicios
       .forEach(
         (
           ejercicio,
@@ -577,6 +689,18 @@ implements OnInit {
         )
       ?? null
     );
+  }
+
+
+  contarDiasEntrenamiento():
+    number {
+
+    return this.diasRutina
+      .filter(
+        dia =>
+          dia.ejercicios.length > 0
+      )
+      .length;
   }
 
 
@@ -630,72 +754,26 @@ implements OnInit {
       return false;
     }
 
+    const diasConEntrenamiento =
+      this.diasRutina.filter(
+        dia =>
+          dia.ejercicios.length > 0
+      );
+
     if (
-      this.diasRutina.length === 0
+      diasConEntrenamiento.length === 0
     ) {
 
       this.errorFormulario =
-        'La rutina debe tener al menos un día de entrenamiento.';
+        'Agrega al menos un ejercicio en algún día de la semana.';
 
       return false;
     }
 
-    const diasUtilizados =
-      new Set<string>();
-
     for (
-      let indiceDia = 0;
-      indiceDia <
-      this.diasRutina.length;
-      indiceDia++
+      const dia
+      of diasConEntrenamiento
     ) {
-
-      const dia =
-        this.diasRutina[
-          indiceDia
-        ];
-
-      const nombreDia =
-        dia.dia.trim();
-
-      if (
-        !nombreDia
-      ) {
-
-        this.errorFormulario =
-          `Selecciona el día de entrenamiento en el bloque ${indiceDia + 1}.`;
-
-        return false;
-      }
-
-      const diaNormalizado =
-        nombreDia.toLowerCase();
-
-      if (
-        diasUtilizados.has(
-          diaNormalizado
-        )
-      ) {
-
-        this.errorFormulario =
-          `El día ${nombreDia} está repetido en la rutina.`;
-
-        return false;
-      }
-
-      diasUtilizados.add(
-        diaNormalizado
-      );
-
-      if (
-        dia.ejercicios.length === 0
-      ) {
-
-        this.errorFormulario =
-          `${nombreDia} debe tener al menos un ejercicio.`;
-
-        return false;
-      }
 
       const ejerciciosUtilizados =
         new Set<number>();
@@ -717,8 +795,11 @@ implements OnInit {
           null
         ) {
 
+          this.diaSeleccionado =
+            dia.dia;
+
           this.errorFormulario =
-            `Selecciona el ejercicio ${indiceEjercicio + 1} de ${nombreDia}.`;
+            `Selecciona el ejercicio ${indiceEjercicio + 1} de ${dia.dia}.`;
 
           return false;
         }
@@ -729,8 +810,11 @@ implements OnInit {
           )
         ) {
 
+          this.diaSeleccionado =
+            dia.dia;
+
           this.errorFormulario =
-            `No puedes repetir el mismo ejercicio dentro de ${nombreDia}.`;
+            `No puedes repetir el mismo ejercicio dentro de ${dia.dia}.`;
 
           return false;
         }
@@ -748,8 +832,11 @@ implements OnInit {
           ejercicio.series <= 0
         ) {
 
+          this.diaSeleccionado =
+            dia.dia;
+
           this.errorFormulario =
-            `Las series del ejercicio ${indiceEjercicio + 1} de ${nombreDia} deben ser un número entero mayor a 0.`;
+            `Las series del ejercicio ${indiceEjercicio + 1} de ${dia.dia} deben ser un número entero mayor a 0.`;
 
           return false;
         }
@@ -763,8 +850,11 @@ implements OnInit {
           ejercicio.repeticiones <= 0
         ) {
 
+          this.diaSeleccionado =
+            dia.dia;
+
           this.errorFormulario =
-            `Las repeticiones del ejercicio ${indiceEjercicio + 1} de ${nombreDia} deben ser un número entero mayor a 0.`;
+            `Las repeticiones del ejercicio ${indiceEjercicio + 1} de ${dia.dia} deben ser un número entero mayor a 0.`;
 
           return false;
         }
@@ -787,6 +877,13 @@ implements OnInit {
       return;
     }
 
+    const diasConEntrenamiento =
+      this.diasRutina
+        .filter(
+          dia =>
+            dia.ejercicios.length > 0
+        );
+
     const request:
       CrearRutinaRequest = {
 
@@ -804,7 +901,7 @@ implements OnInit {
           : null,
 
       dias:
-        this.diasRutina.map(
+        diasConEntrenamiento.map(
           dia => ({
 
             dia:

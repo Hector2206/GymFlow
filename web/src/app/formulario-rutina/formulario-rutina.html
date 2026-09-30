@@ -40,11 +40,8 @@
       </h1>
 
       <p class="subtitle">
-        {{
-          esEdicion
-            ? 'Modifica el cliente, información, días y ejercicios de la rutina.'
-            : 'Configura una nueva rutina de entrenamiento para uno de tus clientes.'
-        }}
+        Configura el plan semanal de tu cliente
+        de forma sencilla.
       </p>
 
     </section>
@@ -105,8 +102,8 @@
             </h2>
 
             <p>
-              Define el cliente y los datos
-              principales de la rutina.
+              Selecciona el cliente y describe
+              el objetivo de la rutina.
             </p>
 
           </div>
@@ -114,58 +111,62 @@
         </div>
 
 
-        <div class="form-group">
+        <div class="general-grid">
 
-          <label for="cliente">
-            Cliente
-          </label>
+          <div class="form-group">
 
-          <select
-            id="cliente"
-            name="cliente"
-            [(ngModel)]="idClienteSeleccionado"
-          >
+            <label for="cliente">
+              Cliente
+            </label>
 
-            <option
-              [ngValue]="null"
+            <select
+              id="cliente"
+              name="cliente"
+              [(ngModel)]="idClienteSeleccionado"
             >
-              Selecciona un cliente
-            </option>
 
-            <option
-              *ngFor="let cliente of clientesAsignados"
-              [ngValue]="cliente.idCliente"
+              <option
+                [ngValue]="null"
+              >
+                Selecciona un cliente
+              </option>
+
+              <option
+                *ngFor="let cliente of clientesAsignados"
+                [ngValue]="cliente.idCliente"
+              >
+                {{ cliente.nombre }}
+              </option>
+
+            </select>
+
+            <p
+              *ngIf="clientesAsignados.length === 0"
+              class="field-message"
             >
-              {{ cliente.nombre }}
-            </option>
+              No tienes clientes asignados.
+            </p>
 
-          </select>
-
-          <p
-            *ngIf="clientesAsignados.length === 0"
-            class="field-message"
-          >
-            No tienes clientes asignados.
-          </p>
-
-        </div>
+          </div>
 
 
-        <div class="form-group">
+          <div class="form-group">
 
-          <label for="nombreRutina">
-            Nombre de la rutina
-          </label>
+            <label for="nombreRutina">
+              Nombre de la rutina
+            </label>
 
-          <input
-            id="nombreRutina"
-            name="nombreRutina"
-            type="text"
-            maxlength="120"
-            autocomplete="off"
-            placeholder="Ej. Fuerza de tren superior"
-            [(ngModel)]="nombreRutina"
-          />
+            <input
+              id="nombreRutina"
+              name="nombreRutina"
+              type="text"
+              maxlength="120"
+              autocomplete="off"
+              placeholder="Ej. Rutina semanal de fuerza"
+              [(ngModel)]="nombreRutina"
+            />
+
+          </div>
 
         </div>
 
@@ -179,14 +180,14 @@
           <textarea
             id="descripcionRutina"
             name="descripcionRutina"
-            rows="4"
+            rows="3"
             maxlength="500"
-            placeholder="Describe el objetivo de la rutina."
+            placeholder="Describe brevemente el objetivo de la rutina."
             [(ngModel)]="descripcionRutina"
           ></textarea>
 
           <p class="field-message">
-            La descripción es opcional.
+            Opcional.
           </p>
 
         </div>
@@ -196,7 +197,7 @@
 
       <section class="form-card">
 
-        <div class="days-header">
+        <div class="plan-heading">
 
           <div class="card-heading">
 
@@ -207,12 +208,12 @@
             <div>
 
               <h2>
-                Días de entrenamiento
+                Plan semanal
               </h2>
 
               <p>
-                Configura los días y ejercicios
-                que forman esta rutina.
+                Selecciona un día para configurar
+                sus ejercicios.
               </p>
 
             </div>
@@ -220,190 +221,204 @@
           </div>
 
 
+          <span class="training-count">
+
+            {{
+              contarDiasEntrenamiento()
+            }}
+
+            {{
+              contarDiasEntrenamiento() === 1
+                ? 'día de entrenamiento'
+                : 'días de entrenamiento'
+            }}
+
+          </span>
+
+        </div>
+
+
+        <div class="week-selector">
+
           <button
+            *ngFor="let dia of diasRutina"
             type="button"
-            class="add-button"
-            (click)="agregarDia()"
+            class="week-day"
+            [class.selected]="
+              esDiaSeleccionado(
+                dia
+              )
+            "
+            [class.has-workout]="
+              tieneEntrenamiento(
+                dia
+              )
+            "
+            (click)="
+              seleccionarDia(
+                dia
+              )
+            "
           >
-            + Agregar día
+
+            <span class="day-short">
+              {{ dia.corto }}
+            </span>
+
+            <span class="day-dot">
+            </span>
+
+            <small>
+              {{
+                tieneEntrenamiento(dia)
+                  ? dia.ejercicios.length +
+                    (
+                      dia.ejercicios.length === 1
+                        ? ' ejercicio'
+                        : ' ejercicios'
+                    )
+                  : 'Descanso'
+              }}
+            </small>
+
           </button>
 
         </div>
 
 
-        <div
-          *ngIf="diasRutina.length === 0"
-          class="empty-state"
+        <ng-container
+          *ngIf="
+            obtenerDiaSeleccionado() as dia
+          "
         >
 
-          <div>
-            📅
+          <div class="selected-day-header">
+
+            <div>
+
+              <span class="selected-label">
+                Día seleccionado
+              </span>
+
+              <h3>
+                {{ dia.dia }}
+              </h3>
+
+              <p>
+                {{
+                  dia.ejercicios.length === 0
+                    ? 'Sin ejercicios. Este día se guardará como descanso.'
+                    : dia.ejercicios.length +
+                      (
+                        dia.ejercicios.length === 1
+                          ? ' ejercicio configurado'
+                          : ' ejercicios configurados'
+                      )
+                }}
+              </p>
+
+            </div>
+
+
+            <button
+              type="button"
+              class="add-exercise-button"
+              (click)="agregarEjercicio()"
+            >
+              + Agregar ejercicio
+            </button>
+
           </div>
 
-          <strong>
-            Sin días configurados
-          </strong>
 
-          <p>
-            Agrega al menos un día
-            de entrenamiento.
-          </p>
-
-        </div>
-
-
-        <div
-          *ngIf="diasRutina.length > 0"
-          class="days-list"
-        >
-
-          <article
-            *ngFor="
-              let dia of diasRutina;
-              let indiceDia = index
+          <div
+            *ngIf="
+              dia.ejercicios.length === 0
             "
-            class="day-card"
+            class="rest-state"
           >
 
-            <div class="day-header">
+            <div class="rest-icon">
+              🌿
+            </div>
 
-              <div class="day-title">
+            <h4>
+              Día de descanso
+            </h4>
 
-                <span class="day-number">
-                  {{ indiceDia + 1 }}
-                </span>
+            <p>
+              Si quieres programar entrenamiento
+              para {{ dia.dia }}, agrega un ejercicio.
+            </p>
 
-                <div>
+          </div>
 
-                  <strong>
-                    Día de entrenamiento
-                  </strong>
 
-                  <span>
-                    Configura día y ejercicios
+          <div
+            *ngIf="
+              dia.ejercicios.length > 0
+            "
+            class="exercise-list"
+          >
+
+            <article
+              *ngFor="
+                let ejercicioDia of dia.ejercicios;
+                let indiceEjercicio = index
+              "
+              class="exercise-card"
+            >
+
+              <div class="exercise-toolbar">
+
+                <div class="exercise-order-area">
+
+                  <span class="exercise-number">
+                    {{ ejercicioDia.orden }}
+                  </span>
+
+                  <span class="order-label">
+                    Orden
                   </span>
 
                 </div>
 
-              </div>
+
+                <div class="exercise-actions">
+
+                  <button
+                    type="button"
+                    class="order-button"
+                    title="Mover arriba"
+                    [disabled]="
+                      indiceEjercicio === 0
+                    "
+                    (click)="
+                      moverEjercicioArriba(
+                        indiceEjercicio
+                      )
+                    "
+                  >
+                    ↑
+                  </button>
 
 
-              <div class="day-actions">
-
-                <button
-                  type="button"
-                  class="add-exercise-button"
-                  (click)="agregarEjercicio(indiceDia)"
-                >
-                  + Ejercicio
-                </button>
-
-                <button
-                  type="button"
-                  class="delete-button"
-                  (click)="eliminarDia(indiceDia)"
-                >
-                  Eliminar día
-                </button>
-
-              </div>
-
-            </div>
-
-
-            <div class="form-group">
-
-              <label
-                [for]="'dia-' + indiceDia"
-              >
-                Día
-              </label>
-
-              <select
-                [id]="'dia-' + indiceDia"
-                [name]="'dia-' + indiceDia"
-                [(ngModel)]="dia.dia"
-              >
-
-                <option value="">
-                  Selecciona un día
-                </option>
-
-                <option
-                  *ngFor="let opcion of opcionesDias"
-                  [value]="opcion"
-                >
-                  {{ opcion }}
-                </option>
-
-              </select>
-
-            </div>
-
-
-            <div
-              *ngIf="dia.ejercicios.length === 0"
-              class="exercise-empty"
-            >
-              Aún no hay ejercicios para este día.
-            </div>
-
-
-            <div
-              *ngIf="dia.ejercicios.length > 0"
-              class="exercise-list"
-            >
-
-              <article
-                *ngFor="
-                  let ejercicioDia of dia.ejercicios;
-                  let indiceEjercicio = index
-                "
-                class="exercise-card"
-              >
-
-                <div class="exercise-header">
-
-                  <div class="exercise-position">
-
-                    <span class="exercise-number">
-                      {{ ejercicioDia.orden }}
-                    </span>
-
-
-                    <button
-                      type="button"
-                      class="order-button"
-                      [disabled]="indiceEjercicio === 0"
-                      (click)="
-                        moverEjercicioArriba(
-                          indiceDia,
-                          indiceEjercicio
-                        )
-                      "
-                    >
-                      ↑
-                    </button>
-
-
-                    <button
-                      type="button"
-                      class="order-button"
-                      [disabled]="
-                        indiceEjercicio ===
-                        dia.ejercicios.length - 1
-                      "
-                      (click)="
-                        moverEjercicioAbajo(
-                          indiceDia,
-                          indiceEjercicio
-                        )
-                      "
-                    >
-                      ↓
-                    </button>
-
-                  </div>
+                  <button
+                    type="button"
+                    class="order-button"
+                    title="Mover abajo"
+                    [disabled]="
+                      indiceEjercicio ===
+                      dia.ejercicios.length - 1
+                    "
+                    (click)="
+                      moverEjercicioAbajo(
+                        indiceEjercicio
+                      )
+                    "
+                  >
+                    ↓
+                  </button>
 
 
                   <button
@@ -411,212 +426,205 @@
                     class="delete-exercise-button"
                     (click)="
                       eliminarEjercicio(
-                        indiceDia,
                         indiceEjercicio
                       )
                     "
                   >
-                    Eliminar ejercicio
+                    Eliminar
                   </button>
 
                 </div>
 
+              </div>
 
-                <div class="exercise-fields">
 
-                  <div class="form-group main-field">
+              <div class="exercise-fields">
 
-                    <label
-                      [for]="
-                        'ejercicio-' +
-                        indiceDia +
-                        '-' +
-                        indiceEjercicio
-                      "
+                <div class="form-group exercise-main-field">
+
+                  <label
+                    [for]="
+                      'ejercicio-' +
+                      obtenerIndiceDiaSeleccionado() +
+                      '-' +
+                      indiceEjercicio
+                    "
+                  >
+                    Ejercicio
+                  </label>
+
+                  <select
+                    [id]="
+                      'ejercicio-' +
+                      obtenerIndiceDiaSeleccionado() +
+                      '-' +
+                      indiceEjercicio
+                    "
+                    [name]="
+                      'ejercicio-' +
+                      obtenerIndiceDiaSeleccionado() +
+                      '-' +
+                      indiceEjercicio
+                    "
+                    [(ngModel)]="
+                      ejercicioDia.idEjercicio
+                    "
+                  >
+
+                    <option
+                      [ngValue]="null"
                     >
-                      Ejercicio
-                    </label>
+                      Selecciona un ejercicio
+                    </option>
 
-                    <select
-                      [id]="
-                        'ejercicio-' +
-                        indiceDia +
-                        '-' +
-                        indiceEjercicio
+                    <option
+                      *ngFor="
+                        let ejercicio of ejerciciosDisponibles
                       "
-                      [name]="
-                        'ejercicio-' +
-                        indiceDia +
-                        '-' +
-                        indiceEjercicio
-                      "
-                      [(ngModel)]="
+                      [ngValue]="ejercicio.idEjercicio"
+                      [disabled]="
+                        !ejercicio.estado &&
+                        ejercicio.idEjercicio !==
                         ejercicioDia.idEjercicio
                       "
                     >
+                      {{ ejercicio.nombre }}
+                      {{
+                        ejercicio.estado
+                          ? ''
+                          : ' (Inactivo)'
+                      }}
+                    </option>
 
-                      <option
-                        [ngValue]="null"
-                      >
-                        Selecciona un ejercicio
-                      </option>
+                  </select>
 
-                      <option
-                        *ngFor="
-                          let ejercicio of ejerciciosDisponibles
-                        "
-                        [ngValue]="ejercicio.idEjercicio"
-                        [disabled]="
-                          !ejercicio.estado &&
-                          ejercicio.idEjercicio !==
-                          ejercicioDia.idEjercicio
-                        "
-                      >
-                        {{ ejercicio.nombre }}
-                        {{
-                          ejercicio.estado
-                            ? ''
-                            : ' (Inactivo)'
-                        }}
-                      </option>
-
-                    </select>
-
-                  </div>
+                </div>
 
 
-                  <div class="form-group">
+                <div class="form-group">
 
-                    <label
-                      [for]="
-                        'series-' +
-                        indiceDia +
-                        '-' +
-                        indiceEjercicio
-                      "
-                    >
-                      Series
-                    </label>
+                  <label
+                    [for]="
+                      'series-' +
+                      obtenerIndiceDiaSeleccionado() +
+                      '-' +
+                      indiceEjercicio
+                    "
+                  >
+                    Series
+                  </label>
 
-                    <input
-                      [id]="
-                        'series-' +
-                        indiceDia +
-                        '-' +
-                        indiceEjercicio
-                      "
-                      [name]="
-                        'series-' +
-                        indiceDia +
-                        '-' +
-                        indiceEjercicio
-                      "
-                      type="number"
-                      min="1"
-                      step="1"
-                      placeholder="4"
-                      [(ngModel)]="
-                        ejercicioDia.series
-                      "
-                    />
+                  <input
+                    [id]="
+                      'series-' +
+                      obtenerIndiceDiaSeleccionado() +
+                      '-' +
+                      indiceEjercicio
+                    "
+                    [name]="
+                      'series-' +
+                      obtenerIndiceDiaSeleccionado() +
+                      '-' +
+                      indiceEjercicio
+                    "
+                    type="number"
+                    min="1"
+                    step="1"
+                    placeholder="4"
+                    [(ngModel)]="
+                      ejercicioDia.series
+                    "
+                  />
 
-                  </div>
+                </div>
 
 
-                  <div class="form-group">
+                <div class="form-group">
 
-                    <label
-                      [for]="
-                        'repeticiones-' +
-                        indiceDia +
-                        '-' +
-                        indiceEjercicio
-                      "
-                    >
-                      Repeticiones
-                    </label>
+                  <label
+                    [for]="
+                      'repeticiones-' +
+                      obtenerIndiceDiaSeleccionado() +
+                      '-' +
+                      indiceEjercicio
+                    "
+                  >
+                    Repeticiones
+                  </label>
 
-                    <input
-                      [id]="
-                        'repeticiones-' +
-                        indiceDia +
-                        '-' +
-                        indiceEjercicio
-                      "
-                      [name]="
-                        'repeticiones-' +
-                        indiceDia +
-                        '-' +
-                        indiceEjercicio
-                      "
-                      type="number"
-                      min="1"
-                      step="1"
-                      placeholder="12"
-                      [(ngModel)]="
-                        ejercicioDia.repeticiones
-                      "
-                    />
+                  <input
+                    [id]="
+                      'repeticiones-' +
+                      obtenerIndiceDiaSeleccionado() +
+                      '-' +
+                      indiceEjercicio
+                    "
+                    [name]="
+                      'repeticiones-' +
+                      obtenerIndiceDiaSeleccionado() +
+                      '-' +
+                      indiceEjercicio
+                    "
+                    type="number"
+                    min="1"
+                    step="1"
+                    placeholder="12"
+                    [(ngModel)]="
+                      ejercicioDia.repeticiones
+                    "
+                  />
+
+                </div>
+
+              </div>
+
+
+              <ng-container
+                *ngIf="
+                  obtenerEjercicioSeleccionado(
+                    ejercicioDia.idEjercicio
+                  ) as ejercicioSeleccionado
+                "
+              >
+
+                <div
+                  *ngIf="
+                    ejercicioSeleccionado.imagenUrl
+                  "
+                  class="exercise-preview"
+                >
+
+                  <img
+                    [src]="
+                      ejercicioSeleccionado.imagenUrl
+                    "
+                    [alt]="
+                      'Demostración de ' +
+                      ejercicioSeleccionado.nombre
+                    "
+                  />
+
+                  <div>
+
+                    <span>
+                      Vista previa
+                    </span>
+
+                    <strong>
+                      {{ ejercicioSeleccionado.nombre }}
+                    </strong>
 
                   </div>
 
                 </div>
 
+              </ng-container>
 
-                <ng-container
-                  *ngIf="
-                    obtenerEjercicioSeleccionado(
-                      ejercicioDia.idEjercicio
-                    ) as ejercicioSeleccionado
-                  "
-                >
+            </article>
 
-                  <div class="exercise-preview">
+          </div>
 
-                    <div class="preview-heading">
-
-                      <span>
-                        Imagen demostrativa
-                      </span>
-
-                      <strong>
-                        {{ ejercicioSeleccionado.nombre }}
-                      </strong>
-
-                    </div>
-
-
-                    <img
-                      *ngIf="ejercicioSeleccionado.imagenUrl"
-                      [src]="ejercicioSeleccionado.imagenUrl"
-                      [alt]="
-                        'Demostración de ' +
-                        ejercicioSeleccionado.nombre
-                      "
-                    />
-
-
-                    <div
-                      *ngIf="!ejercicioSeleccionado.imagenUrl"
-                      class="without-image"
-                    >
-                      🖼️
-                      <span>
-                        Sin imagen demostrativa
-                      </span>
-                    </div>
-
-                  </div>
-
-                </ng-container>
-
-              </article>
-
-            </div>
-
-          </article>
-
-        </div>
+        </ng-container>
 
       </section>
 
