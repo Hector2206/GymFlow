@@ -68,7 +68,8 @@ import {
 
 import {
   recepcionistaGuard,
-  entrenadorGuard
+  entrenadorGuard,
+  clienteGuard
 } from './role-guard';
 
 export const routes: Routes = [
@@ -148,7 +149,8 @@ export const routes: Routes = [
     path: 'mi-codigo-acceso',
     component: MiCodigoAcceso,
     canActivate: [
-      authGuard
+      authGuard,
+      clienteGuard
     ]
   },
 
@@ -156,7 +158,8 @@ export const routes: Routes = [
     path: 'mis-asistencias',
     component: MisAsistencias,
     canActivate: [
-      authGuard
+      authGuard,
+      clienteGuard
     ]
   },
 
@@ -164,7 +167,8 @@ export const routes: Routes = [
     path: 'mis-pagos',
     component: MisPagos,
     canActivate: [
-      authGuard
+      authGuard,
+      clienteGuard
     ]
   },
 
@@ -172,7 +176,8 @@ export const routes: Routes = [
     path: 'rutinas',
     component: MiRutina,
     canActivate: [
-      authGuard
+      authGuard,
+      clienteGuard
     ]
   },
 
