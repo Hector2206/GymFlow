@@ -13,6 +13,7 @@ import {
 } from '@angular/forms';
 
 import {
+  ActivatedRoute,
   Router
 } from '@angular/router';
 
@@ -31,6 +32,13 @@ import {
 
 declare const google: any;
 
+type EstadoGoogle =
+  | 'normal'
+  | 'verificando'
+  | 'exito'
+  | 'no-registrado'
+  | 'error';
+
 @Component({
   selector: 'app-login',
   standalone: true,
@@ -41,7 +49,8 @@ declare const google: any;
   templateUrl: './login.html',
   styleUrl: './login.css'
 })
-export class Login implements AfterViewInit {
+export class Login
+implements AfterViewInit {
 
   correo = '';
 
@@ -53,66 +62,86 @@ export class Login implements AfterViewInit {
 
   error = '';
 
+  estadoGoogle:
+    EstadoGoogle = 'normal';
+
+  mensajeGoogle = '';
+
   private readonly googleClientId =
     environment.googleClientId;
 
   constructor(
-    private authService: AuthService,
-    private http: HttpClient,
-    private router: Router,
-    private changeDetector: ChangeDetectorRef
+    private authService:
+      AuthService,
+    private http:
+      HttpClient,
+    private router:
+      Router,
+    private route:
+      ActivatedRoute,
+    private changeDetector:
+      ChangeDetectorRef
   ) {}
+
 
   ngAfterViewInit(): void {
 
     this.inicializarGoogle();
-
   }
+
 
   iniciarSesion(): void {
 
     this.error = '';
 
-    if (!this.correo.trim()) {
+    if (
+      !this.correo.trim()
+    ) {
 
       this.error =
         'El correo es obligatorio.';
 
       return;
-
     }
 
-    if (!this.correoValido(this.correo)) {
+    if (
+      !this.correoValido(
+        this.correo
+      )
+    ) {
 
       this.error =
         'Ingresa un correo electrónico válido.';
 
       return;
-
     }
 
-    if (!this.password.trim()) {
+    if (
+      !this.password.trim()
+    ) {
 
       this.error =
         'La contraseña es obligatoria.';
 
       return;
-
     }
 
-    if (this.password.length < 6) {
+    if (
+      this.password.length < 6
+    ) {
 
       this.error =
         'La contraseña debe tener al menos 6 caracteres.';
 
       return;
-
     }
 
-    if (this.cargando) {
+    if (
+      this.cargando ||
+      this.cargandoGoogle
+    ) {
 
       return;
-
     }
 
     this.cargando = true;
@@ -126,16 +155,15 @@ export class Login implements AfterViewInit {
 
         next: () => {
 
-          this.cargando = false;
+          this.cargando =
+            false;
 
-          this.router.navigate([
-            '/home'
-          ]);
-
+          this.navegarDespuesDelLogin();
         },
 
         error: (
-          error: HttpErrorResponse
+          error:
+            HttpErrorResponse
         ) => {
 
           console.error(
@@ -143,14 +171,19 @@ export class Login implements AfterViewInit {
             error
           );
 
-          this.cargando = false;
+          this.cargando =
+            false;
 
-          if (error.status === 401) {
+          if (
+            error.status === 401
+          ) {
 
             this.error =
               'Correo o contraseña incorrectos.';
 
-          } else if (error.status === 0) {
+          } else if (
+            error.status === 0
+          ) {
 
             this.error =
               'No se pudo conectar con el servicio de autenticación.';
@@ -159,118 +192,153 @@ export class Login implements AfterViewInit {
 
             this.error =
               'Ocurrió un error al iniciar sesión.';
-
           }
 
           this.changeDetector
             .detectChanges();
-
         }
-
       });
-
   }
+
 
   inicializarGoogle(): void {
 
-    const intentarInicializar = () => {
+    let intentos = 0;
 
-      if (typeof google === 'undefined') {
+    const maxIntentos = 34;
 
-        setTimeout(
-          intentarInicializar,
-          300
-        );
+    const intentarInicializar =
+      () => {
 
-        return;
+        if (
+          typeof google ===
+          'undefined'
+        ) {
 
-      }
+          intentos++;
 
-      google.accounts.id.initialize({
+          if (
+            intentos >= maxIntentos
+          ) {
 
-        client_id:
-          this.googleClientId,
+            this.estadoGoogle =
+              'error';
 
-        callback:
-          (response: any) => {
+            this.mensajeGoogle =
+              'No fue posible cargar el inicio de sesión con Google. Puedes usar correo y contraseña o intentarlo nuevamente.';
 
-            this.loginGoogle(
-              response.credential
-            );
+            this.changeDetector
+              .detectChanges();
 
+            return;
           }
 
-      });
+          setTimeout(
+            intentarInicializar,
+            300
+          );
 
-      const contenedor =
-        document.getElementById(
-          'google-login-button'
-        );
-
-      if (!contenedor) {
-
-        return;
-
-      }
-
-      google.accounts.id.renderButton(
-        contenedor,
-        {
-
-          theme:
-            'outline',
-
-          size:
-            'large',
-
-          shape:
-            'pill',
-
-          text:
-            'signin_with',
-
-          width:
-            320
-
+          return;
         }
-      );
 
-    };
+        google.accounts.id
+          .initialize({
+
+            client_id:
+              this.googleClientId,
+
+            callback:
+              (response: any) => {
+
+                this.loginGoogle(
+                  response.credential
+                );
+              }
+          });
+
+        const contenedor =
+          document.getElementById(
+            'google-login-button'
+          );
+
+        if (
+          !contenedor
+        ) {
+
+          return;
+        }
+
+        google.accounts.id
+          .renderButton(
+            contenedor,
+            {
+
+              theme:
+                'outline',
+
+              size:
+                'large',
+
+              shape:
+                'pill',
+
+              text:
+                'signin_with',
+
+              width:
+                320
+            }
+          );
+      };
 
     intentarInicializar();
-
   }
+
 
   loginGoogle(
     credential: string
   ): void {
 
-    if (!credential) {
+    if (
+      !credential
+    ) {
 
-      this.error =
+      this.estadoGoogle =
+        'error';
+
+      this.mensajeGoogle =
         'Google no devolvió una credencial válida.';
 
       this.changeDetector
         .detectChanges();
 
       return;
-
     }
 
-    if (this.cargandoGoogle) {
+    if (
+      this.cargandoGoogle
+    ) {
 
       return;
-
     }
 
     this.error = '';
 
-    this.cargandoGoogle = true;
+    this.mensajeGoogle = '';
+
+    this.estadoGoogle =
+      'verificando';
+
+    this.cargandoGoogle =
+      true;
+
+    this.changeDetector
+      .detectChanges();
 
     const body = {
 
-      token: credential
-
+      token:
+        credential
     };
 
     this.http
@@ -280,23 +348,30 @@ export class Login implements AfterViewInit {
       )
       .subscribe({
 
-        next: (response) => {
-
-          this.cargandoGoogle = false;
+        next: (
+          response
+        ) => {
 
           const token =
             response?.token;
 
-          if (!token) {
+          if (
+            !token
+          ) {
 
-            this.error =
+            this.cargandoGoogle =
+              false;
+
+            this.estadoGoogle =
+              'error';
+
+            this.mensajeGoogle =
               'El servidor no devolvió un token válido.';
 
             this.changeDetector
               .detectChanges();
 
             return;
-
           }
 
           localStorage.setItem(
@@ -304,7 +379,9 @@ export class Login implements AfterViewInit {
             token
           );
 
-          if (response?.usuario) {
+          if (
+            response?.usuario
+          ) {
 
             localStorage.setItem(
               'usuario',
@@ -312,17 +389,32 @@ export class Login implements AfterViewInit {
                 response.usuario
               )
             );
-
           }
 
-          this.router.navigate([
-            '/home'
-          ]);
+          this.estadoGoogle =
+            'exito';
 
+          this.mensajeGoogle =
+            'Cuenta encontrada. Entrando a GymFlow...';
+
+          this.changeDetector
+            .detectChanges();
+
+          setTimeout(
+            () => {
+
+              this.cargandoGoogle =
+                false;
+
+              this.navegarDespuesDelLogin();
+            },
+            900
+          );
         },
 
         error: (
-          error: HttpErrorResponse
+          error:
+            HttpErrorResponse
         ) => {
 
           console.error(
@@ -330,47 +422,113 @@ export class Login implements AfterViewInit {
             error
           );
 
-          this.cargandoGoogle = false;
+          this.cargandoGoogle =
+            false;
 
-          if (error.status === 400) {
+          if (
+            error.status === 401
+          ) {
 
-            this.error =
+            this.estadoGoogle =
+              'no-registrado';
+
+            this.mensajeGoogle =
               error.error?.mensaje ||
-              'La credencial de Google no es válida.';
+              'No tienes una cuenta registrada. Acude a recepción.';
 
-          } else if (error.status === 401) {
+          } else if (
+            error.status === 403
+          ) {
 
-            this.error =
-              error.error?.mensaje ||
-              'Esta cuenta de Google no está registrada en GymFlow.';
+            this.estadoGoogle =
+              'error';
 
-          } else if (error.status === 403) {
-
-            this.error =
+            this.mensajeGoogle =
               error.error?.mensaje ||
               'La cuenta de Google no coincide con la registrada.';
 
-          } else if (error.status === 0) {
+          } else if (
+            error.status === 400
+          ) {
 
-            this.error =
-              'No se pudo conectar con el servicio de Google.';
+            this.estadoGoogle =
+              'error';
+
+            this.mensajeGoogle =
+              error.error?.mensaje ||
+              'La credencial de Google no es válida.';
+
+          } else if (
+            error.status === 0
+          ) {
+
+            this.estadoGoogle =
+              'error';
+
+            this.mensajeGoogle =
+              'No fue posible conectar con el servicio de autenticación.';
 
           } else {
 
-            this.error =
+            this.estadoGoogle =
+              'error';
+
+            this.mensajeGoogle =
               error.error?.detail ||
               'No fue posible iniciar sesión con Google.';
-
           }
 
           this.changeDetector
             .detectChanges();
-
         }
-
       });
-
   }
+
+
+  volverAlLogin(): void {
+
+    this.estadoGoogle =
+      'normal';
+
+    this.mensajeGoogle = '';
+
+    this.error = '';
+
+    this.cargandoGoogle =
+      false;
+
+    this.changeDetector
+      .detectChanges();
+  }
+
+
+  navegarDespuesDelLogin(): void {
+
+    const returnUrl =
+      this.route.snapshot
+        .queryParamMap
+        .get(
+          'returnUrl'
+        );
+
+    if (
+      returnUrl &&
+      returnUrl.startsWith('/') &&
+      !returnUrl.startsWith('//')
+    ) {
+
+      this.router.navigateByUrl(
+        returnUrl
+      );
+
+      return;
+    }
+
+    this.router.navigate([
+      '/home'
+    ]);
+  }
+
 
   correoValido(
     correo: string
@@ -382,7 +540,5 @@ export class Login implements AfterViewInit {
     return expresion.test(
       correo.trim()
     );
-
   }
-
 }

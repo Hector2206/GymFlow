@@ -1,0 +1,501 @@
+:host {
+  display: block;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+.form-page {
+  min-height: 100vh;
+
+  background:
+    linear-gradient(
+      180deg,
+      #f8f5ef 0%,
+      #f2ede4 100%
+    );
+
+  color: #2f2a24;
+}
+
+.topbar {
+  min-height: 88px;
+
+  display: flex;
+  align-items: center;
+
+  padding: 10px 42px;
+
+  position: sticky;
+  top: 0;
+  z-index: 20;
+
+  background:
+    rgba(255, 253, 248, 0.94);
+
+  border-bottom:
+    1px solid #e7dfd2;
+
+  box-shadow:
+    0 5px 24px
+    rgba(76, 62, 36, 0.06);
+
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+
+  gap: 16px;
+}
+
+.logo {
+  width: 145px;
+  height: 58px;
+
+  display: block;
+
+  object-fit: contain;
+}
+
+.back-button {
+  width: 42px;
+  height: 42px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border:
+    1px solid #d8c8a5;
+
+  border-radius: 12px;
+
+  background: #fffdf8;
+
+  color: #8a6814;
+
+  font-size: 21px;
+
+  cursor: pointer;
+}
+
+.back-button:hover {
+  border-color: #b58a2a;
+
+  background: #f3ead8;
+}
+
+.content {
+  width: 100%;
+  max-width: 850px;
+
+  margin: 0 auto;
+
+  padding: 48px 30px 70px;
+}
+
+.page-header {
+  margin-bottom: 28px;
+}
+
+.section-label {
+  margin: 0 0 7px;
+
+  color: #9a7728;
+
+  font-size: 12px;
+  font-weight: 700;
+
+  text-transform: uppercase;
+
+  letter-spacing: 2px;
+}
+
+.page-header h1 {
+  margin: 0;
+
+  font-size:
+    clamp(
+      30px,
+      4vw,
+      42px
+    );
+}
+
+.subtitle {
+  margin: 9px 0 0;
+
+  color: #777067;
+
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.form-card {
+  padding: 30px;
+
+  border:
+    1px solid #e5ddcf;
+
+  border-radius: 20px;
+
+  background: #fffdf8;
+
+  box-shadow:
+    0 9px 28px
+    rgba(76, 62, 36, 0.06);
+}
+
+.exercise-form {
+  display: flex;
+  flex-direction: column;
+
+  gap: 22px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+
+  gap: 8px;
+}
+
+.form-group label {
+  color: #2f2a24;
+
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.form-group input,
+.form-group textarea,
+.form-group select {
+  width: 100%;
+
+  border:
+    1px solid #e5ddcf;
+
+  border-radius: 13px;
+
+  outline: none;
+
+  background: #f8f4ec;
+
+  color: #2f2a24;
+
+  font-family: inherit;
+  font-size: 14px;
+}
+
+.form-group input,
+.form-group select {
+  min-height: 48px;
+
+  padding: 0 14px;
+}
+
+.form-group textarea {
+  min-height: 120px;
+
+  padding: 13px 14px;
+
+  resize: vertical;
+}
+
+.form-group input:focus,
+.form-group textarea:focus,
+.form-group select:focus {
+  border-color: #b58a2a;
+
+  background: #fffdf8;
+
+  box-shadow:
+    0 0 0 3px
+    rgba(181, 138, 42, 0.1);
+}
+
+.field-message {
+  margin: 0;
+
+  color: #777067;
+
+  font-size: 12px;
+}
+
+.status-help {
+  padding: 13px 15px;
+
+  display: flex;
+  flex-direction: column;
+
+  gap: 4px;
+
+  border:
+    1px solid #b7d7bc;
+
+  border-radius: 12px;
+
+  background: #f2f8f2;
+
+  color: #2e6b32;
+}
+
+.status-help.inactive-help {
+  border-color: #edb9bf;
+
+  background: #fff5f5;
+
+  color: #9d3442;
+}
+
+.status-help strong {
+  font-size: 12px;
+}
+
+.status-help span {
+  font-size: 11px;
+
+  line-height: 1.5;
+}
+
+.image-preview {
+  padding: 17px;
+
+  border:
+    1px solid #e5ddcf;
+
+  border-radius: 15px;
+
+  background: #faf7f1;
+}
+
+.preview-header {
+  margin-bottom: 13px;
+}
+
+.preview-header div {
+  display: flex;
+  flex-direction: column;
+
+  gap: 3px;
+}
+
+.preview-header span {
+  color: #9a7728;
+
+  font-size: 10px;
+  font-weight: 700;
+
+  text-transform: uppercase;
+
+  letter-spacing: 1px;
+}
+
+.preview-header strong {
+  font-size: 13px;
+}
+
+.preview-image {
+  width: 100%;
+  max-height: 390px;
+
+  display: block;
+
+  border-radius: 13px;
+
+  object-fit: contain;
+
+  background: #f4efe6;
+}
+
+.preview-error {
+  min-height: 190px;
+
+  padding: 25px;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  border:
+    1px dashed #d8c8a5;
+
+  border-radius: 13px;
+
+  text-align: center;
+
+  color: #777067;
+}
+
+.preview-icon {
+  margin-bottom: 9px;
+
+  font-size: 32px;
+}
+
+.preview-error strong {
+  color: #2f2a24;
+}
+
+.preview-error p {
+  margin: 7px 0 0;
+
+  font-size: 12px;
+}
+
+.image-remove-message {
+  padding: 12px 14px;
+
+  border:
+    1px solid #e4d2aa;
+
+  border-radius: 11px;
+
+  background: #f8f4ec;
+
+  color: #8a6814;
+
+  font-size: 12px;
+}
+
+.message {
+  padding: 14px 16px;
+
+  border-radius: 13px;
+
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.error-message {
+  border:
+    1px solid #edb9bf;
+
+  border-left:
+    4px solid #c21b2e;
+
+  background: #fff5f5;
+
+  color: #8f2030;
+}
+
+.error-container {
+  display: flex;
+  flex-direction: column;
+
+  gap: 16px;
+}
+
+.loading-state {
+  padding: 35px 20px;
+
+  border:
+    1px dashed #d8c8a5;
+
+  border-radius: 16px;
+
+  background: #fffdf8;
+
+  text-align: center;
+
+  color: #777067;
+}
+
+.form-actions {
+  padding-top: 4px;
+
+  display: flex;
+  justify-content: flex-end;
+
+  gap: 11px;
+}
+
+.primary-button,
+.secondary-button {
+  min-height: 46px;
+
+  padding: 10px 20px;
+
+  border-radius: 13px;
+
+  font-weight: 700;
+
+  cursor: pointer;
+}
+
+.primary-button {
+  border:
+    1px solid #b58a2a;
+
+  background: #b58a2a;
+
+  color: #ffffff;
+}
+
+.primary-button:hover:not(:disabled) {
+  background: #8a6814;
+}
+
+.secondary-button {
+  border:
+    1px solid #d8c8a5;
+
+  background: #fffdf8;
+
+  color: #8a6814;
+}
+
+.secondary-button:hover:not(:disabled) {
+  background: #f3ead8;
+}
+
+.primary-button:disabled,
+.secondary-button:disabled {
+  opacity: 0.6;
+
+  cursor: not-allowed;
+}
+
+@media (
+  max-width: 700px
+) {
+
+  .topbar {
+    min-height: 74px;
+
+    padding: 8px 17px;
+  }
+
+  .logo {
+    width: 115px;
+    height: 48px;
+  }
+
+  .content {
+    padding:
+      34px 18px
+      55px;
+  }
+
+  .form-card {
+    padding: 22px 18px;
+  }
+
+  .form-actions {
+    flex-direction: column-reverse;
+  }
+
+  .primary-button,
+  .secondary-button {
+    width: 100%;
+  }
+
+  .preview-image {
+    max-height: 300px;
+  }
+}

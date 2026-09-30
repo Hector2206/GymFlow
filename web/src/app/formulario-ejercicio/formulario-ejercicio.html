@@ -1,0 +1,332 @@
+<div class="form-page">
+
+  <header class="topbar">
+
+    <div class="header-left">
+
+      <button
+        type="button"
+        class="back-button"
+        (click)="volverEjercicios()"
+      >
+        ←
+      </button>
+
+      <img
+        src="/Logo_GymFlow.png"
+        alt="GymFlow"
+        class="logo"
+      />
+
+    </div>
+
+  </header>
+
+
+  <main class="content">
+
+    <section class="page-header">
+
+      <p class="section-label">
+        Entrenador
+      </p>
+
+      <h1>
+        {{
+          esEdicion
+            ? 'Editar Ejercicio'
+            : 'Nuevo Ejercicio'
+        }}
+      </h1>
+
+      <p class="subtitle">
+        {{
+          esEdicion
+            ? 'Modifica la información del ejercicio seleccionado.'
+            : 'Registra un nuevo ejercicio para utilizarlo en las rutinas.'
+        }}
+      </p>
+
+    </section>
+
+
+    <div
+      *ngIf="cargando"
+      class="loading-state"
+    >
+      {{
+        esEdicion
+          ? 'Cargando ejercicio...'
+          : 'Preparando formulario...'
+      }}
+    </div>
+
+
+    <div
+      *ngIf="
+        !cargando &&
+        error
+      "
+      class="error-container"
+    >
+
+      <div class="message error-message">
+        {{ error }}
+      </div>
+
+      <button
+        type="button"
+        class="secondary-button"
+        (click)="volverEjercicios()"
+      >
+        Volver a ejercicios
+      </button>
+
+    </div>
+
+
+    <section
+      *ngIf="
+        !cargando &&
+        !error
+      "
+      class="form-card"
+    >
+
+      <form
+        class="exercise-form"
+        (ngSubmit)="guardarEjercicio()"
+      >
+
+        <div class="form-group">
+
+          <label for="nombre">
+            Nombre del ejercicio
+          </label>
+
+          <input
+            id="nombre"
+            name="nombre"
+            type="text"
+            maxlength="120"
+            autocomplete="off"
+            placeholder="Ej. Press de banca"
+            [(ngModel)]="nombre"
+          />
+
+          <p class="field-message">
+            El nombre es obligatorio.
+          </p>
+
+        </div>
+
+
+        <div class="form-group">
+
+          <label for="descripcion">
+            Descripción
+          </label>
+
+          <textarea
+            id="descripcion"
+            name="descripcion"
+            rows="5"
+            maxlength="500"
+            placeholder="Describe brevemente cómo se realiza el ejercicio."
+            [(ngModel)]="descripcion"
+          ></textarea>
+
+          <p class="field-message">
+            La descripción es opcional.
+          </p>
+
+        </div>
+
+
+        <div
+          *ngIf="esEdicion"
+          class="form-group"
+        >
+
+          <label for="estadoEjercicio">
+            Estado del ejercicio
+          </label>
+
+          <select
+            id="estadoEjercicio"
+            name="estadoEjercicio"
+            [(ngModel)]="estadoEjercicio"
+          >
+
+            <option [ngValue]="true">
+              Activo
+            </option>
+
+            <option [ngValue]="false">
+              Inactivo
+            </option>
+
+          </select>
+
+          <div
+            class="status-help"
+            [class.inactive-help]="!estadoEjercicio"
+          >
+
+            <strong>
+              {{
+                estadoEjercicio
+                  ? 'Ejercicio activo'
+                  : 'Ejercicio inactivo'
+              }}
+            </strong>
+
+            <span>
+              {{
+                estadoEjercicio
+                  ? 'Puede utilizarse en nuevas rutinas.'
+                  : 'No aparecerá entre los ejercicios disponibles para nuevas rutinas.'
+              }}
+            </span>
+
+          </div>
+
+        </div>
+
+
+        <div class="form-group">
+
+          <label for="imagenUrl">
+            URL de imagen demostrativa
+          </label>
+
+          <input
+            id="imagenUrl"
+            name="imagenUrl"
+            type="url"
+            autocomplete="off"
+            placeholder="https://ejemplo.com/ejercicio.jpg"
+            [(ngModel)]="imagenUrl"
+            (ngModelChange)="cambioImagen()"
+          />
+
+          <p class="field-message">
+            {{
+              esEdicion
+                ? 'Puedes cambiar la URL o dejarla vacía para eliminar la imagen.'
+                : 'La imagen es opcional. Pega una URL pública.'
+            }}
+          </p>
+
+        </div>
+
+
+        <div
+          *ngIf="imagenUrl.trim()"
+          class="image-preview"
+        >
+
+          <div class="preview-header">
+
+            <div>
+
+              <span>
+                Vista previa
+              </span>
+
+              <strong>
+                Imagen demostrativa
+              </strong>
+
+            </div>
+
+          </div>
+
+
+          <img
+            *ngIf="imagenValida"
+            [src]="imagenUrl.trim()"
+            alt="Vista previa del ejercicio"
+            class="preview-image"
+            (error)="imagenValida = false"
+          />
+
+
+          <div
+            *ngIf="!imagenValida"
+            class="preview-error"
+          >
+
+            <div class="preview-icon">
+              🖼️
+            </div>
+
+            <strong>
+              No se pudo cargar la imagen
+            </strong>
+
+            <p>
+              Verifica que la URL sea pública
+              y apunte a una imagen válida.
+            </p>
+
+          </div>
+
+        </div>
+
+
+        <div
+          *ngIf="
+            esEdicion &&
+            !imagenUrl.trim()
+          "
+          class="image-remove-message"
+        >
+          No hay imagen seleccionada.
+          Al guardar, el ejercicio quedará sin imagen demostrativa.
+        </div>
+
+
+        <div
+          *ngIf="errorFormulario"
+          class="message error-message"
+        >
+          {{ errorFormulario }}
+        </div>
+
+
+        <div class="form-actions">
+
+          <button
+            type="button"
+            class="secondary-button"
+            (click)="volverEjercicios()"
+            [disabled]="guardando"
+          >
+            Cancelar
+          </button>
+
+
+          <button
+            type="submit"
+            class="primary-button"
+            [disabled]="guardando"
+          >
+            {{
+              guardando
+                ? 'Guardando...'
+                : esEdicion
+                  ? 'Guardar cambios'
+                  : 'Crear ejercicio'
+            }}
+          </button>
+
+        </div>
+
+      </form>
+
+    </section>
+
+  </main>
+
+</div>

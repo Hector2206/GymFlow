@@ -146,8 +146,34 @@
           GymFlow Web
         </span>
 
-        <span class="version-number">
-          Versión 1.0.3
+
+        <span
+          *ngIf="cargandoVersion"
+          class="version-number"
+        >
+          Consultando versión...
+        </span>
+
+
+        <span
+          *ngIf="
+            !cargandoVersion &&
+            versionSistema
+          "
+          class="version-number"
+        >
+          Versión {{ versionSistema }}
+        </span>
+
+
+        <span
+          *ngIf="
+            !cargandoVersion &&
+            !versionSistema
+          "
+          class="version-number"
+        >
+          Versión no disponible
         </span>
 
       </div>

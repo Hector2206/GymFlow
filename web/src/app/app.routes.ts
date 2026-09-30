@@ -39,11 +39,37 @@ import {
 } from './registrar-pago/registrar-pago';
 
 import {
+  MisClientesEntrenador
+} from './mis-clientes-entrenador/mis-clientes-entrenador';
+
+import {
+  AdministrarEjercicios
+} from './administrar-ejercicios/administrar-ejercicios';
+
+import {
+  FormularioEjercicio
+} from './formulario-ejercicio/formulario-ejercicio';
+
+import {
+  AdministrarRutinas
+} from './administrar-rutinas/administrar-rutinas';
+
+import {
+  FormularioRutina
+} from './formulario-rutina/formulario-rutina';
+
+import {
+  MiRutina
+} from './mi-rutina/mi-rutina';
+
+import {
   authGuard
 } from './auth-guard';
 
 import {
-  recepcionistaGuard
+  recepcionistaGuard,
+  entrenadorGuard,
+  clienteGuard
 } from './role-guard';
 
 export const routes: Routes = [
@@ -123,7 +149,8 @@ export const routes: Routes = [
     path: 'mi-codigo-acceso',
     component: MiCodigoAcceso,
     canActivate: [
-      authGuard
+      authGuard,
+      clienteGuard
     ]
   },
 
@@ -131,7 +158,8 @@ export const routes: Routes = [
     path: 'mis-asistencias',
     component: MisAsistencias,
     canActivate: [
-      authGuard
+      authGuard,
+      clienteGuard
     ]
   },
 
@@ -139,7 +167,80 @@ export const routes: Routes = [
     path: 'mis-pagos',
     component: MisPagos,
     canActivate: [
-      authGuard
+      authGuard,
+      clienteGuard
+    ]
+  },
+
+  {
+    path: 'rutinas',
+    component: MiRutina,
+    canActivate: [
+      authGuard,
+      clienteGuard
+    ]
+  },
+
+  {
+    path: 'entrenador/mis-clientes',
+    component: MisClientesEntrenador,
+    canActivate: [
+      authGuard,
+      entrenadorGuard
+    ]
+  },
+
+  {
+    path: 'entrenador/ejercicios/nuevo',
+    component: FormularioEjercicio,
+    canActivate: [
+      authGuard,
+      entrenadorGuard
+    ]
+  },
+
+  {
+    path: 'entrenador/ejercicios/editar/:id',
+    component: FormularioEjercicio,
+    canActivate: [
+      authGuard,
+      entrenadorGuard
+    ]
+  },
+
+  {
+    path: 'entrenador/ejercicios',
+    component: AdministrarEjercicios,
+    canActivate: [
+      authGuard,
+      entrenadorGuard
+    ]
+  },
+
+  {
+    path: 'entrenador/rutinas/nueva',
+    component: FormularioRutina,
+    canActivate: [
+      authGuard,
+      entrenadorGuard
+    ]
+  },
+
+  {
+    path: 'entrenador/rutinas/editar/:id',
+    component: FormularioRutina,
+    canActivate: [
+      authGuard,
+      entrenadorGuard
+    ]
+  },
+
+  {
+    path: 'entrenador/rutinas',
+    component: AdministrarRutinas,
+    canActivate: [
+      authGuard,
+      entrenadorGuard
     ]
   },
 

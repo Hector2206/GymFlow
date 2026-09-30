@@ -1,0 +1,230 @@
+<div class="mis-clientes-page">
+
+  <header class="topbar">
+
+    <div class="header-left">
+
+      <button
+        type="button"
+        class="back-button"
+        (click)="volverInicio()"
+      >
+        ←
+      </button>
+
+      <img
+        src="/Logo_GymFlow.png"
+        alt="GymFlow"
+        class="logo"
+      />
+
+    </div>
+
+  </header>
+
+
+  <main class="content">
+
+    <section class="page-header">
+
+      <p class="section-label">
+        Entrenador
+      </p>
+
+      <h1>
+        Mis Clientes
+      </h1>
+
+      <p class="subtitle">
+        Consulta los clientes que tienes asignados.
+      </p>
+
+    </section>
+
+
+    <section class="clients-section">
+
+      <div class="section-heading">
+
+        <div class="section-icon">
+          👥
+        </div>
+
+        <div>
+
+          <h2>
+            Clientes asignados
+          </h2>
+
+          <p>
+            Aquí puedes consultar únicamente los clientes
+            asignados a tu cuenta de entrenador.
+          </p>
+
+        </div>
+
+      </div>
+
+
+      <div
+        *ngIf="cargando"
+        class="loading-state"
+      >
+        Cargando clientes asignados...
+      </div>
+
+
+      <div
+        *ngIf="error"
+        class="message error-message"
+      >
+
+        <span>
+          {{ error }}
+        </span>
+
+        <button
+          type="button"
+          class="retry-button"
+          (click)="cargarClientes()"
+        >
+          Reintentar
+        </button>
+
+      </div>
+
+
+      <div
+        *ngIf="
+          !cargando &&
+          !error &&
+          clientes.length === 0
+        "
+        class="empty-state"
+      >
+
+        <div class="empty-icon">
+          👥
+        </div>
+
+        <h3>
+          No tienes clientes asignados
+        </h3>
+
+        <p>
+          Cuando se te asigne un cliente,
+          aparecerá automáticamente en esta sección.
+        </p>
+
+      </div>
+
+
+      <div
+        *ngIf="
+          !cargando &&
+          !error &&
+          clientes.length > 0
+        "
+        class="results"
+      >
+
+        <div class="results-header">
+
+          <p class="results-count">
+            Clientes asignados:
+            <strong>
+              {{ clientes.length }}
+            </strong>
+          </p>
+
+        </div>
+
+
+        <div class="clients-grid">
+
+          <article
+            class="client-card"
+            *ngFor="let cliente of clientes"
+          >
+
+            <div class="client-card-header">
+
+              <div class="client-avatar">
+                {{ obtenerIniciales(cliente.nombre) }}
+              </div>
+
+              <div class="client-main-info">
+
+                <h3>
+                  {{ cliente.nombre }}
+                </h3>
+
+                <span
+                  class="status-badge"
+                  [class.inactive]="!cliente.estatus"
+                >
+                  {{
+                    cliente.estatus
+                      ? 'Activo'
+                      : 'Inactivo'
+                  }}
+                </span>
+
+              </div>
+
+            </div>
+
+
+            <div class="client-details">
+
+              <div class="detail-row">
+
+                <span class="detail-label">
+                  Correo
+                </span>
+
+                <strong>
+                  {{ cliente.correo }}
+                </strong>
+
+              </div>
+
+
+              <div class="detail-row">
+
+                <span class="detail-label">
+                  Teléfono
+                </span>
+
+                <strong>
+                  {{ cliente.telefono }}
+                </strong>
+
+              </div>
+
+
+              <div class="detail-row">
+
+                <span class="detail-label">
+                  ID Cliente
+                </span>
+
+                <strong>
+                  {{ cliente.idCliente }}
+                </strong>
+
+              </div>
+
+            </div>
+
+          </article>
+
+        </div>
+
+      </div>
+
+    </section>
+
+  </main>
+
+</div>

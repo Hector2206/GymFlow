@@ -1,0 +1,275 @@
+<div class="rutinas-page">
+
+  <header class="topbar">
+
+    <div class="header-left">
+
+      <button
+        type="button"
+        class="back-button"
+        (click)="volverInicio()"
+      >
+        ←
+      </button>
+
+      <img
+        src="/Logo_GymFlow.png"
+        alt="GymFlow"
+        class="logo"
+      />
+
+    </div>
+
+  </header>
+
+
+  <main class="content">
+
+    <section class="page-header">
+
+      <div>
+
+        <p class="section-label">
+          Entrenador
+        </p>
+
+        <h1>
+          Administrar Rutinas
+        </h1>
+
+        <p class="subtitle">
+          Consulta y administra las rutinas
+          de entrenamiento de tus clientes.
+        </p>
+
+      </div>
+
+
+      <button
+        type="button"
+        class="new-routine-button"
+        (click)="nuevaRutina()"
+      >
+        + Nueva Rutina
+      </button>
+
+    </section>
+
+
+    <div
+      *ngIf="mensajeExito"
+      class="message success-message"
+    >
+      {{ mensajeExito }}
+    </div>
+
+
+    <div
+      *ngIf="mensajeErrorAccion"
+      class="message action-error-message"
+    >
+      {{ mensajeErrorAccion }}
+    </div>
+
+
+    <section class="rutinas-section">
+
+      <div class="section-heading">
+
+        <div class="section-icon">
+          🏋️
+        </div>
+
+        <div>
+
+          <h2>
+            Rutinas de entrenamiento
+          </h2>
+
+          <p>
+            Edita la información de una rutina
+            o elimínala si ya no será utilizada.
+          </p>
+
+        </div>
+
+      </div>
+
+
+      <div
+        *ngIf="cargando"
+        class="loading-state"
+      >
+        Cargando rutinas...
+      </div>
+
+
+      <div
+        *ngIf="error"
+        class="message error-message"
+      >
+
+        <span>
+          {{ error }}
+        </span>
+
+        <button
+          type="button"
+          class="retry-button"
+          (click)="cargarRutinas()"
+        >
+          Reintentar
+        </button>
+
+      </div>
+
+
+      <div
+        *ngIf="
+          !cargando &&
+          !error &&
+          rutinas.length === 0
+        "
+        class="empty-state"
+      >
+
+        <div class="empty-icon">
+          📋
+        </div>
+
+        <h3>
+          No hay rutinas registradas
+        </h3>
+
+        <p>
+          Crea una rutina para comenzar
+          a administrar los entrenamientos.
+        </p>
+
+      </div>
+
+
+      <div
+        *ngIf="
+          !cargando &&
+          !error &&
+          rutinas.length > 0
+        "
+      >
+
+        <p class="results-count">
+
+          Rutinas registradas:
+
+          <strong>
+            {{ rutinas.length }}
+          </strong>
+
+        </p>
+
+
+        <div class="rutinas-grid">
+
+          <article
+            *ngFor="let rutina of rutinas"
+            class="rutina-card"
+          >
+
+            <div class="rutina-card-header">
+
+              <div class="rutina-icon">
+                🏋️
+              </div>
+
+              <div class="rutina-title">
+
+                <span class="rutina-id">
+                  Rutina #{{ rutina.idRutina }}
+                </span>
+
+                <h3>
+                  {{ rutina.nombre }}
+                </h3>
+
+              </div>
+
+            </div>
+
+
+            <div class="rutina-description">
+
+              <p
+                *ngIf="rutina.descripcion"
+              >
+                {{ rutina.descripcion }}
+              </p>
+
+              <p
+                *ngIf="!rutina.descripcion"
+                class="without-description"
+              >
+                Sin descripción.
+              </p>
+
+            </div>
+
+
+            <div class="rutina-details">
+
+              <div class="detail-row">
+
+                <span>
+                  Cliente
+                </span>
+
+                <strong>
+                  {{ rutina.nombreCliente }}
+                </strong>
+
+              </div>
+
+            </div>
+
+
+            <div class="card-actions">
+
+              <button
+                type="button"
+                class="edit-button"
+                [disabled]="
+                  eliminandoIdRutina !== null
+                "
+                (click)="editarRutina(rutina)"
+              >
+                Editar rutina
+              </button>
+
+
+              <button
+                type="button"
+                class="delete-routine-button"
+                [disabled]="
+                  eliminandoIdRutina !== null
+                "
+                (click)="eliminarRutina(rutina)"
+              >
+                {{
+                  estaEliminando(rutina)
+                    ? 'Eliminando...'
+                    : 'Eliminar'
+                }}
+              </button>
+
+            </div>
+
+          </article>
+
+        </div>
+
+      </div>
+
+    </section>
+
+  </main>
+
+</div>

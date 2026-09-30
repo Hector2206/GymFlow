@@ -1,16 +1,25 @@
-import { inject } from '@angular/core';
+import {
+  inject
+} from '@angular/core';
 
 import {
   CanActivateFn,
-  Router
+  Router,
+  UrlTree
 } from '@angular/router';
 
-export const recepcionistaGuard: CanActivateFn = () => {
 
-  const router = inject(Router);
+function validarRol(
+  rolPermitido: string
+): boolean | UrlTree {
+
+  const router =
+    inject(Router);
 
   const usuarioGuardado =
-    localStorage.getItem('usuario');
+    localStorage.getItem(
+      'usuario'
+    );
 
   if (!usuarioGuardado) {
 
@@ -22,14 +31,20 @@ export const recepcionistaGuard: CanActivateFn = () => {
   try {
 
     const usuario =
-      JSON.parse(usuarioGuardado);
+      JSON.parse(
+        usuarioGuardado
+      );
 
     const role =
       usuario?.role
         ?.toString()
+        .trim()
         .toLowerCase();
 
-    if (role === 'recepcionista') {
+    if (
+      role ===
+      rolPermitido.toLowerCase()
+    ) {
 
       return true;
     }
@@ -48,4 +63,31 @@ export const recepcionistaGuard: CanActivateFn = () => {
       '/login'
     ]);
   }
+}
+
+
+export const recepcionistaGuard:
+  CanActivateFn = () => {
+
+  return validarRol(
+    'recepcionista'
+  );
+};
+
+
+export const entrenadorGuard:
+  CanActivateFn = () => {
+
+  return validarRol(
+    'entrenador'
+  );
+};
+
+
+export const clienteGuard:
+  CanActivateFn = () => {
+
+  return validarRol(
+    'cliente'
+  );
 };
