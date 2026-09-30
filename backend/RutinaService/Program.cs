@@ -185,11 +185,13 @@ app.MapPost(
                     """
                     INSERT INTO ejercicios (
                         nombre,
-                        descripcion
+                        descripcion,
+                        imagen_url
                     )
                     VALUES (
                         @nombre,
-                        @descripcion
+                        @descripcion,
+                        @imagen_url
                     )
                     RETURNING id_ejercicio;
                     """,
@@ -207,6 +209,12 @@ app.MapPost(
                 ?? DBNull.Value
             );
 
+            command.Parameters.AddWithValue(
+                "imagen_url",
+                NpgsqlTypes.NpgsqlDbType.Text,
+                (object?)request.ImagenUrl ?? DBNull.Value
+            );
+
             var idEjercicio =
                 Convert.ToInt32(
                     await command.ExecuteScalarAsync()
@@ -219,6 +227,7 @@ app.MapPost(
                     idEjercicio,
                     nombre = request.Nombre,
                     descripcion = request.Descripcion,
+                    imagenUrl = request.ImagenUrl,
                     estado = true
                 }
             );
@@ -284,7 +293,8 @@ app.MapGet(
                         id_ejercicio,
                         nombre,
                         descripcion,
-                        estado
+                        estado,
+                        imagen_url
                     FROM ejercicios
                     ORDER BY nombre;
                     """,
@@ -313,7 +323,12 @@ app.MapGet(
                             : reader.GetString(2),
 
                     estado =
-                        reader.GetBoolean(3)
+                        reader.GetBoolean(3),
+
+                    imagenUrl =
+                        reader.IsDBNull(4)
+                            ? null
+                            : reader.GetString(4)
                 });
             }
 
@@ -380,7 +395,8 @@ app.MapGet(
                         id_ejercicio,
                         nombre,
                         descripcion,
-                        estado
+                        estado,
+                        imagen_url
                     FROM ejercicios
                     WHERE id_ejercicio = @id_ejercicio;
                     """,
@@ -417,7 +433,12 @@ app.MapGet(
                         : reader.GetString(2),
 
                 estado =
-                    reader.GetBoolean(3)
+                    reader.GetBoolean(3),
+
+                imagenUrl =
+                    reader.IsDBNull(4)
+                        ? null
+                        : reader.GetString(4)
             });
         }
         catch (Exception)
@@ -441,7 +462,7 @@ app.MapPut(
     "/api/ejercicios/{idEjercicio:int}",
     async (
         int idEjercicio,
-        CrearEjercicioRequest request,
+        EditarEjercicioRequest request,
         IConfiguration configuration
     ) =>
     {
@@ -493,12 +514,18 @@ app.MapPut(
 
             await using var command =
                 new NpgsqlCommand(
-                    """
+                   """
                     UPDATE ejercicios
                     SET
                         nombre = @nombre,
-                        descripcion = @descripcion
-                    WHERE id_ejercicio = @id_ejercicio;
+                        descripcion = @descripcion,
+                        imagen_url = CASE
+                            WHEN @actualizar_imagen THEN @imagen_url
+                            ELSE imagen_url
+                        END,
+                        estado = COALESCE(@estado, estado)
+                    WHERE id_ejercicio = @id_ejercicio
+                    RETURNING imagen_url, estado;
                     """,
                     connection
                 );
@@ -519,10 +546,26 @@ app.MapPut(
                 ?? DBNull.Value
             );
 
-            var filasAfectadas =
-                await command.ExecuteNonQueryAsync();
+            command.Parameters.AddWithValue(
+                "imagen_url",
+                NpgsqlTypes.NpgsqlDbType.Text,
+                (object?)request.ImagenUrl ?? DBNull.Value
+            );
 
-            if (filasAfectadas == 0)
+            command.Parameters.AddWithValue(
+                "actualizar_imagen",
+                request.ImagenUrlEspecificada
+            );
+            command.Parameters.AddWithValue(
+                "estado",
+                NpgsqlTypes.NpgsqlDbType.Boolean,
+                (object?)request.Estado ?? DBNull.Value
+            );
+
+            await using var reader =
+                await command.ExecuteReaderAsync();
+
+            if (!await reader.ReadAsync())
             {
                 return Results.NotFound(new
                 {
@@ -530,11 +573,21 @@ app.MapPut(
                 });
             }
 
+            var imagenGuardada =
+                reader.IsDBNull(0)
+                    ? null
+                    : reader.GetString(0);
+
+            var estadoGuardado =
+                reader.GetBoolean(1);
+
             return Results.Ok(new
             {
                 idEjercicio,
                 nombre = request.Nombre,
                 descripcion = request.Descripcion,
+                imagenUrl = imagenGuardada,
+                estado = estadoGuardado,
                 mensaje = "Ejercicio actualizado correctamente."
             });
         }
@@ -696,7 +749,8 @@ app.MapGet(
                         id_ejercicio,
                         nombre,
                         descripcion,
-                        estado
+                        estado,
+                        imagen_url
                     FROM ejercicios
                     WHERE nombre ILIKE @nombre
                     ORDER BY nombre;
@@ -731,7 +785,12 @@ app.MapGet(
                             : reader.GetString(2),
 
                     estado =
-                        reader.GetBoolean(3)
+                        reader.GetBoolean(3),
+
+                    imagenUrl =
+                        reader.IsDBNull(4)
+                            ? null
+                            : reader.GetString(4)
                 });
             }
 
@@ -1117,6 +1176,47 @@ app.MapPut(
                     "El nombre de la rutina es obligatorio."
             });
         }
+        foreach (var dia in request.Dias)
+        {
+            if (string.IsNullOrWhiteSpace(dia.Dia))
+            {
+                return Results.BadRequest(new
+                {
+                    mensaje =
+                        "El nombre del día es obligatorio."
+                });
+            }
+
+            foreach (var ejercicio in dia.Ejercicios)
+            {
+                if (ejercicio.IdEjercicio <= 0)
+                {
+                    return Results.BadRequest(new
+                    {
+                        mensaje =
+                            "El id del ejercicio no es válido."
+                    });
+                }
+
+                if (ejercicio.Series <= 0)
+                {
+                    return Results.BadRequest(new
+                    {
+                        mensaje =
+                            "La cantidad de series debe ser mayor a 0."
+                    });
+                }
+
+                if (ejercicio.Repeticiones <= 0)
+                {
+                    return Results.BadRequest(new
+                    {
+                        mensaje =
+                            "La cantidad de repeticiones debe ser mayor a 0."
+                    });
+                }
+            }
+        }
 
         var idEntrenador =
             await entrenadorService.ObtenerIdPersonalAsync(
@@ -1155,6 +1255,9 @@ app.MapPut(
 
             await connection.OpenAsync();
 
+            await using var transaction =
+                await connection.BeginTransactionAsync();
+
             // ===============================
             // VALIDAR QUE LA RUTINA PERTENEZCA
             // A UN CLIENTE DEL ENTRENADOR
@@ -1171,7 +1274,8 @@ app.MapPut(
                     WHERE r.id_rutina = @id_rutina
                       AND c.id_entrenador = @id_entrenador;
                     """,
-                    connection
+                    connection,
+                    transaction
                 );
 
             rutinaCommand.Parameters.AddWithValue(
@@ -1215,7 +1319,8 @@ app.MapPut(
                     WHERE id_cliente = @id_cliente
                       AND id_entrenador = @id_entrenador;
                     """,
-                    connection
+                    connection,
+                    transaction
                 );
 
             clienteCommand.Parameters.AddWithValue(
@@ -1260,7 +1365,8 @@ app.MapPut(
                         id_cliente = @id_cliente
                     WHERE id_rutina = @id_rutina;
                     """,
-                    connection
+                    connection,
+                    transaction
                 );
 
             command.Parameters.AddWithValue(
@@ -1295,6 +1401,144 @@ app.MapPut(
                         "La rutina no existe."
                 });
             }
+            // ===============================
+            // ELIMINAR DETALLE ACTUAL
+            // ===============================
+
+            await using var eliminarEjerciciosCommand =
+                new NpgsqlCommand(
+                    """
+                    DELETE FROM ejercicios_rutina
+                    WHERE id_dia IN (
+                        SELECT id_dia
+                        FROM dias_rutina
+                        WHERE id_rutina = @id_rutina
+                    );
+                    """,
+                    connection,
+                    transaction
+                );
+
+            eliminarEjerciciosCommand.Parameters.AddWithValue(
+                "id_rutina",
+                idRutina
+            );
+
+            await eliminarEjerciciosCommand.ExecuteNonQueryAsync();
+
+            await using var eliminarDiasCommand =
+                new NpgsqlCommand(
+                    """
+                    DELETE FROM dias_rutina
+                    WHERE id_rutina = @id_rutina;
+                    """,
+                    connection,
+                    transaction
+                );
+
+            eliminarDiasCommand.Parameters.AddWithValue(
+                "id_rutina",
+                idRutina
+            );
+
+            await eliminarDiasCommand.ExecuteNonQueryAsync();
+
+            // ===============================
+            // CREAR NUEVAMENTE LOS DÍAS
+            // ===============================
+
+            foreach (var dia in request.Dias)
+            {
+                await using var diaCommand =
+                    new NpgsqlCommand(
+                        """
+                        INSERT INTO dias_rutina (
+                            dia,
+                            id_rutina
+                        )
+                        VALUES (
+                            @dia,
+                            @id_rutina
+                        )
+                        RETURNING id_dia;
+                        """,
+                        connection,
+                        transaction
+                    );
+
+                diaCommand.Parameters.AddWithValue(
+                    "dia",
+                    dia.Dia
+                );
+
+                diaCommand.Parameters.AddWithValue(
+                    "id_rutina",
+                    idRutina
+                );
+
+                var idDia =
+                    Convert.ToInt32(
+                        await diaCommand.ExecuteScalarAsync()
+                    );
+
+                // ===============================
+                // CREAR NUEVAMENTE LOS EJERCICIOS
+                // ===============================
+
+                foreach (var ejercicio in dia.Ejercicios)
+                {
+                    await using var ejercicioCommand =
+                        new NpgsqlCommand(
+                            """
+                            INSERT INTO ejercicios_rutina (
+                                id_dia,
+                                id_ejercicio,
+                                series,
+                                repeticiones,
+                                orden
+                            )
+                            VALUES (
+                                @id_dia,
+                                @id_ejercicio,
+                                @series,
+                                @repeticiones,
+                                @orden
+                            );
+                            """,
+                            connection,
+                            transaction
+                        );
+
+                    ejercicioCommand.Parameters.AddWithValue(
+                        "id_dia",
+                        idDia
+                    );
+
+                    ejercicioCommand.Parameters.AddWithValue(
+                        "id_ejercicio",
+                        ejercicio.IdEjercicio
+                    );
+
+                    ejercicioCommand.Parameters.AddWithValue(
+                        "series",
+                        ejercicio.Series
+                    );
+
+                    ejercicioCommand.Parameters.AddWithValue(
+                        "repeticiones",
+                        ejercicio.Repeticiones
+                    );
+
+                    ejercicioCommand.Parameters.AddWithValue(
+                        "orden",
+                        ejercicio.Orden
+                    );
+
+                    await ejercicioCommand.ExecuteNonQueryAsync();
+                }
+            }
+            await transaction.CommitAsync();
+
 
             return Results.Ok(new
             {
@@ -1338,6 +1582,244 @@ app.MapPut(
     policy.RequireRole("Entrenador");
 });
 
+// ===============================
+// ELIMINAR RUTINA
+// ===============================
+
+app.MapDelete(
+    "/api/rutinas/{idRutina:int}",
+    async (
+        int idRutina,
+        ClaimsPrincipal usuario,
+        EntrenadorService entrenadorService,
+        IConfiguration configuration
+    ) =>
+    {
+        if (idRutina <= 0)
+        {
+            return Results.BadRequest(new
+            {
+                mensaje =
+                    "El id de la rutina no es válido."
+            });
+        }
+
+        var idEntrenador =
+            await entrenadorService.ObtenerIdPersonalAsync(
+                usuario
+            );
+
+        if (idEntrenador is null)
+        {
+            return Results.NotFound(new
+            {
+                mensaje =
+                    "No se encontró información del entrenador."
+            });
+        }
+
+        var connectionString =
+            configuration.GetConnectionString(
+                "PostgreSQL"
+            );
+
+        if (string.IsNullOrWhiteSpace(connectionString))
+        {
+            return Results.Problem(
+                title: "Configuración faltante",
+                detail:
+                    "No existe la cadena de conexión PostgreSQL.",
+                statusCode: 500
+            );
+        }
+
+        try
+        {
+            await using var connection =
+                new NpgsqlConnection(connectionString);
+
+            await connection.OpenAsync();
+
+            await using var transaction =
+                await connection.BeginTransactionAsync();
+
+            // ===============================
+            // VALIDAR EXISTENCIA Y PERTENENCIA
+            // ===============================
+
+            await using var validarCommand =
+                new NpgsqlCommand(
+                    """
+                    SELECT
+                        EXISTS (
+                            SELECT 1
+                            FROM rutinas
+                            WHERE id_rutina = @id_rutina
+                        ),
+                        EXISTS (
+                            SELECT 1
+                            FROM rutinas r
+                            INNER JOIN clientes c
+                                ON c.id_cliente = r.id_cliente
+                            WHERE r.id_rutina = @id_rutina
+                              AND c.id_entrenador = @id_entrenador
+                        );
+                    """,
+                    connection,
+                    transaction
+                );
+
+            validarCommand.Parameters.AddWithValue(
+                "id_rutina",
+                idRutina
+            );
+
+            validarCommand.Parameters.AddWithValue(
+                "id_entrenador",
+                idEntrenador.Value
+            );
+
+            bool existe;
+            bool pertenece;
+
+            await using (
+                var reader =
+                    await validarCommand.ExecuteReaderAsync()
+            )
+            {
+                await reader.ReadAsync();
+
+                existe =
+                    reader.GetBoolean(0);
+
+                pertenece =
+                    reader.GetBoolean(1);
+            }
+
+            if (!existe)
+            {
+                return Results.NotFound(new
+                {
+                    mensaje =
+                        "La rutina no existe."
+                });
+            }
+
+            if (!pertenece)
+            {
+                return Results.Json(
+                    new
+                    {
+                        mensaje =
+                            "Acceso denegado. La rutina no pertenece a un cliente asignado al entrenador autenticado."
+                    },
+                    statusCode:
+                        StatusCodes.Status403Forbidden
+                );
+            }
+
+            // ===============================
+            // ELIMINAR EJERCICIOS DE LA RUTINA
+            // ===============================
+
+            await using var eliminarEjerciciosCommand =
+                new NpgsqlCommand(
+                    """
+                    DELETE FROM ejercicios_rutina
+                    WHERE id_dia IN (
+                        SELECT id_dia
+                        FROM dias_rutina
+                        WHERE id_rutina = @id_rutina
+                    );
+                    """,
+                    connection,
+                    transaction
+                );
+
+            eliminarEjerciciosCommand.Parameters.AddWithValue(
+                "id_rutina",
+                idRutina
+            );
+
+            await eliminarEjerciciosCommand.ExecuteNonQueryAsync();
+
+            // ===============================
+            // ELIMINAR DÍAS
+            // ===============================
+
+            await using var eliminarDiasCommand =
+                new NpgsqlCommand(
+                    """
+                    DELETE FROM dias_rutina
+                    WHERE id_rutina = @id_rutina;
+                    """,
+                    connection,
+                    transaction
+                );
+
+            eliminarDiasCommand.Parameters.AddWithValue(
+                "id_rutina",
+                idRutina
+            );
+
+            await eliminarDiasCommand.ExecuteNonQueryAsync();
+
+            // ===============================
+            // ELIMINAR RUTINA
+            // ===============================
+
+            await using var eliminarRutinaCommand =
+                new NpgsqlCommand(
+                    """
+                    DELETE FROM rutinas
+                    WHERE id_rutina = @id_rutina;
+                    """,
+                    connection,
+                    transaction
+                );
+
+            eliminarRutinaCommand.Parameters.AddWithValue(
+                "id_rutina",
+                idRutina
+            );
+
+            await eliminarRutinaCommand.ExecuteNonQueryAsync();
+
+            await transaction.CommitAsync();
+
+            return Results.Ok(new
+            {
+                idRutina,
+                mensaje =
+                    "Rutina eliminada correctamente."
+            });
+        }
+        catch (PostgresException ex)
+        {
+            return Results.BadRequest(new
+            {
+                mensaje =
+                    "No se pudo eliminar la rutina.",
+                detalle =
+                    ex.MessageText
+            });
+        }
+        catch (Exception)
+        {
+            return Results.Problem(
+                title:
+                    "Error al eliminar rutina",
+                detail:
+                    "Ocurrió un error interno.",
+                statusCode: 500
+            );
+        }
+    }
+)
+.RequireAuthorization(policy =>
+{
+    policy.RequireRole("Entrenador");
+});
 
 // ===============================
 // LISTAR RUTINAS
@@ -1539,7 +2021,8 @@ app.MapGet(
                         e.descripcion,
                         er.series,
                         er.repeticiones,
-                        er.orden
+                        er.orden,
+                        e.imagen_url
                     FROM dias_rutina d
                     LEFT JOIN ejercicios_rutina er
                         ON er.id_dia = d.id_dia
@@ -1606,7 +2089,12 @@ app.MapGet(
                             detalleReader.GetInt32(7),
 
                         orden =
-                            detalleReader.GetInt32(8)
+                            detalleReader.GetInt32(8),
+
+                        imagenUrl =
+                            detalleReader.IsDBNull(9)
+                                ? null
+                                : detalleReader.GetString(9)
                     });
                 }
             }
@@ -1971,7 +2459,8 @@ app.MapGet(
                             e.descripcion,
                             er.series,
                             er.repeticiones,
-                            er.orden
+                            er.orden,
+                            e.imagen_url
                         FROM ejercicios_rutina er
                         INNER JOIN ejercicios e
                             ON e.id_ejercicio = er.id_ejercicio
@@ -2019,7 +2508,12 @@ app.MapGet(
                             ejerciciosReader.GetInt32(5),
 
                         orden =
-                            ejerciciosReader.GetInt32(6)
+                            ejerciciosReader.GetInt32(6),
+
+                        imagenUrl =
+                            ejerciciosReader.IsDBNull(7)
+                                ? null
+                                : ejerciciosReader.GetString(7)
                     });
                 }
 
@@ -2088,6 +2582,11 @@ app.MapGet(
 // #1279
 // ===============================
 
+// ===============================
+// MIS CLIENTES - ENTRENADOR
+// #1279
+// ===============================
+
 app.MapGet(
     "/api/entrenador/mis-clientes",
     async (
@@ -2136,15 +2635,17 @@ app.MapGet(
                 new NpgsqlCommand(
                     """
                     SELECT
-                        id_cliente,
-                        id_usuario,
-                        nombre_cliente,
-                        correo,
-                        telefono,
-                        estatus
-                    FROM vw_clientes_por_entrenador
-                    WHERE id_entrenador = @id_entrenador
-                    ORDER BY nombre_cliente;
+                        c.id_cliente,
+                        c.id_usuario,
+                        c.nombre_completo,
+                        u.correo,
+                        c.telefono,
+                        u.estatus
+                    FROM clientes c
+                    INNER JOIN usuarios u
+                        ON u.id_usuario = c.id_usuario
+                    WHERE c.id_entrenador = @id_entrenador
+                    ORDER BY c.nombre_completo;
                     """,
                     connection
                 );
@@ -2162,6 +2663,9 @@ app.MapGet(
 
             while (await reader.ReadAsync())
             {
+                var estatusTexto =
+                    reader.GetString(5);
+
                 clientes.Add(new
                 {
                     idCliente =
@@ -2180,13 +2684,17 @@ app.MapGet(
                         reader.GetString(4),
 
                     estatus =
-                        reader.GetBoolean(5)
+                        string.Equals(
+                            estatusTexto,
+                            "Activo",
+                            StringComparison.OrdinalIgnoreCase
+                        )
                 });
             }
 
             return Results.Ok(new
             {
-                idEntrenador,
+                idEntrenador = idEntrenador.Value,
                 clientes
             });
         }
@@ -2207,5 +2715,91 @@ app.MapGet(
     policy.RequireRole("Entrenador");
 });
 
+// ===============================
+// VERSION DEL SISTEMA
+// ===============================
+
+app.MapGet(
+    "/api/sistema/version",
+    async (
+        IConfiguration configuration
+    ) =>
+    {
+        var connectionString =
+            configuration.GetConnectionString(
+                "PostgreSQL"
+            );
+
+        if (string.IsNullOrWhiteSpace(connectionString))
+        {
+            return Results.Problem(
+                title: "Configuración faltante",
+                detail:
+                    "No existe la cadena de conexión PostgreSQL.",
+                statusCode: 500
+            );
+        }
+
+        try
+        {
+            await using var connection =
+                new NpgsqlConnection(connectionString);
+
+            await connection.OpenAsync();
+
+            await using var command =
+                new NpgsqlCommand(
+                    """
+                    SELECT version
+                    FROM system_versions
+                    ORDER BY id DESC
+                    LIMIT 1;
+                    """,
+                    connection
+                );
+
+            var resultado =
+                await command.ExecuteScalarAsync();
+
+            if (resultado is null ||
+                resultado == DBNull.Value)
+            {
+                return Results.NotFound(new
+                {
+                    mensaje =
+                        "No se encontró una versión del sistema."
+                });
+            }
+
+            return Results.Ok(new
+            {
+                version =
+                    Convert.ToString(resultado)
+            });
+        }
+        catch (PostgresException ex)
+        {
+            return Results.BadRequest(new
+            {
+                mensaje =
+                    "No se pudo consultar la versión del sistema.",
+                detalle =
+                    ex.MessageText
+            });
+        }
+        catch (Exception)
+        {
+            return Results.Problem(
+                title:
+                    "Error al consultar versión",
+                detail:
+                    "Ocurrió un error interno.",
+                statusCode: 500
+            );
+        }
+    }
+)
+.RequireAuthorization();
 
 app.Run();
+

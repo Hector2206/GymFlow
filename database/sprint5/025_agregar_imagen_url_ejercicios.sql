@@ -1,0 +1,2 @@
+ALTER TABLE ejercicios
+ADD COLUMN IF NOT EXISTS imagen_url TEXT;

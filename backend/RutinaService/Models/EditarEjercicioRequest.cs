@@ -2,11 +2,13 @@ using System.Text.Json.Serialization;
 
 namespace RutinaService.Models;
 
-public class CrearEjercicioRequest
+public class EditarEjercicioRequest
 {
     public string Nombre { get; set; } = string.Empty;
 
     public string? Descripcion { get; set; }
+
+    public bool? Estado { get; set; }
 
     private string? imagenUrl;
 
@@ -20,7 +22,6 @@ public class CrearEjercicioRequest
         }
     }
 
-    // Distingue un campo omitido de un null explícito en el JSON.
     [JsonIgnore]
     public bool ImagenUrlEspecificada { get; private set; }
 }
