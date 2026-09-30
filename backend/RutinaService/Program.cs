@@ -234,11 +234,15 @@ app.MapPost(
         }
         catch (PostgresException ex)
         {
+            app.Logger.LogError(
+                ex,
+                "Error PostgreSQL al registrar ejercicio."
+            );
+
             return Results.BadRequest(new
             {
                 mensaje =
-                    "No se pudo registrar el ejercicio.",
-                detalle = ex.MessageText
+                    "No se pudo registrar el ejercicio."
             });
         }
         catch (Exception)
@@ -251,7 +255,10 @@ app.MapPost(
         }
     }
 )
-.RequireAuthorization();
+.RequireAuthorization(policy =>
+{
+    policy.RequireRole("Entrenador");
+});
 
 // ===============================
 // LISTAR EJERCICIOS
@@ -556,6 +563,7 @@ app.MapPut(
                 "actualizar_imagen",
                 request.ImagenUrlEspecificada
             );
+
             command.Parameters.AddWithValue(
                 "estado",
                 NpgsqlTypes.NpgsqlDbType.Boolean,
@@ -593,11 +601,15 @@ app.MapPut(
         }
         catch (PostgresException ex)
         {
+            app.Logger.LogError(
+                ex,
+                "Error PostgreSQL al actualizar ejercicio."
+            );
+
             return Results.BadRequest(new
             {
                 mensaje =
-                    "No se pudo actualizar el ejercicio.",
-                detalle = ex.MessageText
+                    "No se pudo actualizar el ejercicio."
             });
         }
         catch (Exception)
@@ -610,7 +622,10 @@ app.MapPut(
         }
     }
 )
-.RequireAuthorization();
+.RequireAuthorization(policy =>
+{
+    policy.RequireRole("Entrenador");
+});
 
 // ===============================
 // DESACTIVAR EJERCICIO
@@ -697,7 +712,10 @@ app.MapDelete(
         }
     }
 )
-.RequireAuthorization();
+.RequireAuthorization(policy =>
+{
+    policy.RequireRole("Entrenador");
+});
 
 
 // ===============================
@@ -825,6 +843,95 @@ app.MapPost(
         IConfiguration configuration
     ) =>
     {
+        if (request.IdCliente <= 0)
+        {
+            return Results.BadRequest(new
+            {
+                mensaje =
+                    "El id del cliente no es válido."
+            });
+        }
+
+        if (string.IsNullOrWhiteSpace(request.Nombre))
+        {
+            return Results.BadRequest(new
+            {
+                mensaje =
+                    "El nombre de la rutina es obligatorio."
+            });
+        }
+
+        if (request.Dias is null ||
+            request.Dias.Count == 0)
+        {
+            return Results.BadRequest(new
+            {
+                mensaje =
+                    "La rutina debe tener al menos un día de entrenamiento."
+            });
+        }
+
+        foreach (var dia in request.Dias)
+        {
+            if (string.IsNullOrWhiteSpace(dia.Dia))
+            {
+                return Results.BadRequest(new
+                {
+                    mensaje =
+                        "El nombre del día es obligatorio."
+                });
+            }
+
+            if (dia.Ejercicios is null ||
+                dia.Ejercicios.Count == 0)
+            {
+                return Results.BadRequest(new
+                {
+                    mensaje =
+                        $"El día {dia.Dia} debe tener al menos un ejercicio."
+                });
+            }
+
+            foreach (var ejercicio in dia.Ejercicios)
+            {
+                if (ejercicio.IdEjercicio <= 0)
+                {
+                    return Results.BadRequest(new
+                    {
+                        mensaje =
+                            "El id del ejercicio no es válido."
+                    });
+                }
+
+                if (ejercicio.Series <= 0)
+                {
+                    return Results.BadRequest(new
+                    {
+                        mensaje =
+                            "La cantidad de series debe ser mayor a 0."
+                    });
+                }
+
+                if (ejercicio.Repeticiones <= 0)
+                {
+                    return Results.BadRequest(new
+                    {
+                        mensaje =
+                            "La cantidad de repeticiones debe ser mayor a 0."
+                    });
+                }
+
+                if (ejercicio.Orden <= 0)
+                {
+                    return Results.BadRequest(new
+                    {
+                        mensaje =
+                            "El orden del ejercicio debe ser mayor a 0."
+                    });
+                }
+            }
+        }
+
         var idEntrenador =
             await entrenadorService.ObtenerIdPersonalAsync(
                 usuario
@@ -864,11 +971,6 @@ app.MapPost(
             await using var transaction =
                 await connection.BeginTransactionAsync();
 
-            // ===============================
-            // VALIDAR CLIENTE ASIGNADO
-            // #1282
-            // ===============================
-
             await using var clienteCommand =
                 new NpgsqlCommand(
                     """
@@ -896,7 +998,7 @@ app.MapPost(
                     await clienteCommand.ExecuteScalarAsync()
                 ) > 0;
 
-           if (!clienteAsignado)
+            if (!clienteAsignado)
             {
                 return Results.Json(
                     new
@@ -904,13 +1006,10 @@ app.MapPost(
                         mensaje =
                             "Acceso denegado. El cliente no está asignado al entrenador autenticado."
                     },
-                    statusCode: StatusCodes.Status403Forbidden
+                    statusCode:
+                        StatusCodes.Status403Forbidden
                 );
             }
-
-            // ===============================
-            // CREAR ENCABEZADO DE RUTINA
-            // ===============================
 
             await using var command =
                 new NpgsqlCommand(
@@ -955,10 +1054,6 @@ app.MapPost(
             var diasGuardados =
                 new List<object>();
 
-            // ===============================
-            // GUARDAR DÍAS
-            // ===============================
-
             foreach (var dia in request.Dias)
             {
                 await using var diaCommand =
@@ -996,30 +1091,8 @@ app.MapPost(
                 var ejerciciosGuardados =
                     new List<object>();
 
-                // ===============================
-                // GUARDAR EJERCICIOS
-                // ===============================
-
                 foreach (var ejercicio in dia.Ejercicios)
                 {
-                    if (ejercicio.Series <= 0)
-                    {
-                        return Results.BadRequest(new
-                        {
-                            mensaje =
-                                "La cantidad de series debe ser mayor a 0."
-                        });
-                    }
-
-                    if (ejercicio.Repeticiones <= 0)
-                    {
-                        return Results.BadRequest(new
-                        {
-                            mensaje =
-                                "La cantidad de repeticiones debe ser mayor a 0."
-                        });
-                    }
-
                     await using var ejercicioCommand =
                         new NpgsqlCommand(
                             """
@@ -1118,12 +1191,15 @@ app.MapPost(
         }
         catch (PostgresException ex)
         {
+            app.Logger.LogError(
+                ex,
+                "Error PostgreSQL al registrar rutina."
+            );
+
             return Results.BadRequest(new
             {
                 mensaje =
-                    "No se pudo registrar la rutina.",
-                detalle =
-                    ex.MessageText
+                    "No se pudo registrar la rutina."
             });
         }
         catch (Exception)
@@ -1168,6 +1244,15 @@ app.MapPut(
             });
         }
 
+        if (request.IdCliente <= 0)
+        {
+            return Results.BadRequest(new
+            {
+                mensaje =
+                    "El id del cliente no es válido."
+            });
+        }
+
         if (string.IsNullOrWhiteSpace(request.Nombre))
         {
             return Results.BadRequest(new
@@ -1176,6 +1261,17 @@ app.MapPut(
                     "El nombre de la rutina es obligatorio."
             });
         }
+
+        if (request.Dias is null ||
+            request.Dias.Count == 0)
+        {
+            return Results.BadRequest(new
+            {
+                mensaje =
+                    "La rutina debe tener al menos un día de entrenamiento."
+            });
+        }
+
         foreach (var dia in request.Dias)
         {
             if (string.IsNullOrWhiteSpace(dia.Dia))
@@ -1184,6 +1280,16 @@ app.MapPut(
                 {
                     mensaje =
                         "El nombre del día es obligatorio."
+                });
+            }
+
+            if (dia.Ejercicios is null ||
+                dia.Ejercicios.Count == 0)
+            {
+                return Results.BadRequest(new
+                {
+                    mensaje =
+                        $"El día {dia.Dia} debe tener al menos un ejercicio."
                 });
             }
 
@@ -1213,6 +1319,15 @@ app.MapPut(
                     {
                         mensaje =
                             "La cantidad de repeticiones debe ser mayor a 0."
+                    });
+                }
+
+                if (ejercicio.Orden <= 0)
+                {
+                    return Results.BadRequest(new
+                    {
+                        mensaje =
+                            "El orden del ejercicio debe ser mayor a 0."
                     });
                 }
             }
@@ -1557,12 +1672,15 @@ app.MapPut(
         }
         catch (PostgresException ex)
         {
+            app.Logger.LogError(
+                ex,
+                "Error PostgreSQL al actualizar rutina."
+            );
+
             return Results.BadRequest(new
             {
                 mensaje =
-                    "No se pudo actualizar la rutina.",
-                detalle =
-                    ex.MessageText
+                    "No se pudo actualizar la rutina."
             });
         }
         catch (Exception)
@@ -1796,12 +1914,15 @@ app.MapDelete(
         }
         catch (PostgresException ex)
         {
+            app.Logger.LogError(
+                ex,
+                "Error PostgreSQL al eliminar rutina."
+            );
+
             return Results.BadRequest(new
             {
                 mensaje =
-                    "No se pudo eliminar la rutina.",
-                detalle =
-                    ex.MessageText
+                    "No se pudo eliminar la rutina."
             });
         }
         catch (Exception)
@@ -1829,9 +1950,25 @@ app.MapDelete(
 app.MapGet(
     "/api/rutinas",
     async (
+        ClaimsPrincipal usuario,
+        EntrenadorService entrenadorService,
         IConfiguration configuration
     ) =>
     {
+        var idEntrenador =
+            await entrenadorService.ObtenerIdPersonalAsync(
+                usuario
+            );
+
+        if (idEntrenador is null)
+        {
+            return Results.NotFound(new
+            {
+                mensaje =
+                    "No se encontró información del entrenador."
+            });
+        }
+
         var connectionString =
             configuration.GetConnectionString(
                 "PostgreSQL"
@@ -1866,10 +2003,16 @@ app.MapGet(
                     FROM rutinas r
                     INNER JOIN clientes c
                         ON c.id_cliente = r.id_cliente
+                    WHERE c.id_entrenador = @id_entrenador
                     ORDER BY r.id_rutina DESC;
                     """,
                     connection
                 );
+
+            command.Parameters.AddWithValue(
+                "id_entrenador",
+                idEntrenador.Value
+            );
 
             await using var reader =
                 await command.ExecuteReaderAsync();
@@ -1912,7 +2055,10 @@ app.MapGet(
         }
     }
 )
-.RequireAuthorization();
+.RequireAuthorization(policy =>
+{
+    policy.RequireRole("Entrenador");
+});
 
 
 // ===============================
@@ -1924,6 +2070,8 @@ app.MapGet(
     "/api/rutinas/{idRutina:int}",
     async (
         int idRutina,
+        ClaimsPrincipal usuario,
+        EntrenadorService entrenadorService,
         IConfiguration configuration
     ) =>
     {
@@ -1931,18 +2079,36 @@ app.MapGet(
         {
             return Results.BadRequest(new
             {
-                mensaje = "El id de la rutina no es válido."
+                mensaje =
+                    "El id de la rutina no es válido."
+            });
+        }
+
+        var idEntrenador =
+            await entrenadorService.ObtenerIdPersonalAsync(
+                usuario
+            );
+
+        if (idEntrenador is null)
+        {
+            return Results.NotFound(new
+            {
+                mensaje =
+                    "No se encontró información del entrenador."
             });
         }
 
         var connectionString =
-            configuration.GetConnectionString("PostgreSQL");
+            configuration.GetConnectionString(
+                "PostgreSQL"
+            );
 
         if (string.IsNullOrWhiteSpace(connectionString))
         {
             return Results.Problem(
                 title: "Configuración faltante",
-                detail: "No existe la cadena de conexión PostgreSQL.",
+                detail:
+                    "No existe la cadena de conexión PostgreSQL.",
                 statusCode: 500
             );
         }
@@ -1954,7 +2120,76 @@ app.MapGet(
 
             await connection.OpenAsync();
 
-            // Encabezado de la rutina
+            await using var validarCommand =
+                new NpgsqlCommand(
+                    """
+                    SELECT
+                        EXISTS (
+                            SELECT 1
+                            FROM rutinas
+                            WHERE id_rutina = @id_rutina
+                        ),
+                        EXISTS (
+                            SELECT 1
+                            FROM rutinas r
+                            INNER JOIN clientes c
+                                ON c.id_cliente = r.id_cliente
+                            WHERE r.id_rutina = @id_rutina
+                              AND c.id_entrenador = @id_entrenador
+                        );
+                    """,
+                    connection
+                );
+
+            validarCommand.Parameters.AddWithValue(
+                "id_rutina",
+                idRutina
+            );
+
+            validarCommand.Parameters.AddWithValue(
+                "id_entrenador",
+                idEntrenador.Value
+            );
+
+            bool existe;
+            bool pertenece;
+
+            await using (
+                var validarReader =
+                    await validarCommand.ExecuteReaderAsync()
+            )
+            {
+                await validarReader.ReadAsync();
+
+                existe =
+                    validarReader.GetBoolean(0);
+
+                pertenece =
+                    validarReader.GetBoolean(1);
+            }
+
+            if (!existe)
+            {
+                return Results.NotFound(new
+                {
+                    mensaje =
+                        "La rutina no existe."
+                });
+            }
+
+            if (!pertenece)
+            {
+                return Results.Json(
+                    new
+                    {
+                        mensaje =
+                            "Acceso denegado. La rutina no pertenece a un cliente asignado al entrenador autenticado."
+                    },
+                    statusCode:
+                        StatusCodes.Status403Forbidden
+                );
+            }
+
             await using var rutinaCommand =
                 new NpgsqlCommand(
                     """
@@ -1989,7 +2224,8 @@ app.MapGet(
                 {
                     return Results.NotFound(new
                     {
-                        mensaje = "La rutina no existe."
+                        mensaje =
+                            "La rutina no existe."
                     });
                 }
 
@@ -2008,7 +2244,6 @@ app.MapGet(
                     rutinaReader.GetString(4);
             }
 
-            // Días y ejercicios
             await using var detalleCommand =
                 new NpgsqlCommand(
                     """
@@ -2122,14 +2357,19 @@ app.MapGet(
         catch (Exception)
         {
             return Results.Problem(
-                title: "Error al consultar rutina",
-                detail: "Ocurrió un error interno.",
+                title:
+                    "Error al consultar rutina",
+                detail:
+                    "Ocurrió un error interno.",
                 statusCode: 500
             );
         }
     }
 )
-.RequireAuthorization();
+.RequireAuthorization(policy =>
+{
+    policy.RequireRole("Entrenador");
+});
 
 // ===============================
 // OBTENER RUTINAS POR CLIENTE
@@ -2140,6 +2380,8 @@ app.MapGet(
     "/api/rutinas/cliente/{idCliente:int}",
     async (
         int idCliente,
+        ClaimsPrincipal usuario,
+        EntrenadorService entrenadorService,
         IConfiguration configuration
     ) =>
     {
@@ -2147,7 +2389,22 @@ app.MapGet(
         {
             return Results.BadRequest(new
             {
-                mensaje = "El id del cliente no es válido."
+                mensaje =
+                    "El id del cliente no es válido."
+            });
+        }
+
+        var idEntrenador =
+            await entrenadorService.ObtenerIdPersonalAsync(
+                usuario
+            );
+
+        if (idEntrenador is null)
+        {
+            return Results.NotFound(new
+            {
+                mensaje =
+                    "No se encontró información del entrenador."
             });
         }
 
@@ -2172,6 +2429,74 @@ app.MapGet(
                 new NpgsqlConnection(connectionString);
 
             await connection.OpenAsync();
+
+            await using var validarClienteCommand =
+                new NpgsqlCommand(
+                    """
+                    SELECT
+                        EXISTS (
+                            SELECT 1
+                            FROM clientes
+                            WHERE id_cliente = @id_cliente
+                        ),
+                        EXISTS (
+                            SELECT 1
+                            FROM clientes
+                            WHERE id_cliente = @id_cliente
+                              AND id_entrenador = @id_entrenador
+                        );
+                    """,
+                    connection
+                );
+
+            validarClienteCommand.Parameters.AddWithValue(
+                "id_cliente",
+                idCliente
+            );
+
+            validarClienteCommand.Parameters.AddWithValue(
+                "id_entrenador",
+                idEntrenador.Value
+            );
+
+            bool existeCliente;
+            bool perteneceCliente;
+
+            await using (
+                var validarReader =
+                    await validarClienteCommand.ExecuteReaderAsync()
+            )
+            {
+                await validarReader.ReadAsync();
+
+                existeCliente =
+                    validarReader.GetBoolean(0);
+
+                perteneceCliente =
+                    validarReader.GetBoolean(1);
+            }
+
+            if (!existeCliente)
+            {
+                return Results.NotFound(new
+                {
+                    mensaje =
+                        "El cliente no existe."
+                });
+            }
+
+            if (!perteneceCliente)
+            {
+                return Results.Json(
+                    new
+                    {
+                        mensaje =
+                            "Acceso denegado. El cliente no está asignado al entrenador autenticado."
+                    },
+                    statusCode:
+                        StatusCodes.Status403Forbidden
+                );
+            }
 
             await using var command =
                 new NpgsqlCommand(
@@ -2239,7 +2564,10 @@ app.MapGet(
         }
     }
 )
-.RequireAuthorization();
+.RequireAuthorization(policy =>
+{
+    policy.RequireRole("Entrenador");
+});
 
 // ===============================
 // MI RUTINA - OBTENER CLIENTE
@@ -2777,14 +3105,17 @@ app.MapGet(
                     Convert.ToString(resultado)
             });
         }
-        catch (PostgresException ex)
+       catch (PostgresException ex)
         {
+            app.Logger.LogError(
+                ex,
+                "Error PostgreSQL al consultar versión del sistema."
+            );
+
             return Results.BadRequest(new
             {
                 mensaje =
-                    "No se pudo consultar la versión del sistema.",
-                detalle =
-                    ex.MessageText
+                    "No se pudo consultar la versión del sistema."
             });
         }
         catch (Exception)
