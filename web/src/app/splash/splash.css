@@ -6,11 +6,6 @@
   box-sizing: border-box;
 }
 
-
-/* =========================
-   PANTALLA
-========================= */
-
 .splash-screen {
   width: 100%;
   min-height: 100vh;
@@ -19,7 +14,8 @@
   align-items: center;
   justify-content: center;
 
-  padding: 32px 20px;
+  padding:
+    32px 20px;
 
   background:
     radial-gradient(
@@ -29,11 +25,6 @@
       #f2ede4 100%
     );
 }
-
-
-/* =========================
-   CONTENIDO
-========================= */
 
 .splash-content {
   width: 100%;
@@ -46,13 +37,13 @@
   text-align: center;
 }
 
-
-/* =========================
-   LOGO
-========================= */
-
 .splash-logo {
-  width: min(330px, 75vw);
+  width:
+    min(
+      330px,
+      75vw
+    );
+
   height: auto;
 
   display: block;
@@ -60,17 +51,16 @@
   object-fit: contain;
 
   animation:
-    logoEntrada 0.9s ease both,
-    logoFlotante 3s ease-in-out 0.9s infinite;
+    logoEntrada
+    0.65s ease both,
+    logoFlotante
+    2s ease-in-out
+    0.65s infinite;
 }
 
-
-/* =========================
-   TEXTO
-========================= */
-
 .splash-text {
-  margin: 24px 0 0;
+  margin:
+    24px 0 0;
 
   color: #777067;
 
@@ -82,13 +72,10 @@
   opacity: 0;
 
   animation:
-    textoEntrada 0.7s ease 0.45s forwards;
+    textoEntrada
+    0.45s ease
+    0.25s forwards;
 }
-
-
-/* =========================
-   BARRA DE CARGA
-========================= */
 
 .loading-track {
   width: 190px;
@@ -105,7 +92,9 @@
   opacity: 0;
 
   animation:
-    textoEntrada 0.5s ease 0.7s forwards;
+    textoEntrada
+    0.35s ease
+    0.35s forwards;
 }
 
 .loading-bar {
@@ -122,15 +111,12 @@
     );
 
   animation:
-    progreso 5s linear forwards;
+    progreso
+    3s linear forwards;
 }
 
-
-/* =========================
-   ANIMACIONES
-========================= */
-
 @keyframes logoEntrada {
+
   from {
     opacity: 0;
 
@@ -149,31 +135,38 @@
 }
 
 @keyframes logoFlotante {
+
   0%,
   100% {
-    transform: translateY(0);
+    transform:
+      translateY(0);
   }
 
   50% {
-    transform: translateY(-4px);
+    transform:
+      translateY(-4px);
   }
 }
 
 @keyframes textoEntrada {
+
   from {
     opacity: 0;
 
-    transform: translateY(6px);
+    transform:
+      translateY(6px);
   }
 
   to {
     opacity: 1;
 
-    transform: translateY(0);
+    transform:
+      translateY(0);
   }
 }
 
 @keyframes progreso {
+
   from {
     width: 0;
   }
@@ -183,12 +176,9 @@
   }
 }
 
-
-/* =========================
-   ACCESIBILIDAD
-========================= */
-
-@media (prefers-reduced-motion: reduce) {
+@media (
+  prefers-reduced-motion: reduce
+) {
 
   .splash-logo,
   .splash-text,
@@ -205,22 +195,23 @@
   .loading-bar {
     width: 100%;
   }
-
 }
 
-
-/* =========================
-   RESPONSIVE
-========================= */
-
-@media (max-width: 600px) {
+@media (
+  max-width: 600px
+) {
 
   .splash-screen {
-    padding: 24px 18px;
+    padding:
+      24px 18px;
   }
 
   .splash-logo {
-    width: min(270px, 78vw);
+    width:
+      min(
+        270px,
+        78vw
+      );
   }
 
   .splash-text {
@@ -234,5 +225,4 @@
 
     margin-top: 23px;
   }
-
 }

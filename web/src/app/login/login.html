@@ -50,6 +50,10 @@
             [(ngModel)]="correo"
             placeholder="correo@gymflow.com"
             autocomplete="email"
+            [disabled]="
+              cargando ||
+              cargandoGoogle
+            "
           />
 
         </div>
@@ -76,6 +80,10 @@
             [(ngModel)]="password"
             placeholder="Ingresa tu contraseña"
             autocomplete="current-password"
+            [disabled]="
+              cargando ||
+              cargandoGoogle
+            "
           />
 
         </div>
@@ -94,7 +102,10 @@
       <button
         type="submit"
         class="login-button"
-        [disabled]="cargando || cargandoGoogle"
+        [disabled]="
+          cargando ||
+          cargandoGoogle
+        "
       >
 
         {{
@@ -127,14 +138,176 @@
     >
     </div>
 
-
-    <p
-      *ngIf="cargandoGoogle"
-      class="google-note"
-    >
-      Iniciando sesión con Google...
-    </p>
-
   </main>
+
+
+  <div
+    *ngIf="
+      estadoGoogle === 'verificando' ||
+      estadoGoogle === 'exito'
+    "
+    class="auth-overlay"
+  >
+
+    <div class="auth-status-card">
+
+      <img
+        src="/Logo_GymFlow.png"
+        alt="GymFlow"
+        class="auth-logo"
+      />
+
+
+      <ng-container
+        *ngIf="
+          estadoGoogle === 'verificando'
+        "
+      >
+
+        <div class="spinner">
+        </div>
+
+        <h2>
+          Verificando tu cuenta...
+        </h2>
+
+        <p>
+          Estamos comprobando tu acceso
+          a GymFlow.
+        </p>
+
+        <span class="auth-secondary-text">
+          Esto puede tomar unos segundos.
+        </span>
+
+      </ng-container>
+
+
+      <ng-container
+        *ngIf="
+          estadoGoogle === 'exito'
+        "
+      >
+
+        <div class="success-icon">
+          ✓
+        </div>
+
+        <h2>
+          Cuenta encontrada
+        </h2>
+
+        <p>
+          Tu cuenta fue verificada
+          correctamente.
+        </p>
+
+        <span class="auth-secondary-text">
+          Entrando a GymFlow...
+        </span>
+
+      </ng-container>
+
+    </div>
+
+  </div>
+
+
+  <div
+    *ngIf="
+      estadoGoogle === 'no-registrado'
+    "
+    class="auth-overlay"
+  >
+
+    <div class="auth-status-card">
+
+      <img
+        src="/Logo_GymFlow.png"
+        alt="GymFlow"
+        class="auth-logo"
+      />
+
+      <div class="reception-icon">
+        👤
+      </div>
+
+      <h2>
+        Cuenta no registrada
+      </h2>
+
+      <p>
+        Tu cuenta de Google todavía
+        no está registrada en GymFlow.
+      </p>
+
+
+      <div class="reception-message">
+
+        <strong>
+          Acude a recepción
+        </strong>
+
+        <span>
+          El personal de recepción debe
+          registrar tu cuenta antes de que
+          puedas iniciar sesión.
+        </span>
+
+      </div>
+
+
+      <button
+        type="button"
+        class="status-button"
+        (click)="volverAlLogin()"
+      >
+        Volver al inicio de sesión
+      </button>
+
+    </div>
+
+  </div>
+
+
+  <div
+    *ngIf="
+      estadoGoogle === 'error'
+    "
+    class="auth-overlay"
+  >
+
+    <div class="auth-status-card">
+
+      <img
+        src="/Logo_GymFlow.png"
+        alt="GymFlow"
+        class="auth-logo"
+      />
+
+      <div class="error-status-icon">
+        !
+      </div>
+
+      <h2>
+        No pudimos iniciar sesión
+      </h2>
+
+      <p>
+        {{ mensajeGoogle }}
+      </p>
+
+
+      <button
+        type="button"
+        class="status-button"
+        (click)="volverAlLogin()"
+      >
+        Intentar nuevamente
+      </button>
+
+    </div>
+
+  </div>
 
 </div>
