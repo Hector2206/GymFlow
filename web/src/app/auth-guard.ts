@@ -1,4 +1,6 @@
-import { inject } from '@angular/core';
+import {
+  inject
+} from '@angular/core';
 
 import {
   CanActivateFn,
@@ -71,25 +73,38 @@ export const authGuard:
       catchError((error) => {
 
         console.error(
-          'Sesión inválida:',
+          'No fue posible validar la sesión:',
           error
         );
 
-        authService.cerrarSesion();
+        if (
+          error.status === 401
+        ) {
 
-        return of(
-          router.createUrlTree(
-            [
-              '/login'
-            ],
-            {
-              queryParams: {
-                returnUrl:
-                  state.url
+          authService.cerrarSesion();
+
+          return of(
+            router.createUrlTree(
+              [
+                '/login'
+              ],
+              {
+                queryParams: {
+                  returnUrl:
+                    state.url
+                }
               }
-            }
-          )
-        );
+            )
+          );
+        }
+
+        /*
+         * Si Render está despertando, hay un problema
+         * temporal de red o el servicio responde 5xx,
+         * conservamos la sesión. El componente mostrará
+         * su estado de error sin destruir el token válido.
+         */
+        return of(true);
       })
     );
 };
