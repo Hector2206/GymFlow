@@ -1582,6 +1582,244 @@ app.MapPut(
     policy.RequireRole("Entrenador");
 });
 
+// ===============================
+// ELIMINAR RUTINA
+// ===============================
+
+app.MapDelete(
+    "/api/rutinas/{idRutina:int}",
+    async (
+        int idRutina,
+        ClaimsPrincipal usuario,
+        EntrenadorService entrenadorService,
+        IConfiguration configuration
+    ) =>
+    {
+        if (idRutina <= 0)
+        {
+            return Results.BadRequest(new
+            {
+                mensaje =
+                    "El id de la rutina no es válido."
+            });
+        }
+
+        var idEntrenador =
+            await entrenadorService.ObtenerIdPersonalAsync(
+                usuario
+            );
+
+        if (idEntrenador is null)
+        {
+            return Results.NotFound(new
+            {
+                mensaje =
+                    "No se encontró información del entrenador."
+            });
+        }
+
+        var connectionString =
+            configuration.GetConnectionString(
+                "PostgreSQL"
+            );
+
+        if (string.IsNullOrWhiteSpace(connectionString))
+        {
+            return Results.Problem(
+                title: "Configuración faltante",
+                detail:
+                    "No existe la cadena de conexión PostgreSQL.",
+                statusCode: 500
+            );
+        }
+
+        try
+        {
+            await using var connection =
+                new NpgsqlConnection(connectionString);
+
+            await connection.OpenAsync();
+
+            await using var transaction =
+                await connection.BeginTransactionAsync();
+
+            // ===============================
+            // VALIDAR EXISTENCIA Y PERTENENCIA
+            // ===============================
+
+            await using var validarCommand =
+                new NpgsqlCommand(
+                    """
+                    SELECT
+                        EXISTS (
+                            SELECT 1
+                            FROM rutinas
+                            WHERE id_rutina = @id_rutina
+                        ),
+                        EXISTS (
+                            SELECT 1
+                            FROM rutinas r
+                            INNER JOIN clientes c
+                                ON c.id_cliente = r.id_cliente
+                            WHERE r.id_rutina = @id_rutina
+                              AND c.id_entrenador = @id_entrenador
+                        );
+                    """,
+                    connection,
+                    transaction
+                );
+
+            validarCommand.Parameters.AddWithValue(
+                "id_rutina",
+                idRutina
+            );
+
+            validarCommand.Parameters.AddWithValue(
+                "id_entrenador",
+                idEntrenador.Value
+            );
+
+            bool existe;
+            bool pertenece;
+
+            await using (
+                var reader =
+                    await validarCommand.ExecuteReaderAsync()
+            )
+            {
+                await reader.ReadAsync();
+
+                existe =
+                    reader.GetBoolean(0);
+
+                pertenece =
+                    reader.GetBoolean(1);
+            }
+
+            if (!existe)
+            {
+                return Results.NotFound(new
+                {
+                    mensaje =
+                        "La rutina no existe."
+                });
+            }
+
+            if (!pertenece)
+            {
+                return Results.Json(
+                    new
+                    {
+                        mensaje =
+                            "Acceso denegado. La rutina no pertenece a un cliente asignado al entrenador autenticado."
+                    },
+                    statusCode:
+                        StatusCodes.Status403Forbidden
+                );
+            }
+
+            // ===============================
+            // ELIMINAR EJERCICIOS DE LA RUTINA
+            // ===============================
+
+            await using var eliminarEjerciciosCommand =
+                new NpgsqlCommand(
+                    """
+                    DELETE FROM ejercicios_rutina
+                    WHERE id_dia IN (
+                        SELECT id_dia
+                        FROM dias_rutina
+                        WHERE id_rutina = @id_rutina
+                    );
+                    """,
+                    connection,
+                    transaction
+                );
+
+            eliminarEjerciciosCommand.Parameters.AddWithValue(
+                "id_rutina",
+                idRutina
+            );
+
+            await eliminarEjerciciosCommand.ExecuteNonQueryAsync();
+
+            // ===============================
+            // ELIMINAR DÍAS
+            // ===============================
+
+            await using var eliminarDiasCommand =
+                new NpgsqlCommand(
+                    """
+                    DELETE FROM dias_rutina
+                    WHERE id_rutina = @id_rutina;
+                    """,
+                    connection,
+                    transaction
+                );
+
+            eliminarDiasCommand.Parameters.AddWithValue(
+                "id_rutina",
+                idRutina
+            );
+
+            await eliminarDiasCommand.ExecuteNonQueryAsync();
+
+            // ===============================
+            // ELIMINAR RUTINA
+            // ===============================
+
+            await using var eliminarRutinaCommand =
+                new NpgsqlCommand(
+                    """
+                    DELETE FROM rutinas
+                    WHERE id_rutina = @id_rutina;
+                    """,
+                    connection,
+                    transaction
+                );
+
+            eliminarRutinaCommand.Parameters.AddWithValue(
+                "id_rutina",
+                idRutina
+            );
+
+            await eliminarRutinaCommand.ExecuteNonQueryAsync();
+
+            await transaction.CommitAsync();
+
+            return Results.Ok(new
+            {
+                idRutina,
+                mensaje =
+                    "Rutina eliminada correctamente."
+            });
+        }
+        catch (PostgresException ex)
+        {
+            return Results.BadRequest(new
+            {
+                mensaje =
+                    "No se pudo eliminar la rutina.",
+                detalle =
+                    ex.MessageText
+            });
+        }
+        catch (Exception)
+        {
+            return Results.Problem(
+                title:
+                    "Error al eliminar rutina",
+                detail:
+                    "Ocurrió un error interno.",
+                statusCode: 500
+            );
+        }
+    }
+)
+.RequireAuthorization(policy =>
+{
+    policy.RequireRole("Entrenador");
+});
 
 // ===============================
 // LISTAR RUTINAS
