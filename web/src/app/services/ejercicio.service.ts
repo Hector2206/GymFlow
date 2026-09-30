@@ -15,6 +15,7 @@ import {
 } from '../../environments/environment';
 
 import {
+  ActualizarEjercicioRequest,
   CrearEjercicioRequest,
   Ejercicio
 } from '../models/ejercicio.model';
@@ -61,7 +62,7 @@ export class EjercicioService {
 
   actualizarEjercicio(
     idEjercicio: number,
-    request: CrearEjercicioRequest
+    request: ActualizarEjercicioRequest
   ): Observable<Ejercicio> {
 
     return this.http.put<Ejercicio>(

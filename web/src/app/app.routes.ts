@@ -47,8 +47,16 @@ import {
 } from './administrar-ejercicios/administrar-ejercicios';
 
 import {
+  FormularioEjercicio
+} from './formulario-ejercicio/formulario-ejercicio';
+
+import {
   AdministrarRutinas
 } from './administrar-rutinas/administrar-rutinas';
+
+import {
+  FormularioRutina
+} from './formulario-rutina/formulario-rutina';
 
 import {
   MiRutina
@@ -178,8 +186,44 @@ export const routes: Routes = [
   },
 
   {
+    path: 'entrenador/ejercicios/nuevo',
+    component: FormularioEjercicio,
+    canActivate: [
+      authGuard,
+      entrenadorGuard
+    ]
+  },
+
+  {
+    path: 'entrenador/ejercicios/editar/:id',
+    component: FormularioEjercicio,
+    canActivate: [
+      authGuard,
+      entrenadorGuard
+    ]
+  },
+
+  {
     path: 'entrenador/ejercicios',
     component: AdministrarEjercicios,
+    canActivate: [
+      authGuard,
+      entrenadorGuard
+    ]
+  },
+
+  {
+    path: 'entrenador/rutinas/nueva',
+    component: FormularioRutina,
+    canActivate: [
+      authGuard,
+      entrenadorGuard
+    ]
+  },
+
+  {
+    path: 'entrenador/rutinas/editar/:id',
+    component: FormularioRutina,
     canActivate: [
       authGuard,
       entrenadorGuard

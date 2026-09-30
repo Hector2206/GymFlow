@@ -11,3 +11,10 @@ export interface CrearEjercicioRequest {
   descripcion: string | null;
   imagenUrl?: string | null;
 }
+
+export interface ActualizarEjercicioRequest {
+  nombre: string;
+  descripcion: string | null;
+  imagenUrl?: string | null;
+  estado: boolean;
+}

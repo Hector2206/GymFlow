@@ -38,8 +38,8 @@
         </h1>
 
         <p class="subtitle">
-          Registra y administra los ejercicios
-          utilizados en las rutinas de tus clientes.
+          Consulta, busca y administra los ejercicios
+          utilizados en las rutinas de GymFlow.
         </p>
 
       </div>
@@ -48,7 +48,7 @@
       <button
         type="button"
         class="new-button"
-        (click)="abrirFormulario()"
+        (click)="nuevoEjercicio()"
       >
         + Nuevo Ejercicio
       </button>
@@ -62,236 +62,6 @@
     >
       {{ mensajeExito }}
     </div>
-
-
-    <section
-      *ngIf="mostrarFormulario"
-      class="form-section"
-    >
-
-      <div class="form-header">
-
-        <div>
-
-          <p class="form-label">
-            {{
-              modoFormulario === 'crear'
-                ? 'Nuevo ejercicio'
-                : 'Editar ejercicio'
-            }}
-          </p>
-
-          <h2>
-            {{
-              modoFormulario === 'crear'
-                ? 'Registrar ejercicio'
-                : 'Modificar ejercicio'
-            }}
-          </h2>
-
-          <p>
-            {{
-              modoFormulario === 'crear'
-                ? 'Agrega los datos del ejercicio y una imagen demostrativa opcional.'
-                : 'Modifica los datos del ejercicio seleccionado.'
-            }}
-          </p>
-
-        </div>
-
-
-        <button
-          type="button"
-          class="close-button"
-          (click)="cerrarFormulario()"
-        >
-          ×
-        </button>
-
-      </div>
-
-
-      <div
-        *ngIf="cargandoEdicion"
-        class="loading-state"
-      >
-        Cargando datos del ejercicio...
-      </div>
-
-
-      <form
-        *ngIf="!cargandoEdicion"
-        class="exercise-form"
-        (ngSubmit)="guardarEjercicio()"
-      >
-
-        <div class="form-group">
-
-          <label for="nombre">
-            Nombre del ejercicio
-          </label>
-
-          <input
-            id="nombre"
-            name="nombre"
-            type="text"
-            maxlength="120"
-            autocomplete="off"
-            placeholder="Ej. Press de banca"
-            [(ngModel)]="nombre"
-          />
-
-        </div>
-
-
-        <div class="form-group">
-
-          <label for="descripcion">
-            Descripción
-          </label>
-
-          <textarea
-            id="descripcion"
-            name="descripcion"
-            rows="4"
-            maxlength="500"
-            placeholder="Describe brevemente cómo se realiza el ejercicio."
-            [(ngModel)]="descripcion"
-          ></textarea>
-
-          <p class="field-message">
-            La descripción es opcional.
-          </p>
-
-        </div>
-
-
-        <div class="form-group">
-
-          <label for="imagenUrl">
-            URL de imagen demostrativa
-          </label>
-
-          <input
-            id="imagenUrl"
-            name="imagenUrl"
-            type="url"
-            autocomplete="off"
-            placeholder="https://ejemplo.com/ejercicio.jpg"
-            [(ngModel)]="imagenUrl"
-            (ngModelChange)="cambioImagen()"
-          />
-
-          <p class="field-message">
-            {{
-              modoFormulario === 'editar'
-                ? 'Puedes cambiar la URL o dejar el campo vacío para eliminar la imagen.'
-                : 'Pega aquí el enlace público de la imagen. La imagen es opcional.'
-            }}
-          </p>
-
-        </div>
-
-
-        <div
-          *ngIf="imagenUrl.trim()"
-          class="image-preview"
-        >
-
-          <div class="preview-header">
-
-            <span>
-              Vista previa
-            </span>
-
-            <strong>
-              Imagen demostrativa
-            </strong>
-
-          </div>
-
-
-          <img
-            *ngIf="imagenValida"
-            [src]="imagenUrl.trim()"
-            alt="Vista previa del ejercicio"
-            class="preview-image"
-            (error)="imagenValida = false"
-          />
-
-
-          <div
-            *ngIf="!imagenValida"
-            class="preview-error"
-          >
-
-            <div>
-              🖼️
-            </div>
-
-            <strong>
-              No se pudo cargar la imagen
-            </strong>
-
-            <p>
-              Verifica que la URL sea pública
-              y apunte directamente a una imagen.
-            </p>
-
-          </div>
-
-        </div>
-
-
-        <div
-          *ngIf="
-            modoFormulario === 'editar' &&
-            !imagenUrl.trim()
-          "
-          class="remove-image-info"
-        >
-          La imagen demostrativa se eliminará
-          al guardar los cambios.
-        </div>
-
-
-        <div
-          *ngIf="errorFormulario"
-          class="message error-message"
-        >
-          {{ errorFormulario }}
-        </div>
-
-
-        <div class="form-actions">
-
-          <button
-            type="button"
-            class="cancel-button"
-            (click)="cerrarFormulario()"
-          >
-            Cancelar
-          </button>
-
-          <button
-            type="submit"
-            class="save-button"
-            [disabled]="guardando"
-          >
-            {{
-              guardando
-                ? 'Guardando...'
-                : modoFormulario === 'crear'
-                  ? 'Guardar ejercicio'
-                  : 'Guardar cambios'
-            }}
-          </button>
-
-        </div>
-
-      </form>
-
-    </section>
 
 
     <section class="list-section">
@@ -309,8 +79,8 @@
           </h2>
 
           <p>
-            Consulta, busca y administra
-            los ejercicios disponibles en GymFlow.
+            Selecciona un ejercicio para editar
+            todos sus datos en una pantalla independiente.
           </p>
 
         </div>
@@ -502,6 +272,14 @@
                 class="image-status"
               >
                 Sin imagen demostrativa
+              </p>
+
+
+              <p
+                *ngIf="!ejercicio.estado"
+                class="image-status"
+              >
+                Puedes reactivarlo desde Editar.
               </p>
 
 
