@@ -4,13 +4,14 @@ import {
 
 import {
   CanActivateFn,
-  Router
+  Router,
+  UrlTree
 } from '@angular/router';
 
 
 function validarRol(
   rolPermitido: string
-): boolean | ReturnType<Router['createUrlTree']> {
+): boolean | UrlTree {
 
   const router =
     inject(Router);
