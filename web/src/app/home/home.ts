@@ -331,6 +331,27 @@ export class Home implements OnInit {
   }
 
 
+  irRutinasCliente(): void {
+
+    if (
+      !this.esCliente()
+    ) {
+
+      this.mensaje =
+        'Esta opción está disponible únicamente para clientes.';
+
+      this.changeDetector
+        .detectChanges();
+
+      return;
+    }
+
+    this.router.navigate([
+      '/rutinas'
+    ]);
+  }
+
+
   irMisClientesEntrenador(): void {
 
     if (
