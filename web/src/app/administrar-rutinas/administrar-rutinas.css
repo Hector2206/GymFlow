@@ -95,7 +95,9 @@
 
   margin: 0 auto;
 
-  padding: 48px 30px 70px;
+  padding:
+    48px 30px
+    70px;
 }
 
 .page-header {
@@ -109,7 +111,8 @@
 }
 
 .section-label {
-  margin: 0 0 7px;
+  margin:
+    0 0 7px;
 
   color: #9a7728;
 
@@ -135,7 +138,8 @@
 .subtitle {
   max-width: 650px;
 
-  margin: 8px 0 0;
+  margin:
+    8px 0 0;
 
   color: #777067;
 
@@ -146,7 +150,8 @@
 .new-routine-button {
   min-height: 44px;
 
-  padding: 11px 19px;
+  padding:
+    11px 19px;
 
   flex-shrink: 0;
 
@@ -211,7 +216,8 @@
 }
 
 .section-heading h2 {
-  margin: 0 0 5px;
+  margin:
+    0 0 5px;
 
   font-size: 18px;
 }
@@ -227,7 +233,8 @@
 
 .loading-state,
 .empty-state {
-  padding: 34px 20px;
+  padding:
+    34px 20px;
 
   border:
     1px dashed #d8c8a5;
@@ -246,7 +253,8 @@
 }
 
 .empty-state h3 {
-  margin: 0 0 7px;
+  margin:
+    0 0 7px;
 }
 
 .empty-state p {
@@ -258,7 +266,8 @@
 }
 
 .message {
-  padding: 14px 16px;
+  padding:
+    14px 16px;
 
   border-radius: 13px;
 
@@ -267,7 +276,7 @@
 }
 
 .success-message {
-  margin-bottom: 22px;
+  margin-bottom: 20px;
 
   border:
     1px solid #b7d7bc;
@@ -278,6 +287,20 @@
   background: #f2f8f2;
 
   color: #2e6b32;
+}
+
+.action-error-message {
+  margin-bottom: 20px;
+
+  border:
+    1px solid #edb9bf;
+
+  border-left:
+    4px solid #c21b2e;
+
+  background: #fff5f5;
+
+  color: #8f2030;
 }
 
 .error-message {
@@ -299,7 +322,8 @@
 }
 
 .retry-button {
-  padding: 8px 13px;
+  padding:
+    8px 13px;
 
   border:
     1px solid #d8c8a5;
@@ -314,7 +338,8 @@
 }
 
 .results-count {
-  margin: 0 0 16px;
+  margin:
+    0 0 16px;
 
   color: #777067;
 
@@ -393,7 +418,8 @@
 
   margin-bottom: 15px;
 
-  padding: 12px 0;
+  padding:
+    12px 0;
 
   border-top:
     1px solid #eee7dc;
@@ -425,7 +451,8 @@
 
   gap: 15px;
 
-  padding: 7px 0;
+  padding:
+    7px 0;
 
   color: #777067;
 
@@ -438,28 +465,66 @@
   text-align: right;
 }
 
-.edit-button {
-  width: 100%;
-  min-height: 40px;
+.card-actions {
+  display: grid;
 
-  border:
-    1px solid #d8c392;
+  grid-template-columns:
+    minmax(0, 1fr)
+    auto;
+
+  gap: 8px;
+}
+
+.edit-button,
+.delete-routine-button {
+  min-height: 40px;
 
   border-radius: 11px;
 
-  background: #f3ead8;
-
-  color: #8a6814;
-
+  font-size: 12px;
   font-weight: 700;
 
   cursor: pointer;
 }
 
-.edit-button:hover {
+.edit-button {
+  border:
+    1px solid #d8c392;
+
+  background: #f3ead8;
+
+  color: #8a6814;
+}
+
+.edit-button:hover:not(:disabled) {
   border-color: #b58a2a;
 
   background: #eadcbf;
+}
+
+.delete-routine-button {
+  padding:
+    0 15px;
+
+  border:
+    1px solid #edb9bf;
+
+  background: #fff5f5;
+
+  color: #a33a47;
+}
+
+.delete-routine-button:hover:not(:disabled) {
+  border-color: #c21b2e;
+
+  background: #fcebed;
+}
+
+.edit-button:disabled,
+.delete-routine-button:disabled {
+  opacity: 0.55;
+
+  cursor: not-allowed;
 }
 
 @media (
@@ -478,7 +543,8 @@
   .topbar {
     min-height: 74px;
 
-    padding: 8px 17px;
+    padding:
+      8px 17px;
   }
 
   .logo {
@@ -502,7 +568,8 @@
   }
 
   .rutinas-section {
-    padding: 21px 18px;
+    padding:
+      21px 18px;
   }
 
   .error-message {
@@ -516,5 +583,18 @@
 
   .detail-row strong {
     text-align: left;
+  }
+}
+
+@media (
+  max-width: 430px
+) {
+
+  .card-actions {
+    grid-template-columns: 1fr;
+  }
+
+  .delete-routine-button {
+    min-height: 40px;
   }
 }

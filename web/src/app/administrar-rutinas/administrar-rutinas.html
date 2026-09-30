@@ -64,6 +64,14 @@
     </div>
 
 
+    <div
+      *ngIf="mensajeErrorAccion"
+      class="message action-error-message"
+    >
+      {{ mensajeErrorAccion }}
+    </div>
+
+
     <section class="rutinas-section">
 
       <div class="section-heading">
@@ -79,8 +87,8 @@
           </h2>
 
           <p>
-            Selecciona una rutina para modificar
-            toda su información en una pantalla independiente.
+            Edita la información de una rutina
+            o elimínala si ya no será utilizada.
           </p>
 
         </div>
@@ -150,10 +158,13 @@
       >
 
         <p class="results-count">
+
           Rutinas registradas:
+
           <strong>
             {{ rutinas.length }}
           </strong>
+
         </p>
 
 
@@ -220,13 +231,36 @@
             </div>
 
 
-            <button
-              type="button"
-              class="edit-button"
-              (click)="editarRutina(rutina)"
-            >
-              Editar rutina
-            </button>
+            <div class="card-actions">
+
+              <button
+                type="button"
+                class="edit-button"
+                [disabled]="
+                  eliminandoIdRutina !== null
+                "
+                (click)="editarRutina(rutina)"
+              >
+                Editar rutina
+              </button>
+
+
+              <button
+                type="button"
+                class="delete-routine-button"
+                [disabled]="
+                  eliminandoIdRutina !== null
+                "
+                (click)="eliminarRutina(rutina)"
+              >
+                {{
+                  estaEliminando(rutina)
+                    ? 'Eliminando...'
+                    : 'Eliminar'
+                }}
+              </button>
+
+            </div>
 
           </article>
 

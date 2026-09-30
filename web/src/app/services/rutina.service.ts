@@ -80,4 +80,20 @@ export class RutinaService {
       request
     );
   }
+
+
+  eliminarRutina(
+    idRutina: number
+  ): Observable<{
+    idRutina: number;
+    mensaje: string;
+  }> {
+
+    return this.http.delete<{
+      idRutina: number;
+      mensaje: string;
+    }>(
+      `${environment.rutinaServiceUrl}/api/rutinas/${idRutina}`
+    );
+  }
 }
