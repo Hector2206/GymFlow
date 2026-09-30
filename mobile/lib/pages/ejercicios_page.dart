@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 
 import '../models/ejercicio.dart';
 import '../services/ejercicio_service.dart';
+import 'crear_ejercicio_page.dart';
+
 
 class EjerciciosPage extends StatefulWidget {
   const EjerciciosPage({
@@ -234,7 +236,7 @@ class _EjerciciosPageState
           ),
         ],
       ),
-      body: SafeArea(
+           body: SafeArea(
         child: Column(
           children: [
             _construirEncabezado(),
@@ -243,6 +245,20 @@ class _EjerciciosPageState
                   _construirContenido(),
             ),
           ],
+        ),
+      ),
+
+      floatingActionButton:
+          FloatingActionButton.extended(
+        backgroundColor: _dorado,
+        foregroundColor: Colors.white,
+        onPressed:
+            _abrirCrearEjercicio,
+        icon: const Icon(
+          Icons.add_rounded,
+        ),
+        label: const Text(
+          'Nuevo ejercicio',
         ),
       ),
     );
@@ -786,5 +802,18 @@ class _EjerciciosPageState
         ],
       ),
     );
+  }
+    Future<void> _abrirCrearEjercicio() async {
+    final creado = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) =>
+            const CrearEjercicioPage(),
+      ),
+    );
+
+    if (creado == true) {
+      await _cargarEjercicios();
+    }
   }
 }
