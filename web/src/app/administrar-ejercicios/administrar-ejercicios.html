@@ -1,0 +1,551 @@
+<div class="ejercicios-page">
+
+  <header class="topbar">
+
+    <div class="header-left">
+
+      <button
+        type="button"
+        class="back-button"
+        (click)="volverInicio()"
+      >
+        ←
+      </button>
+
+      <img
+        src="/Logo_GymFlow.png"
+        alt="GymFlow"
+        class="logo"
+      />
+
+    </div>
+
+  </header>
+
+
+  <main class="content">
+
+    <section class="page-header">
+
+      <div>
+
+        <p class="section-label">
+          Entrenador
+        </p>
+
+        <h1>
+          Administrar Ejercicios
+        </h1>
+
+        <p class="subtitle">
+          Registra y administra los ejercicios
+          utilizados en las rutinas de tus clientes.
+        </p>
+
+      </div>
+
+
+      <button
+        type="button"
+        class="new-button"
+        (click)="abrirFormulario()"
+      >
+        + Nuevo Ejercicio
+      </button>
+
+    </section>
+
+
+    <div
+      *ngIf="mensajeExito"
+      class="message success-message"
+    >
+      {{ mensajeExito }}
+    </div>
+
+
+    <section
+      *ngIf="mostrarFormulario"
+      class="form-section"
+    >
+
+      <div class="form-header">
+
+        <div>
+
+          <p class="form-label">
+            {{
+              modoFormulario === 'crear'
+                ? 'Nuevo ejercicio'
+                : 'Editar ejercicio'
+            }}
+          </p>
+
+          <h2>
+            {{
+              modoFormulario === 'crear'
+                ? 'Registrar ejercicio'
+                : 'Modificar ejercicio'
+            }}
+          </h2>
+
+          <p>
+            {{
+              modoFormulario === 'crear'
+                ? 'Agrega los datos del ejercicio y una imagen demostrativa opcional.'
+                : 'Modifica los datos del ejercicio seleccionado.'
+            }}
+          </p>
+
+        </div>
+
+
+        <button
+          type="button"
+          class="close-button"
+          (click)="cerrarFormulario()"
+        >
+          ×
+        </button>
+
+      </div>
+
+
+      <div
+        *ngIf="cargandoEdicion"
+        class="loading-state"
+      >
+        Cargando datos del ejercicio...
+      </div>
+
+
+      <form
+        *ngIf="!cargandoEdicion"
+        class="exercise-form"
+        (ngSubmit)="guardarEjercicio()"
+      >
+
+        <div class="form-group">
+
+          <label for="nombre">
+            Nombre del ejercicio
+          </label>
+
+          <input
+            id="nombre"
+            name="nombre"
+            type="text"
+            maxlength="120"
+            autocomplete="off"
+            placeholder="Ej. Press de banca"
+            [(ngModel)]="nombre"
+          />
+
+        </div>
+
+
+        <div class="form-group">
+
+          <label for="descripcion">
+            Descripción
+          </label>
+
+          <textarea
+            id="descripcion"
+            name="descripcion"
+            rows="4"
+            maxlength="500"
+            placeholder="Describe brevemente cómo se realiza el ejercicio."
+            [(ngModel)]="descripcion"
+          ></textarea>
+
+          <p class="field-message">
+            La descripción es opcional.
+          </p>
+
+        </div>
+
+
+        <div class="form-group">
+
+          <label for="imagenUrl">
+            URL de imagen demostrativa
+          </label>
+
+          <input
+            id="imagenUrl"
+            name="imagenUrl"
+            type="url"
+            autocomplete="off"
+            placeholder="https://ejemplo.com/ejercicio.jpg"
+            [(ngModel)]="imagenUrl"
+            (ngModelChange)="cambioImagen()"
+          />
+
+          <p class="field-message">
+            {{
+              modoFormulario === 'editar'
+                ? 'Puedes cambiar la URL o dejar el campo vacío para eliminar la imagen.'
+                : 'Pega aquí el enlace público de la imagen. La imagen es opcional.'
+            }}
+          </p>
+
+        </div>
+
+
+        <div
+          *ngIf="imagenUrl.trim()"
+          class="image-preview"
+        >
+
+          <div class="preview-header">
+
+            <span>
+              Vista previa
+            </span>
+
+            <strong>
+              Imagen demostrativa
+            </strong>
+
+          </div>
+
+
+          <img
+            *ngIf="imagenValida"
+            [src]="imagenUrl.trim()"
+            alt="Vista previa del ejercicio"
+            class="preview-image"
+            (error)="imagenValida = false"
+          />
+
+
+          <div
+            *ngIf="!imagenValida"
+            class="preview-error"
+          >
+
+            <div>
+              🖼️
+            </div>
+
+            <strong>
+              No se pudo cargar la imagen
+            </strong>
+
+            <p>
+              Verifica que la URL sea pública
+              y apunte directamente a una imagen.
+            </p>
+
+          </div>
+
+        </div>
+
+
+        <div
+          *ngIf="
+            modoFormulario === 'editar' &&
+            !imagenUrl.trim()
+          "
+          class="remove-image-info"
+        >
+          La imagen demostrativa se eliminará
+          al guardar los cambios.
+        </div>
+
+
+        <div
+          *ngIf="errorFormulario"
+          class="message error-message"
+        >
+          {{ errorFormulario }}
+        </div>
+
+
+        <div class="form-actions">
+
+          <button
+            type="button"
+            class="cancel-button"
+            (click)="cerrarFormulario()"
+          >
+            Cancelar
+          </button>
+
+          <button
+            type="submit"
+            class="save-button"
+            [disabled]="guardando"
+          >
+            {{
+              guardando
+                ? 'Guardando...'
+                : modoFormulario === 'crear'
+                  ? 'Guardar ejercicio'
+                  : 'Guardar cambios'
+            }}
+          </button>
+
+        </div>
+
+      </form>
+
+    </section>
+
+
+    <section class="list-section">
+
+      <div class="section-heading">
+
+        <div class="section-icon">
+          🏋️
+        </div>
+
+        <div>
+
+          <h2>
+            Ejercicios registrados
+          </h2>
+
+          <p>
+            Consulta, busca y administra
+            los ejercicios disponibles en GymFlow.
+          </p>
+
+        </div>
+
+      </div>
+
+
+      <form
+        class="search-form"
+        (ngSubmit)="buscarEjercicios()"
+      >
+
+        <div class="search-field">
+
+          <input
+            type="text"
+            name="busqueda"
+            [(ngModel)]="busqueda"
+            placeholder="Buscar ejercicio por nombre..."
+            autocomplete="off"
+          />
+
+        </div>
+
+
+        <button
+          type="submit"
+          class="search-button"
+        >
+          Buscar
+        </button>
+
+
+        <button
+          *ngIf="busqueda.trim()"
+          type="button"
+          class="clear-button"
+          (click)="limpiarBusqueda()"
+        >
+          Limpiar
+        </button>
+
+      </form>
+
+
+      <div
+        *ngIf="cargando"
+        class="loading-state"
+      >
+        Cargando ejercicios...
+      </div>
+
+
+      <div
+        *ngIf="error"
+        class="message error-message list-error"
+      >
+
+        <span>
+          {{ error }}
+        </span>
+
+        <button
+          type="button"
+          class="retry-button"
+          (click)="recargarListadoActual()"
+        >
+          Reintentar
+        </button>
+
+      </div>
+
+
+      <div
+        *ngIf="
+          !cargando &&
+          !error &&
+          ejercicios.length === 0
+        "
+        class="empty-state"
+      >
+
+        <div class="empty-icon">
+          🔎
+        </div>
+
+        <h3>
+          No se encontraron ejercicios
+        </h3>
+
+        <p *ngIf="busqueda.trim()">
+          No existen resultados para
+          "{{ busqueda }}".
+        </p>
+
+        <p *ngIf="!busqueda.trim()">
+          Crea el primer ejercicio para comenzar.
+        </p>
+
+      </div>
+
+
+      <div
+        *ngIf="
+          !cargando &&
+          !error &&
+          ejercicios.length > 0
+        "
+      >
+
+        <p class="results-count">
+          Resultados:
+          <strong>
+            {{ ejercicios.length }}
+          </strong>
+        </p>
+
+
+        <div class="exercises-grid">
+
+          <article
+            class="exercise-card"
+            *ngFor="let ejercicio of ejercicios"
+            [class.inactive-card]="!ejercicio.estado"
+          >
+
+            <div class="exercise-image">
+
+              <img
+                *ngIf="ejercicio.imagenUrl"
+                [src]="ejercicio.imagenUrl"
+                [alt]="ejercicio.nombre"
+              />
+
+              <div
+                *ngIf="!ejercicio.imagenUrl"
+                class="without-image"
+              >
+                🖼️
+              </div>
+
+            </div>
+
+
+            <div class="exercise-body">
+
+              <div class="exercise-heading">
+
+                <span class="exercise-id">
+                  Ejercicio #{{ ejercicio.idEjercicio }}
+                </span>
+
+                <span
+                  class="status"
+                  [class.inactive]="!ejercicio.estado"
+                >
+                  {{
+                    ejercicio.estado
+                      ? 'Activo'
+                      : 'Inactivo'
+                  }}
+                </span>
+
+              </div>
+
+
+              <h3>
+                {{ ejercicio.nombre }}
+              </h3>
+
+
+              <p
+                *ngIf="ejercicio.descripcion"
+                class="description"
+              >
+                {{ ejercicio.descripcion }}
+              </p>
+
+              <p
+                *ngIf="!ejercicio.descripcion"
+                class="description without-description"
+              >
+                Sin descripción.
+              </p>
+
+
+              <p
+                *ngIf="!ejercicio.imagenUrl"
+                class="image-status"
+              >
+                Sin imagen demostrativa
+              </p>
+
+
+              <div class="card-actions">
+
+                <button
+                  type="button"
+                  class="edit-button"
+                  (click)="editarEjercicio(ejercicio)"
+                >
+                  Editar
+                </button>
+
+
+                <button
+                  type="button"
+                  class="disable-button"
+                  [disabled]="
+                    !ejercicio.estado ||
+                    desactivandoId === ejercicio.idEjercicio
+                  "
+                  (click)="desactivarEjercicio(ejercicio)"
+                >
+                  {{
+                    !ejercicio.estado
+                      ? 'Desactivado'
+                      : desactivandoId === ejercicio.idEjercicio
+                        ? 'Desactivando...'
+                        : 'Desactivar'
+                  }}
+                </button>
+
+              </div>
+
+            </div>
+
+          </article>
+
+        </div>
+
+      </div>
+
+    </section>
+
+  </main>
+
+</div>

@@ -352,6 +352,27 @@ export class Home implements OnInit {
   }
 
 
+  irEjerciciosEntrenador(): void {
+
+    if (
+      !this.esEntrenador()
+    ) {
+
+      this.mensaje =
+        'Esta opción está disponible únicamente para entrenadores.';
+
+      this.changeDetector
+        .detectChanges();
+
+      return;
+    }
+
+    this.router.navigate([
+      '/entrenador/ejercicios'
+    ]);
+  }
+
+
   irRutinasEntrenador(): void {
 
     if (

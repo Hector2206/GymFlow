@@ -15,6 +15,7 @@ import {
 } from '../../environments/environment';
 
 import {
+  CrearEjercicioRequest,
   Ejercicio
 } from '../models/ejercicio.model';
 
@@ -27,11 +28,70 @@ export class EjercicioService {
     private http: HttpClient
   ) {}
 
+
   listarEjercicios():
     Observable<Ejercicio[]> {
 
     return this.http.get<Ejercicio[]>(
       `${environment.rutinaServiceUrl}/api/ejercicios`
+    );
+  }
+
+
+  obtenerEjercicio(
+    idEjercicio: number
+  ): Observable<Ejercicio> {
+
+    return this.http.get<Ejercicio>(
+      `${environment.rutinaServiceUrl}/api/ejercicios/${idEjercicio}`
+    );
+  }
+
+
+  crearEjercicio(
+    request: CrearEjercicioRequest
+  ): Observable<Ejercicio> {
+
+    return this.http.post<Ejercicio>(
+      `${environment.rutinaServiceUrl}/api/ejercicios`,
+      request
+    );
+  }
+
+
+  actualizarEjercicio(
+    idEjercicio: number,
+    request: CrearEjercicioRequest
+  ): Observable<Ejercicio> {
+
+    return this.http.put<Ejercicio>(
+      `${environment.rutinaServiceUrl}/api/ejercicios/${idEjercicio}`,
+      request
+    );
+  }
+
+
+  desactivarEjercicio(
+    idEjercicio: number
+  ): Observable<any> {
+
+    return this.http.delete(
+      `${environment.rutinaServiceUrl}/api/ejercicios/${idEjercicio}`
+    );
+  }
+
+
+  buscarEjercicios(
+    nombre: string
+  ): Observable<Ejercicio[]> {
+
+    return this.http.get<Ejercicio[]>(
+      `${environment.rutinaServiceUrl}/api/ejercicios/buscar`,
+      {
+        params: {
+          nombre
+        }
+      }
     );
   }
 }
