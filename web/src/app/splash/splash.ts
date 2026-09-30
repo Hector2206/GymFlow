@@ -7,6 +7,10 @@ import {
   Router
 } from '@angular/router';
 
+import {
+  AuthService
+} from '../services/auth.service';
+
 @Component({
   selector: 'app-splash',
   standalone: true,
@@ -21,7 +25,9 @@ implements OnInit {
 
   constructor(
     private router:
-      Router
+      Router,
+    private authService:
+      AuthService
   ) {}
 
 
@@ -29,6 +35,18 @@ implements OnInit {
 
     setTimeout(
       () => {
+
+        if (
+          this.authService
+            .estaAutenticado()
+        ) {
+
+          this.router.navigate([
+            '/home'
+          ]);
+
+          return;
+        }
 
         this.router.navigate([
           '/login'
