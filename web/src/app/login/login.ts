@@ -13,6 +13,7 @@ import {
 } from '@angular/forms';
 
 import {
+  ActivatedRoute,
   Router
 } from '@angular/router';
 
@@ -41,7 +42,8 @@ declare const google: any;
   templateUrl: './login.html',
   styleUrl: './login.css'
 })
-export class Login implements AfterViewInit {
+export class Login
+implements AfterViewInit {
 
   correo = '';
 
@@ -57,62 +59,76 @@ export class Login implements AfterViewInit {
     environment.googleClientId;
 
   constructor(
-    private authService: AuthService,
-    private http: HttpClient,
-    private router: Router,
-    private changeDetector: ChangeDetectorRef
+    private authService:
+      AuthService,
+    private http:
+      HttpClient,
+    private router:
+      Router,
+    private route:
+      ActivatedRoute,
+    private changeDetector:
+      ChangeDetectorRef
   ) {}
+
 
   ngAfterViewInit(): void {
 
     this.inicializarGoogle();
-
   }
+
 
   iniciarSesion(): void {
 
     this.error = '';
 
-    if (!this.correo.trim()) {
+    if (
+      !this.correo.trim()
+    ) {
 
       this.error =
         'El correo es obligatorio.';
 
       return;
-
     }
 
-    if (!this.correoValido(this.correo)) {
+    if (
+      !this.correoValido(
+        this.correo
+      )
+    ) {
 
       this.error =
         'Ingresa un correo electrónico válido.';
 
       return;
-
     }
 
-    if (!this.password.trim()) {
+    if (
+      !this.password.trim()
+    ) {
 
       this.error =
         'La contraseña es obligatoria.';
 
       return;
-
     }
 
-    if (this.password.length < 6) {
+    if (
+      this.password.length < 6
+    ) {
 
       this.error =
         'La contraseña debe tener al menos 6 caracteres.';
 
       return;
-
     }
 
-    if (this.cargando) {
+    if (
+      this.cargando
+    ) {
 
       return;
-
     }
 
     this.cargando = true;
@@ -126,16 +142,15 @@ export class Login implements AfterViewInit {
 
         next: () => {
 
-          this.cargando = false;
+          this.cargando =
+            false;
 
-          this.router.navigate([
-            '/home'
-          ]);
-
+          this.navegarDespuesDelLogin();
         },
 
         error: (
-          error: HttpErrorResponse
+          error:
+            HttpErrorResponse
         ) => {
 
           console.error(
@@ -143,14 +158,19 @@ export class Login implements AfterViewInit {
             error
           );
 
-          this.cargando = false;
+          this.cargando =
+            false;
 
-          if (error.status === 401) {
+          if (
+            error.status === 401
+          ) {
 
             this.error =
               'Correo o contraseña incorrectos.';
 
-          } else if (error.status === 0) {
+          } else if (
+            error.status === 0
+          ) {
 
             this.error =
               'No se pudo conectar con el servicio de autenticación.';
@@ -159,23 +179,24 @@ export class Login implements AfterViewInit {
 
             this.error =
               'Ocurrió un error al iniciar sesión.';
-
           }
 
           this.changeDetector
             .detectChanges();
-
         }
-
       });
-
   }
+
 
   inicializarGoogle(): void {
 
-    const intentarInicializar = () => {
+    const intentarInicializar =
+      () => {
 
-      if (typeof google === 'undefined') {
+      if (
+        typeof google ===
+        'undefined'
+      ) {
 
         setTimeout(
           intentarInicializar,
@@ -183,69 +204,69 @@ export class Login implements AfterViewInit {
         );
 
         return;
-
       }
 
-      google.accounts.id.initialize({
+      google.accounts.id
+        .initialize({
 
-        client_id:
-          this.googleClientId,
+          client_id:
+            this.googleClientId,
 
-        callback:
-          (response: any) => {
+          callback:
+            (response: any) => {
 
-            this.loginGoogle(
-              response.credential
-            );
-
-          }
-
-      });
+              this.loginGoogle(
+                response.credential
+              );
+            }
+        });
 
       const contenedor =
         document.getElementById(
           'google-login-button'
         );
 
-      if (!contenedor) {
+      if (
+        !contenedor
+      ) {
 
         return;
-
       }
 
-      google.accounts.id.renderButton(
-        contenedor,
-        {
+      google.accounts.id
+        .renderButton(
+          contenedor,
+          {
 
-          theme:
-            'outline',
+            theme:
+              'outline',
 
-          size:
-            'large',
+            size:
+              'large',
 
-          shape:
-            'pill',
+            shape:
+              'pill',
 
-          text:
-            'signin_with',
+            text:
+              'signin_with',
 
-          width:
-            320
-
-        }
-      );
-
+            width:
+              320
+          }
+        );
     };
 
     intentarInicializar();
-
   }
+
 
   loginGoogle(
     credential: string
   ): void {
 
-    if (!credential) {
+    if (
+      !credential
+    ) {
 
       this.error =
         'Google no devolvió una credencial válida.';
@@ -254,13 +275,13 @@ export class Login implements AfterViewInit {
         .detectChanges();
 
       return;
-
     }
 
-    if (this.cargandoGoogle) {
+    if (
+      this.cargandoGoogle
+    ) {
 
       return;
-
     }
 
     this.error = '';
@@ -269,8 +290,8 @@ export class Login implements AfterViewInit {
 
     const body = {
 
-      token: credential
-
+      token:
+        credential
     };
 
     this.http
@@ -280,14 +301,19 @@ export class Login implements AfterViewInit {
       )
       .subscribe({
 
-        next: (response) => {
+        next: (
+          response
+        ) => {
 
-          this.cargandoGoogle = false;
+          this.cargandoGoogle =
+            false;
 
           const token =
             response?.token;
 
-          if (!token) {
+          if (
+            !token
+          ) {
 
             this.error =
               'El servidor no devolvió un token válido.';
@@ -296,7 +322,6 @@ export class Login implements AfterViewInit {
               .detectChanges();
 
             return;
-
           }
 
           localStorage.setItem(
@@ -304,7 +329,9 @@ export class Login implements AfterViewInit {
             token
           );
 
-          if (response?.usuario) {
+          if (
+            response?.usuario
+          ) {
 
             localStorage.setItem(
               'usuario',
@@ -312,17 +339,14 @@ export class Login implements AfterViewInit {
                 response.usuario
               )
             );
-
           }
 
-          this.router.navigate([
-            '/home'
-          ]);
-
+          this.navegarDespuesDelLogin();
         },
 
         error: (
-          error: HttpErrorResponse
+          error:
+            HttpErrorResponse
         ) => {
 
           console.error(
@@ -330,27 +354,36 @@ export class Login implements AfterViewInit {
             error
           );
 
-          this.cargandoGoogle = false;
+          this.cargandoGoogle =
+            false;
 
-          if (error.status === 400) {
+          if (
+            error.status === 400
+          ) {
 
             this.error =
               error.error?.mensaje ||
               'La credencial de Google no es válida.';
 
-          } else if (error.status === 401) {
+          } else if (
+            error.status === 401
+          ) {
 
             this.error =
               error.error?.mensaje ||
               'Esta cuenta de Google no está registrada en GymFlow.';
 
-          } else if (error.status === 403) {
+          } else if (
+            error.status === 403
+          ) {
 
             this.error =
               error.error?.mensaje ||
               'La cuenta de Google no coincide con la registrada.';
 
-          } else if (error.status === 0) {
+          } else if (
+            error.status === 0
+          ) {
 
             this.error =
               'No se pudo conectar con el servicio de Google.';
@@ -360,17 +393,42 @@ export class Login implements AfterViewInit {
             this.error =
               error.error?.detail ||
               'No fue posible iniciar sesión con Google.';
-
           }
 
           this.changeDetector
             .detectChanges();
-
         }
-
       });
-
   }
+
+
+  navegarDespuesDelLogin(): void {
+
+    const returnUrl =
+      this.route.snapshot
+        .queryParamMap
+        .get(
+          'returnUrl'
+        );
+
+    if (
+      returnUrl &&
+      returnUrl.startsWith('/') &&
+      !returnUrl.startsWith('//')
+    ) {
+
+      this.router.navigateByUrl(
+        returnUrl
+      );
+
+      return;
+    }
+
+    this.router.navigate([
+      '/home'
+    ]);
+  }
+
 
   correoValido(
     correo: string
@@ -382,7 +440,5 @@ export class Login implements AfterViewInit {
     return expresion.test(
       correo.trim()
     );
-
   }
-
 }

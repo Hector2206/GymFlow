@@ -19,7 +19,11 @@ import {
   AuthService
 } from './services/auth.service';
 
-export const authGuard: CanActivateFn = () => {
+export const authGuard:
+  CanActivateFn = (
+    _route,
+    state
+  ) => {
 
   const router =
     inject(Router);
@@ -37,9 +41,17 @@ export const authGuard: CanActivateFn = () => {
 
     authService.cerrarSesion();
 
-    return router.createUrlTree([
-      '/login'
-    ]);
+    return router.createUrlTree(
+      [
+        '/login'
+      ],
+      {
+        queryParams: {
+          returnUrl:
+            state.url
+        }
+      }
+    );
   }
 
   return usuarioService
@@ -66,9 +78,17 @@ export const authGuard: CanActivateFn = () => {
         authService.cerrarSesion();
 
         return of(
-          router.createUrlTree([
-            '/login'
-          ])
+          router.createUrlTree(
+            [
+              '/login'
+            ],
+            {
+              queryParams: {
+                returnUrl:
+                  state.url
+              }
+            }
+          )
         );
       })
     );

@@ -30,6 +30,7 @@ export class RutinaService {
     private http: HttpClient
   ) {}
 
+
   listarRutinas():
     Observable<RutinaResumen[]> {
 
@@ -37,6 +38,7 @@ export class RutinaService {
       `${environment.rutinaServiceUrl}/api/rutinas`
     );
   }
+
 
   obtenerRutinaPorId(
     idRutina: number
@@ -47,6 +49,16 @@ export class RutinaService {
     );
   }
 
+
+  obtenerMiRutina():
+    Observable<RutinaDetalle> {
+
+    return this.http.get<RutinaDetalle>(
+      `${environment.rutinaServiceUrl}/api/rutinas/mi-rutina`
+    );
+  }
+
+
   crearRutina(
     request: CrearRutinaRequest
   ): Observable<RutinaGuardadaResponse> {
@@ -56,6 +68,7 @@ export class RutinaService {
       request
     );
   }
+
 
   actualizarRutina(
     idRutina: number,

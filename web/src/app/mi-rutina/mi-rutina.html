@@ -1,0 +1,393 @@
+<div class="rutina-page">
+
+  <header class="topbar">
+
+    <div class="header-left">
+
+      <button
+        type="button"
+        class="back-button"
+        (click)="volverInicio()"
+      >
+        ←
+      </button>
+
+      <img
+        src="/Logo_GymFlow.png"
+        alt="GymFlow"
+        class="logo"
+      />
+
+    </div>
+
+  </header>
+
+
+  <main class="content">
+
+    <section class="page-header">
+
+      <p class="section-label">
+        Cliente
+      </p>
+
+      <h1>
+        Mi Rutina
+      </h1>
+
+      <p class="subtitle">
+        Consulta tu entrenamiento,
+        ejercicios, series y repeticiones.
+      </p>
+
+    </section>
+
+
+    <div
+      *ngIf="cargando"
+      class="loading-state"
+    >
+      <div class="loading-icon">
+        🏋️
+      </div>
+
+      <strong>
+        Cargando tu rutina...
+      </strong>
+    </div>
+
+
+    <div
+      *ngIf="error"
+      class="message error-message"
+    >
+
+      <span>
+        {{ error }}
+      </span>
+
+      <button
+        type="button"
+        class="retry-button"
+        (click)="cargarRutina()"
+      >
+        Reintentar
+      </button>
+
+    </div>
+
+
+    <section
+      *ngIf="
+        !cargando &&
+        !error &&
+        sinRutina
+      "
+      class="empty-state"
+    >
+
+      <div class="empty-icon">
+        📋
+      </div>
+
+      <h2>
+        Aún no tienes una rutina asignada
+      </h2>
+
+      <p>
+        Cuando tu entrenador te asigne
+        una rutina aparecerá automáticamente
+        en esta sección.
+      </p>
+
+    </section>
+
+
+    <ng-container
+      *ngIf="
+        !cargando &&
+        !error &&
+        rutina
+      "
+    >
+
+      <section class="routine-summary">
+
+        <div class="routine-icon">
+          🏋️
+        </div>
+
+
+        <div class="routine-main">
+
+          <p class="routine-label">
+            Rutina asignada
+          </p>
+
+          <h2>
+            {{ rutina.nombre }}
+          </h2>
+
+          <p
+            *ngIf="rutina.descripcion"
+            class="routine-description"
+          >
+            {{ rutina.descripcion }}
+          </p>
+
+          <p
+            *ngIf="!rutina.descripcion"
+            class="routine-description without-description"
+          >
+            Sin descripción.
+          </p>
+
+        </div>
+
+
+        <div class="client-chip">
+
+          <span>
+            Cliente
+          </span>
+
+          <strong>
+            {{ rutina.nombreCliente }}
+          </strong>
+
+        </div>
+
+      </section>
+
+
+      <section class="days-section">
+
+        <div class="days-heading">
+
+          <div>
+
+            <p class="section-label">
+              Entrenamiento
+            </p>
+
+            <h2>
+              Días de rutina
+            </h2>
+
+          </div>
+
+          <span class="days-count">
+            {{ rutina.dias.length }}
+            {{
+              rutina.dias.length === 1
+                ? 'día'
+                : 'días'
+            }}
+          </span>
+
+        </div>
+
+
+        <div
+          *ngIf="rutina.dias.length === 0"
+          class="empty-days"
+        >
+          Esta rutina todavía no tiene
+          días configurados.
+        </div>
+
+
+        <div
+          *ngIf="rutina.dias.length > 0"
+          class="days-list"
+        >
+
+          <article
+            *ngFor="
+              let dia of rutina.dias;
+              let indiceDia = index
+            "
+            class="day-card"
+          >
+
+            <div class="day-header">
+
+              <div class="day-number">
+                {{ indiceDia + 1 }}
+              </div>
+
+
+              <div>
+
+                <span class="day-label">
+                  Día de entrenamiento
+                </span>
+
+                <h3>
+                  {{ dia.dia }}
+                </h3>
+
+              </div>
+
+
+              <span class="exercise-count">
+
+                {{ dia.ejercicios.length }}
+
+                {{
+                  dia.ejercicios.length === 1
+                    ? 'ejercicio'
+                    : 'ejercicios'
+                }}
+
+              </span>
+
+            </div>
+
+
+            <div
+              *ngIf="
+                dia.ejercicios.length === 0
+              "
+              class="empty-exercises"
+            >
+              No hay ejercicios registrados
+              para este día.
+            </div>
+
+
+            <div
+              *ngIf="
+                dia.ejercicios.length > 0
+              "
+              class="exercises-list"
+            >
+
+              <article
+                *ngFor="
+                  let ejercicio of dia.ejercicios
+                "
+                class="exercise-card"
+              >
+
+                <div class="exercise-image">
+
+                  <img
+                    *ngIf="
+                      mostrarImagen(
+                        ejercicio
+                      )
+                    "
+                    [src]="ejercicio.imagenUrl!"
+                    [alt]="
+                      'Demostración de ' +
+                      ejercicio.nombre
+                    "
+                    (error)="
+                      marcarImagenConError(
+                        ejercicio.idEjercicioRutina
+                      )
+                    "
+                  />
+
+
+                  <div
+                    *ngIf="
+                      !mostrarImagen(
+                        ejercicio
+                      )
+                    "
+                    class="image-placeholder"
+                  >
+
+                    <div>
+                      🏋️
+                    </div>
+
+                    <span>
+                      Sin imagen
+                    </span>
+
+                  </div>
+
+                </div>
+
+
+                <div class="exercise-info">
+
+                  <div class="exercise-top">
+
+                    <span class="exercise-order">
+                      {{ ejercicio.orden }}
+                    </span>
+
+
+                    <div>
+
+                      <span class="exercise-label">
+                        Ejercicio
+                      </span>
+
+                      <h4>
+                        {{ ejercicio.nombre }}
+                      </h4>
+
+                    </div>
+
+                  </div>
+
+
+                  <p
+                    *ngIf="ejercicio.descripcion"
+                    class="exercise-description"
+                  >
+                    {{ ejercicio.descripcion }}
+                  </p>
+
+
+                  <div class="exercise-values">
+
+                    <div class="value-card">
+
+                      <span>
+                        Series
+                      </span>
+
+                      <strong>
+                        {{ ejercicio.series }}
+                      </strong>
+
+                    </div>
+
+
+                    <div class="value-card">
+
+                      <span>
+                        Repeticiones
+                      </span>
+
+                      <strong>
+                        {{ ejercicio.repeticiones }}
+                      </strong>
+
+                    </div>
+
+                  </div>
+
+                </div>
+
+              </article>
+
+            </div>
+
+          </article>
+
+        </div>
+
+      </section>
+
+    </ng-container>
+
+  </main>
+
+</div>

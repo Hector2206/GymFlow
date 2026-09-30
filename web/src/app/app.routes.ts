@@ -51,6 +51,10 @@ import {
 } from './administrar-rutinas/administrar-rutinas';
 
 import {
+  MiRutina
+} from './mi-rutina/mi-rutina';
+
+import {
   authGuard
 } from './auth-guard';
 
@@ -151,6 +155,14 @@ export const routes: Routes = [
   {
     path: 'mis-pagos',
     component: MisPagos,
+    canActivate: [
+      authGuard
+    ]
+  },
+
+  {
+    path: 'rutinas',
+    component: MiRutina,
     canActivate: [
       authGuard
     ]
