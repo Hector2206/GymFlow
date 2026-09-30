@@ -526,21 +526,70 @@ class _EjerciciosPageState
                     height: 8,
                   ),
 
-                  Align(
-                    alignment: Alignment.centerRight,
-                    child: IconButton(
-                      tooltip: 'Editar ejercicio',
-                      onPressed: () {
-                        _editarEjercicio(
-                          ejercicio,
-                        );
-                      },
-                      icon: const Icon(
-                        Icons.edit_rounded,
-                      ),
-                      color: _doradoOscuro,
+                 Align(
+                  alignment: Alignment.centerRight,
+                  child: PopupMenuButton<String>(
+                    tooltip: 'Acciones',
+                    icon: const Icon(
+                      Icons.more_vert_rounded,
                     ),
+                    color: _tarjeta,
+                    onSelected: (accion) {
+                      switch (accion) {
+                        case 'editar':
+                          _editarEjercicio(
+                            ejercicio,
+                          );
+                          break;
+
+                        case 'eliminar':
+                          _confirmarEliminarEjercicio(
+                            ejercicio,
+                          );
+                          break;
+                      }
+                    },
+                    itemBuilder: (context) {
+                      return [
+                        const PopupMenuItem(
+                          value: 'editar',
+                          child: Row(
+                            children: [
+                              Icon(
+                                Icons.edit_rounded,
+                                size: 20,
+                              ),
+                              SizedBox(
+                                width: 10,
+                              ),
+                              Text(
+                                'Editar',
+                              ),
+                            ],
+                          ),
+                        ),
+
+                        const PopupMenuItem(
+                          value: 'eliminar',
+                          child: Row(
+                            children: [
+                              Icon(
+                                Icons.delete_outline_rounded,
+                                size: 20,
+                              ),
+                              SizedBox(
+                                width: 10,
+                              ),
+                              Text(
+                                'Desactivar',
+                              ),
+                            ],
+                          ),
+                        ),
+                      ];
+                    },
                   ),
+                ),
 
 
                 ],
@@ -858,4 +907,92 @@ class _EjerciciosPageState
     await _cargarEjercicios();
   }
 }
+Future<void> _confirmarEliminarEjercicio(
+  Ejercicio ejercicio,
+) async {
+  final confirmar =
+      await showDialog<bool>(
+    context: context,
+    builder: (context) {
+      return AlertDialog(
+        title: const Text(
+          'Desactivar ejercicio',
+        ),
+        content: Text(
+          '¿Deseas desactivar "${ejercicio.nombre}"?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(
+                context,
+                false,
+              );
+            },
+            child: const Text(
+              'Cancelar',
+            ),
+          ),
+
+          FilledButton(
+            onPressed: () {
+              Navigator.pop(
+                context,
+                true,
+              );
+            },
+            child: const Text(
+              'Desactivar',
+            ),
+          ),
+        ],
+      );
+    },
+  );
+
+  if (confirmar != true) {
+    return;
+  }
+
+  try {
+    await _ejercicioService
+        .eliminarEjercicio(
+      ejercicio.idEjercicio,
+    );
+
+    if (!mounted) {
+      return;
+    }
+
+    ScaffoldMessenger.of(context)
+        .showSnackBar(
+      const SnackBar(
+        content: Text(
+          'Ejercicio desactivado correctamente.',
+        ),
+      ),
+    );
+
+    await _cargarEjercicios();
+  } catch (error) {
+    if (!mounted) {
+      return;
+    }
+
+    ScaffoldMessenger.of(context)
+        .showSnackBar(
+      SnackBar(
+        content: Text(
+          error
+              .toString()
+              .replaceFirst(
+                'Exception: ',
+                '',
+              ),
+        ),
+      ),
+    );
+  }
+}
+
 }
