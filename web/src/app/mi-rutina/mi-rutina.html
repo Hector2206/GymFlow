@@ -36,8 +36,8 @@
       </h1>
 
       <p class="subtitle">
-        Consulta tu entrenamiento,
-        ejercicios, series y repeticiones.
+        Selecciona un día y consulta
+        los ejercicios de tu entrenamiento.
       </p>
 
     </section>
@@ -47,6 +47,7 @@
       *ngIf="cargando"
       class="loading-state"
     >
+
       <div class="loading-icon">
         🏋️
       </div>
@@ -54,6 +55,7 @@
       <strong>
         Cargando tu rutina...
       </strong>
+
     </div>
 
 
@@ -167,79 +169,191 @@
           <div>
 
             <p class="section-label">
-              Entrenamiento
+              Semana
             </p>
 
             <h2>
-              Días de rutina
+              Tu entrenamiento
             </h2>
 
           </div>
 
+
           <span class="days-count">
+
             {{ rutina.dias.length }}
+
             {{
               rutina.dias.length === 1
-                ? 'día'
-                : 'días'
+                ? 'día con entrenamiento'
+                : 'días con entrenamiento'
             }}
+
           </span>
 
         </div>
 
 
-        <div
-          *ngIf="rutina.dias.length === 0"
-          class="empty-days"
-        >
-          Esta rutina todavía no tiene
-          días configurados.
+        <div class="week-selector">
+
+          <button
+            *ngFor="
+              let diaSemana of diasSemana
+            "
+            type="button"
+            class="week-day"
+            [class.selected]="
+              esDiaSeleccionado(
+                diaSemana.nombre
+              )
+            "
+            [class.has-workout]="
+              diaTieneRutina(
+                diaSemana.nombre
+              )
+            "
+            [class.rest-day]="
+              !diaTieneRutina(
+                diaSemana.nombre
+              )
+            "
+            (click)="
+              seleccionarDia(
+                diaSemana.nombre
+              )
+            "
+          >
+
+            <span class="week-day-name">
+              {{ diaSemana.corto }}
+            </span>
+
+
+            <span
+              class="week-day-indicator"
+            >
+            </span>
+
+
+            <small>
+              {{
+                diaTieneRutina(
+                  diaSemana.nombre
+                )
+                  ? 'Rutina'
+                  : 'Descanso'
+              }}
+            </small>
+
+          </button>
+
         </div>
 
 
-        <div
-          *ngIf="rutina.dias.length > 0"
-          class="days-list"
+        <div class="selected-day-title">
+
+          <div>
+
+            <span>
+              Día seleccionado
+            </span>
+
+            <h3>
+              {{ diaSeleccionado }}
+            </h3>
+
+          </div>
+
+        </div>
+
+
+        <ng-container
+          *ngIf="
+            obtenerDiaSeleccionado() as dia
+          "
         >
 
-          <article
-            *ngFor="
-              let dia of rutina.dias;
-              let indiceDia = index
-            "
-            class="day-card"
-          >
+          <div class="day-workout-header">
 
-            <div class="day-header">
+            <div>
 
-              <div class="day-number">
-                {{ indiceDia + 1 }}
-              </div>
+              <span>
+                Entrenamiento
+              </span>
 
-
-              <div>
-
-                <span class="day-label">
-                  Día de entrenamiento
-                </span>
-
-                <h3>
-                  {{ dia.dia }}
-                </h3>
-
-              </div>
-
-
-              <span class="exercise-count">
-
-                {{ dia.ejercicios.length }}
+              <strong>
+                {{
+                  dia.ejercicios.length
+                }}
 
                 {{
                   dia.ejercicios.length === 1
                     ? 'ejercicio'
                     : 'ejercicios'
                 }}
+              </strong>
 
+            </div>
+
+          </div>
+
+
+          <div
+            *ngIf="
+              dia.ejercicios.length === 0
+            "
+            class="day-empty"
+          >
+
+            <div class="rest-icon">
+              🌿
+            </div>
+
+            <h3>
+              Sin ejercicios configurados
+            </h3>
+
+            <p>
+              Tu entrenador todavía no agregó
+              ejercicios para este día.
+            </p>
+
+          </div>
+
+
+          <ng-container
+            *ngIf="
+              dia.ejercicios.length > 0 &&
+              obtenerEjercicioActual(dia) as ejercicio
+            "
+          >
+
+            <div class="exercise-status">
+
+              <div>
+
+                <span>
+                  Ejercicio actual
+                </span>
+
+                <strong>
+                  {{
+                    obtenerIndiceActual(
+                      dia
+                    ) + 1
+                  }}
+                  de
+                  {{
+                    dia.ejercicios.length
+                  }}
+                </strong>
+
+              </div>
+
+
+              <span class="recommended-order">
+                Orden recomendado:
+                {{ ejercicio.orden }}
               </span>
 
             </div>
@@ -247,140 +361,267 @@
 
             <div
               *ngIf="
-                dia.ejercicios.length === 0
+                dia.ejercicios.length > 1
               "
-              class="empty-exercises"
-            >
-              No hay ejercicios registrados
-              para este día.
-            </div>
-
-
-            <div
-              *ngIf="
-                dia.ejercicios.length > 0
-              "
-              class="exercises-list"
+              class="exercise-selector"
             >
 
-              <article
+              <button
                 *ngFor="
-                  let ejercicio of dia.ejercicios
+                  let opcion of dia.ejercicios;
+                  let indiceEjercicio = index
                 "
-                class="exercise-card"
+                type="button"
+                class="exercise-selector-button"
+                [class.active]="
+                  obtenerIndiceActual(
+                    dia
+                  ) ===
+                  indiceEjercicio
+                "
+                (click)="
+                  seleccionarEjercicio(
+                    dia,
+                    indiceEjercicio
+                  )
+                "
               >
 
-                <div class="exercise-image">
+                <span>
+                  {{ indiceEjercicio + 1 }}
+                </span>
 
-                  <img
-                    *ngIf="
-                      mostrarImagen(
-                        ejercicio
-                      )
-                    "
-                    [src]="ejercicio.imagenUrl!"
-                    [alt]="
-                      'Demostración de ' +
-                      ejercicio.nombre
-                    "
-                    (error)="
-                      marcarImagenConError(
-                        ejercicio.idEjercicioRutina
-                      )
-                    "
-                  />
+                <strong>
+                  {{ opcion.nombre }}
+                </strong>
 
-
-                  <div
-                    *ngIf="
-                      !mostrarImagen(
-                        ejercicio
-                      )
-                    "
-                    class="image-placeholder"
-                  >
-
-                    <div>
-                      🏋️
-                    </div>
-
-                    <span>
-                      Sin imagen
-                    </span>
-
-                  </div>
-
-                </div>
-
-
-                <div class="exercise-info">
-
-                  <div class="exercise-top">
-
-                    <span class="exercise-order">
-                      {{ ejercicio.orden }}
-                    </span>
-
-
-                    <div>
-
-                      <span class="exercise-label">
-                        Ejercicio
-                      </span>
-
-                      <h4>
-                        {{ ejercicio.nombre }}
-                      </h4>
-
-                    </div>
-
-                  </div>
-
-
-                  <p
-                    *ngIf="ejercicio.descripcion"
-                    class="exercise-description"
-                  >
-                    {{ ejercicio.descripcion }}
-                  </p>
-
-
-                  <div class="exercise-values">
-
-                    <div class="value-card">
-
-                      <span>
-                        Series
-                      </span>
-
-                      <strong>
-                        {{ ejercicio.series }}
-                      </strong>
-
-                    </div>
-
-
-                    <div class="value-card">
-
-                      <span>
-                        Repeticiones
-                      </span>
-
-                      <strong>
-                        {{ ejercicio.repeticiones }}
-                      </strong>
-
-                    </div>
-
-                  </div>
-
-                </div>
-
-              </article>
+              </button>
 
             </div>
 
-          </article>
+
+            <article class="exercise-card">
+
+              <div class="exercise-image">
+
+                <img
+                  *ngIf="
+                    mostrarImagen(
+                      ejercicio
+                    )
+                  "
+                  [src]="ejercicio.imagenUrl!"
+                  [alt]="
+                    'Demostración de ' +
+                    ejercicio.nombre
+                  "
+                  (error)="
+                    marcarImagenConError(
+                      ejercicio.idEjercicioRutina
+                    )
+                  "
+                />
+
+
+                <div
+                  *ngIf="
+                    !mostrarImagen(
+                      ejercicio
+                    )
+                  "
+                  class="image-placeholder"
+                >
+
+                  <div>
+                    🏋️
+                  </div>
+
+                  <span>
+                    Sin imagen demostrativa
+                  </span>
+
+                </div>
+
+              </div>
+
+
+              <div class="exercise-info">
+
+                <div class="exercise-top">
+
+                  <span class="exercise-order">
+                    {{ ejercicio.orden }}
+                  </span>
+
+
+                  <div>
+
+                    <span class="exercise-label">
+                      Ejercicio
+                    </span>
+
+                    <h4>
+                      {{ ejercicio.nombre }}
+                    </h4>
+
+                  </div>
+
+                </div>
+
+
+                <p
+                  *ngIf="ejercicio.descripcion"
+                  class="exercise-description"
+                >
+                  {{ ejercicio.descripcion }}
+                </p>
+
+
+                <p
+                  *ngIf="!ejercicio.descripcion"
+                  class="exercise-description without-description"
+                >
+                  Sin descripción.
+                </p>
+
+
+                <div class="exercise-values">
+
+                  <div class="value-card">
+
+                    <span>
+                      Series
+                    </span>
+
+                    <strong>
+                      {{ ejercicio.series }}
+                    </strong>
+
+                  </div>
+
+
+                  <div class="value-card">
+
+                    <span>
+                      Repeticiones
+                    </span>
+
+                    <strong>
+                      {{ ejercicio.repeticiones }}
+                    </strong>
+
+                  </div>
+
+                </div>
+
+
+                <div
+                  *ngIf="
+                    dia.ejercicios.length > 1
+                  "
+                  class="exercise-navigation"
+                >
+
+                  <button
+                    type="button"
+                    class="navigation-button secondary"
+                    [disabled]="
+                      esPrimerEjercicio(
+                        dia
+                      )
+                    "
+                    (click)="
+                      ejercicioAnterior(
+                        dia
+                      )
+                    "
+                  >
+                    ← Anterior
+                  </button>
+
+
+                  <div class="navigation-progress">
+
+                    <button
+                      *ngFor="
+                        let punto of dia.ejercicios;
+                        let indicePunto = index
+                      "
+                      type="button"
+                      class="progress-dot"
+                      [class.active]="
+                        obtenerIndiceActual(
+                          dia
+                        ) ===
+                        indicePunto
+                      "
+                      [attr.aria-label]="
+                        'Ir al ejercicio ' +
+                        (indicePunto + 1)
+                      "
+                      (click)="
+                        seleccionarEjercicio(
+                          dia,
+                          indicePunto
+                        )
+                      "
+                    >
+                    </button>
+
+                  </div>
+
+
+                  <button
+                    type="button"
+                    class="navigation-button primary"
+                    [disabled]="
+                      esUltimoEjercicio(
+                        dia
+                      )
+                    "
+                    (click)="
+                      ejercicioSiguiente(
+                        dia
+                      )
+                    "
+                  >
+                    Siguiente →
+                  </button>
+
+                </div>
+
+              </div>
+
+            </article>
+
+          </ng-container>
+
+        </ng-container>
+
+
+        <div
+          *ngIf="
+            !obtenerDiaSeleccionado()
+          "
+          class="day-empty rest"
+        >
+
+          <div class="rest-icon">
+            🌿
+          </div>
+
+          <p class="rest-label">
+            {{ diaSeleccionado }}
+          </p>
+
+          <h3>
+            Día de descanso
+          </h3>
+
+          <p>
+            No tienes ejercicios programados
+            para este día.
+          </p>
 
         </div>
 
