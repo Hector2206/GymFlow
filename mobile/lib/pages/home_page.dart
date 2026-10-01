@@ -14,6 +14,7 @@ import 'registrar_asistencia_page.dart';
 import 'registrar_cliente_page.dart';
 import 'registrar_pago_page.dart';
 import 'clientes_entrenador_page.dart';
+import 'rutinas_page.dart';
 
 class HomePage extends StatelessWidget {
   final Usuario usuario;
@@ -1136,9 +1137,11 @@ class HomePage extends StatelessWidget {
         subtitulo:
             'Crear y administrar rutinas de entrenamiento',
         onTap: () {
-          proximamente(
-            context,
-            'Rutinas',
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (_) =>
+                  const RutinasPage(),
+            ),
           );
         },
       ),
