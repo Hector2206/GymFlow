@@ -514,55 +514,230 @@ class _RutinasPageState
             height: 16,
           ),
 
-          SizedBox(
-            width: double.infinity,
-            child: OutlinedButton(
-              onPressed: () async {
-                final actualizado = await Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => EditarRutinaPage(
-                      idRutina: rutina.idRutina,
+                   Row(
+            children: [
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: () async {
+                    final actualizado =
+                        await Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) =>
+                            EditarRutinaPage(
+                          idRutina:
+                              rutina.idRutina,
+                        ),
+                      ),
+                    );
+
+                    if (actualizado == true) {
+                      _cargarRutinas();
+                    }
+                  },
+                  style:
+                      OutlinedButton.styleFrom(
+                    foregroundColor:
+                        _doradoOscuro,
+                    side:
+                        const BorderSide(
+                      color: _dorado,
+                    ),
+                    padding:
+                        const EdgeInsets.symmetric(
+                      vertical: 13,
+                    ),
+                    shape:
+                        RoundedRectangleBorder(
+                      borderRadius:
+                          BorderRadius.circular(
+                        12,
+                      ),
                     ),
                   ),
-                );
-
-                if (actualizado == true) {
-                  _cargarRutinas();
-                }
-              },
-              style:
-                  OutlinedButton.styleFrom(
-                foregroundColor:
-                    _doradoOscuro,
-                side: const BorderSide(
-                  color: _dorado,
-                ),
-                padding:
-                    const EdgeInsets.symmetric(
-                  vertical: 13,
-                ),
-                shape:
-                    RoundedRectangleBorder(
-                  borderRadius:
-                      BorderRadius.circular(
-                    12,
+                  child: const Text(
+                    'Editar',
+                    style: TextStyle(
+                      fontWeight:
+                          FontWeight.w700,
+                    ),
                   ),
                 ),
               ),
-              child: const Text(
-                'Editar rutina',
-                style: TextStyle(
-                  fontWeight:
-                      FontWeight.w700,
+
+              const SizedBox(
+                width: 10,
+              ),
+
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: () {
+                    _confirmarEliminarRutina(
+                      rutina,
+                    );
+                  },
+                  style:
+                      OutlinedButton.styleFrom(
+                    foregroundColor:
+                        Colors.red.shade700,
+                    side:
+                        BorderSide(
+                      color:
+                          Colors.red.shade300,
+                    ),
+                    padding:
+                        const EdgeInsets.symmetric(
+                      vertical: 13,
+                    ),
+                    shape:
+                        RoundedRectangleBorder(
+                      borderRadius:
+                          BorderRadius.circular(
+                        12,
+                      ),
+                    ),
+                  ),
+                  child: const Text(
+                    'Eliminar',
+                    style: TextStyle(
+                      fontWeight:
+                          FontWeight.w700,
+                    ),
+                  ),
                 ),
               ),
-            ),
+            ],
           ),
         ],
       ),
     );
   }
+
+    Future<void> _confirmarEliminarRutina(
+    Rutina rutina,
+  ) async {
+    final confirmar =
+        await showDialog<bool>(
+      context: context,
+      builder: (
+        dialogContext,
+      ) {
+        return AlertDialog(
+          backgroundColor:
+              _tarjeta,
+          title: const Text(
+            'Eliminar rutina',
+            style: TextStyle(
+              color: _texto,
+              fontWeight:
+                  FontWeight.w800,
+            ),
+          ),
+          content: Text(
+            '¿Deseas eliminar la rutina "${rutina.nombre}"?\n\nEsta acción eliminará la rutina y sus ejercicios asociados.',
+            style: const TextStyle(
+              color:
+                  _textoSecundario,
+              height: 1.4,
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(
+                  dialogContext,
+                ).pop(false);
+              },
+              child: const Text(
+                'Cancelar',
+              ),
+            ),
+            FilledButton(
+              style:
+                  FilledButton.styleFrom(
+                backgroundColor:
+                    Colors.red,
+                foregroundColor:
+                    Colors.white,
+              ),
+              onPressed: () {
+                Navigator.of(
+                  dialogContext,
+                ).pop(true);
+              },
+              child: const Text(
+                'Eliminar',
+              ),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (confirmar != true ||
+        !mounted) {
+      return;
+    }
+
+    await _eliminarRutina(
+      rutina,
+    );
+  }
+
+  Future<void> _eliminarRutina(
+    Rutina rutina,
+  ) async {
+    try {
+      await _rutinaService.eliminarRutina(
+        rutina.idRutina,
+      );
+
+      if (!mounted) {
+        return;
+      }
+
+      setState(() {
+        _rutinas.removeWhere(
+          (item) =>
+              item.idRutina ==
+              rutina.idRutina,
+        );
+      });
+
+      ScaffoldMessenger.of(context)
+          .showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Rutina eliminada correctamente.',
+          ),
+        ),
+      );
+    } catch (error) {
+      if (!mounted) {
+        return;
+      }
+
+      final mensaje = error
+          .toString()
+          .replaceFirst(
+            'Exception: ',
+            '',
+          );
+
+      ScaffoldMessenger.of(context)
+          .showSnackBar(
+        SnackBar(
+          content: Text(
+            mensaje,
+          ),
+          backgroundColor:
+              Colors.red,
+        ),
+      );
+    }
+  }
+
+
 
   Widget _construirSinRutinas() {
     return Container(

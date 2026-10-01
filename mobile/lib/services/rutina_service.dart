@@ -348,6 +348,8 @@ class RutinaService {
       },
     );
 
+  
+
     final data =
         jsonDecode(
           response.body,
@@ -364,6 +366,47 @@ class RutinaService {
       data,
     );
   }
+
+  Future<void> eliminarRutina(
+    int idRutina,
+  ) async {
+    final headers =
+        await _headers();
+
+    late http.Response response;
+
+    try {
+      response = await http
+          .delete(
+            Uri.parse(
+              '${ApiConfig.rutinaServiceUrl}/api/rutinas/$idRutina',
+            ),
+            headers: headers,
+          )
+          .timeout(
+            const Duration(
+              seconds: 25,
+            ),
+          );
+    } on TimeoutException {
+      throw Exception(
+        'El servidor tardó demasiado en responder.',
+      );
+    } on http.ClientException {
+      throw Exception(
+        'No fue posible conectar con el servidor.',
+      );
+    }
+
+    _validarRespuesta(
+      response,
+      codigosAceptados: {
+        200,
+        204,
+      },
+    );
+  }
+
 
   void _validarRespuesta(
     http.Response response, {

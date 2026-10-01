@@ -16,6 +16,8 @@ import 'registrar_pago_page.dart';
 import 'clientes_entrenador_page.dart';
 import 'rutinas_page.dart';
 import 'mi_rutina_page.dart';
+import 'ejercicios_page.dart';
+
 
 class HomePage extends StatelessWidget {
   final Usuario usuario;
@@ -1136,6 +1138,25 @@ class HomePage extends StatelessWidget {
         icon:
             Icons.fitness_center,
         titulo:
+            'Ejercicios',
+        subtitulo:
+            'Crear y administrar ejercicios e imágenes',
+        onTap: () {
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (_) =>
+                  const EjerciciosPage(),
+            ),
+          );
+        },
+      ),
+
+      _espacio(),
+
+      _buildCard(
+        icon:
+            Icons.fitness_center,
+        titulo:
             'Rutinas',
         subtitulo:
             'Crear y administrar rutinas de entrenamiento',
@@ -1148,6 +1169,8 @@ class HomePage extends StatelessWidget {
           );
         },
       ),
+      
+
     ];
   }
 

@@ -40,7 +40,8 @@ class _EditarEjercicioPageState
   final TextEditingController _nombreController =
       TextEditingController();
 
-  final TextEditingController _descripcionController =
+  final TextEditingController
+      _descripcionController =
       TextEditingController();
 
   final TextEditingController _imagenController =
@@ -51,6 +52,8 @@ class _EditarEjercicioPageState
 
   bool _guardando = false;
   String _error = '';
+
+  late bool _estado;
 
   @override
   void initState() {
@@ -64,6 +67,9 @@ class _EditarEjercicioPageState
 
     _imagenController.text =
         widget.ejercicio.imagenUrl ?? '';
+
+    _estado =
+        widget.ejercicio.activo;
   }
 
   @override
@@ -91,12 +97,16 @@ class _EditarEjercicioPageState
       _error = '';
     });
 
-    final request = EjercicioRequest(
-      nombre: _nombreController.text,
+    final request =
+        EjercicioRequest(
+      nombre:
+          _nombreController.text,
       descripcion:
           _descripcionController.text,
       imagenUrl:
           _imagenController.text,
+      estado:
+          _estado,
     );
 
     try {
@@ -181,15 +191,19 @@ class _EditarEjercicioPageState
     BuildContext context,
   ) {
     return Scaffold(
-      backgroundColor: _fondo,
+      backgroundColor:
+          _fondo,
       appBar: AppBar(
-        backgroundColor: _tarjeta,
-        foregroundColor: _texto,
+        backgroundColor:
+            _tarjeta,
+        foregroundColor:
+            _texto,
         elevation: 0,
         title: const Text(
           'Editar ejercicio',
           style: TextStyle(
-            fontWeight: FontWeight.w700,
+            fontWeight:
+                FontWeight.w700,
           ),
         ),
       ),
@@ -215,6 +229,8 @@ class _EditarEjercicioPageState
                 ),
               ),
               child: Column(
+                crossAxisAlignment:
+                    CrossAxisAlignment.stretch,
                 children: [
                   TextFormField(
                     controller:
@@ -226,13 +242,14 @@ class _EditarEjercicioPageState
                     decoration:
                         _campo(
                       'Nombre',
-                      Icons
-                          .fitness_center,
+                      Icons.fitness_center,
                     ),
                   ),
+
                   const SizedBox(
                     height: 16,
                   ),
+
                   TextFormField(
                     controller:
                         _descripcionController,
@@ -243,13 +260,151 @@ class _EditarEjercicioPageState
                     decoration:
                         _campo(
                       'Descripción',
-                      Icons
-                          .description,
+                      Icons.description,
                     ),
                   ),
+
                   const SizedBox(
                     height: 16,
                   ),
+
+                  DropdownButtonFormField<bool>(
+                    initialValue:
+                        _estado,
+                    decoration:
+                        _campo(
+                      'Estado del ejercicio',
+                      Icons.toggle_on_outlined,
+                    ),
+                    items: const [
+                      DropdownMenuItem<bool>(
+                        value: true,
+                        child: Text(
+                          'Activo',
+                        ),
+                      ),
+                      DropdownMenuItem<bool>(
+                        value: false,
+                        child: Text(
+                          'Inactivo',
+                        ),
+                      ),
+                    ],
+                    onChanged:
+                        _guardando
+                            ? null
+                            : (value) {
+                                if (value ==
+                                    null) {
+                                  return;
+                                }
+
+                                setState(() {
+                                  _estado =
+                                      value;
+                                });
+                              },
+                  ),
+
+                  const SizedBox(
+                    height: 10,
+                  ),
+
+                  Container(
+                    padding:
+                        const EdgeInsets.all(
+                      14,
+                    ),
+                    decoration:
+                        BoxDecoration(
+                      color:
+                          _estado
+                              ? const Color(
+                                  0xFFF0F8F0,
+                                )
+                              : const Color(
+                                  0xFFFFF1F1,
+                                ),
+                      borderRadius:
+                          BorderRadius.circular(
+                        12,
+                      ),
+                      border:
+                          Border.all(
+                        color:
+                            _estado
+                                ? const Color(
+                                    0xFFC8E6C9,
+                                  )
+                                : const Color(
+                                    0xFFF0CACA,
+                                  ),
+                      ),
+                    ),
+                    child: Row(
+                      crossAxisAlignment:
+                          CrossAxisAlignment.start,
+                      children: [
+                        Icon(
+                          _estado
+                              ? Icons.check_circle_outline
+                              : Icons
+                                  .pause_circle_outline,
+                          color:
+                              _estado
+                                  ? Colors.green.shade700
+                                  : Colors.red.shade700,
+                        ),
+                        const SizedBox(
+                          width: 10,
+                        ),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment:
+                                CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                _estado
+                                    ? 'Ejercicio activo'
+                                    : 'Ejercicio inactivo',
+                                style:
+                                    TextStyle(
+                                  color:
+                                      _estado
+                                          ? Colors.green.shade700
+                                          : Colors.red.shade700,
+                                  fontWeight:
+                                      FontWeight.w700,
+                                ),
+                              ),
+                              const SizedBox(
+                                height: 3,
+                              ),
+                              Text(
+                                _estado
+                                    ? 'Puede utilizarse en nuevas rutinas.'
+                                    : 'No debe utilizarse en nuevas rutinas.',
+                                style:
+                                    TextStyle(
+                                  color:
+                                      _estado
+                                          ? Colors.green.shade700
+                                          : Colors.red.shade700,
+                                  fontSize:
+                                      12,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(
+                    height: 16,
+                  ),
+
                   TextFormField(
                     controller:
                         _imagenController,
@@ -257,6 +412,8 @@ class _EditarEjercicioPageState
                         _validarImagen,
                     enabled:
                         !_guardando,
+                    keyboardType:
+                        TextInputType.url,
                     decoration:
                         _campo(
                       'URL imagen',
@@ -266,21 +423,43 @@ class _EditarEjercicioPageState
                 ],
               ),
             ),
+
             const SizedBox(
               height: 20,
             ),
+
             if (_error.isNotEmpty)
-              Text(
-                _error,
-                style:
-                    TextStyle(
+              Container(
+                padding:
+                    const EdgeInsets.all(
+                  12,
+                ),
+                decoration:
+                    BoxDecoration(
                   color:
-                      Colors.red.shade700,
+                      const Color(
+                    0xFFFFEEEE,
+                  ),
+                  borderRadius:
+                      BorderRadius.circular(
+                    12,
+                  ),
+                ),
+                child: Text(
+                  _error,
+                  style:
+                      TextStyle(
+                    color:
+                        Colors.red.shade700,
+                  ),
                 ),
               ),
-            const SizedBox(
-              height: 20,
-            ),
+
+            if (_error.isNotEmpty)
+              const SizedBox(
+                height: 20,
+              ),
+
             SizedBox(
               height: 52,
               child:
@@ -296,12 +475,24 @@ class _EditarEjercicioPageState
                         : _actualizarEjercicio,
                 child:
                     _guardando
-                        ? const CircularProgressIndicator(
-                            color:
-                                Colors.white,
+                        ? const SizedBox(
+                            width: 22,
+                            height: 22,
+                            child:
+                                CircularProgressIndicator(
+                              color:
+                                  Colors.white,
+                              strokeWidth:
+                                  2.5,
+                            ),
                           )
                         : const Text(
                             'Guardar cambios',
+                            style:
+                                TextStyle(
+                              fontWeight:
+                                  FontWeight.w700,
+                            ),
                           ),
               ),
             ),
@@ -336,6 +527,26 @@ class _EditarEjercicioPageState
         ),
         borderSide:
             BorderSide.none,
+      ),
+      enabledBorder:
+          OutlineInputBorder(
+        borderRadius:
+            BorderRadius.circular(
+          15,
+        ),
+        borderSide:
+            BorderSide.none,
+      ),
+      focusedBorder:
+          OutlineInputBorder(
+        borderRadius:
+            BorderRadius.circular(
+          15,
+        ),
+        borderSide:
+            const BorderSide(
+          color: _dorado,
+        ),
       ),
     );
   }
