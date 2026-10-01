@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../models/usuario.dart';
 import '../services/auth_service.dart';
+import '../services/version_service.dart';
 
 import 'login_page.dart';
 
@@ -593,7 +594,7 @@ class ProfilePage extends StatelessWidget {
                       ),
 
                       child:
-                          const Column(
+                          Column(
                         children: [
                           Text(
                             'GymFlow Mobile',
@@ -619,17 +620,35 @@ class ProfilePage extends StatelessWidget {
                                 5,
                           ),
 
-                          Text(
-                            'Versión 1.0.3',
+                          FutureBuilder<String?>(
+                            future: VersionService().obtenerVersion(),
+                            builder: (
+                              context,
+                              snapshot,
+                            ) {
+                              final version =
+                                  snapshot.data;
 
-                            style:
-                                TextStyle(
-                              color:
-                                  textSecondary,
+                              if (snapshot.connectionState ==
+                                      ConnectionState.waiting ||
+                                  version == null) {
+                                return const Text(
+                                  'Versión del sistema',
+                                  style: TextStyle(
+                                    color: textSecondary,
+                                    fontSize: 11,
+                                  ),
+                                );
+                              }
 
-                              fontSize:
-                                  11,
-                            ),
+                              return Text(
+                                'Versión $version',
+                                style: const TextStyle(
+                                  color: textSecondary,
+                                  fontSize: 11,
+                                ),
+                              );
+                            },
                           ),
                         ],
                       ),
