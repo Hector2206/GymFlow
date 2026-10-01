@@ -13,6 +13,11 @@ import 'profile_page.dart';
 import 'registrar_asistencia_page.dart';
 import 'registrar_cliente_page.dart';
 import 'registrar_pago_page.dart';
+import 'clientes_entrenador_page.dart';
+import 'rutinas_page.dart';
+import 'mi_rutina_page.dart';
+import 'ejercicios_page.dart';
+
 
 class HomePage extends StatelessWidget {
   final Usuario usuario;
@@ -974,9 +979,11 @@ class HomePage extends StatelessWidget {
         subtitulo:
             'Consulta tu rutina de entrenamiento',
         onTap: () {
-          proximamente(
-            context,
-            'Rutinas',
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (_) =>
+                  const MiRutinaPage(),
+            ),
           );
         },
       ),
@@ -1109,16 +1116,37 @@ class HomePage extends StatelessWidget {
       _espacio(),
 
       _buildCard(
+          icon:
+              Icons.groups_outlined,
+          titulo:
+              'Administrar mis Clientes',
+          subtitulo:
+              'Consulta los clientes que tienes asignados',
+          onTap: () {
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (_) =>
+                    const ClientesEntrenadorPage(),
+              ),
+            );
+          },
+        ),
+
+      _espacio(),
+
+      _buildCard(
         icon:
-            Icons.groups_outlined,
+            Icons.fitness_center,
         titulo:
-            'Administrar mis Clientes',
+            'Ejercicios',
         subtitulo:
-            'Consulta los clientes que tienes asignados',
+            'Crear y administrar ejercicios e imágenes',
         onTap: () {
-          proximamente(
-            context,
-            'Administrar mis clientes',
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (_) =>
+                  const EjerciciosPage(),
+            ),
           );
         },
       ),
@@ -1133,12 +1161,16 @@ class HomePage extends StatelessWidget {
         subtitulo:
             'Crear y administrar rutinas de entrenamiento',
         onTap: () {
-          proximamente(
-            context,
-            'Rutinas',
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (_) =>
+                  const RutinasPage(),
+            ),
           );
         },
       ),
+      
+
     ];
   }
 

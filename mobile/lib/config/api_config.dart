@@ -13,6 +13,9 @@ class ApiConfig {
   static const String usuarioConsultaUrl =
       'https://gymflow-usuario-consulta.onrender.com';
 
+  static const String rutinaServiceUrl =
+      'https://gymflow-rutina-service.onrender.com';
+
   static const String asistenciasUrl =
       '$clienteAltaUrl/api/asistencias';
 
