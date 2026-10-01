@@ -7,11 +7,9 @@ import '../config/api_config.dart';
 import '../models/rutina.dart';
 import 'auth_service.dart';
 
-
 class RutinaService {
   final AuthService _authService =
       AuthService();
-
 
   Future<Map<String, String>>
       _headers() async {
@@ -34,7 +32,6 @@ class RutinaService {
           'Bearer $token',
     };
   }
-
 
   Future<List<Rutina>>
       obtenerRutinas() async {
@@ -90,7 +87,6 @@ class RutinaService {
         .toList();
   }
 
-
   Future<Rutina>
       obtenerRutina(
     int idRutina,
@@ -131,7 +127,6 @@ class RutinaService {
       data,
     );
   }
-
 
   Future<List<Rutina>>
       obtenerRutinasPorCliente(
@@ -177,6 +172,60 @@ class RutinaService {
         .toList();
   }
 
+  // ==========================================================
+  // MI RUTINA - CLIENTE
+  // ==========================================================
+
+  Future<Rutina>
+      obtenerMiRutina() async {
+    final headers =
+        await _headers();
+
+    late http.Response response;
+
+    try {
+      response = await http
+          .get(
+            Uri.parse(
+              '${ApiConfig.rutinaServiceUrl}/api/rutinas/mi-rutina',
+            ),
+            headers: headers,
+          )
+          .timeout(
+            const Duration(
+              seconds: 25,
+            ),
+          );
+    } on TimeoutException {
+      throw Exception(
+        'El servidor tardó demasiado en responder.',
+      );
+    } on http.ClientException {
+      throw Exception(
+        'No fue posible conectar con el servidor.',
+      );
+    }
+
+    _validarRespuesta(
+      response,
+    );
+
+    final data =
+        jsonDecode(
+          response.body,
+        );
+
+    if (data
+        is! Map<String, dynamic>) {
+      throw Exception(
+        'El servidor devolvió una respuesta no válida.',
+      );
+    }
+
+    return Rutina.fromJson(
+      data,
+    );
+  }
 
   Future<Rutina>
       crearRutina({
@@ -247,7 +296,6 @@ class RutinaService {
     );
   }
 
-
   Future<Rutina>
       editarRutina({
     required int idRutina,
@@ -316,7 +364,6 @@ class RutinaService {
       data,
     );
   }
-
 
   void _validarRespuesta(
     http.Response response, {
