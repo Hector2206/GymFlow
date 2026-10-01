@@ -13,6 +13,7 @@ import 'profile_page.dart';
 import 'registrar_asistencia_page.dart';
 import 'registrar_cliente_page.dart';
 import 'registrar_pago_page.dart';
+import 'clientes_entrenador_page.dart';
 
 class HomePage extends StatelessWidget {
   final Usuario usuario;
@@ -1109,19 +1110,21 @@ class HomePage extends StatelessWidget {
       _espacio(),
 
       _buildCard(
-        icon:
-            Icons.groups_outlined,
-        titulo:
-            'Administrar mis Clientes',
-        subtitulo:
-            'Consulta los clientes que tienes asignados',
-        onTap: () {
-          proximamente(
-            context,
-            'Administrar mis clientes',
-          );
-        },
-      ),
+          icon:
+              Icons.groups_outlined,
+          titulo:
+              'Administrar mis Clientes',
+          subtitulo:
+              'Consulta los clientes que tienes asignados',
+          onTap: () {
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (_) =>
+                    const ClientesEntrenadorPage(),
+              ),
+            );
+          },
+        ),
 
       _espacio(),
 
