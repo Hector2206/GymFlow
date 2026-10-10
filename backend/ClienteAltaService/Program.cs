@@ -1485,4 +1485,87 @@ app.MapGet(
     policy.RequireRole("Recepcionista");
 });
 
+
+ // ============================================
+ // LISTAR ENTRENADORES - RECEPCION
+ // ============================================
+
+app.MapGet(
+    "/api/entrenadores",
+    async (IConfiguration configuration) =>
+    {
+        var connectionString =
+            configuration.GetConnectionString("PostgreSQL");
+
+        if (string.IsNullOrWhiteSpace(connectionString))
+        {
+            return Results.Problem(
+                title: "Configuración faltante",
+                detail: "No existe la conexión PostgreSQL.",
+                statusCode: 500
+            );
+        }
+
+        try
+        {
+            await using var connection =
+                new NpgsqlConnection(connectionString);
+
+            await connection.OpenAsync();
+
+            await using var command =
+                new NpgsqlCommand(
+                    """
+                    SELECT
+                        p.id_personal,
+                        p.nombre_completo
+                    FROM personal p
+                    INNER JOIN usuarios u
+                        ON u.id_usuario = p.id_usuario
+                    INNER JOIN roles r
+                        ON r.id_rol = u.id_rol
+                    WHERE r.nombre = 'Entrenador'
+                      AND u.estatus = 'Activo'
+                    ORDER BY p.nombre_completo;
+                    """,
+                    connection
+                );
+
+            await using var reader =
+                await command.ExecuteReaderAsync();
+
+            var entrenadores = new List<object>();
+
+            while (await reader.ReadAsync())
+            {
+                entrenadores.Add(new
+                {
+                    idEntrenador = reader.GetInt32(0),
+                    nombreCompleto = reader.GetString(1)
+                });
+            }
+
+            return Results.Ok(entrenadores);
+        }
+        catch (Exception ex)
+        {
+            app.Logger.LogError(
+                ex,
+                "Error al consultar entrenadores."
+            );
+
+            return Results.Problem(
+                title: "Error al consultar entrenadores",
+                detail: "Ocurrió un error interno.",
+                statusCode: 500
+            );
+        }
+    }
+)
+.RequireAuthorization(policy =>
+{
+    policy.RequireRole("Recepcionista");
+});
+
+
 app.Run();
