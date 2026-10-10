@@ -3352,5 +3352,271 @@ app.MapPost(
 });
 
 
+ // ============================================
+ // SPRINT 6 - CONSULTAR MI PROGRESO
+ // #1031 + #1032 + #1034
+ // ============================================
+
+app.MapGet(
+    "/api/progreso",
+    async (
+        ClaimsPrincipal usuario,
+        IConfiguration configuration
+    ) =>
+    {
+        var sub = usuario.FindFirst("sub")?.Value;
+
+        if (string.IsNullOrWhiteSpace(sub) ||
+            !int.TryParse(sub, out var idUsuario) ||
+            idUsuario <= 0)
+        {
+            return Results.Unauthorized();
+        }
+
+        var connectionString =
+            configuration.GetConnectionString("PostgreSQL");
+
+        if (string.IsNullOrWhiteSpace(connectionString))
+        {
+            return Results.Problem(
+                title: "Configuración faltante",
+                detail: "No existe la cadena de conexión PostgreSQL.",
+                statusCode: 500
+            );
+        }
+
+        try
+        {
+            await using var connection =
+                new NpgsqlConnection(connectionString);
+
+            await connection.OpenAsync();
+
+            await using var command =
+                new NpgsqlCommand(
+                    """
+                    SELECT
+                        p.id_progreso,
+                        p.id_cliente,
+                        p.id_ejercicio,
+                        e.nombre,
+                        p.peso_utilizado,
+                        p.fecha_registro
+                    FROM progreso p
+                    INNER JOIN clientes c
+                        ON c.id_cliente = p.id_cliente
+                    INNER JOIN ejercicios e
+                        ON e.id_ejercicio = p.id_ejercicio
+                    WHERE c.id_usuario = @id_usuario
+                    ORDER BY
+                        p.fecha_registro DESC,
+                        p.id_progreso DESC;
+                    """,
+                    connection
+                );
+
+            command.Parameters.AddWithValue(
+                "id_usuario",
+                idUsuario
+            );
+
+            await using var reader =
+                await command.ExecuteReaderAsync();
+
+            var registros = new List<object>();
+
+            while (await reader.ReadAsync())
+            {
+                registros.Add(new
+                {
+                    idProgreso = reader.GetInt32(0),
+                    idCliente = reader.GetInt32(1),
+                    idEjercicio = reader.GetInt32(2),
+                    nombreEjercicio = reader.GetString(3),
+                    pesoUtilizado = reader.GetDecimal(4),
+                    fechaRegistro = reader.GetDateTime(5)
+                });
+            }
+
+            return Results.Ok(registros);
+        }
+        catch (Exception ex)
+        {
+            app.Logger.LogError(
+                ex,
+                "Error al consultar el progreso."
+            );
+
+            return Results.Problem(
+                title: "Error al consultar progreso",
+                detail: "Ocurrió un error interno.",
+                statusCode: 500
+            );
+        }
+    }
+)
+.RequireAuthorization(policy =>
+{
+    policy.RequireRole("Cliente");
+});
+
+
+ // ============================================
+ // SPRINT 6 - PROGRESO POR EJERCICIO
+ // #1033 + #1036
+ // ============================================
+
+app.MapGet(
+    "/api/progreso/ejercicio/{idEjercicio:int}",
+    async (
+        int idEjercicio,
+        ClaimsPrincipal usuario,
+        IConfiguration configuration
+    ) =>
+    {
+        if (idEjercicio <= 0)
+        {
+            return Results.BadRequest(new
+            {
+                mensaje = "El id del ejercicio no es válido."
+            });
+        }
+
+        var sub = usuario.FindFirst("sub")?.Value;
+
+        if (string.IsNullOrWhiteSpace(sub) ||
+            !int.TryParse(sub, out var idUsuario) ||
+            idUsuario <= 0)
+        {
+            return Results.Unauthorized();
+        }
+
+        var connectionString =
+            configuration.GetConnectionString("PostgreSQL");
+
+        if (string.IsNullOrWhiteSpace(connectionString))
+        {
+            return Results.Problem(
+                title: "Configuración faltante",
+                detail: "No existe la cadena de conexión PostgreSQL.",
+                statusCode: 500
+            );
+        }
+
+        try
+        {
+            await using var connection =
+                new NpgsqlConnection(connectionString);
+
+            await connection.OpenAsync();
+
+            // Verificar que el ejercicio exista
+            await using var ejercicioCommand =
+                new NpgsqlCommand(
+                    """
+                    SELECT EXISTS (
+                        SELECT 1
+                        FROM ejercicios
+                        WHERE id_ejercicio = @id_ejercicio
+                    );
+                    """,
+                    connection
+                );
+
+            ejercicioCommand.Parameters.AddWithValue(
+                "id_ejercicio",
+                idEjercicio
+            );
+
+            var ejercicioExiste =
+                Convert.ToBoolean(
+                    await ejercicioCommand.ExecuteScalarAsync()
+                );
+
+            if (!ejercicioExiste)
+            {
+                return Results.NotFound(new
+                {
+                    mensaje = "El ejercicio no existe."
+                });
+            }
+
+            // Consultar solo el progreso del cliente
+            await using var command =
+                new NpgsqlCommand(
+                    """
+                    SELECT
+                        p.id_progreso,
+                        p.id_cliente,
+                        p.id_ejercicio,
+                        e.nombre,
+                        p.peso_utilizado,
+                        p.fecha_registro
+                    FROM progreso p
+                    INNER JOIN clientes c
+                        ON c.id_cliente = p.id_cliente
+                    INNER JOIN ejercicios e
+                        ON e.id_ejercicio = p.id_ejercicio
+                    WHERE c.id_usuario = @id_usuario
+                      AND p.id_ejercicio = @id_ejercicio
+                    ORDER BY
+                        p.fecha_registro ASC,
+                        p.id_progreso ASC;
+                    """,
+                    connection
+                );
+
+            command.Parameters.AddWithValue(
+                "id_usuario",
+                idUsuario
+            );
+
+            command.Parameters.AddWithValue(
+                "id_ejercicio",
+                idEjercicio
+            );
+
+            await using var reader =
+                await command.ExecuteReaderAsync();
+
+            var registros = new List<object>();
+
+            while (await reader.ReadAsync())
+            {
+                registros.Add(new
+                {
+                    idProgreso = reader.GetInt32(0),
+                    idCliente = reader.GetInt32(1),
+                    idEjercicio = reader.GetInt32(2),
+                    nombreEjercicio = reader.GetString(3),
+                    pesoUtilizado = reader.GetDecimal(4),
+                    fechaRegistro = reader.GetDateTime(5)
+                });
+            }
+
+            return Results.Ok(registros);
+        }
+        catch (Exception ex)
+        {
+            app.Logger.LogError(
+                ex,
+                "Error al consultar progreso por ejercicio."
+            );
+
+            return Results.Problem(
+                title: "Error al consultar progreso por ejercicio",
+                detail: "Ocurrió un error interno.",
+                statusCode: 500
+            );
+        }
+    }
+)
+.RequireAuthorization(policy =>
+{
+    policy.RequireRole("Cliente");
+});
+
+
+
 app.Run();
 
