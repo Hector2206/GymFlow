@@ -1568,4 +1568,386 @@ app.MapGet(
 });
 
 
+ // ============================================
+ // ASIGNAR ENTRENADOR A CLIENTE - RECEPCION
+ // ============================================
+
+
+ // ============================================
+ // ASIGNAR ENTRENADOR A CLIENTE - RECEPCION
+ // CON AUDITORIA
+ // ============================================
+
+app.MapPut(
+    "/api/clientes/{idCliente:int}/entrenador",
+    async (
+        int idCliente,
+        AsignarEntrenadorRequest request,
+        ClaimsPrincipal usuario,
+        IConfiguration configuration
+    ) =>
+    {
+        // =====================================
+        // OBTENER USUARIO DESDE JWT
+        // =====================================
+
+        var sub = usuario.FindFirst("sub")?.Value;
+
+        if (string.IsNullOrWhiteSpace(sub) ||
+            !int.TryParse(sub, out var idUsuario) ||
+            idUsuario <= 0)
+        {
+            return Results.Unauthorized();
+        }
+
+        // =====================================
+        // VALIDAR CLIENTE
+        // =====================================
+
+        if (idCliente <= 0)
+        {
+            return Results.BadRequest(new
+            {
+                mensaje = "El id del cliente no es válido."
+            });
+        }
+
+        // =====================================
+        // VALIDAR ENTRENADOR
+        // =====================================
+
+        if (request.IdEntrenador <= 0)
+        {
+            return Results.BadRequest(new
+            {
+                mensaje = "El id del entrenador no es válido."
+            });
+        }
+
+        var connectionString =
+            configuration.GetConnectionString("PostgreSQL");
+
+        if (string.IsNullOrWhiteSpace(connectionString))
+        {
+            return Results.Problem(
+                title: "Configuración faltante",
+                detail: "No existe la conexión PostgreSQL.",
+                statusCode: 500
+            );
+        }
+
+        try
+        {
+            await using var connection =
+                new NpgsqlConnection(connectionString);
+
+            await connection.OpenAsync();
+
+            // =====================================
+            // INICIAR TRANSACCION
+            // =====================================
+
+            await using var transaction =
+                await connection.BeginTransactionAsync();
+
+            // =====================================
+            // CONFIGURAR USUARIO PARA AUDITORIA
+            // =====================================
+
+            await using (var auditCommand =
+                new NpgsqlCommand(
+                    """
+                    SELECT set_config(
+                        'gymflow.usuario_actual',
+                        @usuario_actual,
+                        true
+                    );
+                    """,
+                    connection,
+                    transaction
+                ))
+            {
+                auditCommand.Parameters.AddWithValue(
+                    "usuario_actual",
+                    idUsuario.ToString()
+                );
+
+                await auditCommand.ExecuteScalarAsync();
+            }
+
+            // =====================================
+            // VALIDAR ENTRENADOR ACTIVO
+            // =====================================
+
+            await using var entrenadorCommand =
+                new NpgsqlCommand(
+                    """
+                    SELECT p.nombre_completo
+                    FROM personal p
+                    INNER JOIN usuarios u
+                        ON u.id_usuario = p.id_usuario
+                    INNER JOIN roles r
+                        ON r.id_rol = u.id_rol
+                    WHERE p.id_personal = @id_entrenador
+                      AND r.nombre = 'Entrenador'
+                      AND u.estatus = 'Activo';
+                    """,
+                    connection,
+                    transaction
+                );
+
+            entrenadorCommand.Parameters.AddWithValue(
+                "id_entrenador",
+                request.IdEntrenador
+            );
+
+            var nombreEntrenador =
+                await entrenadorCommand.ExecuteScalarAsync();
+
+            if (nombreEntrenador is null ||
+                nombreEntrenador == DBNull.Value)
+            {
+                return Results.NotFound(new
+                {
+                    mensaje =
+                        "El entrenador no existe o está inactivo."
+                });
+            }
+
+            // =====================================
+            // ASIGNAR ENTRENADOR AL CLIENTE
+            // =====================================
+
+            await using var actualizarCommand =
+                new NpgsqlCommand(
+                    """
+                    UPDATE clientes
+                    SET id_entrenador = @id_entrenador
+                    WHERE id_cliente = @id_cliente
+                    RETURNING nombre_completo;
+                    """,
+                    connection,
+                    transaction
+                );
+
+            actualizarCommand.Parameters.AddWithValue(
+                "id_entrenador",
+                request.IdEntrenador
+            );
+
+            actualizarCommand.Parameters.AddWithValue(
+                "id_cliente",
+                idCliente
+            );
+
+            var nombreCliente =
+                await actualizarCommand.ExecuteScalarAsync();
+
+            if (nombreCliente is null ||
+                nombreCliente == DBNull.Value)
+            {
+                return Results.NotFound(new
+                {
+                    mensaje = "El cliente no existe."
+                });
+            }
+
+            // =====================================
+            // CONFIRMAR TRANSACCION
+            // =====================================
+
+            await transaction.CommitAsync();
+
+            return Results.Ok(new
+            {
+                idCliente,
+                nombreCliente = nombreCliente.ToString(),
+                idEntrenador = request.IdEntrenador,
+                nombreEntrenador = nombreEntrenador.ToString(),
+                mensaje = "Entrenador asignado correctamente."
+            });
+        }
+        catch (Exception ex)
+        {
+            app.Logger.LogError(
+                ex,
+                "Error al asignar entrenador al cliente {IdCliente}.",
+                idCliente
+            );
+
+            return Results.Problem(
+                title: "Error al asignar entrenador",
+                detail: "Ocurrió un error interno.",
+                statusCode: 500
+            );
+        }
+    }
+)
+.RequireAuthorization(policy =>
+{
+    policy.RequireRole("Recepcionista");
+});
+
+
+ // ============================================
+ // QUITAR ENTRENADOR ASIGNADO - RECEPCION
+ // ============================================
+
+app.MapDelete(
+    "/api/clientes/{idCliente:int}/entrenador",
+    async (
+        int idCliente,
+        ClaimsPrincipal usuario,
+        IConfiguration configuration
+    ) =>
+    {
+        if (idCliente <= 0)
+        {
+            return Results.BadRequest(new
+            {
+                mensaje = "El id del cliente no es válido."
+            });
+        }
+
+        var sub = usuario.FindFirst("sub")?.Value;
+
+        if (!int.TryParse(sub, out var idUsuario) ||
+            idUsuario <= 0)
+        {
+            return Results.Unauthorized();
+        }
+
+        var connectionString =
+            configuration.GetConnectionString("PostgreSQL");
+
+        if (string.IsNullOrWhiteSpace(connectionString))
+        {
+            return Results.Problem(
+                title: "Configuración faltante",
+                detail: "No existe la conexión PostgreSQL.",
+                statusCode: 500
+            );
+        }
+
+        try
+        {
+            await using var connection =
+                new NpgsqlConnection(connectionString);
+
+            await connection.OpenAsync();
+
+            await using var transaction =
+                await connection.BeginTransactionAsync();
+
+            // Obtener la asignación actual
+            await using var clienteCommand =
+                new NpgsqlCommand(
+                    """
+                    SELECT id_entrenador
+                    FROM clientes
+                    WHERE id_cliente = @id_cliente
+                    FOR UPDATE;
+                    """,
+                    connection,
+                    transaction
+                );
+
+            clienteCommand.Parameters.AddWithValue(
+                "id_cliente",
+                idCliente
+            );
+
+            var entrenadorActual =
+                await clienteCommand.ExecuteScalarAsync();
+
+            if (entrenadorActual is null)
+            {
+                return Results.NotFound(new
+                {
+                    mensaje = "El cliente no existe."
+                });
+            }
+
+            if (entrenadorActual == DBNull.Value)
+            {
+                return Results.Ok(new
+                {
+                    idCliente,
+                    idEntrenador = (int?)null,
+                    mensaje = "El cliente ya no tiene entrenador asignado."
+                });
+            }
+
+            // Identificar al recepcionista en auditoría
+            await using var auditoriaCommand =
+                new NpgsqlCommand(
+                    """
+                    SELECT set_config(
+                        'gymflow.usuario_actual',
+                        @usuario_actual,
+                        true
+                    );
+                    """,
+                    connection,
+                    transaction
+                );
+
+            auditoriaCommand.Parameters.AddWithValue(
+                "usuario_actual",
+                idUsuario.ToString()
+            );
+
+            await auditoriaCommand.ExecuteScalarAsync();
+
+            // Quitar solamente la asignación
+            await using var actualizarCommand =
+                new NpgsqlCommand(
+                    """
+                    UPDATE clientes
+                    SET id_entrenador = NULL
+                    WHERE id_cliente = @id_cliente;
+                    """,
+                    connection,
+                    transaction
+                );
+
+            actualizarCommand.Parameters.AddWithValue(
+                "id_cliente",
+                idCliente
+            );
+
+            await actualizarCommand.ExecuteNonQueryAsync();
+
+            await transaction.CommitAsync();
+
+            return Results.Ok(new
+            {
+                idCliente,
+                idEntrenador = (int?)null,
+                mensaje = "Entrenador retirado correctamente."
+            });
+        }
+        catch (Exception ex)
+        {
+            app.Logger.LogError(
+                ex,
+                "Error al retirar entrenador del cliente {IdCliente}.",
+                idCliente
+            );
+
+            return Results.Problem(
+                title: "Error al retirar entrenador",
+                detail: "Ocurrió un error interno.",
+                statusCode: 500
+            );
+        }
+    }
+)
+.RequireAuthorization(policy =>
+{
+    policy.RequireRole("Recepcionista");
+});
+
+
+
 app.Run();
