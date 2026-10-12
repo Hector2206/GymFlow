@@ -36,7 +36,9 @@ builder.Services.AddCors(options =>
 
                 var allowedOrigins = new[]
                 {
-                    "https://gymflow-web-lkvv.onrender.com"
+                    "https://gymflow-web-lkvv.onrender.com",
+                    "https://www.gymflow.lat",
+                    "https://gymflow.lat"
                 };
 
                 return allowedOrigins.Contains(origin);
