@@ -63,6 +63,10 @@ import {
 } from './mi-rutina/mi-rutina';
 
 import {
+  MiProgreso
+} from './mi-progreso/mi-progreso';
+
+import {
   authGuard
 } from './auth-guard';
 
@@ -181,6 +185,14 @@ export const routes: Routes = [
     ]
   },
 
+  {
+  path: 'mi-progreso',
+  component: MiProgreso,
+  canActivate: [
+    authGuard,
+    clienteGuard
+  ]
+},
   {
     path: 'entrenador/mis-clientes',
     component: MisClientesEntrenador,

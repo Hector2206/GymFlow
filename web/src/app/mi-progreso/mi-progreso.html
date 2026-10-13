@@ -1,0 +1,226 @@
+<div class="progreso-page">
+
+  <header class="topbar">
+
+    <div class="header-left">
+
+      <button
+        type="button"
+        class="back-button"
+        (click)="volverInicio()"
+      >
+        ←
+      </button>
+
+      <img
+        src="/Logo_GymFlow.png"
+        alt="GymFlow"
+        class="logo"
+      />
+
+    </div>
+
+  </header>
+
+
+  <main class="content">
+
+    <section class="page-header">
+
+      <p class="section-label">
+        Cliente
+      </p>
+
+      <h1>
+        Mi Progreso
+      </h1>
+
+      <p class="subtitle">
+        Consulta el peso que has utilizado
+        en tus ejercicios y revisa tu avance.
+      </p>
+
+    </section>
+
+
+    <div
+      *ngIf="cargando"
+      class="loading-state"
+    >
+
+      <div class="loading-icon">
+        📈
+      </div>
+
+      <strong>
+        Cargando tu progreso...
+      </strong>
+
+    </div>
+
+
+    <div
+      *ngIf="error"
+      class="message error-message"
+    >
+
+      <span>
+        {{ error }}
+      </span>
+
+      <button
+        type="button"
+        class="retry-button"
+        (click)="cargarProgreso()"
+      >
+        Reintentar
+      </button>
+
+    </div>
+
+
+    <section
+      *ngIf="
+        !cargando &&
+        !error &&
+        progresos.length === 0
+      "
+      class="empty-state"
+    >
+
+      <div class="empty-icon">
+        📊
+      </div>
+
+      <h2>
+        Aún no tienes progreso registrado
+      </h2>
+
+      <p>
+        Cuando registres el peso utilizado
+        en tus ejercicios, podrás consultar
+        tu historial en esta sección.
+      </p>
+
+    </section>
+
+
+    <ng-container
+      *ngIf="
+        !cargando &&
+        !error &&
+        progresos.length > 0
+      "
+    >
+
+      <section class="summary-card">
+
+        <div class="summary-icon">
+          📈
+        </div>
+
+        <div class="summary-info">
+
+          <p class="summary-label">
+            Historial
+          </p>
+
+          <h2>
+            Tu avance de entrenamiento
+          </h2>
+
+          <p>
+            Tienes
+            <strong>
+              {{ progresos.length }}
+            </strong>
+
+            {{
+              progresos.length === 1
+                ? 'registro'
+                : 'registros'
+            }}
+            de progreso.
+          </p>
+
+        </div>
+
+      </section>
+
+
+      <section class="history-section">
+
+        <div class="section-heading">
+
+          <div>
+
+            <p class="section-label">
+              Registros
+            </p>
+
+            <h2>
+              Historial de progreso
+            </h2>
+
+          </div>
+
+          <span class="record-count">
+            {{ progresos.length }}
+          </span>
+
+        </div>
+
+
+        <div class="history-list">
+
+          <article
+            *ngFor="let progreso of progresos"
+            class="progress-card"
+          >
+
+            <div class="exercise-icon">
+              🏋️
+            </div>
+
+
+            <div class="progress-info">
+
+              <span class="exercise-label">
+                Ejercicio
+              </span>
+
+              <h3>
+                {{ progreso.nombreEjercicio }}
+              </h3>
+
+              <p class="date">
+                {{ formatearFecha(progreso.fechaRegistro) }}
+              </p>
+
+            </div>
+
+
+            <div class="weight">
+
+              <span>
+                Peso utilizado
+              </span>
+
+              <strong>
+                {{ progreso.pesoUtilizado }}
+                <small>kg</small>
+              </strong>
+
+            </div>
+
+          </article>
+
+        </div>
+
+      </section>
+
+    </ng-container>
+
+  </main>
+
+</div>

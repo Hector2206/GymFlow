@@ -351,6 +351,26 @@ export class Home implements OnInit {
     ]);
   }
 
+  irMiProgreso(): void {
+
+  if (
+    !this.esCliente()
+  ) {
+
+    this.mensaje =
+      'Esta opción está disponible únicamente para clientes.';
+
+    this.changeDetector
+      .detectChanges();
+
+    return;
+  }
+
+  this.router.navigate([
+    '/mi-progreso'
+  ]);
+}
+
 
   irMisClientesEntrenador(): void {
 
