@@ -25,6 +25,8 @@
 
   <main class="content">
 
+    <!-- ENCABEZADO -->
+
     <section class="page-header">
 
       <p class="section-label">
@@ -36,14 +38,153 @@
       </h1>
 
       <p class="subtitle">
-        Consulta el peso que has utilizado
-        en tus ejercicios y revisa tu avance.
+        Registra el peso utilizado en tus ejercicios
+        y observa cómo evoluciona tu entrenamiento.
       </p>
 
     </section>
 
 
-    <div
+    <!-- REGISTRAR PROGRESO -->
+
+    <section class="register-section">
+
+      <div class="register-heading">
+
+        <div>
+
+          <p class="section-label">
+            Nuevo registro
+          </p>
+
+          <h2>
+            Registrar progreso
+          </h2>
+
+          <p>
+            Selecciona un ejercicio e indica
+            el peso utilizado durante tu entrenamiento.
+          </p>
+
+        </div>
+
+        <div class="register-icon">
+          🏋️
+        </div>
+
+      </div>
+
+
+      <div
+        *ngIf="mensajeExito"
+        class="message success-message"
+      >
+        {{ mensajeExito }}
+      </div>
+
+
+      <div
+        *ngIf="errorRegistro"
+        class="message error-simple"
+      >
+        {{ errorRegistro }}
+      </div>
+
+
+      <div class="progress-form">
+
+        <div class="form-field">
+
+          <label for="ejercicio">
+            Ejercicio
+          </label>
+
+          <select
+            id="ejercicio"
+            name="ejercicio"
+            [(ngModel)]="idEjercicioSeleccionado"
+            [disabled]="
+              cargandoEjercicios ||
+              guardando
+            "
+          >
+
+            <option
+              [ngValue]="null"
+            >
+              {{
+                cargandoEjercicios
+                  ? 'Cargando ejercicios...'
+                  : 'Selecciona un ejercicio'
+              }}
+            </option>
+
+            <option
+              *ngFor="let ejercicio of ejercicios"
+              [ngValue]="ejercicio.idEjercicio"
+            >
+              {{ ejercicio.nombre }}
+            </option>
+
+          </select>
+
+        </div>
+
+
+        <div class="form-field">
+
+          <label for="pesoUtilizado">
+            Peso utilizado
+          </label>
+
+          <div class="weight-input">
+
+            <input
+              id="pesoUtilizado"
+              name="pesoUtilizado"
+              type="number"
+              min="0.01"
+              max="99999999.99"
+              step="0.01"
+              placeholder="Ej. 25"
+              [(ngModel)]="pesoUtilizado"
+              [disabled]="guardando"
+            />
+
+            <span>
+              kg
+            </span>
+
+          </div>
+
+        </div>
+
+
+        <button
+          type="button"
+          class="save-button"
+          (click)="registrarProgreso()"
+          [disabled]="
+            guardando ||
+            cargandoEjercicios ||
+            ejercicios.length === 0
+          "
+        >
+          {{
+            guardando
+              ? 'Guardando...'
+              : 'Registrar progreso'
+          }}
+        </button>
+
+      </div>
+
+    </section>
+
+
+    <!-- CARGANDO -->
+
+    <section
       *ngIf="cargando"
       class="loading-state"
     >
@@ -56,11 +197,13 @@
         Cargando tu progreso...
       </strong>
 
-    </div>
+    </section>
 
+
+    <!-- ERROR GENERAL -->
 
     <div
-      *ngIf="error"
+      *ngIf="!cargando && error"
       class="message error-message"
     >
 
@@ -79,11 +222,13 @@
     </div>
 
 
+    <!-- SIN REGISTROS -->
+
     <section
       *ngIf="
         !cargando &&
         !error &&
-        progresos.length === 0
+        ejerciciosConProgreso.length === 0
       "
       class="empty-state"
     >
@@ -93,127 +238,519 @@
       </div>
 
       <h2>
-        Aún no tienes progreso registrado
+        Comienza a registrar tu progreso
       </h2>
 
       <p>
-        Cuando registres el peso utilizado
-        en tus ejercicios, podrás consultar
-        tu historial en esta sección.
+        Registra el peso utilizado en alguno de tus
+        ejercicios. Cuando tengas registros podrás
+        visualizar aquí tu evolución.
       </p>
 
     </section>
 
 
+    <!-- PROGRESO POR EJERCICIO -->
+
     <ng-container
       *ngIf="
         !cargando &&
         !error &&
-        progresos.length > 0
+        ejerciciosConProgreso.length > 0
       "
     >
 
-      <section class="summary-card">
+      <section class="progress-section">
 
-        <div class="summary-icon">
-          📈
-        </div>
-
-        <div class="summary-info">
-
-          <p class="summary-label">
-            Historial
-          </p>
-
-          <h2>
-            Tu avance de entrenamiento
-          </h2>
-
-          <p>
-            Tienes
-            <strong>
-              {{ progresos.length }}
-            </strong>
-
-            {{
-              progresos.length === 1
-                ? 'registro'
-                : 'registros'
-            }}
-            de progreso.
-          </p>
-
-        </div>
-
-      </section>
-
-
-      <section class="history-section">
-
-        <div class="section-heading">
+        <div class="progress-heading">
 
           <div>
 
             <p class="section-label">
-              Registros
+              Evolución
             </p>
 
             <h2>
-              Historial de progreso
+              Progreso por ejercicio
             </h2>
+
+            <p>
+              Selecciona un ejercicio para consultar
+              cómo ha cambiado tu peso de entrenamiento.
+            </p>
 
           </div>
 
-          <span class="record-count">
-            {{ progresos.length }}
+          <span class="exercise-count">
+            {{ ejerciciosConProgreso.length }}
+            {{
+              ejerciciosConProgreso.length === 1
+                ? 'ejercicio'
+                : 'ejercicios'
+            }}
           </span>
 
         </div>
 
 
-        <div class="history-list">
+        <!-- SELECTOR DE EJERCICIOS -->
 
-          <article
-            *ngFor="let progreso of progresos"
-            class="progress-card"
+        <div class="exercise-selector">
+
+          <button
+            *ngFor="
+              let ejercicio
+              of ejerciciosConProgreso
+            "
+            type="button"
+            class="exercise-selector-button"
+            [class.active]="
+              ejercicio.idEjercicio ===
+              idEjercicioGrafica
+            "
+            (click)="
+              seleccionarEjercicio(
+                ejercicio.idEjercicio
+              )
+            "
           >
 
-            <div class="exercise-icon">
+            <span class="selector-icon">
+              🏋️
+            </span>
+
+            <div class="selector-info">
+
+              <strong>
+                {{ ejercicio.nombreEjercicio }}
+              </strong>
+
+              <small>
+                {{ ejercicio.cantidadRegistros }}
+                {{
+                  ejercicio.cantidadRegistros === 1
+                    ? 'registro'
+                    : 'registros'
+                }}
+              </small>
+
+            </div>
+
+          </button>
+
+        </div>
+
+
+        <!-- CARGANDO EJERCICIO -->
+
+        <div
+          *ngIf="cargandoGrafica"
+          class="exercise-loading"
+        >
+
+          <div>
+            📈
+          </div>
+
+          <span>
+            Cargando evolución...
+          </span>
+
+        </div>
+
+
+        <!-- ERROR EJERCICIO -->
+
+        <div
+          *ngIf="
+            !cargandoGrafica &&
+            errorGrafica
+          "
+          class="message error-message"
+        >
+
+          <span>
+            {{ errorGrafica }}
+          </span>
+
+          <button
+            *ngIf="idEjercicioGrafica !== null"
+            type="button"
+            class="retry-button"
+            (click)="
+              cargarProgresoEjercicio(
+                idEjercicioGrafica
+              )
+            "
+          >
+            Reintentar
+          </button>
+
+        </div>
+
+
+        <!-- DETALLE DEL EJERCICIO -->
+
+        <div
+          *ngIf="
+            !cargandoGrafica &&
+            !errorGrafica &&
+            ejercicioActual
+          "
+          class="exercise-progress"
+        >
+
+          <!-- TÍTULO -->
+
+          <div class="exercise-title">
+
+            <div class="exercise-title-icon">
               🏋️
             </div>
 
+            <div>
 
-            <div class="progress-info">
-
-              <span class="exercise-label">
-                Ejercicio
+              <span>
+                Tu progreso en
               </span>
 
               <h3>
-                {{ progreso.nombreEjercicio }}
+                {{ ejercicioActual.nombreEjercicio }}
               </h3>
-
-              <p class="date">
-                {{ formatearFecha(progreso.fechaRegistro) }}
-              </p>
 
             </div>
 
+            <div class="records-chip">
 
-            <div class="weight">
+              {{ progresoEjercicio.length }}
+
+              {{
+                progresoEjercicio.length === 1
+                  ? 'registro'
+                  : 'registros'
+              }}
+
+            </div>
+
+          </div>
+
+
+          <!-- MÉTRICAS -->
+
+          <div class="metrics-grid">
+
+            <div class="metric-card">
 
               <span>
-                Peso utilizado
+                Peso inicial
               </span>
 
               <strong>
-                {{ progreso.pesoUtilizado }}
-                <small>kg</small>
+                {{ formatearPeso(pesoInicial) }}
+
+                <small>
+                  kg
+                </small>
               </strong>
 
             </div>
 
-          </article>
+
+            <div class="metric-card current">
+
+              <span>
+                Peso actual
+              </span>
+
+              <strong>
+                {{ formatearPeso(pesoActual) }}
+
+                <small>
+                  kg
+                </small>
+              </strong>
+
+            </div>
+
+
+            <div
+              class="metric-card change"
+              [ngClass]="claseCambio()"
+            >
+
+              <span>
+                Cambio
+              </span>
+
+              <strong *ngIf="tieneEvolucion">
+
+                {{ simboloCambio() }}
+                {{ formatearPeso(cambioPeso) }}
+
+                <small>
+                  kg
+                </small>
+
+              </strong>
+
+              <strong *ngIf="!tieneEvolucion">
+                —
+              </strong>
+
+            </div>
+
+          </div>
+
+
+          <!-- SIN EVOLUCIÓN TODAVÍA -->
+
+          <div
+            *ngIf="!tieneEvolucion"
+            class="not-enough-data"
+          >
+
+            <div class="not-enough-icon">
+              📈
+            </div>
+
+            <div>
+
+              <strong>
+                Tu evolución comienza aquí
+              </strong>
+
+              <p>
+                Registra este ejercicio nuevamente
+                en otro entrenamiento para comenzar
+                a visualizar cómo cambia tu peso.
+              </p>
+
+            </div>
+
+          </div>
+
+
+          <!-- GRÁFICA -->
+
+          <section
+            *ngIf="tieneEvolucion"
+            class="chart-section"
+          >
+
+            <div class="chart-heading">
+
+              <div>
+
+                <span class="chart-label">
+                  Evolución
+                </span>
+
+                <h4>
+                  Peso utilizado
+                </h4>
+
+              </div>
+
+              <span class="chart-unit">
+                kg
+              </span>
+
+            </div>
+
+
+            <div class="chart-container">
+
+              <svg
+                class="progress-chart"
+                viewBox="0 0 100 100"
+                preserveAspectRatio="none"
+                role="img"
+                aria-label="Gráfica de evolución del peso utilizado"
+              >
+
+                <!-- LÍNEAS GUÍA -->
+
+                <line
+                  x1="5"
+                  y1="18"
+                  x2="95"
+                  y2="18"
+                  class="grid-line"
+                />
+
+                <line
+                  x1="5"
+                  y1="50"
+                  x2="95"
+                  y2="50"
+                  class="grid-line"
+                />
+
+                <line
+                  x1="5"
+                  y1="82"
+                  x2="95"
+                  y2="82"
+                  class="grid-line"
+                />
+
+
+                <!-- LÍNEA DE PROGRESO -->
+
+                <polyline
+                  [attr.points]="lineaGrafica"
+                  class="progress-line"
+                />
+
+
+                <!-- PUNTOS -->
+
+                <circle
+                  *ngFor="let punto of puntosGrafica"
+                  [attr.cx]="punto.x"
+                  [attr.cy]="punto.y"
+                  r="2.3"
+                  class="progress-point"
+                />
+
+              </svg>
+
+
+              <!-- ETIQUETAS DE PUNTOS -->
+
+              <div class="chart-labels">
+
+                <div
+                  *ngFor="
+                    let punto
+                    of puntosGrafica
+                  "
+                  class="chart-point-label"
+                  [style.left.%]="punto.x"
+                  [style.top.%]="punto.y"
+                >
+
+                  <strong>
+                    {{ formatearPeso(punto.peso) }}
+                  </strong>
+
+                  <span>
+                    kg
+                  </span>
+
+                </div>
+
+              </div>
+
+            </div>
+
+
+            <div class="chart-dates">
+
+              <span>
+                {{
+                  formatearFechaCorta(
+                    progresoEjercicio[0]
+                      .fechaRegistro
+                  )
+                }}
+              </span>
+
+              <span>
+                {{
+                  formatearFechaCorta(
+                    progresoEjercicio[
+                      progresoEjercicio.length - 1
+                    ].fechaRegistro
+                  )
+                }}
+              </span>
+
+            </div>
+
+          </section>
+
+
+          <!-- HISTORIAL DEL EJERCICIO -->
+
+          <section class="exercise-history">
+
+            <div class="history-heading">
+
+              <div>
+
+                <span class="history-label">
+                  Registros
+                </span>
+
+                <h4>
+                  Historial del ejercicio
+                </h4>
+
+              </div>
+
+              <span class="history-count">
+                {{ progresoEjercicio.length }}
+              </span>
+
+            </div>
+
+
+            <div class="history-table">
+
+              <div
+                *ngFor="
+                  let progreso
+                  of progresoEjercicio
+                "
+                class="history-row"
+              >
+
+                <div class="history-date">
+
+                  <span class="history-dot">
+                  </span>
+
+                  <div>
+
+                    <strong>
+                      {{
+                        formatearFecha(
+                          progreso.fechaRegistro
+                        )
+                      }}
+                    </strong>
+
+                    <small>
+                      Registro de entrenamiento
+                    </small>
+
+                  </div>
+
+                </div>
+
+
+                <div class="history-weight">
+
+                  <strong>
+                    {{
+                      formatearPeso(
+                        progreso.pesoUtilizado
+                      )
+                    }}
+                  </strong>
+
+                  <span>
+                    kg
+                  </span>
+
+                </div>
+
+              </div>
+
+            </div>
+
+          </section>
 
         </div>
 
