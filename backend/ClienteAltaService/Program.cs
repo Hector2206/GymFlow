@@ -1291,9 +1291,9 @@ app.MapGet(
     policy.RequireRole("Cliente");
 });
 
-// ===============================
-// LISTAR CLIENTES PARA RECEPCION
-// ===============================
+ // ===============================
+ // LISTAR CLIENTES PARA RECEPCION
+ // ===============================
 
 app.MapGet(
     "/api/clientes",
@@ -1326,10 +1326,14 @@ app.MapGet(
                 """
                 SELECT
                     c.id_cliente,
-                    c.nombre_completo
+                    c.nombre_completo,
+                    c.id_entrenador,
+                    p.nombre_completo AS nombre_entrenador
                 FROM clientes c
                 INNER JOIN usuarios u
                     ON c.id_usuario = u.id_usuario
+                LEFT JOIN personal p
+                    ON c.id_entrenador = p.id_personal
                 WHERE u.estatus = 'Activo'
                 ORDER BY c.nombre_completo;
                 """,
@@ -1350,7 +1354,17 @@ app.MapGet(
                     reader.GetInt32(0),
 
                 nombreCompleto =
-                    reader.GetString(1)
+                    reader.GetString(1),
+
+                idEntrenador =
+                    reader.IsDBNull(2)
+                        ? (int?)null
+                        : reader.GetInt32(2),
+
+                nombreEntrenador =
+                    reader.IsDBNull(3)
+                        ? null
+                        : reader.GetString(3)
             });
         }
 
