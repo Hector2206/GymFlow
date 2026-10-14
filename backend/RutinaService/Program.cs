@@ -3140,6 +3140,7 @@ app.MapGet(
  // #1026 + #1027 + #1028 + #1029 + #1030
  // ============================================
 
+
 app.MapPost(
     "/api/progreso",
     async (
@@ -3165,6 +3166,27 @@ app.MapPost(
             {
                 mensaje = "El peso utilizado debe ser mayor a cero y estar dentro del rango permitido."
             });
+        }
+
+        // Validar formato de fecha opcional
+        DateOnly? fechaSolicitada = null;
+
+        if (request.FechaEntrenamiento is not null)
+        {
+            if (!DateOnly.TryParseExact(
+                request.FechaEntrenamiento,
+                "yyyy-MM-dd",
+                System.Globalization.CultureInfo.InvariantCulture,
+                System.Globalization.DateTimeStyles.None,
+                out var fechaValida))
+            {
+                return Results.BadRequest(new
+                {
+                    mensaje = "fechaEntrenamiento debe tener formato YYYY-MM-DD."
+                });
+            }
+
+            fechaSolicitada = fechaValida;
         }
 
         // Obtener usuario desde JWT
@@ -3195,6 +3217,30 @@ app.MapPost(
                 new NpgsqlConnection(connectionString);
 
             await connection.OpenAsync();
+
+            // Fecha actual según PostgreSQL
+            await using var fechaCommand =
+                new NpgsqlCommand(
+                    "SELECT CURRENT_DATE;",
+                    connection
+                );
+
+            var fechaActual =
+                (DateOnly)(await fechaCommand.ExecuteScalarAsync()
+                    ?? throw new InvalidOperationException(
+                        "No se pudo obtener la fecha actual."
+                    ));
+
+            var fechaEntrenamiento =
+                fechaSolicitada ?? fechaActual;
+
+            if (fechaEntrenamiento > fechaActual)
+            {
+                return Results.BadRequest(new
+                {
+                    mensaje = "No se permiten fechas de entrenamiento futuras."
+                });
+            }
 
             // Obtener cliente autenticado
             await using var clienteCommand =
@@ -3259,21 +3305,26 @@ app.MapPost(
                 });
             }
 
-            // Registrar progreso
+            // Registrar progreso con fecha de entrenamiento
             await using var progresoCommand =
                 new NpgsqlCommand(
                     """
                     INSERT INTO progreso (
                         id_cliente,
                         id_ejercicio,
-                        peso_utilizado
+                        peso_utilizado,
+                        fecha_entrenamiento
                     )
                     VALUES (
                         @id_cliente,
                         @id_ejercicio,
-                        @peso_utilizado
+                        @peso_utilizado,
+                        @fecha_entrenamiento
                     )
-                    RETURNING id_progreso, fecha_registro;
+                    RETURNING
+                        id_progreso,
+                        fecha_registro,
+                        fecha_entrenamiento;
                     """,
                     connection
                 );
@@ -3293,6 +3344,12 @@ app.MapPost(
                 request.PesoUtilizado
             );
 
+            progresoCommand.Parameters.AddWithValue(
+                "fecha_entrenamiento",
+                NpgsqlTypes.NpgsqlDbType.Date,
+                fechaEntrenamiento
+            );
+
             await using var reader =
                 await progresoCommand.ExecuteReaderAsync();
 
@@ -3306,6 +3363,7 @@ app.MapPost(
 
             var idProgreso = reader.GetInt32(0);
             var fechaRegistro = reader.GetDateTime(1);
+            var fechaGuardada = reader.GetFieldValue<DateOnly>(2);
 
             return Results.Created(
                 $"/api/progreso/{idProgreso}",
@@ -3315,6 +3373,10 @@ app.MapPost(
                     idCliente,
                     idEjercicio = request.IdEjercicio,
                     pesoUtilizado = request.PesoUtilizado,
+                    fechaEntrenamiento = fechaGuardada.ToString(
+                        "yyyy-MM-dd",
+                        System.Globalization.CultureInfo.InvariantCulture
+                    ),
                     fechaRegistro,
                     mensaje = "Progreso registrado correctamente."
                 }
@@ -3403,7 +3465,8 @@ app.MapGet(
                         p.id_ejercicio,
                         e.nombre,
                         p.peso_utilizado,
-                        p.fecha_registro
+                        p.fecha_registro,
+                        p.fecha_entrenamiento
                     FROM progreso p
                     INNER JOIN clientes c
                         ON c.id_cliente = p.id_cliente
@@ -3411,8 +3474,10 @@ app.MapGet(
                         ON e.id_ejercicio = p.id_ejercicio
                     WHERE c.id_usuario = @id_usuario
                     ORDER BY
+                        p.fecha_entrenamiento DESC,
                         p.fecha_registro DESC,
                         p.id_progreso DESC;
+
                     """,
                     connection
                 );
@@ -3427,6 +3492,7 @@ app.MapGet(
 
             var registros = new List<object>();
 
+           
             while (await reader.ReadAsync())
             {
                 registros.Add(new
@@ -3436,9 +3502,15 @@ app.MapGet(
                     idEjercicio = reader.GetInt32(2),
                     nombreEjercicio = reader.GetString(3),
                     pesoUtilizado = reader.GetDecimal(4),
-                    fechaRegistro = reader.GetDateTime(5)
+                    fechaRegistro = reader.GetDateTime(5),
+                    fechaEntrenamiento =
+                        reader.GetFieldValue<DateOnly>(6).ToString(
+                            "yyyy-MM-dd",
+                            System.Globalization.CultureInfo.InvariantCulture
+                        )
                 });
             }
+
 
             return Results.Ok(registros);
         }
@@ -3547,21 +3619,24 @@ app.MapGet(
             await using var command =
                 new NpgsqlCommand(
                     """
+                    
                     SELECT
                         p.id_progreso,
                         p.id_cliente,
                         p.id_ejercicio,
                         e.nombre,
                         p.peso_utilizado,
-                        p.fecha_registro
+                        p.fecha_registro,
+                        p.fecha_entrenamiento
                     FROM progreso p
                     INNER JOIN clientes c
                         ON c.id_cliente = p.id_cliente
                     INNER JOIN ejercicios e
                         ON e.id_ejercicio = p.id_ejercicio
                     WHERE c.id_usuario = @id_usuario
-                      AND p.id_ejercicio = @id_ejercicio
+                    AND p.id_ejercicio = @id_ejercicio
                     ORDER BY
+                        p.fecha_entrenamiento ASC,
                         p.fecha_registro ASC,
                         p.id_progreso ASC;
                     """,
@@ -3582,7 +3657,7 @@ app.MapGet(
                 await command.ExecuteReaderAsync();
 
             var registros = new List<object>();
-
+            
             while (await reader.ReadAsync())
             {
                 registros.Add(new
@@ -3592,10 +3667,14 @@ app.MapGet(
                     idEjercicio = reader.GetInt32(2),
                     nombreEjercicio = reader.GetString(3),
                     pesoUtilizado = reader.GetDecimal(4),
-                    fechaRegistro = reader.GetDateTime(5)
+                    fechaRegistro = reader.GetDateTime(5),
+                    fechaEntrenamiento =
+                        reader.GetFieldValue<DateOnly>(6).ToString(
+                            "yyyy-MM-dd",
+                            System.Globalization.CultureInfo.InvariantCulture
+                        )
                 });
             }
-
             return Results.Ok(registros);
         }
         catch (Exception ex)
