@@ -76,6 +76,10 @@ import {
   clienteGuard
 } from './role-guard';
 
+import {
+  AsignacionEntrenadores
+} from './asignacion-entrenadores/asignacion-entrenadores';
+
 export const routes: Routes = [
 
   {
@@ -148,6 +152,15 @@ export const routes: Routes = [
       recepcionistaGuard
     ]
   },
+
+  {
+  path: 'asignacion-entrenadores',
+  component: AsignacionEntrenadores,
+  canActivate: [
+    authGuard,
+    recepcionistaGuard
+  ]
+},
 
   {
     path: 'mi-codigo-acceso',

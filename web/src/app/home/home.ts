@@ -288,6 +288,26 @@ export class Home implements OnInit {
     ]);
   }
 
+  irAsignacionEntrenadores(): void {
+
+  if (
+    !this.esRecepcionista()
+  ) {
+
+    this.mensaje =
+      'Esta opción está disponible únicamente para recepción.';
+
+    this.changeDetector
+      .detectChanges();
+
+    return;
+  }
+
+  this.router.navigate([
+    '/asignacion-entrenadores'
+  ]);
+}
+
 
   irMisAsistencias(): void {
 
