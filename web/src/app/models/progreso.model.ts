@@ -1,6 +1,8 @@
+
 export interface RegistrarProgresoRequest {
   idEjercicio: number;
   pesoUtilizado: number;
+  fechaEntrenamiento?: string;
 }
 
 export interface RegistrarProgresoResponse {
@@ -9,6 +11,7 @@ export interface RegistrarProgresoResponse {
   idEjercicio: number;
   pesoUtilizado: number;
   fechaRegistro: string;
+  fechaEntrenamiento?: string | null;
   mensaje: string;
 }
 
@@ -19,4 +22,5 @@ export interface Progreso {
   nombreEjercicio: string;
   pesoUtilizado: number;
   fechaRegistro: string;
+  fechaEntrenamiento?: string | null;
 }

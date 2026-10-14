@@ -84,6 +84,61 @@ implements OnInit {
   pesoUtilizado:
     number | null = null;
 
+  // Activar solo después de confirmar que POST y GET admiten fechaEntrenamiento.
+  readonly backendFechasHabilitado = false;
+
+  fechaEntrenamiento = this.fechaLocalHoy();
+  readonly fechaMaxima = this.fechaLocalHoy();
+
+  private fechaLocalHoy(): string {
+    const ahora = new Date();
+    const anio = ahora.getFullYear();
+    const mes = String(ahora.getMonth() + 1).padStart(2, '0');
+    const dia = String(ahora.getDate()).padStart(2, '0');
+    return `${anio}-${mes}-${dia}`;
+  }
+
+  private fechaDelProgreso(progreso: Progreso): string {
+    return progreso.fechaEntrenamiento || progreso.fechaRegistro;
+  }
+
+  private ordenarPorEntrenamiento(progresos: Progreso[]): Progreso[] {
+    return [...progresos].sort((a, b) => {
+      const fechaA = this.fechaDelProgreso(a).substring(0, 10);
+      const fechaB = this.fechaDelProgreso(b).substring(0, 10);
+      const diferencia = fechaA.localeCompare(fechaB);
+      if (diferencia !== 0) return diferencia;
+      const registro = a.fechaRegistro.localeCompare(b.fechaRegistro);
+      return registro !== 0 ? registro : a.idProgreso - b.idProgreso;
+    });
+  }
+
+  fechaVisible(progreso: Progreso): string {
+    return this.fechaDelProgreso(progreso);
+  }
+
+  formatearFechaEntrenamiento(fecha: string): string {
+    // YYYY-MM-DD se interpreta como fecha local para evitar desfase UTC.
+    if (/^\d{4}-\d{2}-\d{2}$/.test(fecha)) {
+      const [anio, mes, dia] = fecha.split('-').map(Number);
+      const valor = new Date(anio, mes - 1, dia);
+      return valor.toLocaleDateString('es-MX', {
+        day: '2-digit', month: 'short', year: 'numeric'
+      });
+    }
+    return this.formatearFecha(fecha);
+  }
+
+  formatearFechaCortaEntrenamiento(fecha: string): string {
+    if (/^\d{4}-\d{2}-\d{2}$/.test(fecha)) {
+      const [anio, mes, dia] = fecha.split('-').map(Number);
+      return new Date(anio, mes - 1, dia).toLocaleDateString('es-MX', {
+        day: '2-digit', month: 'short'
+      });
+    }
+    return this.formatearFechaCorta(fecha);
+  }
+
   cargando = true;
 
   cargandoEjercicios = true;
@@ -139,7 +194,7 @@ implements OnInit {
         ) => {
 
           this.progresos =
-            progresos;
+            this.ordenarPorEntrenamiento(progresos).reverse();
 
           this.construirResumenEjercicios();
 
@@ -216,7 +271,7 @@ implements OnInit {
           ) {
 
             this.error =
-              'Esta sección está disponible únicamente para clientes.';
+              'Esta secci├│n est├í disponible ├║nicamente para clientes.';
 
           } else if (
             error.status === 0
@@ -430,7 +485,7 @@ implements OnInit {
           }
 
           this.progresoEjercicio =
-            progresos;
+            this.ordenarPorEntrenamiento(progresos);
 
           this.construirGrafica();
 
@@ -490,7 +545,7 @@ implements OnInit {
           } else {
 
             this.errorGrafica =
-              'No fue posible cargar la evolución de este ejercicio.';
+              'No fue posible cargar la evoluci├│n de este ejercicio.';
           }
 
           this.changeDetector
@@ -579,7 +634,7 @@ implements OnInit {
               y,
               peso,
               fecha:
-                progreso.fechaRegistro
+                this.fechaDelProgreso(progreso)
             };
           }
         );
@@ -626,6 +681,32 @@ implements OnInit {
       return;
     }
 
+    const fechaHoy = this.fechaLocalHoy();
+    const fechaElegida = this.fechaEntrenamiento;
+
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(fechaElegida)) {
+      this.errorRegistro = 'Selecciona una fecha válida.';
+      return;
+    }
+
+    const [anio, mes, dia] = fechaElegida.split('-').map(Number);
+    const fechaComprobacion = new Date(anio, mes - 1, dia);
+    if (
+      fechaComprobacion.getFullYear() !== anio ||
+      fechaComprobacion.getMonth() !== mes - 1 ||
+      fechaComprobacion.getDate() !== dia ||
+      fechaElegida > fechaHoy
+    ) {
+      this.errorRegistro = 'No se permiten fechas inválidas o futuras.';
+      return;
+    }
+
+    if (!this.backendFechasHabilitado && fechaElegida !== fechaHoy) {
+      this.errorRegistro =
+        'El registro de días anteriores estará disponible cuando Backend habilite las fechas.';
+      return;
+    }
+
     const ejercicioRegistrado =
       this.idEjercicioSeleccionado;
 
@@ -637,7 +718,10 @@ implements OnInit {
           ejercicioRegistrado,
 
         pesoUtilizado:
-          this.pesoUtilizado
+          this.pesoUtilizado,
+        ...(this.backendFechasHabilitado
+          ? { fechaEntrenamiento: fechaElegida }
+          : {})
       })
       .subscribe({
 
@@ -657,6 +741,8 @@ implements OnInit {
 
           this.pesoUtilizado =
             null;
+
+          this.fechaEntrenamiento = this.fechaLocalHoy();
 
           this.cargarProgreso(
             ejercicioRegistrado
@@ -717,7 +803,7 @@ implements OnInit {
           ) {
 
             this.errorRegistro =
-              'El ejercicio seleccionado no está disponible.';
+              'El ejercicio seleccionado no est├í disponible.';
 
           } else if (
             error.status === 0
