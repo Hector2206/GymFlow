@@ -1,4 +1,3 @@
-
 import 'dart:async';
 import 'dart:convert';
 
@@ -11,20 +10,13 @@ import 'auth_service.dart';
 class ProgresoService {
   final AuthService _authService = AuthService();
 
-  static const Duration _tiempoEspera =
-      Duration(seconds: 25);
-
-  // ==========================================
-  // OBTENER TOKEN JWT
-  // ==========================================
+  static const Duration _tiempoEspera = Duration(seconds: 25);
 
   Future<Map<String, String>> _headers() async {
     final token = await _authService.obtenerToken();
 
     if (token == null || token.trim().isEmpty) {
-      throw Exception(
-        'Tu sesión no es válida. Inicia sesión nuevamente.',
-      );
+      throw Exception('Tu sesión no es válida. Inicia sesión nuevamente.');
     }
 
     return {
@@ -34,107 +26,94 @@ class ProgresoService {
     };
   }
 
-  // ==========================================
-  // REGISTRAR PROGRESO
   // POST /api/progreso
-  // ==========================================
-
+  // Backend recibe fechaEntrenamiento como YYYY-MM-DD (opcional).
   Future<void> registrarProgreso({
     required int idEjercicio,
     required double pesoUtilizado,
+    DateTime? fechaEntrenamiento,
   }) async {
     if (idEjercicio <= 0) {
-      throw Exception(
-        'Selecciona un ejercicio válido.',
-      );
+      throw Exception('Selecciona un ejercicio válido.');
     }
 
     if (!pesoUtilizado.isFinite ||
         pesoUtilizado <= 0 ||
         pesoUtilizado > 99999999.99) {
-      throw Exception(
-        'Ingresa un peso válido mayor a cero.',
+      throw Exception('Ingresa un peso válido mayor a cero.');
+    }
+
+    if (fechaEntrenamiento != null) {
+      final hoy = DateTime.now();
+      final hoySinHora = DateTime(hoy.year, hoy.month, hoy.day);
+      final elegidaSinHora = DateTime(
+        fechaEntrenamiento.year,
+        fechaEntrenamiento.month,
+        fechaEntrenamiento.day,
       );
+      if (elegidaSinHora.isAfter(hoySinHora)) {
+        throw Exception('No puedes registrar una fecha futura.');
+      }
     }
 
     final headers = await _headers();
-
-    final body = {
+    final body = <String, dynamic>{
       'idEjercicio': idEjercicio,
       'pesoUtilizado': pesoUtilizado,
+      if (fechaEntrenamiento != null)
+        'fechaEntrenamiento':
+            '${fechaEntrenamiento.year.toString().padLeft(4, '0')}-'
+            '${fechaEntrenamiento.month.toString().padLeft(2, '0')}-'
+            '${fechaEntrenamiento.day.toString().padLeft(2, '0')}',
     };
 
     try {
       final response = await http
           .post(
-            Uri.parse(
-              '${ApiConfig.rutinaServiceUrl}/api/progreso',
-            ),
+            Uri.parse('${ApiConfig.rutinaServiceUrl}/api/progreso'),
             headers: headers,
             body: jsonEncode(body),
           )
           .timeout(_tiempoEspera);
 
-      _validarRespuesta(
-        response,
-        codigosAceptados: {201},
-      );
+      _validarRespuesta(response, codigosAceptados: {201});
     } on TimeoutException {
       throw Exception(
         'El servidor tardó demasiado en responder. '
         'Consulta tu historial antes de volver a guardar.',
       );
     } on http.ClientException {
-      throw Exception(
-        'No fue posible conectar con el servidor.',
-      );
+      throw Exception('No fue posible conectar con el servidor.');
     }
   }
 
-  // ==========================================
-  // CONSULTAR MI HISTORIAL
   // GET /api/progreso
-  // ==========================================
-
   Future<List<Progreso>> obtenerMiProgreso() async {
     final headers = await _headers();
 
     try {
       final response = await http
           .get(
-            Uri.parse(
-              '${ApiConfig.rutinaServiceUrl}/api/progreso',
-            ),
+            Uri.parse('${ApiConfig.rutinaServiceUrl}/api/progreso'),
             headers: headers,
           )
           .timeout(_tiempoEspera);
 
       _validarRespuesta(response);
-
       return _convertirLista(response.body);
     } on TimeoutException {
-      throw Exception(
-        'El servidor tardó demasiado en responder.',
-      );
+      throw Exception('El servidor tardó demasiado en responder.');
     } on http.ClientException {
-      throw Exception(
-        'No fue posible conectar con el servidor.',
-      );
+      throw Exception('No fue posible conectar con el servidor.');
     }
   }
 
-  // ==========================================
-  // CONSULTAR PROGRESO POR EJERCICIO
   // GET /api/progreso/ejercicio/{idEjercicio}
-  // ==========================================
-
   Future<List<Progreso>> obtenerProgresoPorEjercicio(
     int idEjercicio,
   ) async {
     if (idEjercicio <= 0) {
-      throw Exception(
-        'El ejercicio seleccionado no es válido.',
-      );
+      throw Exception('El ejercicio seleccionado no es válido.');
     }
 
     final headers = await _headers();
@@ -151,22 +130,13 @@ class ProgresoService {
           .timeout(_tiempoEspera);
 
       _validarRespuesta(response);
-
       return _convertirLista(response.body);
     } on TimeoutException {
-      throw Exception(
-        'El servidor tardó demasiado en responder.',
-      );
+      throw Exception('El servidor tardó demasiado en responder.');
     } on http.ClientException {
-      throw Exception(
-        'No fue posible conectar con el servidor.',
-      );
+      throw Exception('No fue posible conectar con el servidor.');
     }
   }
-
-  // ==========================================
-  // CONVERTIR JSON A LISTA DE PROGRESOS
-  // ==========================================
 
   List<Progreso> _convertirLista(String respuesta) {
     try {
@@ -180,7 +150,6 @@ class ProgresoService {
         if (registro is! Map<String, dynamic>) {
           throw const FormatException();
         }
-
         return Progreso.fromJson(registro);
       }).toList();
     } catch (_) {
@@ -191,10 +160,6 @@ class ProgresoService {
     }
   }
 
-  // ==========================================
-  // VALIDAR RESPUESTAS DEL SERVIDOR
-  // ==========================================
-
   void _validarRespuesta(
     http.Response response, {
     Set<int> codigosAceptados = const {200},
@@ -204,15 +169,11 @@ class ProgresoService {
     }
 
     if (response.statusCode == 401) {
-      throw Exception(
-        'Tu sesión ha expirado. Inicia sesión nuevamente.',
-      );
+      throw Exception('Tu sesión ha expirado. Inicia sesión nuevamente.');
     }
 
     if (response.statusCode == 403) {
-      throw Exception(
-        'No tienes permiso para acceder al progreso.',
-      );
+      throw Exception('No tienes permiso para acceder al progreso.');
     }
 
     String mensaje =
@@ -221,16 +182,14 @@ class ProgresoService {
 
     try {
       final data = jsonDecode(response.body);
-
       if (data is Map<String, dynamic>) {
-        mensaje =
-            data['mensaje']?.toString() ??
+        mensaje = data['mensaje']?.toString() ??
             data['detail']?.toString() ??
             data['title']?.toString() ??
             mensaje;
       }
     } catch (_) {
-      // Mantener mensaje genérico si no hay JSON.
+      // Se conserva el mensaje de respaldo.
     }
 
     throw Exception(mensaje);

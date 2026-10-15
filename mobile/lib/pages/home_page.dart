@@ -16,6 +16,7 @@ import 'registrar_pago_page.dart';
 import 'clientes_entrenador_page.dart';
 import 'rutinas_page.dart';
 import 'mi_rutina_page.dart';
+import 'mi_progreso_page.dart';
 import 'ejercicios_page.dart';
 
 
@@ -983,6 +984,23 @@ class HomePage extends StatelessWidget {
             MaterialPageRoute(
               builder: (_) =>
                   const MiRutinaPage(),
+            ),
+          );
+        },
+      ),
+
+      
+      _espacio(),
+
+      _buildCard(
+        icon: Icons.show_chart,
+        titulo: 'Mi Progreso',
+        subtitulo:
+            'Registra tus pesos y consulta tu evolución',
+        onTap: () {
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (_) => const MiProgresoPage(),
             ),
           );
         },
