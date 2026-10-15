@@ -1,0 +1,329 @@
+
+<div class="assignment-page">
+
+  <header class="topbar">
+
+    <div class="header-left">
+
+      <button
+        type="button"
+        class="back-button"
+        (click)="volverInicio()"
+      >
+        ←
+      </button>
+
+      <img
+        src="/Logo_GymFlow.png"
+        alt="GymFlow"
+        class="logo"
+      />
+
+    </div>
+
+  </header>
+
+
+  <main class="content">
+
+    <!-- ENCABEZADO -->
+
+    <section class="page-header">
+
+      <p class="section-label">
+        Recepción
+      </p>
+
+      <h1>
+        Asignación de Entrenadores
+      </h1>
+
+      <p class="subtitle">
+        Asigna un entrenador a cada cliente
+        para dar seguimiento a sus rutinas
+        y entrenamiento.
+      </p>
+
+    </section>
+
+
+    <!-- MENSAJES -->
+
+    <div
+      *ngIf="mensajeExito"
+      class="message success-message"
+    >
+      <span class="message-icon">
+        ✓
+      </span>
+
+      <span>
+        {{ mensajeExito }}
+      </span>
+    </div>
+
+
+    <div
+      *ngIf="error"
+      class="message error-message"
+    >
+      <span class="message-icon">
+        !
+      </span>
+
+      <span>
+        {{ error }}
+      </span>
+    </div>
+
+
+    <!-- TARJETA PRINCIPAL -->
+
+    <section class="assignment-card">
+
+      <div class="card-heading">
+
+        <div>
+
+          <p class="section-label">
+            Gestión
+          </p>
+
+          <h2>
+            Asignar entrenador
+          </h2>
+
+          <p>
+            Selecciona primero al cliente
+            y después al entrenador que
+            estará a cargo de su seguimiento.
+          </p>
+
+        </div>
+
+        <div class="heading-icon">
+          🏋️
+        </div>
+
+      </div>
+
+
+      <!-- CLIENTE -->
+
+      <div class="selection-block">
+
+        <div class="selection-number">
+          1
+        </div>
+
+        <div class="selection-content">
+
+          <label for="cliente">
+            Cliente
+          </label>
+
+          <p>
+            Selecciona el cliente al que
+            deseas asignar o retirar
+            un entrenador.
+          </p>
+
+          <select
+            id="cliente"
+            name="cliente"
+            [(ngModel)]="idClienteSeleccionado"
+            (ngModelChange)="alCambiarCliente()"
+            [disabled]="
+              cargandoClientes ||
+              guardando ||
+              quitando
+            "
+          >
+
+            <option [ngValue]="null">
+              {{
+                cargandoClientes
+                  ? 'Cargando clientes...'
+                  : 'Selecciona un cliente'
+              }}
+            </option>
+
+            <option
+              *ngFor="let cliente of clientes"
+              [ngValue]="cliente.idCliente"
+            >
+              {{ cliente.nombreCompleto }}
+            </option>
+
+          </select>
+
+        </div>
+
+      </div>
+
+
+      <!-- SEPARADOR -->
+
+      <div class="flow-divider">
+        <span>↓</span>
+      </div>
+
+
+      <!-- ENTRENADOR -->
+
+      <div class="selection-block">
+
+        <div class="selection-number">
+          2
+        </div>
+
+        <div class="selection-content">
+
+          <label for="entrenador">
+            Entrenador
+          </label>
+
+          <p>
+            Elige al entrenador que deseas
+            asignar al cliente seleccionado.
+          </p>
+
+          <select
+            id="entrenador"
+            name="entrenador"
+            [(ngModel)]="idEntrenadorSeleccionado"
+            [disabled]="
+              idClienteSeleccionado === null ||
+              cargandoEntrenadores ||
+              guardando ||
+              quitando
+            "
+          >
+
+            <option [ngValue]="null">
+              {{
+                cargandoEntrenadores
+                  ? 'Cargando entrenadores...'
+                  : 'Selecciona un entrenador'
+              }}
+            </option>
+
+            <option
+              *ngFor="let entrenador of entrenadores"
+              [ngValue]="entrenador.idEntrenador"
+            >
+              {{ entrenador.nombreCompleto }}
+            </option>
+
+          </select>
+
+        </div>
+
+      </div>
+
+
+      <!-- ENTRENADOR ACTUAL CONFIRMADO -->
+
+      <div
+        *ngIf="
+          puedeMostrarAsignacionSesion &&
+          entrenadorAsignadoSesion
+        "
+        class="current-assignment"
+      >
+
+        <div class="assignment-icon">
+          ✓
+        </div>
+
+        <div class="assignment-info">
+
+          <span>
+            Entrenador asignado
+          </span>
+
+          <strong>
+            {{ entrenadorAsignadoSesion.nombreCompleto }}
+          </strong>
+
+          <small *ngIf="clienteSeleccionado">
+            Cliente:
+            {{ clienteSeleccionado.nombreCompleto }}
+          </small>
+
+        </div>
+
+      </div>
+
+
+      <!-- ACCIONES -->
+
+      <div class="actions">
+
+        <button
+          type="button"
+          class="primary-button"
+          (click)="asignarEntrenador()"
+          [disabled]="
+            idClienteSeleccionado === null ||
+            idEntrenadorSeleccionado === null ||
+            cargandoClientes ||
+            cargandoEntrenadores ||
+            guardando ||
+            quitando
+          "
+        >
+          {{
+            guardando
+              ? 'Asignando...'
+              : 'Asignar entrenador'
+          }}
+        </button>
+
+
+        <button
+          type="button"
+          class="remove-button"
+          (click)="quitarEntrenador()"
+          [disabled]="!puedeQuitarEntrenador"
+        >
+          {{
+            quitando
+              ? 'Quitando...'
+              : 'Quitar entrenador'
+          }}
+        </button>
+
+      </div>
+
+    </section>
+
+
+    <!-- NOTA INFORMATIVA -->
+
+    <section class="information-card">
+
+      <div class="information-icon">
+        i
+      </div>
+
+      <div>
+
+        <strong>
+          Acerca de las asignaciones
+        </strong>
+
+        <p>
+          Al asignar un entrenador,
+          este podrá consultar al cliente
+          dentro de sus clientes asignados
+          y administrar sus rutinas.
+        </p>
+
+      </div>
+
+    </section>
+
+  </main>
+
+</div>

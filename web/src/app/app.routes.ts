@@ -63,6 +63,10 @@ import {
 } from './mi-rutina/mi-rutina';
 
 import {
+  MiProgreso
+} from './mi-progreso/mi-progreso';
+
+import {
   authGuard
 } from './auth-guard';
 
@@ -71,6 +75,10 @@ import {
   entrenadorGuard,
   clienteGuard
 } from './role-guard';
+
+import {
+  AsignacionEntrenadores
+} from './asignacion-entrenadores/asignacion-entrenadores';
 
 export const routes: Routes = [
 
@@ -146,6 +154,15 @@ export const routes: Routes = [
   },
 
   {
+  path: 'asignacion-entrenadores',
+  component: AsignacionEntrenadores,
+  canActivate: [
+    authGuard,
+    recepcionistaGuard
+  ]
+},
+
+  {
     path: 'mi-codigo-acceso',
     component: MiCodigoAcceso,
     canActivate: [
@@ -181,6 +198,14 @@ export const routes: Routes = [
     ]
   },
 
+  {
+  path: 'mi-progreso',
+  component: MiProgreso,
+  canActivate: [
+    authGuard,
+    clienteGuard
+  ]
+},
   {
     path: 'entrenador/mis-clientes',
     component: MisClientesEntrenador,

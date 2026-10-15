@@ -1,22 +1,17 @@
-import {
-  Injectable
-} from '@angular/core';
 
-import {
-  HttpClient
-} from '@angular/common/http';
+import { Injectable } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { Observable } from 'rxjs';
 
-import {
-  Observable
-} from 'rxjs';
-
-import {
-  environment
-} from '../../environments/environment';
+import { environment } from '../../environments/environment';
 
 export interface ClienteResumen {
   idCliente: number;
   nombreCompleto: string;
+
+  // Opcionales para mantener compatibilidad con Backend actual.
+  idEntrenador?: number | null;
+  nombreEntrenador?: string | null;
 }
 
 @Injectable({
@@ -32,7 +27,6 @@ export class ClienteConsultaService {
   ) {}
 
   obtenerClientes(): Observable<ClienteResumen[]> {
-
     return this.http.get<ClienteResumen[]>(
       this.apiUrl
     );
