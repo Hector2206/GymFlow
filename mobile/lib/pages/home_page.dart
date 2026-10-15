@@ -18,6 +18,8 @@ import 'rutinas_page.dart';
 import 'mi_rutina_page.dart';
 import 'mi_progreso_page.dart';
 import 'ejercicios_page.dart';
+import 'asignacion_entrenadores_page.dart';
+
 
 
 class HomePage extends StatelessWidget {
@@ -861,9 +863,11 @@ class HomePage extends StatelessWidget {
         subtitulo:
             'Asignar clientes a entrenadores',
         onTap: () {
-          proximamente(
-            context,
-            'Asignación de entrenadores',
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (_) =>
+                  const AsignacionEntrenadoresPage(),
+            ),
           );
         },
       ),
