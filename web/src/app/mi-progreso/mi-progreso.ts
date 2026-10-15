@@ -75,6 +75,22 @@ implements OnInit {
   puntosGrafica:
     PuntoGrafica[] = [];
 
+    puntoSeleccionado: number | null = null;
+
+    get puntoActivo(): PuntoGrafica | null {
+    if (this.puntoSeleccionado === null) {
+        return null;
+    }
+
+    return this.puntosGrafica[this.puntoSeleccionado] ?? null;
+    }
+
+    seleccionarPunto(indice: number): void {
+    if (indice >= 0 && indice < this.puntosGrafica.length) {
+        this.puntoSeleccionado = indice;
+    }
+    }
+
   idEjercicioSeleccionado:
     number | null = null;
 
@@ -85,7 +101,7 @@ implements OnInit {
     number | null = null;
 
   // Activar solo después de confirmar que POST y GET admiten fechaEntrenamiento.
-  readonly backendFechasHabilitado = false;
+  readonly backendFechasHabilitado = true;
 
   fechaEntrenamiento = this.fechaLocalHoy();
   readonly fechaMaxima = this.fechaLocalHoy();
@@ -466,6 +482,10 @@ implements OnInit {
     this.puntosGrafica =
       [];
 
+    
+
+    this.puntoSeleccionado = null;  
+
     this.progresoService
       .obtenerProgresoPorEjercicio(
         idEjercicio
@@ -638,6 +658,12 @@ implements OnInit {
             };
           }
         );
+
+          // Seleccionar automáticamente el registro más reciente.
+    this.puntoSeleccionado =
+      this.puntosGrafica.length > 0
+        ? this.puntosGrafica.length - 1
+        : null;
   }
 
 
@@ -846,6 +872,38 @@ implements OnInit {
     );
   }
 
+  get historialEjercicio(): Progreso[] {
+  return [...this.progresoEjercicio].reverse();
+}
+
+get historialAgrupado(): {
+  fecha: string;
+  registros: Progreso[];
+}[] {
+  const grupos = new Map<string, Progreso[]>();
+
+  for (const progreso of this.historialEjercicio) {
+    const fecha = this.fechaVisible(progreso).substring(0, 10);
+
+    if (!grupos.has(fecha)) {
+      grupos.set(fecha, []);
+    }
+
+    grupos.get(fecha)!.push(progreso);
+  }
+
+  return Array.from(grupos, ([fecha, registros]) => ({
+    fecha,
+    registros
+  }));
+}
+
+identificarGrupoHistorial(
+  indice: number,
+  grupo: { fecha: string; registros: Progreso[] }
+): string {
+  return grupo.fecha;
+}
 
   get pesoInicial(): number {
 
@@ -893,6 +951,34 @@ implements OnInit {
     );
   }
 
+  get escalaMinima(): number {
+  if (this.progresoEjercicio.length === 0) {
+    return 0;
+  }
+
+  return Math.min(
+    ...this.progresoEjercicio.map(
+      progreso => Number(progreso.pesoUtilizado)
+    )
+  );
+}
+
+get escalaMaxima(): number {
+  if (this.progresoEjercicio.length === 0) {
+    return 0;
+  }
+
+  return Math.max(
+    ...this.progresoEjercicio.map(
+      progreso => Number(progreso.pesoUtilizado)
+    )
+  );
+}
+
+get escalaMedia(): number {
+  return (this.escalaMinima + this.escalaMaxima) / 2;
+}
+
 
   get lineaGrafica(): string {
 
@@ -902,6 +988,8 @@ implements OnInit {
           `${punto.x},${punto.y}`
       )
       .join(' ');
+
+    
   }
 
 

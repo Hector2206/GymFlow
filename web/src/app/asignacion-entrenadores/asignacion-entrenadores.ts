@@ -285,6 +285,14 @@ export class AsignacionEntrenadores implements OnInit {
 
     const idCliente = cliente.idCliente;
 
+    const confirmar = window.confirm(
+    `¿Estás seguro de que deseas quitar el entrenador asignado a ${cliente.nombreCompleto}?`
+    );
+
+    if (!confirmar) {
+    return;
+    }
+
     this.quitando = true;
 
     this.asignacionEntrenadorService

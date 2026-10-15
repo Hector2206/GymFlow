@@ -410,6 +410,20 @@
               </span>
             </div>
             <div class="chart-container">
+               <!-- ESCALA VERTICAL EN KILOGRAMOS -->
+                <div class="chart-y-axis">
+                <span class="axis-max">
+                    {{ formatearPeso(escalaMaxima) }} kg
+                </span>
+
+                <span class="axis-mid">
+                    {{ formatearPeso(escalaMedia) }} kg
+                </span>
+
+                <span class="axis-min">
+                    {{ formatearPeso(escalaMinima) }} kg
+                </span>
+                </div> 
               <svg
                 class="progress-chart"
                 viewBox="0 0 100 100"
@@ -444,35 +458,36 @@
                   [attr.points]="lineaGrafica"
                   class="progress-line"
                 />
-                <!-- PUNTOS -->
+                <!-- PUNTOS INTERACTIVOS -->
                 <circle
-                  *ngFor="let punto of puntosGrafica"
+                  *ngFor="let punto of puntosGrafica; let i = index"
                   [attr.cx]="punto.x"
                   [attr.cy]="punto.y"
-                  r="2.3"
+                  [attr.r]="puntoSeleccionado === i ? 3.3 : 2.3"
                   class="progress-point"
+                  role="button"
+                  tabindex="0"
+                  [attr.aria-label]="
+                    'Ver peso ' + formatearPeso(punto.peso) +
+                    ' kg del ' + formatearFechaEntrenamiento(punto.fecha)
+                  "
+                  (click)="seleccionarPunto(i)"
+                  (keydown.enter)="seleccionarPunto(i)"
+                  (keydown.space)="seleccionarPunto(i); $event.preventDefault()"
                 />
               </svg>
-              <!-- ETIQUETAS DE PUNTOS -->
-              <div class="chart-labels">
-                <div
-                  *ngFor="
-                    let punto
-                    of puntosGrafica
-                  "
-                  class="chart-point-label"
-                  [style.left.%]="punto.x"
-                  [style.top.%]="punto.y"
-                >
-                  <strong>
-                    {{ formatearPeso(punto.peso) }}
-                  </strong>
-                  <span>
-                    kg
-                  </span>
-                </div>
-              </div>
             </div>
+            <!-- DETALLE DEL PUNTO SELECCIONADO -->
+            @if (puntoActivo; as punto) {
+              <div class="chart-point-detail">
+                <span>
+                  {{ formatearFechaEntrenamiento(punto.fecha) }}
+                </span>
+                <strong>
+                  {{ formatearPeso(punto.peso) }} kg
+                </strong>
+              </div>
+            }
             <div class="chart-dates">
               <span>
                 {{
@@ -508,42 +523,58 @@
               </span>
             </div>
             <div class="history-table">
-              <div
+              <details
+                class="history-group"
                 *ngFor="
-                  let progreso
-                  of progresoEjercicio
+                  let grupo of historialAgrupado;
+                  trackBy: identificarGrupoHistorial
                 "
-                class="history-row"
               >
-                <div class="history-date">
-                  <span class="history-dot">
+                <summary class="history-group-heading">
+                  <span class="history-group-date">
+                    {{ formatearFechaEntrenamiento(grupo.fecha) }}
                   </span>
-                  <div>
-                    <strong>
-                      {{
-                        formatearFechaEntrenamiento(
-                          fechaVisible(progreso)
-                        )
-                      }}
-                    </strong>
-                    <small>
-                      Registro de entrenamiento
-                    </small>
+                  <span class="history-group-count">
+                    {{ grupo.registros.length }}
+                    {{ grupo.registros.length === 1 ? 'registro' : 'registros' }}
+                    ▾
+                  </span>
+                </summary>
+                <div
+                  *ngFor="let progreso of grupo.registros"
+                  class="history-row"
+                >
+                  <div class="history-date">
+                    <span class="history-dot"></span>
+                    <div>
+                      <strong>
+                        {{ formatearFechaEntrenamiento(fechaVisible(progreso)) }}
+                      </strong>
+                      <small
+                        *ngIf="
+                          fechaVisible(progreso).substring(0, 10) !==
+                          progreso.fechaRegistro.substring(0, 10)
+                        "
+                      >
+                        Registrado el
+                        {{ formatearFechaEntrenamiento(progreso.fechaRegistro.substring(0, 10)) }}
+                      </small>
+                      <small
+                        *ngIf="
+                          fechaVisible(progreso).substring(0, 10) ===
+                          progreso.fechaRegistro.substring(0, 10)
+                        "
+                      >
+                        Registro de entrenamiento
+                      </small>
+                    </div>
+                  </div>
+                  <div class="history-weight">
+                    <strong>{{ formatearPeso(progreso.pesoUtilizado) }}</strong>
+                    <span>kg</span>
                   </div>
                 </div>
-                <div class="history-weight">
-                  <strong>
-                    {{
-                      formatearPeso(
-                        progreso.pesoUtilizado
-                      )
-                    }}
-                  </strong>
-                  <span>
-                    kg
-                  </span>
-                </div>
-              </div>
+              </details>
             </div>
           </section>
         </div>
