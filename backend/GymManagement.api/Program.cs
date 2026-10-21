@@ -463,4 +463,57 @@ app.MapPut("/api/admin/personal/{id:int}",
     })
     .RequireAuthorization("SoloAdministrador");
 
+    app.MapGet("/api/admin/personal/{id:int}/salarios",
+    async (
+        int id,
+        PersonalService personalService,
+        ClaimsPrincipal usuario
+    ) =>
+    {
+        if (!int.TryParse(
+                usuario.FindFirst("sub")?.Value,
+                out var idAdministrador) ||
+            idAdministrador <= 0)
+        {
+            return Results.Unauthorized();
+        }
+
+        try
+        {
+            var historial =
+                await personalService.ObtenerHistorialSalarios(
+                    id,
+                    idAdministrador);
+
+            return Results.Ok(historial);
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return Results.Forbid();
+        }
+        catch (ArgumentException ex)
+        {
+            return Results.BadRequest(new
+            {
+                mensaje = ex.Message
+            });
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return Results.NotFound(new
+            {
+                mensaje = ex.Message
+            });
+        }
+        catch
+        {
+            return Results.Problem(
+                statusCode: 500,
+                title: "Error al consultar historial salarial",
+                detail: "No se pudo obtener el historial salarial."
+            );
+        }
+    })
+    .RequireAuthorization("SoloAdministrador");
+
 app.Run();
