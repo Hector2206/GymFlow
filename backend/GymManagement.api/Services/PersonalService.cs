@@ -620,7 +620,188 @@ public async Task<int> DarDeBajaPersonal(
 
         return historial;
     }
+
+    public async Task<long> CambiarSalario(
+    int idPersonal,
+    CambiarSalarioRequest request,
+    int idAdministrador)
+    {
+        if (idPersonal <= 0)
+            throw new ArgumentException("ID de empleado inválido.");
+
+        var connectionString =
+            _configuration.GetConnectionString("PostgreSQL");
+
+        if (string.IsNullOrWhiteSpace(connectionString))
+            throw new InvalidOperationException("Falta la conexión PostgreSQL.");
+
+        await using var connection = new NpgsqlConnection(connectionString);
+        await connection.OpenAsync();
+
+        await using var transaction = await connection.BeginTransactionAsync();
+
+        // Mantener autorizado al administrador durante la operación.
+        await using (var admin = new NpgsqlCommand("""
+            SELECT u.id_usuario
+            FROM usuarios u
+            JOIN roles r ON r.id_rol = u.id_rol
+            WHERE u.id_usuario = @admin
+            AND u.estatus = 'Activo'
+            AND r.nombre = 'Administrador'
+            FOR SHARE OF u;
+            """, connection, transaction))
+        {
+            admin.Parameters.AddWithValue("admin", idAdministrador);
+
+            if (await admin.ExecuteScalarAsync() is null)
+                throw new UnauthorizedAccessException(
+                    "Administrador no autorizado.");
+        }
+
+        // Usar el mismo bloqueo que edición y baja de personal.
+        decimal salarioActual;
+
+        await using (var empleado = new NpgsqlCommand("""
+            SELECT u.estatus, p.fecha_baja, p.salario
+            FROM personal p
+            JOIN usuarios u ON u.id_usuario = p.id_usuario
+            JOIN roles r ON r.id_rol = u.id_rol
+            WHERE p.id_personal = @id
+            AND r.nombre IN ('Entrenador', 'Recepcionista')
+            FOR UPDATE OF p, u;
+            """, connection, transaction))
+        {
+            empleado.Parameters.AddWithValue("id", idPersonal);
+
+            await using var reader = await empleado.ExecuteReaderAsync();
+
+            if (!await reader.ReadAsync())
+                throw new KeyNotFoundException("Empleado no encontrado.");
+
+            if (reader.GetString(0) != "Activo" || !reader.IsDBNull(1))
+                throw new ArgumentException(
+                    "No se puede cambiar el sueldo de un empleado dado de baja.");
+
+            salarioActual = reader.GetDecimal(2);
+        }
+
+        DateOnly fechaOperacion;
+
+         await using (var fecha = new NpgsqlCommand(
+            "SELECT CURRENT_DATE;", connection, transaction))
+        {
+            await using var reader = await fecha.ExecuteReaderAsync();
+            await reader.ReadAsync();
+
+            fechaOperacion = reader.GetFieldValue<DateOnly>(0);
+        }
+
+        request.NormalizarYValidar(fechaOperacion);
+        var monto = request.Monto!.Value;
+
+        long idSalarioAnterior;
+
+        await using (var vigente = new NpgsqlCommand("""
+            SELECT id_salario, monto, periodicidad, vigente_desde
+            FROM personal_salarios_historial
+            WHERE id_personal = @id
+            AND vigente_hasta IS NULL
+            FOR UPDATE;
+            """, connection, transaction))
+        {
+            vigente.Parameters.AddWithValue("id", idPersonal);
+
+            await using var reader = await vigente.ExecuteReaderAsync();
+
+            if (!await reader.ReadAsync())
+                throw new ArgumentException(
+                    "El empleado no tiene un salario vigente registrado.");
+
+            idSalarioAnterior = reader.GetInt64(0);
+            var montoAnterior = reader.GetDecimal(1);
+            var periodicidad = reader.GetString(2);
+            var inicioAnterior = reader.GetFieldValue<DateOnly>(3);
+
+            if (periodicidad != "Mensual")
+                throw new ArgumentException(
+                    "Esta operación solo admite salarios mensuales.");
+
+            if (salarioActual != montoAnterior)
+                throw new ArgumentException(
+                    "El salario del empleado no coincide con su historial. Revísalo antes de continuar.");
+
+            if (request.VigenteDesde <= inicioAnterior)
+                throw new ArgumentException(
+                    "La nueva vigencia debe ser posterior al inicio del salario vigente.");
+
+            if (monto == montoAnterior)
+                throw new ArgumentException(
+                    "El nuevo sueldo debe ser diferente al actual.");
+        }
+
+        // Identificar al administrador en los triggers de auditoría.
+        await using (var audit = new NpgsqlCommand(
+            "SELECT set_config('gymflow.usuario_actual', @admin, true);",
+            connection, transaction))
+        {
+            audit.Parameters.AddWithValue("admin", idAdministrador.ToString());
+            await audit.ExecuteScalarAsync();
+        }
+
+        // Solo cerrar la vigencia; conservar monto y datos del registro anterior.
+        await using (var cerrar = new NpgsqlCommand("""
+            UPDATE personal_salarios_historial
+            SET vigente_hasta = @hasta
+            WHERE id_salario = @id;
+            """, connection, transaction))
+        {
+            cerrar.Parameters.AddWithValue(
+                "hasta", request.VigenteDesde.AddDays(-1));
+            cerrar.Parameters.AddWithValue("id", idSalarioAnterior);
+
+            await cerrar.ExecuteNonQueryAsync();
+        }
+
+        long idSalarioNuevo;
+
+        await using (var nuevo = new NpgsqlCommand("""
+            INSERT INTO personal_salarios_historial
+                (id_personal, monto, periodicidad,
+                vigente_desde, motivo, registrado_por)
+            VALUES
+                (@id, @monto, 'Mensual', @desde, @motivo, @admin)
+            RETURNING id_salario;
+            """, connection, transaction))
+        {
+            nuevo.Parameters.AddWithValue("id", idPersonal);
+            nuevo.Parameters.AddWithValue("monto", monto);
+            nuevo.Parameters.AddWithValue("desde", request.VigenteDesde);
+            nuevo.Parameters.AddWithValue("motivo", request.Motivo);
+            nuevo.Parameters.AddWithValue("admin", idAdministrador);
+
+            idSalarioNuevo = Convert.ToInt64(
+                await nuevo.ExecuteScalarAsync());
+        }
+
+        await using (var actualizar = new NpgsqlCommand("""
+            UPDATE personal
+            SET salario = @monto,
+                fecha_actualizacion = CURRENT_TIMESTAMP
+            WHERE id_personal = @id;
+            """, connection, transaction))
+        {
+            actualizar.Parameters.AddWithValue("monto", monto);
+            actualizar.Parameters.AddWithValue("id", idPersonal);
+
+            await actualizar.ExecuteNonQueryAsync();
+        }
+
+        await transaction.CommitAsync();
+
+        return idSalarioNuevo;
+    }
 }
+
 
 
 
