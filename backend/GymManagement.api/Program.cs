@@ -584,4 +584,55 @@ app.MapPut("/api/admin/personal/{id:int}",
     })
     .RequireAuthorization("SoloAdministrador");
 
+    app.MapGet("/api/admin/personal/{id:int}/nomina",
+    async (
+        int id,
+        PersonalService personalService,
+        ClaimsPrincipal usuario
+    ) =>
+    {
+        if (!int.TryParse(
+                usuario.FindFirst("sub")?.Value,
+                out var idAdministrador) ||
+            idAdministrador <= 0)
+        {
+            return Results.Unauthorized();
+        }
+
+        try
+        {
+            var pagos = await personalService.ObtenerPagosNomina(
+                id,
+                idAdministrador);
+
+            return Results.Ok(pagos);
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return Results.Forbid();
+        }
+        catch (ArgumentException ex)
+        {
+            return Results.BadRequest(new
+            {
+                mensaje = ex.Message
+            });
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return Results.NotFound(new
+            {
+                mensaje = ex.Message
+            });
+        }
+        catch
+        {
+            return Results.Problem(
+                statusCode: 500,
+                title: "Error al consultar pagos de nómina",
+                detail: "No se pudieron obtener los pagos de nómina.");
+        }
+    })
+    .RequireAuthorization("SoloAdministrador");
+
 app.Run();
