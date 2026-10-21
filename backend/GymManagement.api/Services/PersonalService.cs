@@ -13,6 +13,87 @@ public class PersonalService
         _configuration = configuration;
     }
 
+    public async Task EditarPersonal(int idPersonal, EditarPersonalRequest request, int idAdministrador)
+    {
+        if (idPersonal <= 0)
+            throw new ArgumentException("ID de empleado inválido.");
+        request.NormalizarYValidar();
+
+        var connectionString = _configuration.GetConnectionString("PostgreSQL");
+        if (string.IsNullOrWhiteSpace(connectionString))
+            throw new InvalidOperationException("Falta la conexión PostgreSQL.");
+
+        await using var connection = new NpgsqlConnection(connectionString);
+        await connection.OpenAsync();
+        await using var transaction = await connection.BeginTransactionAsync();
+
+        await using (var admin = new NpgsqlCommand("""
+            SELECT u.id_usuario
+            FROM usuarios u JOIN roles r ON r.id_rol = u.id_rol
+            WHERE u.id_usuario = @admin AND u.estatus = 'Activo'
+              AND r.nombre = 'Administrador'
+            FOR SHARE OF u;
+            """, connection, transaction))
+        {
+            admin.Parameters.AddWithValue("admin", idAdministrador);
+            if (await admin.ExecuteScalarAsync() is null)
+                throw new UnauthorizedAccessException("Administrador no autorizado.");
+        }
+
+        int idUsuario;
+        await using (var select = new NpgsqlCommand("""
+            SELECT p.id_usuario, u.estatus, p.fecha_baja
+            FROM personal p
+            JOIN usuarios u ON u.id_usuario = p.id_usuario
+            JOIN roles r ON r.id_rol = u.id_rol
+            WHERE p.id_personal = @id AND r.nombre IN ('Entrenador', 'Recepcionista')
+            FOR UPDATE OF p, u;
+            """, connection, transaction))
+        {
+            select.Parameters.AddWithValue("id", idPersonal);
+            await using var reader = await select.ExecuteReaderAsync();
+            if (!await reader.ReadAsync())
+                throw new KeyNotFoundException("Empleado no encontrado.");
+            if (reader.GetString(1) != "Activo" || !reader.IsDBNull(2))
+                throw new InvalidOperationException("No se puede editar un empleado dado de baja.");
+            idUsuario = reader.GetInt32(0);
+        }
+
+        await using (var audit = new NpgsqlCommand(
+            "SELECT set_config('gymflow.usuario_actual', @admin, true)", connection, transaction))
+        {
+            audit.Parameters.AddWithValue("admin", idAdministrador.ToString());
+            await audit.ExecuteScalarAsync();
+        }
+
+        // La restricción UNIQUE resuelve también correos duplicados concurrentes.
+        await using (var usuario = new NpgsqlCommand("""
+            UPDATE usuarios SET correo = @correo WHERE id_usuario = @id;
+            """, connection, transaction))
+        {
+            usuario.Parameters.AddWithValue("correo", request.Correo);
+            usuario.Parameters.AddWithValue("id", idUsuario);
+            await usuario.ExecuteNonQueryAsync();
+        }
+
+        await using (var personal = new NpgsqlCommand("""
+            UPDATE personal
+            SET nombre_completo = @nombre, telefono = @telefono,
+                horario = @horario, fecha_actualizacion = CURRENT_TIMESTAMP
+            WHERE id_personal = @id;
+            """, connection, transaction))
+        {
+            personal.Parameters.AddWithValue("nombre", request.NombreCompleto);
+            personal.Parameters.AddWithValue("telefono", request.Telefono);
+            personal.Parameters.AddWithValue("horario", request.Horario);
+            personal.Parameters.AddWithValue("id", idPersonal);
+            await personal.ExecuteNonQueryAsync();
+        }
+
+        // Dispose revierte la transacción ante cualquier error previo al commit.
+        await transaction.CommitAsync();
+    }
+
     public async Task<int> CrearPersonal(
         CrearPersonalRequest request,
         int idAdministrador)

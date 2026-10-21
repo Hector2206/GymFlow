@@ -432,4 +432,35 @@ app.MapPatch("/api/admin/personal/{id:int}/baja",
     })
     .RequireAuthorization("SoloAdministrador");
 
+app.MapPut("/api/admin/personal/{id:int}",
+    async (int id, GymManagement.api.Models.EditarPersonalRequest request,
+        PersonalService personalService, ClaimsPrincipal usuario) =>
+    {
+        if (!int.TryParse(usuario.FindFirst("sub")?.Value, out var admin) || admin <= 0)
+            return Results.Unauthorized();
+
+        try
+        {
+            await personalService.EditarPersonal(id, request, admin);
+            return Results.Ok(new { mensaje = "Empleado actualizado correctamente.", idPersonal = id });
+        }
+        catch (UnauthorizedAccessException) { return Results.Forbid(); }
+        catch (ArgumentException ex) { return Results.BadRequest(new { mensaje = ex.Message }); }
+        catch (KeyNotFoundException ex) { return Results.NotFound(new { mensaje = ex.Message }); }
+        catch (PostgresException ex) when (ex.SqlState == PostgresErrorCodes.UniqueViolation)
+        {
+            return Results.Conflict(new { mensaje = "Ya existe un registro con esos datos." });
+        }
+        catch (InvalidOperationException ex) when (ex.Message == "No se puede editar un empleado dado de baja.")
+        {
+            return Results.Conflict(new { mensaje = ex.Message });
+        }
+        catch
+        {
+            return Results.Problem(statusCode: 500, title: "Error al editar empleado",
+                detail: "Ocurrió un error interno.");
+        }
+    })
+    .RequireAuthorization("SoloAdministrador");
+
 app.Run();
