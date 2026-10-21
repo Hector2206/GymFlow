@@ -703,4 +703,65 @@ app.MapPut("/api/admin/personal/{id:int}",
     })
     .RequireAuthorization("SoloAdministrador");
 
+    app.MapPatch(
+    "/api/admin/personal/{id:int}/nomina/{idPago:long}/cancelacion",
+    async (
+        int id,
+        long idPago,
+        GymManagement.api.Models.CancelarPagoNominaRequest request,
+        PersonalService personalService,
+        ClaimsPrincipal usuario
+    ) =>
+    {
+        if (!int.TryParse(
+                usuario.FindFirst("sub")?.Value,
+                out var idAdministrador) ||
+            idAdministrador <= 0)
+        {
+            return Results.Unauthorized();
+        }
+
+        try
+        {
+            await personalService.CancelarPagoNomina(
+                id,
+                idPago,
+                request,
+                idAdministrador);
+
+            return Results.Ok(new
+            {
+                mensaje = "Pago de nómina cancelado correctamente.",
+                idPersonal = id,
+                idPago
+            });
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return Results.Forbid();
+        }
+        catch (ArgumentException ex)
+        {
+            return Results.BadRequest(new
+            {
+                mensaje = ex.Message
+            });
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return Results.NotFound(new
+            {
+                mensaje = ex.Message
+            });
+        }
+        catch
+        {
+            return Results.Problem(
+                statusCode: 500,
+                title: "Error al cancelar pago de nómina",
+                detail: "No se pudo completar la cancelación.");
+        }
+    })
+    .RequireAuthorization("SoloAdministrador");
+
 app.Run();
