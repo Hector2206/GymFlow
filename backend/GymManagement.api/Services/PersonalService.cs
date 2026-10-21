@@ -917,6 +917,220 @@ public async Task<int> DarDeBajaPersonal(
 
         return pagos;
     }
+
+    public async Task<long> RegistrarPagoNomina(
+    int idPersonal,
+    RegistrarPagoNominaRequest request,
+    int idAdministrador)
+    {
+        if (idPersonal <= 0)
+            throw new ArgumentException("ID de empleado inválido.");
+
+        var connectionString =
+            _configuration.GetConnectionString("PostgreSQL");
+
+        if (string.IsNullOrWhiteSpace(connectionString))
+            throw new InvalidOperationException(
+                "Falta la conexión PostgreSQL.");
+
+        await using var connection = new NpgsqlConnection(connectionString);
+        await connection.OpenAsync();
+
+        await using var transaction = await connection.BeginTransactionAsync();
+
+        await using (var admin = new NpgsqlCommand("""
+            SELECT u.id_usuario
+            FROM usuarios u
+            JOIN roles r ON r.id_rol = u.id_rol
+            WHERE u.id_usuario = @admin
+            AND u.estatus = 'Activo'
+            AND r.nombre = 'Administrador'
+            FOR SHARE OF u;
+            """, connection, transaction))
+        {
+            admin.Parameters.AddWithValue("admin", idAdministrador);
+
+            if (await admin.ExecuteScalarAsync() is null)
+                throw new UnauthorizedAccessException(
+                    "Administrador no autorizado.");
+        }
+
+        // Serializar operaciones del mismo empleado con edición,
+        // baja y cambio salarial.
+        DateOnly fechaAlta;
+        DateOnly? fechaBaja;
+        string estatus;
+
+        await using (var empleado = new NpgsqlCommand("""
+            SELECT p.fecha_alta, p.fecha_baja, u.estatus
+            FROM personal p
+            JOIN usuarios u ON u.id_usuario = p.id_usuario
+            JOIN roles r ON r.id_rol = u.id_rol
+            WHERE p.id_personal = @id
+            AND r.nombre IN ('Entrenador', 'Recepcionista')
+            FOR UPDATE OF p, u;
+            """, connection, transaction))
+        {
+            empleado.Parameters.AddWithValue("id", idPersonal);
+
+            await using var reader = await empleado.ExecuteReaderAsync();
+
+            if (!await reader.ReadAsync())
+                throw new KeyNotFoundException("Empleado no encontrado.");
+
+            fechaAlta = reader.GetFieldValue<DateOnly>(0);
+            fechaBaja = reader.IsDBNull(1)
+                ? null
+                : reader.GetFieldValue<DateOnly>(1);
+            estatus = reader.GetString(2);
+        }
+
+        DateOnly fechaOperacion;
+
+        await using (var fecha = new NpgsqlCommand(
+            "SELECT CURRENT_DATE;", connection, transaction))
+        {
+            await using var reader = await fecha.ExecuteReaderAsync();
+            await reader.ReadAsync();
+            fechaOperacion = reader.GetFieldValue<DateOnly>(0);
+        }
+
+        request.NormalizarYValidar(fechaOperacion);
+
+        if (request.PeriodoInicio < fechaAlta)
+            throw new ArgumentException(
+                "El periodo no puede comenzar antes de la contratación.");
+
+        if (fechaBaja.HasValue && request.PeriodoFin > fechaBaja.Value)
+            throw new ArgumentException(
+                "El periodo no puede terminar después de la baja.");
+
+        if (estatus != "Activo" && !fechaBaja.HasValue)
+            throw new ArgumentException(
+                "El empleado está inactivo sin fecha de baja. Revisa su expediente.");
+
+        // Un solo salario histórico debe cubrir todo el periodo.
+        long idSalario;
+
+        await using (var salario = new NpgsqlCommand("""
+            SELECT id_salario, periodicidad
+            FROM personal_salarios_historial
+            WHERE id_personal = @id
+            AND vigente_desde <= @inicio
+            AND (
+                vigente_hasta IS NULL
+                OR vigente_hasta >= @fin
+            )
+            FOR SHARE;
+            """, connection, transaction))
+        {
+            salario.Parameters.AddWithValue("id", idPersonal);
+            salario.Parameters.AddWithValue("inicio", request.PeriodoInicio);
+            salario.Parameters.AddWithValue("fin", request.PeriodoFin);
+
+            await using var reader = await salario.ExecuteReaderAsync();
+
+            if (!await reader.ReadAsync())
+                throw new ArgumentException(
+                    "Ningún salario cubre todo el periodo. Si cruza un cambio salarial, divide el pago en periodos separados.");
+
+            idSalario = reader.GetInt64(0);
+
+            if (reader.GetString(1) != "Mensual")
+                throw new ArgumentException(
+                    "Esta operación solo admite salarios mensuales.");
+
+            if (await reader.ReadAsync())
+                throw new ArgumentException(
+                    "Hay salarios superpuestos en el historial. Revísalos antes de registrar el pago.");
+        }
+
+        // Los extremos del periodo son inclusivos.
+        await using (var duplicado = new NpgsqlCommand("""
+            SELECT EXISTS (
+                SELECT 1
+                FROM personal_nomina_pagos
+                WHERE id_personal = @id
+                AND estado = 'Pagado'
+                AND periodo_inicio <= @fin
+                AND periodo_fin >= @inicio
+            );
+            """, connection, transaction))
+        {
+            duplicado.Parameters.AddWithValue("id", idPersonal);
+            duplicado.Parameters.AddWithValue("inicio", request.PeriodoInicio);
+            duplicado.Parameters.AddWithValue("fin", request.PeriodoFin);
+
+            if (await duplicado.ExecuteScalarAsync() is true)
+                throw new ArgumentException(
+                    "El periodo se solapa con un pago de nómina existente.");
+        }
+
+        await using (var audit = new NpgsqlCommand(
+            "SELECT set_config('gymflow.usuario_actual', @admin, true);",
+            connection, transaction))
+        {
+            audit.Parameters.AddWithValue("admin", idAdministrador.ToString());
+            await audit.ExecuteScalarAsync();
+        }
+
+        long idPago;
+
+        await using (var insertar = new NpgsqlCommand("""
+            INSERT INTO personal_nomina_pagos (
+                id_personal,
+                id_salario,
+                periodo_inicio,
+                periodo_fin,
+                monto,
+                fecha_pago,
+                metodo,
+                referencia,
+                observaciones,
+                estado,
+                registrado_por
+            )
+            VALUES (
+                @id,
+                @salario,
+                @inicio,
+                @fin,
+                @monto,
+                @fecha,
+                @metodo,
+                @referencia,
+                @observaciones,
+                'Pagado',
+                @admin
+            )
+            RETURNING id_pago;
+            """, connection, transaction))
+        {
+            insertar.Parameters.AddWithValue("id", idPersonal);
+            insertar.Parameters.AddWithValue("salario", idSalario);
+            insertar.Parameters.AddWithValue("inicio", request.PeriodoInicio);
+            insertar.Parameters.AddWithValue("fin", request.PeriodoFin);
+            insertar.Parameters.AddWithValue("monto", request.Monto!.Value);
+            insertar.Parameters.AddWithValue("fecha", request.FechaPago);
+            insertar.Parameters.AddWithValue("metodo", request.Metodo);
+
+            insertar.Parameters.Add(
+                "referencia", NpgsqlTypes.NpgsqlDbType.Varchar
+            ).Value = (object?)request.Referencia ?? DBNull.Value;
+
+            insertar.Parameters.Add(
+                "observaciones", NpgsqlTypes.NpgsqlDbType.Text
+            ).Value = (object?)request.Observaciones ?? DBNull.Value;
+
+            insertar.Parameters.AddWithValue("admin", idAdministrador);
+
+            idPago = Convert.ToInt64(await insertar.ExecuteScalarAsync());
+        }
+
+        await transaction.CommitAsync();
+
+        return idPago;
+    }
 }
 
 
