@@ -687,10 +687,13 @@ public async Task<int> DarDeBajaPersonal(
 
         DateOnly fechaOperacion;
 
-        await using (var fecha = new NpgsqlCommand(
+         await using (var fecha = new NpgsqlCommand(
             "SELECT CURRENT_DATE;", connection, transaction))
         {
-            fechaOperacion = (DateOnly)(await fecha.ExecuteScalarAsync())!;
+            await using var reader = await fecha.ExecuteReaderAsync();
+            await reader.ReadAsync();
+
+            fechaOperacion = reader.GetFieldValue<DateOnly>(0);
         }
 
         request.NormalizarYValidar(fechaOperacion);

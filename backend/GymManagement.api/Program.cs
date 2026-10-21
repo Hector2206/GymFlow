@@ -516,4 +516,72 @@ app.MapPut("/api/admin/personal/{id:int}",
     })
     .RequireAuthorization("SoloAdministrador");
 
+    app.MapPost("/api/admin/personal/{id:int}/salarios",
+    async (
+        int id,
+        GymManagement.api.Models.CambiarSalarioRequest request,
+        PersonalService personalService,
+        ClaimsPrincipal usuario
+    ) =>
+    {
+        if (!int.TryParse(
+                usuario.FindFirst("sub")?.Value,
+                out var idAdministrador) ||
+            idAdministrador <= 0)
+        {
+            return Results.Unauthorized();
+        }
+
+        try
+        {
+            var idSalario = await personalService.CambiarSalario(
+                id,
+                request,
+                idAdministrador);
+
+            return Results.Created(
+                $"/api/admin/personal/{id}/salarios",
+                new
+                {
+                    mensaje = "Sueldo actualizado correctamente.",
+                    idPersonal = id,
+                    idSalario
+                });
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return Results.Forbid();
+        }
+        catch (ArgumentException ex)
+        {
+            return Results.BadRequest(new
+            {
+                mensaje = ex.Message
+            });
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return Results.NotFound(new
+            {
+                mensaje = ex.Message
+            });
+        }
+        catch (PostgresException ex)
+            when (ex.SqlState == PostgresErrorCodes.UniqueViolation)
+        {
+            return Results.Conflict(new
+            {
+                mensaje = "Existe un conflicto con el salario vigente. Consulta el historial antes de reintentar."
+            });
+        }
+        catch
+        {
+            return Results.Problem(
+                statusCode: 500,
+                title: "Error al cambiar sueldo",
+                detail: "No se pudo completar el cambio de sueldo.");
+        }
+    })
+    .RequireAuthorization("SoloAdministrador");
+
 app.Run();
