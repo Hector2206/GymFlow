@@ -800,6 +800,123 @@ public async Task<int> DarDeBajaPersonal(
 
         return idSalarioNuevo;
     }
+
+    public async Task<List<PagoNominaResponse>> ObtenerPagosNomina(
+    int idPersonal,
+    int idAdministrador)
+    {
+        if (idPersonal <= 0)
+            throw new ArgumentException("ID de empleado inválido.");
+
+        var connectionString =
+            _configuration.GetConnectionString("PostgreSQL");
+
+        if (string.IsNullOrWhiteSpace(connectionString))
+            throw new InvalidOperationException(
+                "Falta la conexión PostgreSQL.");
+
+        await using var connection = new NpgsqlConnection(connectionString);
+        await connection.OpenAsync();
+
+        await using (var admin = new NpgsqlCommand("""
+            SELECT EXISTS (
+                SELECT 1
+                FROM usuarios u
+                JOIN roles r ON r.id_rol = u.id_rol
+                WHERE u.id_usuario = @admin
+                AND u.estatus = 'Activo'
+                AND r.nombre = 'Administrador'
+            );
+            """, connection))
+        {
+            admin.Parameters.AddWithValue("admin", idAdministrador);
+
+            if (await admin.ExecuteScalarAsync() is not true)
+                throw new UnauthorizedAccessException(
+                    "Administrador no autorizado.");
+        }
+
+        // Permitir consultar también empleados dados de baja.
+        await using (var empleado = new NpgsqlCommand("""
+            SELECT EXISTS (
+                SELECT 1
+                FROM personal p
+                JOIN usuarios u ON u.id_usuario = p.id_usuario
+                JOIN roles r ON r.id_rol = u.id_rol
+                WHERE p.id_personal = @id
+                AND r.nombre IN ('Entrenador', 'Recepcionista')
+            );
+            """, connection))
+        {
+            empleado.Parameters.AddWithValue("id", idPersonal);
+
+            if (await empleado.ExecuteScalarAsync() is not true)
+                throw new KeyNotFoundException("Empleado no encontrado.");
+        }
+
+        await using var command = new NpgsqlCommand("""
+            SELECT id_pago,
+                id_personal,
+                id_salario,
+                periodo_inicio,
+                periodo_fin,
+                monto,
+                fecha_pago,
+                metodo,
+                referencia,
+                observaciones,
+                estado,
+                registrado_por,
+                cancelado_por,
+                fecha_cancelacion,
+                motivo_cancelacion,
+                creado_en
+            FROM personal_nomina_pagos
+            WHERE id_personal = @id
+            ORDER BY fecha_pago DESC, id_pago DESC;
+            """, connection);
+
+        command.Parameters.AddWithValue("id", idPersonal);
+
+        var pagos = new List<PagoNominaResponse>();
+
+        await using var reader = await command.ExecuteReaderAsync();
+
+        while (await reader.ReadAsync())
+        {
+            pagos.Add(new PagoNominaResponse
+            {
+                IdPago = reader.GetInt64(0),
+                IdPersonal = reader.GetInt32(1),
+                IdSalario = reader.GetInt64(2),
+                PeriodoInicio = reader.GetFieldValue<DateOnly>(3),
+                PeriodoFin = reader.GetFieldValue<DateOnly>(4),
+                Monto = reader.GetDecimal(5),
+                FechaPago = reader.GetFieldValue<DateOnly>(6),
+                Metodo = reader.GetString(7),
+                Referencia = reader.IsDBNull(8)
+                    ? null
+                    : reader.GetString(8),
+                Observaciones = reader.IsDBNull(9)
+                    ? null
+                    : reader.GetString(9),
+                Estado = reader.GetString(10),
+                RegistradoPor = reader.GetInt32(11),
+                CanceladoPor = reader.IsDBNull(12)
+                    ? null
+                    : reader.GetInt32(12),
+                FechaCancelacion = reader.IsDBNull(13)
+                    ? null
+                    : reader.GetDateTime(13),
+                MotivoCancelacion = reader.IsDBNull(14)
+                    ? null
+                    : reader.GetString(14),
+                CreadoEn = reader.GetDateTime(15)
+            });
+        }
+
+        return pagos;
+    }
 }
 
 
