@@ -1131,6 +1131,116 @@ public async Task<int> DarDeBajaPersonal(
 
         return idPago;
     }
+
+    public async Task CancelarPagoNomina(
+    int idPersonal,
+    long idPago,
+    CancelarPagoNominaRequest request,
+    int idAdministrador)
+    {
+        if (idPersonal <= 0)
+            throw new ArgumentException("ID de empleado inválido.");
+
+        if (idPago <= 0)
+            throw new ArgumentException("ID de pago inválido.");
+
+        request.NormalizarYValidar();
+
+        var connectionString =
+            _configuration.GetConnectionString("PostgreSQL");
+
+        if (string.IsNullOrWhiteSpace(connectionString))
+            throw new InvalidOperationException(
+                "Falta la conexión PostgreSQL.");
+
+        await using var connection = new NpgsqlConnection(connectionString);
+        await connection.OpenAsync();
+
+        await using var transaction = await connection.BeginTransactionAsync();
+
+        await using (var admin = new NpgsqlCommand("""
+            SELECT u.id_usuario
+            FROM usuarios u
+            JOIN roles r ON r.id_rol = u.id_rol
+            WHERE u.id_usuario = @admin
+            AND u.estatus = 'Activo'
+            AND r.nombre = 'Administrador'
+            FOR SHARE OF u;
+            """, connection, transaction))
+        {
+            admin.Parameters.AddWithValue("admin", idAdministrador);
+
+            if (await admin.ExecuteScalarAsync() is null)
+                throw new UnauthorizedAccessException(
+                    "Administrador no autorizado.");
+        }
+
+        await using (var empleado = new NpgsqlCommand("""
+            SELECT p.id_personal
+            FROM personal p
+            JOIN usuarios u ON u.id_usuario = p.id_usuario
+            JOIN roles r ON r.id_rol = u.id_rol
+            WHERE p.id_personal = @id
+            AND r.nombre IN ('Entrenador', 'Recepcionista')
+            FOR UPDATE OF p, u;
+            """, connection, transaction))
+        {
+            empleado.Parameters.AddWithValue("id", idPersonal);
+
+            if (await empleado.ExecuteScalarAsync() is null)
+                throw new KeyNotFoundException("Empleado no encontrado.");
+        }
+
+        await using (var pago = new NpgsqlCommand("""
+            SELECT estado
+            FROM personal_nomina_pagos
+            WHERE id_pago = @pago
+            AND id_personal = @personal
+            FOR UPDATE;
+            """, connection, transaction))
+        {
+            pago.Parameters.AddWithValue("pago", idPago);
+            pago.Parameters.AddWithValue("personal", idPersonal);
+
+            var estado = await pago.ExecuteScalarAsync();
+
+            if (estado is null)
+                throw new KeyNotFoundException(
+                    "Pago de nómina no encontrado para este empleado.");
+
+            if ((string)estado != "Pagado")
+                throw new ArgumentException(
+                    "El pago de nómina ya está cancelado.");
+        }
+
+        await using (var audit = new NpgsqlCommand(
+            "SELECT set_config('gymflow.usuario_actual', @admin, true);",
+            connection, transaction))
+        {
+            audit.Parameters.AddWithValue("admin", idAdministrador.ToString());
+            await audit.ExecuteScalarAsync();
+        }
+
+        await using (var cancelar = new NpgsqlCommand("""
+            UPDATE personal_nomina_pagos
+            SET estado = 'Cancelado',
+                cancelado_por = @admin,
+                fecha_cancelacion = CURRENT_TIMESTAMP,
+                motivo_cancelacion = @motivo
+            WHERE id_pago = @pago
+            AND id_personal = @personal;
+            """, connection, transaction))
+        {
+            cancelar.Parameters.AddWithValue("admin", idAdministrador);
+            cancelar.Parameters.AddWithValue("motivo", request.Motivo);
+            cancelar.Parameters.AddWithValue("pago", idPago);
+            cancelar.Parameters.AddWithValue("personal", idPersonal);
+
+            await cancelar.ExecuteNonQueryAsync();
+        }
+
+        await transaction.CommitAsync();
+    }
 }
 
 
