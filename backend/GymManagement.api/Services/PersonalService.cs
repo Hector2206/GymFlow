@@ -297,4 +297,150 @@ public class PersonalService
         return empleados;
     }
 
+
+public async Task<int> DarDeBajaPersonal(
+    int idPersonal,
+    string motivo,
+    int idAdministrador)
+{
+    if (idPersonal <= 0)
+        throw new ArgumentException("ID de empleado inválido.");
+
+    if (string.IsNullOrWhiteSpace(motivo))
+        throw new ArgumentException("El motivo es obligatorio.");
+
+    var connectionString =
+        _configuration.GetConnectionString("PostgreSQL")
+        ?? throw new InvalidOperationException(
+            "Falta configurar PostgreSQL.");
+
+    await using var connection =
+        new NpgsqlConnection(connectionString);
+
+    await connection.OpenAsync();
+
+    await using var transaction =
+        await connection.BeginTransactionAsync();
+
+    try
+    {
+        // Identificar al administrador que realiza la baja.
+        await using (var auditCommand = new NpgsqlCommand(
+            "SELECT set_config('gymflow.usuario_actual', @admin, true)",
+            connection,
+            transaction))
+        {
+            auditCommand.Parameters.AddWithValue(
+                "admin", idAdministrador.ToString());
+
+            await auditCommand.ExecuteNonQueryAsync();
+        }
+
+        // Confirmar que el administrador continúa activo.
+        await using (var adminCommand = new NpgsqlCommand("""
+            SELECT 1
+            FROM usuarios u
+            JOIN roles r ON r.id_rol = u.id_rol
+            WHERE u.id_usuario = @admin
+              AND u.estatus = 'Activo'
+              AND r.nombre = 'Administrador';
+            """, connection, transaction))
+        {
+            adminCommand.Parameters.AddWithValue("admin", idAdministrador);
+
+            if (await adminCommand.ExecuteScalarAsync() is null)
+                throw new UnauthorizedAccessException(
+                    "Administrador no autorizado.");
+        }
+
+        int idUsuario;
+        string puesto;
+
+        // Bloquear el empleado durante la operación.
+        await using (var selectCommand = new NpgsqlCommand("""
+            SELECT p.id_usuario, r.nombre
+            FROM personal p
+            JOIN usuarios u ON u.id_usuario = p.id_usuario
+            JOIN roles r ON r.id_rol = u.id_rol
+            WHERE p.id_personal = @idPersonal
+              AND u.estatus = 'Activo'
+              AND r.nombre IN ('Entrenador', 'Recepcionista')
+            FOR UPDATE OF p, u;
+            """, connection, transaction))
+        {
+            selectCommand.Parameters.AddWithValue(
+                "idPersonal", idPersonal);
+
+            await using var reader =
+                await selectCommand.ExecuteReaderAsync();
+
+            if (!await reader.ReadAsync())
+                throw new ArgumentException(
+                    "Empleado inexistente o ya inactivo.");
+
+            idUsuario = reader.GetInt32(0);
+            puesto = reader.GetString(1);
+        }
+
+        int clientesDesasignados = 0;
+
+        // Si es entrenador, desasignar sus clientes.
+        if (puesto == "Entrenador")
+        {
+            await using var clientsCommand = new NpgsqlCommand("""
+                UPDATE clientes
+                SET id_entrenador = NULL
+                WHERE id_entrenador = @idPersonal;
+                """, connection, transaction);
+
+            clientsCommand.Parameters.AddWithValue(
+                "idPersonal", idPersonal);
+
+            clientesDesasignados =
+                await clientsCommand.ExecuteNonQueryAsync();
+        }
+
+        // Registrar su baja laboral.
+        await using (var personalCommand = new NpgsqlCommand("""
+            UPDATE personal
+            SET fecha_baja = CURRENT_DATE,
+                motivo_baja = @motivo,
+                fecha_actualizacion = CURRENT_TIMESTAMP
+            WHERE id_personal = @idPersonal;
+            """, connection, transaction))
+        {
+            personalCommand.Parameters.AddWithValue(
+                "motivo", motivo.Trim());
+
+            personalCommand.Parameters.AddWithValue(
+                "idPersonal", idPersonal);
+
+            await personalCommand.ExecuteNonQueryAsync();
+        }
+
+        // Desactivar su acceso al sistema.
+        await using (var usuarioCommand = new NpgsqlCommand("""
+            UPDATE usuarios
+            SET estatus = 'Inactivo'
+            WHERE id_usuario = @idUsuario;
+            """, connection, transaction))
+        {
+            usuarioCommand.Parameters.AddWithValue(
+                "idUsuario", idUsuario);
+
+            await usuarioCommand.ExecuteNonQueryAsync();
+        }
+
+        await transaction.CommitAsync();
+
+        return clientesDesasignados;
+    }
+    catch
+    {
+        await transaction.RollbackAsync();
+        throw;
+    }
+}
+
+
 }

@@ -381,6 +381,55 @@ app.MapGet("/api/admin/personal/{id:int}",
     .RequireAuthorization("SoloAdministrador");
 
 
+app.MapPatch("/api/admin/personal/{id:int}/baja",
+    async (
+        int id,
+        GymManagement.api.Models.DarBajaPersonalRequest request,
+        GymManagement.api.Services.PersonalService personalService,
+        HttpContext context
+    ) =>
+    {
+        if (!int.TryParse(
+            context.User.FindFirst("sub")?.Value,
+            out var idAdministrador))
+        {
+            return Results.Unauthorized();
+        }
 
+        try
+        {
+            var clientesDesasignados =
+                await personalService.DarDeBajaPersonal(
+                    id,
+                    request.Motivo,
+                    idAdministrador);
+
+            return Results.Ok(new
+            {
+                mensaje = "Empleado dado de baja correctamente.",
+                idPersonal = id,
+                clientesDesasignados
+            });
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return Results.Forbid();
+        }
+        catch (ArgumentException ex)
+        {
+            return Results.BadRequest(new
+            {
+                mensaje = ex.Message
+            });
+        }
+        catch
+        {
+            return Results.Problem(
+                statusCode: 500,
+                title: "Error al dar de baja al empleado."
+            );
+        }
+    })
+    .RequireAuthorization("SoloAdministrador");
 
 app.Run();
