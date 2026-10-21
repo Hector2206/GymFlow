@@ -522,6 +522,105 @@ public async Task<int> DarDeBajaPersonal(
         throw;
     }
 }
+        public async Task<List<SalarioPersonalResponse>> ObtenerHistorialSalarios(
+        int idPersonal,
+        int idAdministrador)
+    {
+        if (idPersonal <= 0)
+            throw new ArgumentException("ID de empleado inválido.");
 
+        var connectionString =
+            _configuration.GetConnectionString("PostgreSQL");
 
+        if (string.IsNullOrWhiteSpace(connectionString))
+            throw new InvalidOperationException("Falta la conexión PostgreSQL.");
+
+        await using var connection = new NpgsqlConnection(connectionString);
+        await connection.OpenAsync();
+
+        // Confirmar permisos actuales, además del rol incluido en el JWT.
+        await using (var admin = new NpgsqlCommand("""
+            SELECT EXISTS (
+                SELECT 1
+                FROM usuarios u
+                JOIN roles r ON r.id_rol = u.id_rol
+                WHERE u.id_usuario = @admin
+                AND u.estatus = 'Activo'
+                AND r.nombre = 'Administrador'
+            );
+            """, connection))
+        {
+            admin.Parameters.AddWithValue("admin", idAdministrador);
+
+            if (await admin.ExecuteScalarAsync() is not true)
+                throw new UnauthorizedAccessException(
+                    "Administrador no autorizado.");
+        }
+
+        // También permitir consultar empleados dados de baja.
+        await using (var empleado = new NpgsqlCommand("""
+            SELECT EXISTS (
+                SELECT 1
+                FROM personal p
+                JOIN usuarios u ON u.id_usuario = p.id_usuario
+                JOIN roles r ON r.id_rol = u.id_rol
+                WHERE p.id_personal = @id
+                AND r.nombre IN ('Entrenador', 'Recepcionista')
+            );
+            """, connection))
+        {
+            empleado.Parameters.AddWithValue("id", idPersonal);
+
+            if (await empleado.ExecuteScalarAsync() is not true)
+                throw new KeyNotFoundException("Empleado no encontrado.");
+        }
+
+        await using var command = new NpgsqlCommand("""
+            SELECT id_salario,
+                id_personal,
+                monto,
+                periodicidad,
+                vigente_desde,
+                vigente_hasta,
+                motivo,
+                registrado_por,
+                creado_en
+            FROM personal_salarios_historial
+            WHERE id_personal = @id
+            ORDER BY vigente_desde DESC, id_salario DESC;
+            """, connection);
+
+        command.Parameters.AddWithValue("id", idPersonal);
+
+        var historial = new List<SalarioPersonalResponse>();
+
+        await using var reader = await command.ExecuteReaderAsync();
+
+        while (await reader.ReadAsync())
+        {
+            historial.Add(new SalarioPersonalResponse
+            {
+                IdSalario = reader.GetInt64(0),
+                IdPersonal = reader.GetInt32(1),
+                Monto = reader.GetDecimal(2),
+                Periodicidad = reader.GetString(3),
+                VigenteDesde = reader.GetFieldValue<DateOnly>(4),
+                VigenteHasta = reader.IsDBNull(5)
+                    ? null
+                    : reader.GetFieldValue<DateOnly>(5),
+                Motivo = reader.IsDBNull(6)
+                    ? null
+                    : reader.GetString(6),
+                RegistradoPor = reader.IsDBNull(7)
+                    ? null
+                    : reader.GetInt32(7),
+                CreadoEn = reader.GetDateTime(8)
+            });
+        }
+
+        return historial;
+    }
 }
+
+
+
