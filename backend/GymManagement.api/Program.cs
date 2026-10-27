@@ -803,4 +803,43 @@ app.MapPut("/api/admin/personal/{id:int}",
     })
     .RequireAuthorization("SoloAdministrador");
 
+    app.MapGet("/api/admin/dashboard/membresias-activas",
+    async (
+        DashboardService dashboardService,
+        ClaimsPrincipal usuario
+    ) =>
+    {
+        if (!int.TryParse(
+                usuario.FindFirst("sub")?.Value,
+                out var idAdministrador) ||
+            idAdministrador <= 0)
+        {
+            return Results.Unauthorized();
+        }
+
+        try
+        {
+            var total =
+                await dashboardService.ObtenerMembresiasActivas(
+                    idAdministrador);
+
+            return Results.Ok(new
+            {
+                membresiasActivas = total
+            });
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return Results.Forbid();
+        }
+        catch
+        {
+            return Results.Problem(
+                statusCode: 500,
+                title: "Error al consultar membresías activas",
+                detail: "No se pudo obtener el indicador.");
+        }
+    })
+    .RequireAuthorization("SoloAdministrador");
+
 app.Run();
