@@ -14,6 +14,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddOpenApi();
 builder.Services.AddScoped<PersonalService>();
+builder.Services.AddScoped<DashboardService>();
 
 // ========================================
 // CORS
@@ -760,6 +761,224 @@ app.MapPut("/api/admin/personal/{id:int}",
                 statusCode: 500,
                 title: "Error al cancelar pago de nómina",
                 detail: "No se pudo completar la cancelación.");
+        }
+    })
+    .RequireAuthorization("SoloAdministrador");
+
+    app.MapGet("/api/admin/dashboard/total-clientes",
+    async (
+        DashboardService dashboardService,
+        ClaimsPrincipal usuario
+    ) =>
+    {
+        if (!int.TryParse(
+                usuario.FindFirst("sub")?.Value,
+                out var idAdministrador) ||
+            idAdministrador <= 0)
+        {
+            return Results.Unauthorized();
+        }
+
+        try
+        {
+            var total = await dashboardService.ObtenerTotalClientes(
+                idAdministrador);
+
+            return Results.Ok(new
+            {
+                totalClientes = total
+            });
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return Results.Forbid();
+        }
+        catch
+        {
+            return Results.Problem(
+                statusCode: 500,
+                title: "Error al consultar total de clientes",
+                detail: "No se pudo obtener el indicador.");
+        }
+    })
+    .RequireAuthorization("SoloAdministrador");
+
+    app.MapGet("/api/admin/dashboard/membresias-activas",
+    async (
+        DashboardService dashboardService,
+        ClaimsPrincipal usuario
+    ) =>
+    {
+        if (!int.TryParse(
+                usuario.FindFirst("sub")?.Value,
+                out var idAdministrador) ||
+            idAdministrador <= 0)
+        {
+            return Results.Unauthorized();
+        }
+
+        try
+        {
+            var total =
+                await dashboardService.ObtenerMembresiasActivas(
+                    idAdministrador);
+
+            return Results.Ok(new
+            {
+                membresiasActivas = total
+            });
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return Results.Forbid();
+        }
+        catch
+        {
+            return Results.Problem(
+                statusCode: 500,
+                title: "Error al consultar membresías activas",
+                detail: "No se pudo obtener el indicador.");
+        }
+    })
+    .RequireAuthorization("SoloAdministrador");
+
+    app.MapGet("/api/admin/dashboard/asistencias-dia",
+    async (
+        DashboardService dashboardService,
+        ClaimsPrincipal usuario
+    ) =>
+    {
+        if (!int.TryParse(
+                usuario.FindFirst("sub")?.Value,
+                out var idAdministrador) ||
+            idAdministrador <= 0)
+        {
+            return Results.Unauthorized();
+        }
+
+        try
+        {
+            var total =
+                await dashboardService.ObtenerAsistenciasDia(
+                    idAdministrador);
+
+            return Results.Ok(new
+            {
+                asistenciasDia = total
+            });
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return Results.Forbid();
+        }
+        catch
+        {
+            return Results.Problem(
+                statusCode: 500,
+                title: "Error al consultar asistencias del día",
+                detail: "No se pudo obtener el indicador.");
+        }
+    })
+    .RequireAuthorization("SoloAdministrador");
+
+    app.MapGet("/api/admin/dashboard/pagos-registrados",
+    async (
+        DashboardService dashboardService,
+        ClaimsPrincipal usuario
+    ) =>
+    {
+        if (!int.TryParse(
+                usuario.FindFirst("sub")?.Value,
+                out var idAdministrador) ||
+            idAdministrador <= 0)
+        {
+            return Results.Unauthorized();
+        }
+
+        try
+        {
+            var total =
+                await dashboardService.ObtenerPagosRegistrados(
+                    idAdministrador);
+
+            return Results.Ok(new
+            {
+                pagosRegistrados = total
+            });
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return Results.Forbid();
+        }
+        catch
+        {
+            return Results.Problem(
+                statusCode: 500,
+                title: "Error al consultar pagos registrados",
+                detail: "No se pudo obtener el indicador.");
+        }
+    })
+    .RequireAuthorization("SoloAdministrador");
+
+    app.MapGet("/api/admin/dashboard/ingresos-periodo",
+    async (
+        DateOnly? desde,
+        DateOnly? hasta,
+        DashboardService dashboardService,
+        ClaimsPrincipal usuario
+    ) =>
+    {
+        if (!int.TryParse(
+                usuario.FindFirst("sub")?.Value,
+                out var idAdministrador) ||
+            idAdministrador <= 0)
+        {
+            return Results.Unauthorized();
+        }
+
+        if (!desde.HasValue || !hasta.HasValue)
+        {
+            return Results.BadRequest(new
+            {
+                mensaje = "Los parámetros desde y hasta son obligatorios."
+            });
+        }
+
+        try
+        {
+            var total = await dashboardService.ObtenerIngresosPeriodo(
+                idAdministrador,
+                desde.Value,
+                hasta.Value);
+
+            return Results.Ok(new
+            {
+                desde = desde.Value.ToString(
+                    "yyyy-MM-dd",
+                    System.Globalization.CultureInfo.InvariantCulture),
+                hasta = hasta.Value.ToString(
+                    "yyyy-MM-dd",
+                    System.Globalization.CultureInfo.InvariantCulture),
+                ingresosPeriodo = total
+            });
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return Results.Forbid();
+        }
+        catch (ArgumentException ex)
+        {
+            return Results.BadRequest(new
+            {
+                mensaje = ex.Message
+            });
+        }
+        catch
+        {
+            return Results.Problem(
+                statusCode: 500,
+                title: "Error al consultar ingresos del periodo",
+                detail: "No se pudo obtener el indicador.");
         }
     })
     .RequireAuthorization("SoloAdministrador");
