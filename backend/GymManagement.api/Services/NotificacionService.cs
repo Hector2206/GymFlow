@@ -192,4 +192,93 @@ public class NotificacionService
 
         return total;
     }
+
+    public async Task MarcarComoLeida(
+    long idNotificacion,
+    int idUsuario,
+    CancellationToken cancellationToken = default)
+    {
+        if (idNotificacion <= 0)
+            throw new ArgumentException(
+                "ID de notificación inválido.");
+
+        if (idUsuario <= 0)
+            throw new UnauthorizedAccessException(
+                "Usuario no autorizado.");
+
+        var connectionString =
+            _configuration.GetConnectionString("PostgreSQL");
+
+        if (string.IsNullOrWhiteSpace(connectionString))
+            throw new InvalidOperationException(
+                "Falta la conexión PostgreSQL.");
+
+        await using var connection =
+            new NpgsqlConnection(connectionString);
+
+        await connection.OpenAsync(cancellationToken);
+
+        await using var transaction =
+            await connection.BeginTransactionAsync(cancellationToken);
+
+        await using (var usuario = new NpgsqlCommand("""
+            SELECT id_usuario
+            FROM public.usuarios
+            WHERE id_usuario = @id
+            AND estatus = 'Activo'
+            FOR SHARE;
+            """, connection, transaction))
+        {
+            usuario.Parameters.AddWithValue("id", idUsuario);
+
+            if (await usuario.ExecuteScalarAsync(cancellationToken) is null)
+                throw new UnauthorizedAccessException(
+                    "Usuario inactivo o inexistente.");
+        }
+
+        // Bloquear únicamente una notificación del usuario autenticado.
+        bool leida;
+
+        await using (var buscar = new NpgsqlCommand("""
+            SELECT leida
+            FROM public.notificaciones
+            WHERE id_notificacion = @notificacion
+            AND id_usuario = @usuario
+            FOR UPDATE;
+            """, connection, transaction))
+        {
+            buscar.Parameters.AddWithValue(
+                "notificacion", idNotificacion);
+            buscar.Parameters.AddWithValue("usuario", idUsuario);
+
+            var resultado =
+                await buscar.ExecuteScalarAsync(cancellationToken);
+
+            if (resultado is null)
+                throw new KeyNotFoundException(
+                    "Notificación no encontrada.");
+
+            leida = (bool)resultado;
+        }
+
+        // Repetir la petición no modifica la primera fecha de lectura.
+        if (!leida)
+        {
+            await using var actualizar = new NpgsqlCommand("""
+                UPDATE public.notificaciones
+                SET leida = TRUE,
+                    fecha_lectura = CURRENT_TIMESTAMP
+                WHERE id_notificacion = @notificacion
+                AND id_usuario = @usuario;
+                """, connection, transaction);
+
+            actualizar.Parameters.AddWithValue(
+                "notificacion", idNotificacion);
+            actualizar.Parameters.AddWithValue("usuario", idUsuario);
+
+            await actualizar.ExecuteNonQueryAsync(cancellationToken);
+        }
+
+        await transaction.CommitAsync(cancellationToken);
+    }
 }
