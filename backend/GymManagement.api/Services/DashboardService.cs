@@ -213,4 +213,70 @@ public class DashboardService
 
         return total;
     }
+
+    public async Task<decimal> ObtenerIngresosPeriodo(
+    int idAdministrador,
+    DateOnly desde,
+    DateOnly hasta)
+    {
+        if (desde == default || hasta == default)
+            throw new ArgumentException(
+                "Las fechas del periodo son obligatorias.");
+
+        if (hasta < desde)
+            throw new ArgumentException(
+                "La fecha final no puede ser anterior a la inicial.");
+
+        var connectionString =
+            _configuration.GetConnectionString("PostgreSQL");
+
+        if (string.IsNullOrWhiteSpace(connectionString))
+            throw new InvalidOperationException(
+                "Falta la conexión PostgreSQL.");
+
+        await using var connection =
+            new NpgsqlConnection(connectionString);
+
+        await connection.OpenAsync();
+
+        await using var transaction =
+            await connection.BeginTransactionAsync();
+
+        await using (var admin = new NpgsqlCommand("""
+            SELECT u.id_usuario
+            FROM public.usuarios u
+            JOIN public.roles r ON r.id_rol = u.id_rol
+            WHERE u.id_usuario = @admin
+            AND u.estatus = 'Activo'
+            AND r.nombre = 'Administrador'
+            FOR SHARE OF u;
+            """, connection, transaction))
+        {
+            admin.Parameters.AddWithValue("admin", idAdministrador);
+
+            if (await admin.ExecuteScalarAsync() is null)
+                throw new UnauthorizedAccessException(
+                    "Administrador no autorizado.");
+        }
+
+        await using var command = new NpgsqlCommand("""
+            SELECT public.fn_admin_ingresos_periodo(@desde, @hasta);
+            """, connection, transaction);
+
+        command.Parameters.AddWithValue(
+            "desde", NpgsqlTypes.NpgsqlDbType.Date, desde);
+
+        command.Parameters.AddWithValue(
+            "hasta", NpgsqlTypes.NpgsqlDbType.Date, hasta);
+
+        var resultado = await command.ExecuteScalarAsync();
+
+        if (resultado is not decimal total)
+            throw new InvalidOperationException(
+                "No se pudieron obtener los ingresos del periodo.");
+
+        await transaction.CommitAsync();
+
+        return total;
+    }
 }
