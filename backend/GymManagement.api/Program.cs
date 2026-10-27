@@ -1130,4 +1130,66 @@ app.MapPut("/api/admin/personal/{id:int}",
     })
     .RequireAuthorization();
 
+    app.MapPatch("/api/notificaciones/{id:long}/lectura",
+    async (
+        long id,
+        NotificacionService notificacionService,
+        ClaimsPrincipal usuario,
+        CancellationToken cancellationToken
+    ) =>
+    {
+        if (!int.TryParse(
+                usuario.FindFirst("sub")?.Value,
+                out var idUsuario) ||
+            idUsuario <= 0)
+        {
+            return Results.Unauthorized();
+        }
+
+        try
+        {
+            await notificacionService.MarcarComoLeida(
+                id,
+                idUsuario,
+                cancellationToken);
+
+            return Results.Ok(new
+            {
+                mensaje = "Notificación marcada como leída.",
+                idNotificacion = id
+            });
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return Results.Forbid();
+        }
+        catch (ArgumentException ex)
+        {
+            return Results.BadRequest(new
+            {
+                mensaje = ex.Message
+            });
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return Results.NotFound(new
+            {
+                mensaje = ex.Message
+            });
+        }
+        catch (OperationCanceledException)
+            when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch
+        {
+            return Results.Problem(
+                statusCode: 500,
+                title: "Error al marcar notificación",
+                detail: "No se pudo actualizar la notificación.");
+        }
+    })
+    .RequireAuthorization();
+
 app.Run();
