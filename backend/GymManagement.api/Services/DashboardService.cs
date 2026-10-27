@@ -163,4 +163,54 @@ public class DashboardService
 
         return total;
     }
+
+    public async Task<long> ObtenerPagosRegistrados(int idAdministrador)
+    {
+        var connectionString =
+            _configuration.GetConnectionString("PostgreSQL");
+
+        if (string.IsNullOrWhiteSpace(connectionString))
+            throw new InvalidOperationException(
+                "Falta la conexión PostgreSQL.");
+
+        await using var connection =
+            new NpgsqlConnection(connectionString);
+
+        await connection.OpenAsync();
+
+        await using var transaction =
+            await connection.BeginTransactionAsync();
+
+        await using (var admin = new NpgsqlCommand("""
+            SELECT u.id_usuario
+            FROM public.usuarios u
+            JOIN public.roles r ON r.id_rol = u.id_rol
+            WHERE u.id_usuario = @admin
+            AND u.estatus = 'Activo'
+            AND r.nombre = 'Administrador'
+            FOR SHARE OF u;
+            """, connection, transaction))
+        {
+            admin.Parameters.AddWithValue("admin", idAdministrador);
+
+            if (await admin.ExecuteScalarAsync() is null)
+                throw new UnauthorizedAccessException(
+                    "Administrador no autorizado.");
+        }
+
+        await using var command = new NpgsqlCommand("""
+            SELECT pagos_registrados
+            FROM public.vw_admin_pagos_registrados;
+            """, connection, transaction);
+
+        var resultado = await command.ExecuteScalarAsync();
+
+        if (resultado is not long total)
+            throw new InvalidOperationException(
+                "No se pudo obtener el total de pagos registrados.");
+
+        await transaction.CommitAsync();
+
+        return total;
+    }
 }
