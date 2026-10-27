@@ -17,6 +17,7 @@ builder.Services.AddScoped<PersonalService>();
 builder.Services.AddScoped<DashboardService>();
 builder.Services.AddScoped<ClienteAdminService>();
 builder.Services.AddScoped<NotificacionService>();
+builder.Services.AddHostedService<NotificacionWorker>();
 
 // ========================================
 // CORS
