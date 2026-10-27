@@ -1041,4 +1041,47 @@ app.MapPut("/api/admin/personal/{id:int}",
     })
     .RequireAuthorization("SoloAdministrador");
 
+    app.MapGet("/api/notificaciones",
+    async (
+        NotificacionService notificacionService,
+        ClaimsPrincipal usuario,
+        CancellationToken cancellationToken
+    ) =>
+    {
+        if (!int.TryParse(
+                usuario.FindFirst("sub")?.Value,
+                out var idUsuario) ||
+            idUsuario <= 0)
+        {
+            return Results.Unauthorized();
+        }
+
+        try
+        {
+            var notificaciones =
+                await notificacionService.ObtenerNotificaciones(
+                    idUsuario,
+                    cancellationToken);
+
+            return Results.Ok(notificaciones);
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return Results.Forbid();
+        }
+        catch (OperationCanceledException)
+            when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch
+        {
+            return Results.Problem(
+                statusCode: 500,
+                title: "Error al consultar notificaciones",
+                detail: "No se pudieron obtener las notificaciones.");
+        }
+    })
+    .RequireAuthorization();
+
 app.Run();
