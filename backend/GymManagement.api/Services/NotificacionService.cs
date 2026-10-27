@@ -1,5 +1,6 @@
 using Npgsql;
 using NpgsqlTypes;
+using GymManagement.api.Models;
 
 namespace GymManagement.api.Services;
 
@@ -49,5 +50,87 @@ public class NotificacionService
                 "No se pudo obtener el resultado de generación de avisos.");
 
         return creadas;
+    }
+
+    public async Task<List<NotificacionResponse>> ObtenerNotificaciones(
+    int idUsuario,
+    CancellationToken cancellationToken = default)
+    {
+        if (idUsuario <= 0)
+            throw new UnauthorizedAccessException(
+                "Usuario no autorizado.");
+
+        var connectionString =
+            _configuration.GetConnectionString("PostgreSQL");
+
+        if (string.IsNullOrWhiteSpace(connectionString))
+            throw new InvalidOperationException(
+                "Falta la conexión PostgreSQL.");
+
+        await using var connection =
+            new NpgsqlConnection(connectionString);
+
+        await connection.OpenAsync(cancellationToken);
+
+        await using var transaction =
+            await connection.BeginTransactionAsync(cancellationToken);
+
+        await using (var usuario = new NpgsqlCommand("""
+            SELECT id_usuario
+            FROM public.usuarios
+            WHERE id_usuario = @id
+            AND estatus = 'Activo'
+            FOR SHARE;
+            """, connection, transaction))
+        {
+            usuario.Parameters.AddWithValue("id", idUsuario);
+
+            if (await usuario.ExecuteScalarAsync(cancellationToken) is null)
+                throw new UnauthorizedAccessException(
+                    "Usuario inactivo o inexistente.");
+        }
+
+        var notificaciones = new List<NotificacionResponse>();
+
+        await using (var command = new NpgsqlCommand("""
+            SELECT id_notificacion,
+                tipo,
+                titulo,
+                mensaje,
+                fecha_vencimiento,
+                leida,
+                fecha_lectura,
+                creado_en
+            FROM public.notificaciones
+            WHERE id_usuario = @id
+            ORDER BY creado_en DESC, id_notificacion DESC;
+            """, connection, transaction))
+        {
+            command.Parameters.AddWithValue("id", idUsuario);
+
+            await using var reader =
+                await command.ExecuteReaderAsync(cancellationToken);
+
+            while (await reader.ReadAsync(cancellationToken))
+            {
+                notificaciones.Add(new NotificacionResponse
+                {
+                    IdNotificacion = reader.GetInt64(0),
+                    Tipo = reader.GetString(1),
+                    Titulo = reader.GetString(2),
+                    Mensaje = reader.GetString(3),
+                    FechaVencimiento = reader.GetFieldValue<DateOnly>(4),
+                    Leida = reader.GetBoolean(5),
+                    FechaLectura = reader.IsDBNull(6)
+                        ? null
+                        : reader.GetDateTime(6),
+                    CreadoEn = reader.GetDateTime(7)
+                });
+            }
+        }
+
+        await transaction.CommitAsync(cancellationToken);
+
+        return notificaciones;
     }
 }
