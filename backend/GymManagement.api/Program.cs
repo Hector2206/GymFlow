@@ -881,4 +881,43 @@ app.MapPut("/api/admin/personal/{id:int}",
     })
     .RequireAuthorization("SoloAdministrador");
 
+    app.MapGet("/api/admin/dashboard/pagos-registrados",
+    async (
+        DashboardService dashboardService,
+        ClaimsPrincipal usuario
+    ) =>
+    {
+        if (!int.TryParse(
+                usuario.FindFirst("sub")?.Value,
+                out var idAdministrador) ||
+            idAdministrador <= 0)
+        {
+            return Results.Unauthorized();
+        }
+
+        try
+        {
+            var total =
+                await dashboardService.ObtenerPagosRegistrados(
+                    idAdministrador);
+
+            return Results.Ok(new
+            {
+                pagosRegistrados = total
+            });
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return Results.Forbid();
+        }
+        catch
+        {
+            return Results.Problem(
+                statusCode: 500,
+                title: "Error al consultar pagos registrados",
+                detail: "No se pudo obtener el indicador.");
+        }
+    })
+    .RequireAuthorization("SoloAdministrador");
+
 app.Run();
