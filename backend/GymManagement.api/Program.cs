@@ -1085,4 +1085,49 @@ app.MapPut("/api/admin/personal/{id:int}",
     })
     .RequireAuthorization();
 
+    app.MapGet("/api/notificaciones/no-leidas",
+    async (
+        NotificacionService notificacionService,
+        ClaimsPrincipal usuario,
+        CancellationToken cancellationToken
+    ) =>
+    {
+        if (!int.TryParse(
+                usuario.FindFirst("sub")?.Value,
+                out var idUsuario) ||
+            idUsuario <= 0)
+        {
+            return Results.Unauthorized();
+        }
+
+        try
+        {
+            var total = await notificacionService.ObtenerNoLeidas(
+                idUsuario,
+                cancellationToken);
+
+            return Results.Ok(new
+            {
+                noLeidas = total
+            });
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return Results.Forbid();
+        }
+        catch (OperationCanceledException)
+            when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch
+        {
+            return Results.Problem(
+                statusCode: 500,
+                title: "Error al contar notificaciones",
+                detail: "No se pudo obtener el contador de no leídas.");
+        }
+    })
+    .RequireAuthorization();
+
 app.Run();
