@@ -15,6 +15,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddOpenApi();
 builder.Services.AddScoped<PersonalService>();
 builder.Services.AddScoped<DashboardService>();
+builder.Services.AddScoped<ClienteAdminService>();
 
 // ========================================
 // CORS
@@ -979,6 +980,63 @@ app.MapPut("/api/admin/personal/{id:int}",
                 statusCode: 500,
                 title: "Error al consultar ingresos del periodo",
                 detail: "No se pudo obtener el indicador.");
+        }
+    })
+    .RequireAuthorization("SoloAdministrador");
+
+    app.MapGet("/api/admin/clientes",
+    async (
+        string? nombre,
+        string? correo,
+        string? estatus,
+        string? vigencia,
+        int? idMembresia,
+        ClienteAdminService clienteService,
+        ClaimsPrincipal usuario
+    ) =>
+    {
+        if (!int.TryParse(
+                usuario.FindFirst("sub")?.Value,
+                out var idAdministrador) ||
+            idAdministrador <= 0)
+        {
+            return Results.Unauthorized();
+        }
+
+        var filtros = new GymManagement.api.Models.BuscarClientesRequest
+        {
+            Nombre = nombre,
+            Correo = correo,
+            Estatus = estatus,
+            Vigencia = vigencia,
+            IdMembresia = idMembresia
+        };
+
+        try
+        {
+            var clientes = await clienteService.BuscarClientes(
+                filtros,
+                idAdministrador);
+
+            return Results.Ok(clientes);
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return Results.Forbid();
+        }
+        catch (ArgumentException ex)
+        {
+            return Results.BadRequest(new
+            {
+                mensaje = ex.Message
+            });
+        }
+        catch
+        {
+            return Results.Problem(
+                statusCode: 500,
+                title: "Error al buscar clientes",
+                detail: "No se pudo completar la consulta.");
         }
     })
     .RequireAuthorization("SoloAdministrador");
