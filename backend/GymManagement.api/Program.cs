@@ -920,4 +920,67 @@ app.MapPut("/api/admin/personal/{id:int}",
     })
     .RequireAuthorization("SoloAdministrador");
 
+    app.MapGet("/api/admin/dashboard/ingresos-periodo",
+    async (
+        DateOnly? desde,
+        DateOnly? hasta,
+        DashboardService dashboardService,
+        ClaimsPrincipal usuario
+    ) =>
+    {
+        if (!int.TryParse(
+                usuario.FindFirst("sub")?.Value,
+                out var idAdministrador) ||
+            idAdministrador <= 0)
+        {
+            return Results.Unauthorized();
+        }
+
+        if (!desde.HasValue || !hasta.HasValue)
+        {
+            return Results.BadRequest(new
+            {
+                mensaje = "Los parámetros desde y hasta son obligatorios."
+            });
+        }
+
+        try
+        {
+            var total = await dashboardService.ObtenerIngresosPeriodo(
+                idAdministrador,
+                desde.Value,
+                hasta.Value);
+
+            return Results.Ok(new
+            {
+                desde = desde.Value.ToString(
+                    "yyyy-MM-dd",
+                    System.Globalization.CultureInfo.InvariantCulture),
+                hasta = hasta.Value.ToString(
+                    "yyyy-MM-dd",
+                    System.Globalization.CultureInfo.InvariantCulture),
+                ingresosPeriodo = total
+            });
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return Results.Forbid();
+        }
+        catch (ArgumentException ex)
+        {
+            return Results.BadRequest(new
+            {
+                mensaje = ex.Message
+            });
+        }
+        catch
+        {
+            return Results.Problem(
+                statusCode: 500,
+                title: "Error al consultar ingresos del periodo",
+                detail: "No se pudo obtener el indicador.");
+        }
+    })
+    .RequireAuthorization("SoloAdministrador");
+
 app.Run();
