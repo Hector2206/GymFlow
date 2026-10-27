@@ -16,6 +16,8 @@ builder.Services.AddOpenApi();
 builder.Services.AddScoped<PersonalService>();
 builder.Services.AddScoped<DashboardService>();
 builder.Services.AddScoped<ClienteAdminService>();
+builder.Services.AddScoped<NotificacionService>();
+builder.Services.AddHostedService<NotificacionWorker>();
 
 // ========================================
 // CORS
@@ -1040,5 +1042,155 @@ app.MapPut("/api/admin/personal/{id:int}",
         }
     })
     .RequireAuthorization("SoloAdministrador");
+
+    app.MapGet("/api/notificaciones",
+    async (
+        NotificacionService notificacionService,
+        ClaimsPrincipal usuario,
+        CancellationToken cancellationToken
+    ) =>
+    {
+        if (!int.TryParse(
+                usuario.FindFirst("sub")?.Value,
+                out var idUsuario) ||
+            idUsuario <= 0)
+        {
+            return Results.Unauthorized();
+        }
+
+        try
+        {
+            var notificaciones =
+                await notificacionService.ObtenerNotificaciones(
+                    idUsuario,
+                    cancellationToken);
+
+            return Results.Ok(notificaciones);
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return Results.Forbid();
+        }
+        catch (OperationCanceledException)
+            when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch
+        {
+            return Results.Problem(
+                statusCode: 500,
+                title: "Error al consultar notificaciones",
+                detail: "No se pudieron obtener las notificaciones.");
+        }
+    })
+    .RequireAuthorization();
+
+    app.MapGet("/api/notificaciones/no-leidas",
+    async (
+        NotificacionService notificacionService,
+        ClaimsPrincipal usuario,
+        CancellationToken cancellationToken
+    ) =>
+    {
+        if (!int.TryParse(
+                usuario.FindFirst("sub")?.Value,
+                out var idUsuario) ||
+            idUsuario <= 0)
+        {
+            return Results.Unauthorized();
+        }
+
+        try
+        {
+            var total = await notificacionService.ObtenerNoLeidas(
+                idUsuario,
+                cancellationToken);
+
+            return Results.Ok(new
+            {
+                noLeidas = total
+            });
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return Results.Forbid();
+        }
+        catch (OperationCanceledException)
+            when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch
+        {
+            return Results.Problem(
+                statusCode: 500,
+                title: "Error al contar notificaciones",
+                detail: "No se pudo obtener el contador de no leídas.");
+        }
+    })
+    .RequireAuthorization();
+
+    app.MapPatch("/api/notificaciones/{id:long}/lectura",
+    async (
+        long id,
+        NotificacionService notificacionService,
+        ClaimsPrincipal usuario,
+        CancellationToken cancellationToken
+    ) =>
+    {
+        if (!int.TryParse(
+                usuario.FindFirst("sub")?.Value,
+                out var idUsuario) ||
+            idUsuario <= 0)
+        {
+            return Results.Unauthorized();
+        }
+
+        try
+        {
+            await notificacionService.MarcarComoLeida(
+                id,
+                idUsuario,
+                cancellationToken);
+
+            return Results.Ok(new
+            {
+                mensaje = "Notificación marcada como leída.",
+                idNotificacion = id
+            });
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return Results.Forbid();
+        }
+        catch (ArgumentException ex)
+        {
+            return Results.BadRequest(new
+            {
+                mensaje = ex.Message
+            });
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return Results.NotFound(new
+            {
+                mensaje = ex.Message
+            });
+        }
+        catch (OperationCanceledException)
+            when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch
+        {
+            return Results.Problem(
+                statusCode: 500,
+                title: "Error al marcar notificación",
+                detail: "No se pudo actualizar la notificación.");
+        }
+    })
+    .RequireAuthorization();
 
 app.Run();
