@@ -133,4 +133,63 @@ public class NotificacionService
 
         return notificaciones;
     }
+
+    public async Task<long> ObtenerNoLeidas(
+    int idUsuario,
+    CancellationToken cancellationToken = default)
+    {
+        if (idUsuario <= 0)
+            throw new UnauthorizedAccessException(
+                "Usuario no autorizado.");
+
+        var connectionString =
+            _configuration.GetConnectionString("PostgreSQL");
+
+        if (string.IsNullOrWhiteSpace(connectionString))
+            throw new InvalidOperationException(
+                "Falta la conexión PostgreSQL.");
+
+        await using var connection =
+            new NpgsqlConnection(connectionString);
+
+        await connection.OpenAsync(cancellationToken);
+
+        await using var transaction =
+            await connection.BeginTransactionAsync(cancellationToken);
+
+        await using (var usuario = new NpgsqlCommand("""
+            SELECT id_usuario
+            FROM public.usuarios
+            WHERE id_usuario = @id
+            AND estatus = 'Activo'
+            FOR SHARE;
+            """, connection, transaction))
+        {
+            usuario.Parameters.AddWithValue("id", idUsuario);
+
+            if (await usuario.ExecuteScalarAsync(cancellationToken) is null)
+                throw new UnauthorizedAccessException(
+                    "Usuario inactivo o inexistente.");
+        }
+
+        await using var command = new NpgsqlCommand("""
+            SELECT COUNT(*)
+            FROM public.notificaciones
+            WHERE id_usuario = @id
+            AND leida = FALSE;
+            """, connection, transaction);
+
+        command.Parameters.AddWithValue("id", idUsuario);
+
+        var resultado =
+            await command.ExecuteScalarAsync(cancellationToken);
+
+        if (resultado is not long total)
+            throw new InvalidOperationException(
+                "No se pudo obtener el contador de notificaciones.");
+
+        await transaction.CommitAsync(cancellationToken);
+
+        return total;
+    }
 }
