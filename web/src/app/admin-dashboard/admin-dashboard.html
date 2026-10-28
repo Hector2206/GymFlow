@@ -81,14 +81,49 @@
         <p>Clientes registrados en el sistema</p>
       </article>
 
-      <article class="stat-card">
+      
+        <article class="stat-card">
+
         <div class="stat-icon">🎫</div>
+
         <span class="stat-title">
-          Membresías activas
+            Membresías activas
         </span>
-        <strong class="stat-value">—</strong>
-        <p>Clientes con membresía vigente</p>
-      </article>
+
+        @if (cargandoMembresias) {
+
+            <div class="stat-loading">
+            Cargando membresías...
+            </div>
+
+        } @else if (errorMembresias) {
+
+            <div class="stat-error" role="alert">
+            {{ errorMembresias }}
+            </div>
+
+            <button
+            type="button"
+            class="retry-button"
+            (click)="cargarMembresiasActivas()"
+            >
+            Reintentar
+            </button>
+
+        } @else {
+
+            <strong class="stat-value">
+            {{ membresiasActivas ?? '—' }}
+            </strong>
+
+        }
+
+        <p>
+            Clientes activos con membresía vigente
+        </p>
+
+        </article>
+
 
       <article class="stat-card">
         <div class="stat-icon">📅</div>

@@ -23,10 +23,15 @@ import {
 })
 export class AdminDashboard implements OnInit {
 
+  // Total de clientes
   totalClientes: number | null = null;
-
   cargandoClientes = false;
   errorClientes = '';
+
+  // Membresias activas
+  membresiasActivas: number | null = null;
+  cargandoMembresias = false;
+  errorMembresias = '';
 
   constructor(
     private router: Router,
@@ -37,7 +42,10 @@ export class AdminDashboard implements OnInit {
 
   ngOnInit(): void {
     this.cargarTotalClientes();
+    this.cargarMembresiasActivas();
   }
+
+  // TOTAL DE CLIENTES
 
   cargarTotalClientes(): void {
 
@@ -51,15 +59,12 @@ export class AdminDashboard implements OnInit {
       .subscribe({
 
         next: (respuesta) => {
-
           this.totalClientes = respuesta.totalClientes;
           this.cargandoClientes = false;
-
           this.changeDetector.detectChanges();
         },
 
         error: (error: HttpErrorResponse) => {
-
           this.cargandoClientes = false;
 
           if (error.status === 401) {
@@ -80,7 +85,51 @@ export class AdminDashboard implements OnInit {
 
           this.changeDetector.detectChanges();
         }
+      });
+  }
 
+  // MEMBRESIAS ACTIVAS
+
+  cargarMembresiasActivas(): void {
+
+    this.cargandoMembresias = true;
+    this.errorMembresias = '';
+    this.membresiasActivas = null;
+
+    this.dashboardService
+      .obtenerMembresiasActivas()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+
+        next: (respuesta) => {
+          this.membresiasActivas =
+            respuesta.membresiasActivas;
+
+          this.cargandoMembresias = false;
+          this.changeDetector.detectChanges();
+        },
+
+        error: (error: HttpErrorResponse) => {
+          this.cargandoMembresias = false;
+
+          if (error.status === 401) {
+            this.errorMembresias =
+              'Tu sesión venció. Inicia sesión nuevamente.';
+          } else if (error.status === 403) {
+            this.errorMembresias =
+              'No tienes permisos para consultar las membresías.';
+          } else if (error.status === 0 || error.status >= 500) {
+            this.errorMembresias =
+              'No fue posible conectar con el servidor. Intenta nuevamente.';
+          } else {
+            this.errorMembresias =
+              error.error?.mensaje ||
+              error.error?.detail ||
+              'No se pudieron consultar las membresías activas.';
+          }
+
+          this.changeDetector.detectChanges();
+        }
       });
   }
 
