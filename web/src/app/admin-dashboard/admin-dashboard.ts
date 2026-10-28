@@ -9,12 +9,12 @@ import {
 import { HttpErrorResponse } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { FormsModule } from '@angular/forms';
+import { Subscription } from 'rxjs';
 
 import {
   AdminDashboardService
 } from '../services/admin-dashboard.service';
-
-import { FormsModule } from '@angular/forms';
 
 @Component({
   selector: 'app-admin-dashboard',
@@ -44,15 +44,24 @@ export class AdminDashboard implements OnInit {
   pagosRegistrados: number | null = null;
   cargandoPagos = false;
   errorPagos = '';
-  // Consulta de ingresos por periodo
-    fechaDesde = '';
-    fechaHasta = '';
 
-    errorPeriodo = '';
-    periodoValidado = false;
+  // Ingresos por periodo
+  fechaDesde = '';
+  fechaHasta = '';
 
-    
+  errorPeriodo = '';
+  periodoValidado = false;
 
+  ingresosPeriodo: number | null = null;
+  ingresosFormateados = '';
+
+  periodoConsultadoDesde = '';
+  periodoConsultadoHasta = '';
+
+  cargandoIngresos = false;
+  errorIngresos = '';
+
+  private consultaIngresos?: Subscription;
 
   constructor(
     private router: Router,
@@ -68,7 +77,6 @@ export class AdminDashboard implements OnInit {
     this.cargarPagosRegistrados();
   }
 
-  
   // TOTAL DE CLIENTES
 
   cargarTotalClientes(): void {
@@ -214,7 +222,6 @@ export class AdminDashboard implements OnInit {
       .subscribe({
 
         next: (respuesta) => {
-
           this.pagosRegistrados =
             respuesta.pagosRegistrados;
 
@@ -223,68 +230,153 @@ export class AdminDashboard implements OnInit {
         },
 
         error: (error: HttpErrorResponse) => {
-
           this.cargandoPagos = false;
 
           if (error.status === 401) {
-
             this.errorPagos =
               'Tu sesión venció. Inicia sesión nuevamente.';
-
           } else if (error.status === 403) {
-
             this.errorPagos =
               'No tienes permisos para consultar pagos.';
-
-          } else if (
-            error.status === 0 ||
-            error.status >= 500
-          ) {
-
+          } else if (error.status === 0 || error.status >= 500) {
             this.errorPagos =
               'No fue posible conectar con el servidor. Intenta nuevamente.';
-
           } else {
-
             this.errorPagos =
               error.error?.mensaje ||
               error.error?.detail ||
               'No se pudieron consultar los pagos registrados.';
-
           }
 
           this.changeDetector.detectChanges();
         }
-
       });
   }
 
-  
-reiniciarValidacionPeriodo(): void {
-  this.errorPeriodo = '';
-  this.periodoValidado = false;
-}
+  // VALIDACION DEL PERIODO
 
-validarPeriodo(): void {
+  reiniciarValidacionPeriodo(): void {
 
-  this.errorPeriodo = '';
-  this.periodoValidado = false;
+    // Cancelar una consulta anterior si cambian las fechas.
+    this.consultaIngresos?.unsubscribe();
+    this.consultaIngresos = undefined;
 
-  if (!this.fechaDesde || !this.fechaHasta) {
-    this.errorPeriodo =
-      'Debes seleccionar ambas fechas.';
-    return;
+    this.errorPeriodo = '';
+    this.periodoValidado = false;
+
+    this.ingresosPeriodo = null;
+    this.ingresosFormateados = '';
+    this.errorIngresos = '';
+    this.cargandoIngresos = false;
+
+    this.periodoConsultadoDesde = '';
+    this.periodoConsultadoHasta = '';
   }
 
-  if (this.fechaDesde > this.fechaHasta) {
-    this.errorPeriodo =
-      'La fecha inicial no puede ser posterior a la fecha final.';
-    return;
+  validarPeriodo(): boolean {
+
+    this.errorPeriodo = '';
+    this.periodoValidado = false;
+
+    if (!this.fechaDesde || !this.fechaHasta) {
+      this.errorPeriodo =
+        'Debes seleccionar ambas fechas.';
+      return false;
+    }
+
+    if (this.fechaDesde > this.fechaHasta) {
+      this.errorPeriodo =
+        'La fecha inicial no puede ser posterior a la fecha final.';
+      return false;
+    }
+
+    this.periodoValidado = true;
+    return true;
   }
 
-  this.periodoValidado = true;
-}
+  // CONSULTA REAL DE INGRESOS
 
+  consultarIngresos(): void {
+
+    if (this.cargandoIngresos) {
+      return;
+    }
+
+    if (!this.validarPeriodo()) {
+      return;
+    }
+
+    this.consultaIngresos?.unsubscribe();
+
+    const desde = this.fechaDesde;
+    const hasta = this.fechaHasta;
+
+    this.cargandoIngresos = true;
+    this.errorIngresos = '';
+    this.ingresosPeriodo = null;
+    this.ingresosFormateados = '';
+
+    this.consultaIngresos = this.dashboardService
+      .obtenerIngresosPeriodo(desde, hasta)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+
+        next: (respuesta) => {
+
+          this.ingresosPeriodo =
+            respuesta.ingresosPeriodo;
+
+          this.periodoConsultadoDesde =
+            respuesta.desde;
+
+          this.periodoConsultadoHasta =
+            respuesta.hasta;
+
+          this.ingresosFormateados =
+            new Intl.NumberFormat('es-MX', {
+              style: 'currency',
+              currency: 'MXN',
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2
+            }).format(respuesta.ingresosPeriodo);
+
+          this.cargandoIngresos = false;
+
+          this.changeDetector.detectChanges();
+        },
+
+        error: (error: HttpErrorResponse) => {
+
+          this.cargandoIngresos = false;
+
+          const mensajeServidor =
+            typeof error.error?.mensaje === 'string'
+              ? error.error.mensaje
+              : typeof error.error?.detail === 'string'
+                ? error.error.detail
+                : typeof error.error?.title === 'string'
+                  ? error.error.title
+                  : '';
+
+          if (error.status === 401) {
+            this.errorIngresos =
+              'Tu sesión venció. Inicia sesión nuevamente.';
+          } else if (error.status === 403) {
+            this.errorIngresos =
+              'No tienes permisos para consultar ingresos.';
+          } else if (error.status === 0 || error.status >= 500) {
+            this.errorIngresos =
+              'No fue posible conectar con el servidor. Intenta nuevamente.';
+          } else {
+            this.errorIngresos =
+              mensajeServidor ||
+              'No se pudieron consultar los ingresos del periodo.';
+          }
+
+          this.changeDetector.detectChanges();
+        }
+      });
+  }
 
   volverInicio(): void {
     this.router.navigate(['/home']);

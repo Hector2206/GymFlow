@@ -357,3 +357,56 @@
   }
 }
 
+
+/* SPRINT 7 - RESULTADO DE INGRESOS */
+
+.periodo-button:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.ingresos-resultado {
+  max-width: 650px;
+  margin: 28px auto 0;
+  padding: 26px 22px;
+  border: 1px solid #dfcfaa;
+  border-radius: 18px;
+  background: #fffdf8;
+  text-align: center;
+}
+
+.ingresos-etiqueta {
+  display: block;
+  color: #98731f;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1.4px;
+}
+
+.ingresos-valor {
+  display: block;
+  margin: 16px 0 5px;
+  color: #2f2a24;
+  font-size: clamp(30px, 5vw, 43px);
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.ingresos-moneda {
+  display: block;
+  color: #91877a;
+  font-size: 12px;
+  margin-bottom: 23px;
+}
+
+.ingresos-resultado .periodo-correcto {
+  margin-top: 10px;
+}
+
+.ingresos-resultado p {
+  margin: 18px auto 0;
+  color: #81776c;
+  font-size: 12px;
+  line-height: 1.6;
+}
+

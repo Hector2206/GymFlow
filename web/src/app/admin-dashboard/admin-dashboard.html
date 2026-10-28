@@ -230,15 +230,16 @@
       </div>
 
       
+
 <div class="finance-placeholder">
 
   <div class="finance-icon">📈</div>
 
-  <h3>Seleccionar periodo</h3>
+  <h3>Consultar ingresos</h3>
 
   <p>
     Selecciona las fechas para consultar los
-    ingresos registrados del gimnasio.
+    ingresos brutos registrados del gimnasio.
   </p>
 
   <div class="periodo-form">
@@ -268,9 +269,10 @@
     <button
       type="button"
       class="periodo-button"
-      (click)="validarPeriodo()"
+      [disabled]="cargandoIngresos"
+      (click)="consultarIngresos()"
     >
-      Validar periodo
+      {{ cargandoIngresos ? 'Consultando...' : 'Consultar ingresos' }}
     </button>
 
   </div>
@@ -283,20 +285,60 @@
 
   }
 
-  @if (periodoValidado) {
+  @if (cargandoIngresos) {
 
-    <div class="periodo-correcto">
-      Periodo seleccionado:
-      {{ fechaDesde }} al {{ fechaHasta }}
+    <div class="stat-loading" role="status">
+      Consultando ingresos del periodo...
     </div>
 
-    <p class="periodo-nota">
-      El rango está listo para consultar sus ingresos.
-    </p>
+  } @else if (errorIngresos) {
+
+    <div class="periodo-error" role="alert">
+      {{ errorIngresos }}
+    </div>
+
+    <button
+      type="button"
+      class="retry-button"
+      (click)="consultarIngresos()"
+    >
+      Reintentar consulta
+    </button>
+
+  } @else if (ingresosPeriodo !== null) {
+
+    <div class="ingresos-resultado">
+
+      <span class="ingresos-etiqueta">
+        INGRESOS BRUTOS DEL PERIODO
+      </span>
+
+      <strong class="ingresos-valor">
+        {{ ingresosFormateados }}
+      </strong>
+
+      <span class="ingresos-moneda">
+        Pesos mexicanos (MXN)
+      </span>
+
+      <div class="periodo-correcto">
+        Periodo consultado:
+        {{ periodoConsultadoDesde }}
+        al
+        {{ periodoConsultadoHasta }}
+      </div>
+
+      <p>
+        Corresponde a pagos registrados de clientes.
+        No se descuentan sueldos ni otros gastos.
+      </p>
+
+    </div>
 
   }
 
 </div>
+
 
     </section>
 
