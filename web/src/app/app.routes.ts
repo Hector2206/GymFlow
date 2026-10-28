@@ -74,6 +74,12 @@ import {
   AdminDashboard
 } from './admin-dashboard/admin-dashboard';
 
+
+import {
+  AdminClientes
+} from './admin-clientes/admin-clientes';
+
+
 import {
   recepcionistaGuard,
   entrenadorGuard,
@@ -122,6 +128,17 @@ export const routes: Routes = [
     administradorGuard
   ]
 },
+
+
+{
+  path: 'admin/clientes',
+  component: AdminClientes,
+  canActivate: [
+    authGuard,
+    administradorGuard
+  ]
+},
+
 
   {
     path: 'registrar-cliente',
