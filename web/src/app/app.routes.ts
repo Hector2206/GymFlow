@@ -87,6 +87,10 @@ import {
 } from './admin-personal-editar/admin-personal-editar';
 
 import {
+  AdminPersonalBajas
+} from './admin-personal-bajas/admin-personal-bajas';
+
+import {
   AsignacionEntrenadores
 } from './asignacion-entrenadores/asignacion-entrenadores';
 
@@ -146,6 +150,12 @@ export const routes: Routes = [
   {
     path: 'admin/personal/editar/:id',
     component: AdminPersonalEditar,
+    canActivate: [authGuard, administradorGuard]
+  },
+
+  {
+    path: 'admin/personal/bajas',
+    component: AdminPersonalBajas,
     canActivate: [authGuard, administradorGuard]
   },
 
@@ -268,8 +278,6 @@ export const routes: Routes = [
     component: AdministrarRutinas,
     canActivate: [authGuard, entrenadorGuard]
   },
-
-  // INICIO
 
   {
     path: '',

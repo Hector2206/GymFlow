@@ -37,17 +37,11 @@ export class AdminPersonal implements OnInit {
   error = '';
   consultaRealizada = false;
 
-  // CONFIRMACIONES
-
   tituloOperacion = '';
   mensajeOperacion = '';
 
-  // FILTROS
-
   filtroPuesto: PuestoPersonalAdmin | '' = '';
   filtroEstatus: EstatusPersonalAdmin | '' = '';
-
-  // SELECTOR PARA EDITAR
 
   mostrarSelectorEdicion = false;
   idPersonalSeleccionado: number | null = null;
@@ -61,8 +55,6 @@ export class AdminPersonal implements OnInit {
   ) {}
 
   ngOnInit(): void {
-
-    // RECIBIR CONFIRMACION DE ALTA O EDICION
 
     const estado = this.location.getState();
 
@@ -79,8 +71,7 @@ export class AdminPersonal implements OnInit {
         datos.empleadoRegistradoId > 0
       ) {
 
-        this.tituloOperacion =
-          'Empleado registrado';
+        this.tituloOperacion = 'Empleado registrado';
 
         this.mensajeOperacion =
           `Empleado registrado correctamente. ` +
@@ -94,8 +85,7 @@ export class AdminPersonal implements OnInit {
         datos.empleadoEditadoId > 0
       ) {
 
-        this.tituloOperacion =
-          'Empleado actualizado';
+        this.tituloOperacion = 'Empleado actualizado';
 
         this.mensajeOperacion =
           `Los datos del empleado con ID ` +
@@ -105,8 +95,6 @@ export class AdminPersonal implements OnInit {
         this.limpiarEstadoNavegacion();
       }
     }
-
-    // CONSULTAR EMPLEADOS ACTUALIZADOS
 
     this.cargarPersonal();
   }
@@ -120,7 +108,7 @@ export class AdminPersonal implements OnInit {
     );
   }
 
-  // REGISTRAR EMPLEADO
+  // ALTA
 
   irRegistrarPersonal(): void {
 
@@ -129,7 +117,16 @@ export class AdminPersonal implements OnInit {
     ]);
   }
 
-  // SELECTOR DE EDICION
+  // BAJAS - NUEVA PANTALLA
+
+  irBajasPersonal(): void {
+
+    this.router.navigate([
+      '/admin/personal/bajas'
+    ]);
+  }
+
+  // EDICION
 
   abrirSelectorEdicion(): void {
 
@@ -142,8 +139,6 @@ export class AdminPersonal implements OnInit {
     this.mostrarSelectorEdicion = false;
     this.idPersonalSeleccionado = null;
   }
-
-  // EMPLEADOS ACTIVOS
 
   get empleadosDisponibles(): PersonalAdmin[] {
 
@@ -176,7 +171,7 @@ export class AdminPersonal implements OnInit {
     ]);
   }
 
-  // FILTROS DEL DIRECTORIO
+  // FILTROS
 
   get empleadosFiltrados(): PersonalAdmin[] {
 
@@ -208,7 +203,7 @@ export class AdminPersonal implements OnInit {
     this.filtroEstatus = '';
   }
 
-  // CONSULTAR EMPLEADOS REALES
+  // CONSULTAR EMPLEADOS
 
   cargarPersonal(): void {
 
@@ -223,9 +218,7 @@ export class AdminPersonal implements OnInit {
 
     this.personalService
       .obtenerPersonal()
-      .pipe(
-        takeUntilDestroyed(this.destroyRef)
-      )
+      .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
 
         next: (respuesta: PersonalAdmin[]) => {
@@ -286,8 +279,6 @@ export class AdminPersonal implements OnInit {
       });
   }
 
-  // FORMATO DE SALARIO
-
   mostrarSalario(monto: number): string {
 
     if (
@@ -303,8 +294,6 @@ export class AdminPersonal implements OnInit {
       currency: 'MXN'
     }).format(monto);
   }
-
-  // FORMATO DE FECHA
 
   mostrarFecha(fecha: string | null): string {
 
