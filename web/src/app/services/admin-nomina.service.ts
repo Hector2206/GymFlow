@@ -11,7 +11,9 @@ import {
   SalarioPersonalAdmin,
   PagoNominaAdmin,
   CambiarSalarioAdminRequest,
-  CambiarSalarioAdminResponse
+  CambiarSalarioAdminResponse,
+  RegistrarPagoNominaAdminRequest,
+  RegistrarPagoNominaAdminResponse
 } from '../models/admin-nomina.model';
 
 @Injectable({
@@ -37,7 +39,7 @@ export class AdminNominaService {
     );
   }
 
-  // CONSULTAR PAGOS DE NOMINA
+  // CONSULTAR PAGOS DE NÓMINA
 
   obtenerHistorialNomina(
     idPersonal: number
@@ -57,6 +59,19 @@ export class AdminNominaService {
 
     return this.http.post<CambiarSalarioAdminResponse>(
       `${this.apiUrl}/${idPersonal}/salarios`,
+      datos
+    );
+  }
+
+  // REGISTRAR PAGO MANUAL DE NÓMINA
+
+  registrarPagoNomina(
+    idPersonal: number,
+    datos: RegistrarPagoNominaAdminRequest
+  ): Observable<RegistrarPagoNominaAdminResponse> {
+
+    return this.http.post<RegistrarPagoNominaAdminResponse>(
+      `${this.apiUrl}/${idPersonal}/nomina`,
       datos
     );
   }

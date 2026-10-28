@@ -1,7 +1,7 @@
 
 /**
  * GymFlow - Sprint 7
- * Modelos de salarios y nomina.
+ * Modelos de salarios y nómina.
  */
 
 export interface SalarioPersonalAdmin {
@@ -35,7 +35,7 @@ export interface PagoNominaAdmin {
   creadoEn: string;
 }
 
-// CAMBIO DE SUELDO
+// CAMBIOS SALARIALES
 
 export interface CambiarSalarioAdminRequest {
   monto: number;
@@ -47,4 +47,25 @@ export interface CambiarSalarioAdminResponse {
   mensaje: string;
   idPersonal: number;
   idSalario: number;
+}
+
+// REGISTRO MANUAL DE NÓMINA
+
+export type MetodoPagoNominaAdmin =
+  'Efectivo' | 'Transferencia';
+
+export interface RegistrarPagoNominaAdminRequest {
+  periodoInicio: string;
+  periodoFin: string;
+  monto: number;
+  fechaPago: string;
+  metodo: MetodoPagoNominaAdmin;
+  referencia: string | null;
+  observaciones: string | null;
+}
+
+export interface RegistrarPagoNominaAdminResponse {
+  mensaje: string;
+  idPersonal: number;
+  idPago: number;
 }
