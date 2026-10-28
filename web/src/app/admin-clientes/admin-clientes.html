@@ -48,27 +48,25 @@
 
       <p>
         Consulta los clientes registrados en GymFlow
-        y encuentra su información de membresía.
+        y su información de membresía.
       </p>
 
     </section>
 
-    <!-- AREA DE FILTROS -->
+    <!-- FILTROS -->
 
     <section class="filters-panel">
 
       <div class="panel-heading">
 
-        <div class="heading-icon">
-          🔎
-        </div>
+        <div class="heading-icon">🔎</div>
 
         <div>
           <h3>Búsqueda de clientes</h3>
 
           <p>
-            Busca clientes por nombre, correo,
-            estatus o membresía.
+            Consulta por nombre, correo, estatus
+            o vigencia de membresía.
           </p>
         </div>
 
@@ -80,12 +78,12 @@
 
         <div>
           <strong>
-            Preparando los filtros
+            Filtros en preparación
           </strong>
 
           <p>
-            Esta sección tendrá los campos
-            para buscar y filtrar clientes.
+            Por ahora se muestran todos los clientes.
+            Próximamente podrás aplicar filtros.
           </p>
         </div>
 
@@ -107,26 +105,193 @@
           <h3>Clientes registrados</h3>
 
           <p>
-            Información de clientes y membresías.
+            Información obtenida del sistema GymFlow.
           </p>
         </div>
 
+        @if (consultaRealizada && !error) {
+
+          <div class="total-resultados">
+            {{ clientes.length }}
+            clientes encontrados
+          </div>
+
+        }
+
       </div>
 
-      <div class="results-placeholder">
+      <!-- CARGA -->
 
-        <div class="placeholder-icon">
-          👥
+      @if (cargando) {
+
+        <div class="results-placeholder" role="status">
+
+          <div class="placeholder-icon">⏳</div>
+
+          <h3>Cargando clientes...</h3>
+
+          <p>
+            Consultando información del servidor.
+          </p>
+
         </div>
 
-        <h3>Directorio de clientes</h3>
+      } @else if (error) {
 
-        <p>
-          El listado se mostrará aquí cuando
-          conectemos la consulta con el backend.
-        </p>
+        <!-- ERROR -->
 
-      </div>
+        <div class="results-placeholder">
+
+          <div class="placeholder-icon">⚠️</div>
+
+          <h3>No fue posible cargar clientes</h3>
+
+          <p role="alert">
+            {{ error }}
+          </p>
+
+          <button
+            type="button"
+            class="retry-button"
+            (click)="cargarClientes()"
+          >
+            Reintentar
+          </button>
+
+        </div>
+
+      } @else if (consultaRealizada && clientes.length === 0) {
+
+        <!-- SIN RESULTADOS -->
+
+        <div class="results-placeholder">
+
+          <div class="placeholder-icon">👥</div>
+
+          <h3>No hay clientes para mostrar</h3>
+
+          <p>
+            No se encontraron clientes registrados.
+          </p>
+
+        </div>
+
+      } @else if (clientes.length > 0) {
+
+        <!-- TABLA DE CLIENTES -->
+
+        <div class="table-container">
+
+          <table class="clientes-table">
+
+            <thead>
+              <tr>
+                <th>Cliente</th>
+                <th>Contacto</th>
+                <th>Membresía</th>
+                <th>Estatus</th>
+                <th>Vigencia</th>
+                <th>Vencimiento</th>
+              </tr>
+            </thead>
+
+            <tbody>
+
+              @for (
+                cliente of clientes;
+                track cliente.idCliente
+              ) {
+
+                <tr>
+
+                  <td>
+                    <div class="cliente-info">
+
+                      <div class="cliente-avatar">
+                        👤
+                      </div>
+
+                      <div>
+                        <strong>
+                          {{ cliente.nombreCompleto }}
+                        </strong>
+
+                        <span class="cliente-id">
+                          ID: {{ cliente.idCliente }}
+                        </span>
+                      </div>
+
+                    </div>
+                  </td>
+
+                  <td>
+                    <div class="contacto-info">
+
+                      <span>
+                        {{ cliente.correo }}
+                      </span>
+
+                      <small>
+                        {{ cliente.telefono || 'Sin teléfono' }}
+                      </small>
+
+                    </div>
+                  </td>
+
+                  <td>
+                    <div class="membresia-info">
+
+                      <strong>
+                        {{ cliente.nombrePlan }}
+                      </strong>
+
+                      <small>
+                        Plan #{{ cliente.idMembresia }}
+                      </small>
+
+                    </div>
+                  </td>
+
+                  <td>
+                    <span
+                      class="estado-badge"
+                      [class.estado-activo]="cliente.estatus === 'Activo'"
+                      [class.estado-inactivo]="cliente.estatus === 'Inactivo'"
+                    >
+                      {{ cliente.estatus }}
+                    </span>
+                  </td>
+
+                  <td>
+                    <span
+                      class="vigencia-badge"
+                      [class.vigente]="cliente.vigencia === 'Vigente'"
+                      [class.vencida]="cliente.vigencia === 'Vencida'"
+                      [class.sin-pagos]="cliente.vigencia === 'SinPagos'"
+                    >
+                      {{
+                        cliente.vigencia === 'SinPagos'
+                          ? 'Sin pagos'
+                          : cliente.vigencia
+                      }}
+                    </span>
+                  </td>
+
+                  <td class="fecha-cell">
+                    {{ mostrarFecha(cliente.fechaVencimiento) }}
+                  </td>
+
+                </tr>
+
+              }
+
+            </tbody>
+
+          </table>
+
+        </div>
+
+      }
 
     </section>
 

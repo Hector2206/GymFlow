@@ -257,3 +257,174 @@
     padding: 40px 15px;
   }
 }
+
+
+/* SPRINT 7 - LISTADO DE CLIENTES */
+
+.results-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+}
+
+.total-resultados {
+  padding: 10px 16px;
+  background: #f4ead5;
+  border: 1px solid #dfcfaa;
+  border-radius: 20px;
+  color: #87671d;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+/* TABLA */
+
+.table-container {
+  width: 100%;
+  overflow-x: auto;
+  border: 1px solid #e9e0d2;
+  border-radius: 15px;
+}
+
+.clientes-table {
+  width: 100%;
+  min-width: 850px;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.clientes-table thead {
+  background: #f7f0e3;
+}
+
+.clientes-table th {
+  padding: 17px 15px;
+  color: #87671d;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.clientes-table td {
+  padding: 18px 15px;
+  border-top: 1px solid #eee7dc;
+  color: #4b443a;
+  font-size: 12px;
+  vertical-align: middle;
+}
+
+.clientes-table tbody tr:hover {
+  background: #fdfaf4;
+}
+
+/* INFORMACION DEL CLIENTE */
+
+.cliente-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.cliente-avatar {
+  width: 38px;
+  height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border-radius: 11px;
+  background: #f4ead5;
+  font-size: 18px;
+}
+
+.cliente-info strong,
+.membresia-info strong {
+  display: block;
+  color: #2f2a24;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.cliente-id,
+.contacto-info small,
+.membresia-info small {
+  display: block;
+  margin-top: 6px;
+  color: #968a7a;
+  font-size: 11px;
+}
+
+.contacto-info span {
+  display: block;
+  overflow-wrap: anywhere;
+}
+
+/* ESTATUS Y VIGENCIA */
+
+.estado-badge,
+.vigencia-badge {
+  display: inline-block;
+  padding: 7px 11px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.estado-activo,
+.vigente {
+  background: #e7f5ec;
+  color: #247a45;
+}
+
+.estado-inactivo,
+.vencida {
+  background: #fde8e8;
+  color: #ba3441;
+}
+
+.sin-pagos {
+  background: #f2eee6;
+  color: #827568;
+}
+
+.fecha-cell {
+  white-space: nowrap;
+}
+
+/* REINTENTAR */
+
+.retry-button {
+  margin-top: 22px;
+  padding: 11px 21px;
+  border: 1px solid #dfcfaa;
+  border-radius: 12px;
+  background: #f4ead5;
+  color: #87671d;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.retry-button:hover {
+  background: #e9d7ae;
+}
+
+.retry-button:focus-visible {
+  outline: 3px solid #b58a2a;
+  outline-offset: 3px;
+}
+
+/* RESPONSIVE */
+
+@media (max-width: 600px) {
+  .results-heading {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .total-resultados {
+    width: fit-content;
+  }
+}
