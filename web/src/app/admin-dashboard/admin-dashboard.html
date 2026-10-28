@@ -169,14 +169,49 @@
 </article>
 
 
-      <article class="stat-card">
-        <div class="stat-icon">💳</div>
-        <span class="stat-title">
-          Pagos registrados
-        </span>
-        <strong class="stat-value">—</strong>
-        <p>Pagos de clientes registrados</p>
-      </article>
+      
+<article class="stat-card">
+
+  <div class="stat-icon">💳</div>
+
+  <span class="stat-title">
+    Pagos registrados
+  </span>
+
+  @if (cargandoPagos) {
+
+    <div class="stat-loading">
+      Cargando pagos...
+    </div>
+
+  } @else if (errorPagos) {
+
+    <div class="stat-error" role="alert">
+      {{ errorPagos }}
+    </div>
+
+    <button
+      type="button"
+      class="retry-button"
+      (click)="cargarPagosRegistrados()"
+    >
+      Reintentar
+    </button>
+
+  } @else {
+
+    <strong class="stat-value">
+      {{ pagosRegistrados ?? '—' }}
+    </strong>
+
+  }
+
+  <p>
+    Pagos de clientes registrados en el sistema
+  </p>
+
+</article>
+
 
     </section>
 

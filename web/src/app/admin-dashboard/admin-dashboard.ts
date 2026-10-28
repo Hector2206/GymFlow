@@ -38,6 +38,11 @@ export class AdminDashboard implements OnInit {
   cargandoAsistencias = false;
   errorAsistencias = '';
 
+  // Pagos registrados
+  pagosRegistrados: number | null = null;
+  cargandoPagos = false;
+  errorPagos = '';
+
   constructor(
     private router: Router,
     private dashboardService: AdminDashboardService,
@@ -49,6 +54,7 @@ export class AdminDashboard implements OnInit {
     this.cargarTotalClientes();
     this.cargarMembresiasActivas();
     this.cargarAsistenciasDia();
+    this.cargarPagosRegistrados();
   }
 
   // TOTAL DE CLIENTES
@@ -153,41 +159,85 @@ export class AdminDashboard implements OnInit {
       .subscribe({
 
         next: (respuesta) => {
-
           this.asistenciasDia = respuesta.asistenciasDia;
           this.cargandoAsistencias = false;
+          this.changeDetector.detectChanges();
+        },
 
+        error: (error: HttpErrorResponse) => {
+          this.cargandoAsistencias = false;
+
+          if (error.status === 401) {
+            this.errorAsistencias =
+              'Tu sesión venció. Inicia sesión nuevamente.';
+          } else if (error.status === 403) {
+            this.errorAsistencias =
+              'No tienes permisos para consultar asistencias.';
+          } else if (error.status === 0 || error.status >= 500) {
+            this.errorAsistencias =
+              'No fue posible conectar con el servidor. Intenta nuevamente.';
+          } else {
+            this.errorAsistencias =
+              error.error?.mensaje ||
+              error.error?.detail ||
+              'No se pudieron consultar las asistencias del día.';
+          }
+
+          this.changeDetector.detectChanges();
+        }
+      });
+  }
+
+  // PAGOS REGISTRADOS
+
+  cargarPagosRegistrados(): void {
+
+    this.cargandoPagos = true;
+    this.errorPagos = '';
+    this.pagosRegistrados = null;
+
+    this.dashboardService
+      .obtenerPagosRegistrados()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+
+        next: (respuesta) => {
+
+          this.pagosRegistrados =
+            respuesta.pagosRegistrados;
+
+          this.cargandoPagos = false;
           this.changeDetector.detectChanges();
         },
 
         error: (error: HttpErrorResponse) => {
 
-          this.cargandoAsistencias = false;
+          this.cargandoPagos = false;
 
           if (error.status === 401) {
 
-            this.errorAsistencias =
+            this.errorPagos =
               'Tu sesión venció. Inicia sesión nuevamente.';
 
           } else if (error.status === 403) {
 
-            this.errorAsistencias =
-              'No tienes permisos para consultar asistencias.';
+            this.errorPagos =
+              'No tienes permisos para consultar pagos.';
 
           } else if (
             error.status === 0 ||
             error.status >= 500
           ) {
 
-            this.errorAsistencias =
+            this.errorPagos =
               'No fue posible conectar con el servidor. Intenta nuevamente.';
 
           } else {
 
-            this.errorAsistencias =
+            this.errorPagos =
               error.error?.mensaje ||
               error.error?.detail ||
-              'No se pudieron consultar las asistencias del día.';
+              'No se pudieron consultar los pagos registrados.';
 
           }
 
