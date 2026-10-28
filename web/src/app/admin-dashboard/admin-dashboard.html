@@ -229,14 +229,75 @@
         </div>
       </div>
 
-      <div class="finance-placeholder">
-        <div class="finance-icon">📈</div>
-        <h3>Resumen de ingresos</h3>
-        <p>
-          Aquí se mostrarán los ingresos del periodo
-          seleccionado cuando conectemos el servicio.
-        </p>
-      </div>
+      
+<div class="finance-placeholder">
+
+  <div class="finance-icon">📈</div>
+
+  <h3>Seleccionar periodo</h3>
+
+  <p>
+    Selecciona las fechas para consultar los
+    ingresos registrados del gimnasio.
+  </p>
+
+  <div class="periodo-form">
+
+    <label class="periodo-campo">
+      Fecha inicial
+
+      <input
+        type="date"
+        name="fechaDesde"
+        [(ngModel)]="fechaDesde"
+        (ngModelChange)="reiniciarValidacionPeriodo()"
+      />
+    </label>
+
+    <label class="periodo-campo">
+      Fecha final
+
+      <input
+        type="date"
+        name="fechaHasta"
+        [(ngModel)]="fechaHasta"
+        (ngModelChange)="reiniciarValidacionPeriodo()"
+      />
+    </label>
+
+    <button
+      type="button"
+      class="periodo-button"
+      (click)="validarPeriodo()"
+    >
+      Validar periodo
+    </button>
+
+  </div>
+
+  @if (errorPeriodo) {
+
+    <div class="periodo-error" role="alert">
+      {{ errorPeriodo }}
+    </div>
+
+  }
+
+  @if (periodoValidado) {
+
+    <div class="periodo-correcto">
+      Periodo seleccionado:
+      {{ fechaDesde }} al {{ fechaHasta }}
+    </div>
+
+    <p class="periodo-nota">
+      El rango está listo para consultar sus ingresos.
+    </p>
+
+  }
+
+</div>
+
     </section>
 
   </main>

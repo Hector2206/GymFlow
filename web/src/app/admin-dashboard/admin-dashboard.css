@@ -272,3 +272,88 @@
   outline-offset: 3px;
 }
 
+
+
+/* SPRINT 7 - FILTRO DE INGRESOS */
+
+.periodo-form {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+  max-width: 650px;
+  margin: 30px auto 0;
+  text-align: left;
+}
+
+.periodo-campo {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  color: #756c60;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.periodo-campo input {
+  width: 100%;
+  padding: 13px 15px;
+  border: 1px solid #dfcfaa;
+  border-radius: 12px;
+  background: #fffdf8;
+  color: #2f2a24;
+  font: inherit;
+}
+
+.periodo-campo input:focus {
+  outline: 2px solid #b58a2a;
+  outline-offset: 2px;
+}
+
+.periodo-button {
+  grid-column: 1 / -1;
+  padding: 13px 22px;
+  border: none;
+  border-radius: 12px;
+  background: #b58a2a;
+  color: white;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.periodo-button:hover {
+  background: #957022;
+}
+
+.periodo-error {
+  max-width: 650px;
+  margin: 20px auto 0;
+  padding: 13px;
+  border-radius: 10px;
+  background: #fff1f1;
+  color: #b42332;
+  font-size: 13px;
+}
+
+.periodo-correcto {
+  max-width: 650px;
+  margin: 20px auto 0;
+  padding: 15px;
+  border: 1px solid #dfcfaa;
+  border-radius: 12px;
+  background: #f4ead5;
+  color: #87671d;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.periodo-nota {
+  margin-top: 12px !important;
+}
+
+@media (max-width: 600px) {
+  .periodo-form {
+    grid-template-columns: 1fr;
+  }
+}
+

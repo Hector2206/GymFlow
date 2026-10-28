@@ -14,10 +14,12 @@ import {
   AdminDashboardService
 } from '../services/admin-dashboard.service';
 
+import { FormsModule } from '@angular/forms';
+
 @Component({
   selector: 'app-admin-dashboard',
   standalone: true,
-  imports: [],
+  imports: [FormsModule],
   templateUrl: './admin-dashboard.html',
   styleUrl: './admin-dashboard.css'
 })
@@ -42,6 +44,15 @@ export class AdminDashboard implements OnInit {
   pagosRegistrados: number | null = null;
   cargandoPagos = false;
   errorPagos = '';
+  // Consulta de ingresos por periodo
+    fechaDesde = '';
+    fechaHasta = '';
+
+    errorPeriodo = '';
+    periodoValidado = false;
+
+    
+
 
   constructor(
     private router: Router,
@@ -57,6 +68,7 @@ export class AdminDashboard implements OnInit {
     this.cargarPagosRegistrados();
   }
 
+  
   // TOTAL DE CLIENTES
 
   cargarTotalClientes(): void {
@@ -246,6 +258,33 @@ export class AdminDashboard implements OnInit {
 
       });
   }
+
+  
+reiniciarValidacionPeriodo(): void {
+  this.errorPeriodo = '';
+  this.periodoValidado = false;
+}
+
+validarPeriodo(): void {
+
+  this.errorPeriodo = '';
+  this.periodoValidado = false;
+
+  if (!this.fechaDesde || !this.fechaHasta) {
+    this.errorPeriodo =
+      'Debes seleccionar ambas fechas.';
+    return;
+  }
+
+  if (this.fechaDesde > this.fechaHasta) {
+    this.errorPeriodo =
+      'La fecha inicial no puede ser posterior a la fecha final.';
+    return;
+  }
+
+  this.periodoValidado = true;
+}
+
 
   volverInicio(): void {
     this.router.navigate(['/home']);
