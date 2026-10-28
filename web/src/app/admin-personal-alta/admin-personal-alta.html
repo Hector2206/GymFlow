@@ -17,13 +17,16 @@
         </p>
       </div>
 
-      <button
-        type="button"
-        class="back-button"
-        (click)="volverDirectorio()"
-      >
-        ← Volver al directorio
-      </button>
+      
+    <button
+    type="button"
+    class="back-button"
+    (click)="volverDirectorio()"
+    [disabled]="guardandoAlta"
+    >
+    ← Volver al directorio
+    </button>
+
 
     </div>
 

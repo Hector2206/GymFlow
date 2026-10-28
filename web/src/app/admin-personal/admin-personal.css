@@ -667,3 +667,27 @@
   flex-direction: column;
   align-items: flex-start;
 }
+
+
+/* CONFIRMACION DEL ALTA */
+
+.personal-registro-exito {
+  margin-bottom: 26px;
+  padding: 19px 22px;
+  border: 1px solid #b9d8bf;
+  border-radius: 15px;
+  background: #f0f8f1;
+  color: #28683b;
+}
+
+.personal-registro-exito strong {
+  display: block;
+  margin-bottom: 7px;
+  font-size: 14px;
+}
+
+.personal-registro-exito p {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.6;
+}

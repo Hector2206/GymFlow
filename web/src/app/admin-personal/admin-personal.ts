@@ -10,6 +10,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { Location } from '@angular/common';
 
 import {
   AdminPersonalService
@@ -33,7 +34,7 @@ export class AdminPersonal implements OnInit {
   // DIRECTORIO DE EMPLEADOS
 
   empleados: PersonalAdmin[] = [];
-
+  mensajeRegistro = '';
   cargando = false;
   error = '';
   consultaRealizada = false;
@@ -49,7 +50,8 @@ export class AdminPersonal implements OnInit {
     private router: Router,
     private personalService: AdminPersonalService,
     private changeDetector: ChangeDetectorRef,
-    private destroyRef: DestroyRef
+    private destroyRef: DestroyRef,
+    private location: Location
   ) {}
 
   // CARGAR EMPLEADOS AL ENTRAR
