@@ -24,6 +24,7 @@
         type="button"
         class="back-button"
         (click)="volverDirectorio()"
+        [disabled]="guardando"
       >
         ← Volver al directorio
       </button>
@@ -33,6 +34,8 @@
   </header>
 
   <main class="editar-content">
+
+    <!-- CARGANDO EXPEDIENTE -->
 
     @if (cargando) {
 
@@ -49,6 +52,8 @@
       </section>
 
     } @else if (errorCarga) {
+
+      <!-- ERROR DE CONSULTA -->
 
       <section class="editar-panel estado-panel">
 
@@ -76,6 +81,8 @@
 
     } @else if (empleado) {
 
+      <!-- FORMULARIO DE EDICION -->
+
       <section class="editar-panel">
 
         <div class="empleado-heading">
@@ -101,14 +108,49 @@
 
         </div>
 
+        <!-- EMPLEADO INACTIVO -->
+
         @if (empleado.estatus === 'Inactivo') {
 
-          <div class="empleado-advertencia" role="status">
+          <div
+            class="empleado-advertencia"
+            role="status"
+          >
             Este empleado está dado de baja.
-            Su expediente es de consulta y no puede editarse.
+            Su expediente es de consulta
+            y no puede modificarse.
           </div>
 
         }
+
+        <!-- ERROR AL GUARDAR -->
+
+        @if (errorGuardado) {
+
+          <div
+            class="empleado-advertencia"
+            role="alert"
+          >
+            ⚠️ {{ errorGuardado }}
+          </div>
+
+        }
+
+        <!-- GUARDANDO -->
+
+        @if (guardando) {
+
+          <div class="editar-nota" role="status">
+            <strong>Guardando cambios...</strong>
+            <p>
+              Estamos actualizando el expediente
+              en GymFlow.
+            </p>
+          </div>
+
+        }
+
+        <!-- CAMPOS EDITABLES -->
 
         <div class="editar-grid">
 
@@ -121,7 +163,7 @@
               name="nombreCompleto"
               [(ngModel)]="formulario.nombreCompleto"
               maxlength="150"
-              [disabled]="empleado.estatus === 'Inactivo'"
+              [disabled]="empleado.estatus !== 'Activo' || guardando || resultadoIncierto"
             />
 
           </label>
@@ -135,7 +177,7 @@
               name="correo"
               [(ngModel)]="formulario.correo"
               maxlength="150"
-              [disabled]="empleado.estatus === 'Inactivo'"
+              [disabled]="empleado.estatus !== 'Activo' || guardando || resultadoIncierto"
             />
 
           </label>
@@ -149,7 +191,7 @@
               name="telefono"
               [(ngModel)]="formulario.telefono"
               maxlength="20"
-              [disabled]="empleado.estatus === 'Inactivo'"
+              [disabled]="empleado.estatus !== 'Activo' || guardando || resultadoIncierto"
             />
 
           </label>
@@ -164,24 +206,29 @@
               [(ngModel)]="formulario.horario"
               maxlength="100"
               placeholder="Ej. 08:00 - 16:00"
-              [disabled]="empleado.estatus === 'Inactivo'"
+              [disabled]="empleado.estatus !== 'Activo' || guardando || resultadoIncierto"
             />
 
           </label>
 
         </div>
 
+        <!-- INFORMACION -->
+
         <div class="editar-nota">
 
           <strong>Información importante</strong>
 
           <p>
-            El puesto y el sueldo no se modifican
-            en este formulario. Los cambios salariales
-            se registrarán en su propio historial.
+            Solo puedes actualizar nombre,
+            correo, teléfono y horario.
+            El puesto y el sueldo no cambian
+            desde este formulario.
           </p>
 
         </div>
+
+        <!-- BOTONES -->
 
         <div class="editar-acciones">
 
@@ -189,6 +236,7 @@
             type="button"
             class="cancelar-button"
             (click)="volverDirectorio()"
+            [disabled]="guardando"
           >
             Cancelar
           </button>
@@ -196,9 +244,19 @@
           <button
             type="button"
             class="guardar-button"
-            disabled
+            (click)="guardarCambios()"
+            [disabled]="
+              empleado.estatus !== 'Activo' ||
+              guardando ||
+              resultadoIncierto ||
+              !hayCambios
+            "
           >
-            Guardar cambios
+            {{
+              guardando
+                ? 'Guardando cambios...'
+                : 'Guardar cambios'
+            }}
           </button>
 
         </div>

@@ -37,12 +37,17 @@ export class AdminPersonal implements OnInit {
   error = '';
   consultaRealizada = false;
 
-  mensajeRegistro = '';
+  // CONFIRMACIONES
+
+  tituloOperacion = '';
+  mensajeOperacion = '';
+
+  // FILTROS
 
   filtroPuesto: PuestoPersonalAdmin | '' = '';
   filtroEstatus: EstatusPersonalAdmin | '' = '';
 
-  // SELECTOR DE EMPLEADOS
+  // SELECTOR PARA EDITAR
 
   mostrarSelectorEdicion = false;
   idPersonalSeleccionado: number | null = null;
@@ -57,36 +62,62 @@ export class AdminPersonal implements OnInit {
 
   ngOnInit(): void {
 
+    // RECIBIR CONFIRMACION DE ALTA O EDICION
+
     const estado = this.location.getState();
 
-    if (
-      estado &&
-      typeof estado === 'object' &&
-      'empleadoRegistradoId' in estado
-    ) {
+    if (estado && typeof estado === 'object') {
 
-      const id = (
-        estado as { empleadoRegistradoId?: unknown }
-      ).empleadoRegistradoId;
+      const datos = estado as {
+        empleadoRegistradoId?: unknown;
+        empleadoEditadoId?: unknown;
+      };
 
       if (
-        typeof id === 'number' &&
-        Number.isInteger(id) &&
-        id > 0
+        typeof datos.empleadoRegistradoId === 'number' &&
+        Number.isInteger(datos.empleadoRegistradoId) &&
+        datos.empleadoRegistradoId > 0
       ) {
 
-        this.mensajeRegistro =
-          `Empleado registrado correctamente. ID: ${id}.`;
+        this.tituloOperacion =
+          'Empleado registrado';
 
-        this.location.replaceState(
-          '/admin/personal',
-          '',
-          {}
-        );
+        this.mensajeOperacion =
+          `Empleado registrado correctamente. ` +
+          `ID de personal: ${datos.empleadoRegistradoId}.`;
+
+        this.limpiarEstadoNavegacion();
+
+      } else if (
+        typeof datos.empleadoEditadoId === 'number' &&
+        Number.isInteger(datos.empleadoEditadoId) &&
+        datos.empleadoEditadoId > 0
+      ) {
+
+        this.tituloOperacion =
+          'Empleado actualizado';
+
+        this.mensajeOperacion =
+          `Los datos del empleado con ID ` +
+          `${datos.empleadoEditadoId} ` +
+          `se actualizaron correctamente.`;
+
+        this.limpiarEstadoNavegacion();
       }
     }
 
+    // CONSULTAR EMPLEADOS ACTUALIZADOS
+
     this.cargarPersonal();
+  }
+
+  private limpiarEstadoNavegacion(): void {
+
+    this.location.replaceState(
+      '/admin/personal',
+      '',
+      {}
+    );
   }
 
   // REGISTRAR EMPLEADO
@@ -98,7 +129,7 @@ export class AdminPersonal implements OnInit {
     ]);
   }
 
-  // ABRIR SELECTOR DE EDICION
+  // SELECTOR DE EDICION
 
   abrirSelectorEdicion(): void {
 
@@ -106,15 +137,13 @@ export class AdminPersonal implements OnInit {
     this.mostrarSelectorEdicion = true;
   }
 
-  // CERRAR SELECTOR
-
   cerrarSelectorEdicion(): void {
 
     this.mostrarSelectorEdicion = false;
     this.idPersonalSeleccionado = null;
   }
 
-  // MOSTRAR SOLO EMPLEADOS ACTIVOS
+  // EMPLEADOS ACTIVOS
 
   get empleadosDisponibles(): PersonalAdmin[] {
 
@@ -122,8 +151,6 @@ export class AdminPersonal implements OnInit {
       empleado => empleado.estatus === 'Activo'
     );
   }
-
-  // IR A LA PANTALLA DE EDICION
 
   continuarEdicion(): void {
 
@@ -181,7 +208,7 @@ export class AdminPersonal implements OnInit {
     this.filtroEstatus = '';
   }
 
-  // CONSULTAR PERSONAL
+  // CONSULTAR EMPLEADOS REALES
 
   cargarPersonal(): void {
 
@@ -244,10 +271,14 @@ export class AdminPersonal implements OnInit {
 
           } else {
 
-            this.error =
-              error.error?.mensaje ||
-              error.error?.detail ||
-              'No se pudieron consultar los empleados.';
+            const mensajeServidor =
+              typeof error.error?.mensaje === 'string'
+                ? error.error.mensaje
+                : typeof error.error?.detail === 'string'
+                  ? error.error.detail
+                  : 'No se pudieron consultar los empleados.';
+
+            this.error = mensajeServidor;
           }
 
           this.changeDetector.detectChanges();

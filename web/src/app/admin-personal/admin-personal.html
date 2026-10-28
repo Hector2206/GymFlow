@@ -1,8 +1,6 @@
 
 <div class="personal-page">
 
-  <!-- ENCABEZADO -->
-
   <header class="personal-header">
 
     <div class="header-content">
@@ -70,7 +68,7 @@
 
       <div class="management-grid">
 
-        <!-- REGISTRAR EMPLEADO -->
+        <!-- REGISTRO -->
 
         <button
           type="button"
@@ -93,7 +91,7 @@
 
         </button>
 
-        <!-- EDITAR INFORMACION -->
+        <!-- EDICION -->
 
         <button
           type="button"
@@ -158,15 +156,22 @@
 
     </section>
 
-    <!-- MENSAJE DE REGISTRO -->
+    <!-- CONFIRMACION DE OPERACION -->
 
-    @if (mensajeRegistro) {
+    @if (mensajeOperacion) {
 
-      <div class="personal-registro-exito" role="status">
+      <div
+        class="personal-registro-exito"
+        role="status"
+      >
 
-        <strong>✓ Empleado registrado</strong>
+        <strong>
+          ✓ {{ tituloOperacion }}
+        </strong>
 
-        <p>{{ mensajeRegistro }}</p>
+        <p>
+          {{ mensajeOperacion }}
+        </p>
 
       </div>
 
@@ -264,11 +269,14 @@
 
       </div>
 
-      <!-- CARGANDO -->
+      <!-- CARGA -->
 
       @if (cargando) {
 
-        <div class="directory-placeholder" role="status">
+        <div
+          class="directory-placeholder"
+          role="status"
+        >
 
           <div class="placeholder-icon">⏳</div>
 
@@ -358,7 +366,7 @@
 
         </div>
 
-        <!-- TABLA -->
+        <!-- TABLA DE EMPLEADOS -->
 
         <div class="personal-table-container">
 
@@ -484,7 +492,7 @@
 
   </main>
 
-  <!-- SELECTOR DE EMPLEADO -->
+  <!-- SELECTOR PARA EDICION -->
 
   @if (mostrarSelectorEdicion) {
 
@@ -601,7 +609,9 @@
                     {{ empleado.nombreCompleto }}
                   </strong>
 
-                  <span>{{ empleado.correo }}</span>
+                  <span>
+                    {{ empleado.correo }}
+                  </span>
 
                   <small>
                     {{ empleado.puesto }}
