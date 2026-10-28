@@ -63,6 +63,8 @@ export class AdminPersonal implements OnInit {
       const datos = estado as {
         empleadoRegistradoId?: unknown;
         empleadoEditadoId?: unknown;
+        empleadoBajaId?: unknown;
+        clientesDesasignados?: unknown;
       };
 
       if (
@@ -71,7 +73,8 @@ export class AdminPersonal implements OnInit {
         datos.empleadoRegistradoId > 0
       ) {
 
-        this.tituloOperacion = 'Empleado registrado';
+        this.tituloOperacion =
+          'Empleado registrado';
 
         this.mensajeOperacion =
           `Empleado registrado correctamente. ` +
@@ -85,12 +88,39 @@ export class AdminPersonal implements OnInit {
         datos.empleadoEditadoId > 0
       ) {
 
-        this.tituloOperacion = 'Empleado actualizado';
+        this.tituloOperacion =
+          'Empleado actualizado';
 
         this.mensajeOperacion =
           `Los datos del empleado con ID ` +
           `${datos.empleadoEditadoId} ` +
           `se actualizaron correctamente.`;
+
+        this.limpiarEstadoNavegacion();
+
+      } else if (
+        typeof datos.empleadoBajaId === 'number' &&
+        Number.isInteger(datos.empleadoBajaId) &&
+        datos.empleadoBajaId > 0
+      ) {
+
+        this.tituloOperacion =
+          'Baja laboral registrada';
+
+        this.mensajeOperacion =
+          `El empleado con ID ${datos.empleadoBajaId} ` +
+          `fue dado de baja correctamente.`;
+
+        if (
+          typeof datos.clientesDesasignados === 'number' &&
+          Number.isInteger(datos.clientesDesasignados) &&
+          datos.clientesDesasignados >= 0
+        ) {
+
+          this.mensajeOperacion +=
+            ` Clientes desasignados: ` +
+            `${datos.clientesDesasignados}.`;
+        }
 
         this.limpiarEstadoNavegacion();
       }
@@ -108,7 +138,7 @@ export class AdminPersonal implements OnInit {
     );
   }
 
-  // ALTA
+  // REGISTRO
 
   irRegistrarPersonal(): void {
 
@@ -117,7 +147,7 @@ export class AdminPersonal implements OnInit {
     ]);
   }
 
-  // BAJAS - NUEVA PANTALLA
+  // BAJAS
 
   irBajasPersonal(): void {
 
@@ -126,7 +156,7 @@ export class AdminPersonal implements OnInit {
     ]);
   }
 
-  // EDICION
+  // SELECCION DE EDICION
 
   abrirSelectorEdicion(): void {
 
@@ -203,7 +233,7 @@ export class AdminPersonal implements OnInit {
     this.filtroEstatus = '';
   }
 
-  // CONSULTAR EMPLEADOS
+  // CONSULTAR PERSONAL
 
   cargarPersonal(): void {
 
