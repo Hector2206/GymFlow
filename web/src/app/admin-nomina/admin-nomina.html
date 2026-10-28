@@ -1,9 +1,8 @@
 
 <div class="nomina-page">
 
-  <!-- ENCABEZADO -->
-
   <header class="nomina-header">
+
     <div class="header-content">
 
       <div>
@@ -14,8 +13,8 @@
         <h1>Salarios y nómina</h1>
 
         <p>
-          Consulta sueldos y registra pagos
-          manuales del personal.
+          Consulta sueldos, historiales
+          y pagos de los empleados.
         </p>
       </div>
 
@@ -23,17 +22,18 @@
         type="button"
         class="back-button"
         (click)="volverDirectorio()"
-        [disabled]="cambiandoSalario || registrandoPago"
+        [disabled]="cambiandoSalario"
       >
         ← Volver al directorio
       </button>
 
     </div>
+
   </header>
 
   <main class="nomina-content">
 
-    <!-- SELECTOR DE EMPLEADO -->
+    <!-- SELECCIONAR EMPLEADO -->
 
     <section class="nomina-panel">
 
@@ -42,6 +42,7 @@
         <div class="panel-icon">💰</div>
 
         <div>
+
           <span class="section-label">
             ADMINISTRACIÓN LABORAL
           </span>
@@ -49,9 +50,10 @@
           <h2>Expediente de nómina</h2>
 
           <p>
-            Selecciona un empleado para consultar
-            sus sueldos y pagos.
+            Selecciona al entrenador o recepcionista
+            que deseas consultar.
           </p>
+
         </div>
 
       </div>
@@ -86,27 +88,19 @@
             name="empleadoNomina"
             [(ngModel)]="idPersonalSeleccionado"
             (ngModelChange)="cambiarEmpleado()"
-            [disabled]="
-              cambiandoSalario ||
-              registrandoPago ||
-              mostrarConfirmacionFinal ||
-              mostrarConfirmacionPago
-            "
+            [disabled]="cambiandoSalario || mostrarConfirmacionFinal"
           >
 
             <option [ngValue]="null">
               Seleccionar entrenador o recepcionista
             </option>
 
-            @for (
-              empleado of empleados;
-              track empleado.idPersonal
-            ) {
+            @for (e of empleados; track e.idPersonal) {
 
-              <option [ngValue]="empleado.idPersonal">
-                {{ empleado.nombreCompleto }}
-                — {{ empleado.puesto }}
-                — {{ empleado.estatus }}
+              <option [ngValue]="e.idPersonal">
+                {{ e.nombreCompleto }}
+                — {{ e.puesto }}
+                — {{ e.estatus }}
               </option>
 
             }
@@ -115,21 +109,13 @@
 
         </label>
 
-        @if (empleados.length === 0) {
-
-          <div class="nomina-estado">
-            No hay empleados registrados.
-          </div>
-
-        }
-
       }
 
     </section>
 
     @if (empleadoSeleccionado; as empleado) {
 
-      <!-- EXPEDIENTE -->
+      <!-- RESUMEN -->
 
       <section class="nomina-panel">
 
@@ -155,19 +141,20 @@
         <div class="resumen-grid">
 
           <div class="resumen-card">
+
             <span>Sueldo mensual registrado</span>
 
             <strong>
               {{ mostrarMonto(empleado.salario) }}
             </strong>
 
-            <small>
-              Sueldo del expediente laboral
-            </small>
+            <small>Expediente laboral</small>
+
           </div>
 
           <div class="resumen-card">
-            <span>Estatus del empleado</span>
+
+            <span>Estatus</span>
 
             <strong
               [class.inactivo]="empleado.estatus === 'Inactivo'"
@@ -176,9 +163,11 @@
             </strong>
 
             <small>{{ empleado.puesto }}</small>
+
           </div>
 
           <div class="resumen-card">
+
             <span>Contratación</span>
 
             <strong>
@@ -186,15 +175,14 @@
             </strong>
 
             <small>Fecha de ingreso</small>
+
           </div>
 
         </div>
 
         <div class="nomina-toolbar">
 
-          <p>
-            Información obtenida de GymFlow.
-          </p>
+          <p>Información obtenida de GymFlow.</p>
 
           <button
             type="button"
@@ -203,9 +191,7 @@
             [disabled]="
               cargandoSalarios ||
               cargandoPagos ||
-              cambiandoSalario ||
-              registrandoPago ||
-              mostrarConfirmacionPago
+              cambiandoSalario
             "
           >
             ↻ Actualizar consulta
@@ -215,30 +201,32 @@
 
       </section>
 
-      <!-- MENSAJE DE SALARIO -->
-
-      @if (mensajeCambio) {
+      @if (mensajeRegistroPago) {
 
         <section class="nomina-panel">
 
           <div class="nomina-destacado" role="status">
-            <strong>✓ Cambio salarial registrado</strong>
-            <small>{{ mensajeCambio }}</small>
+
+            <strong>✓ Pago registrado</strong>
+
+            <small>{{ mensajeRegistroPago }}</small>
+
           </div>
 
         </section>
 
       }
 
-      <!-- MENSAJE DE PAGO -->
-
-      @if (mensajeRegistroPago) {
+      @if (mensajeCambio) {
 
         <section class="nomina-panel">
 
           <div class="nomina-destacado" role="status">
-            <strong>✓ Pago de nómina registrado</strong>
-            <small>{{ mensajeRegistroPago }}</small>
+
+            <strong>✓ Cambio salarial registrado</strong>
+
+            <small>{{ mensajeCambio }}</small>
+
           </div>
 
         </section>
@@ -252,6 +240,7 @@
         <div class="section-heading">
 
           <div>
+
             <span class="section-label">
               HISTORIAL SALARIAL
             </span>
@@ -259,9 +248,9 @@
             <h2>Sueldos del empleado</h2>
 
             <p>
-              Consulta los cambios salariales
-              y sus fechas de vigencia.
+              Vigencias y cambios salariales.
             </p>
+
           </div>
 
           <div class="section-icon">📈</div>
@@ -271,7 +260,7 @@
         @if (cargandoSalarios) {
 
           <div class="nomina-estado" role="status">
-            ⏳ Consultando historial salarial...
+            Consultando historial salarial...
           </div>
 
         } @else if (errorSalarios) {
@@ -279,14 +268,6 @@
           <div class="nomina-error" role="alert">
             {{ errorSalarios }}
           </div>
-
-          <button
-            type="button"
-            class="secondary-button"
-            (click)="cargarDetalles()"
-          >
-            Reintentar consulta
-          </button>
 
         } @else if (
           consultaSalariosRealizada &&
@@ -318,10 +299,6 @@
 
               <strong>Sin salario vigente</strong>
 
-              <small>
-                Solo existen registros históricos.
-              </small>
-
             }
 
           </div>
@@ -337,46 +314,41 @@
                   <th>Desde</th>
                   <th>Hasta</th>
                   <th>Motivo</th>
-                  <th>Vigencia</th>
+                  <th>Estado</th>
                 </tr>
               </thead>
 
               <tbody>
 
-                @for (
-                  salario of salarios;
-                  track salario.idSalario
-                ) {
+                @for (s of salarios; track s.idSalario) {
 
                   <tr>
 
                     <td class="monto-cell">
-                      {{ mostrarMonto(salario.monto) }}
+                      {{ mostrarMonto(s.monto) }}
+                    </td>
+
+                    <td>{{ s.periodicidad }}</td>
+
+                    <td>
+                      {{ mostrarFecha(s.vigenteDesde) }}
                     </td>
 
                     <td>
-                      {{ salario.periodicidad }}
-                    </td>
-
-                    <td>
-                      {{ mostrarFecha(salario.vigenteDesde) }}
-                    </td>
-
-                    <td>
-                      {{ mostrarFecha(salario.vigenteHasta) }}
+                      {{ mostrarFecha(s.vigenteHasta) }}
                     </td>
 
                     <td class="motivo-cell">
-                      {{ salario.motivo || 'Sin motivo registrado' }}
+                      {{ s.motivo || 'Sin motivo' }}
                     </td>
 
                     <td>
                       <span
                         class="estado-chip"
-                        [class.chip-vigente]="salario.vigenteHasta === null"
+                        [class.chip-vigente]="s.vigenteHasta === null"
                       >
                         {{
-                          salario.vigenteHasta === null
+                          s.vigenteHasta === null
                             ? 'Vigente'
                             : 'Histórico'
                         }}
@@ -395,13 +367,10 @@
 
         }
 
-        <!-- CAMBIAR SUELDO -->
-
         <div class="nomina-toolbar">
 
           <p>
-            El cambio de sueldo conserva
-            el salario anterior en el historial.
+            Los cambios conservan el historial salarial.
           </p>
 
           <button
@@ -418,43 +387,27 @@
 
         </div>
 
-        @if (
-          empleado.estatus === 'Activo' &&
-          consultaSalariosRealizada &&
-          salarioVigente &&
-          salarioVigente.vigenteDesde >= fechaVigencia
-        ) {
-
-          <p class="nomina-estado">
-            El salario vigente comenzó hoy.
-            El backend no permite iniciar otra vigencia
-            el mismo día.
-          </p>
-
-        }
-
         @if (empleado.estatus === 'Inactivo') {
 
-          <p class="nomina-estado">
-            Los empleados dados de baja no pueden
-            recibir cambios de sueldo nuevos.
-          </p>
+          <div class="nomina-estado">
+            Este empleado está inactivo.
+            No se puede cambiar su sueldo.
+          </div>
 
         }
 
         @if (resultadoIncierto) {
 
           <div class="nomina-error" role="alert">
-            No se pudo confirmar un cambio salarial.
-            Consulta el historial antes de intentarlo
-            otra vez desde una nueva sesión.
+            No se pudo confirmar el cambio salarial.
+            Revisa el historial antes de otro intento.
           </div>
 
         }
 
       </section>
 
-      <!-- FORMULARIO DE CAMBIO SALARIAL EXISTENTE -->
+      <!-- CAMBIO SALARIAL -->
 
       @if (mostrarFormularioCambio) {
 
@@ -463,6 +416,7 @@
           <div class="section-heading">
 
             <div>
+
               <span class="section-label">
                 CAMBIO SALARIAL
               </span>
@@ -470,9 +424,9 @@
               <h2>Actualizar sueldo mensual</h2>
 
               <p>
-                Registra el nuevo sueldo
-                y explica el motivo del ajuste.
+                Captura el nuevo sueldo y el motivo.
               </p>
+
             </div>
 
             <div class="section-icon">💵</div>
@@ -482,18 +436,19 @@
           <div class="resumen-grid">
 
             <div class="resumen-card">
+
               <span>Empleado</span>
 
               <strong>
                 {{ empleado.nombreCompleto }}
               </strong>
 
-              <small>
-                ID: {{ empleado.idPersonal }}
-              </small>
+              <small>ID: {{ empleado.idPersonal }}</small>
+
             </div>
 
             <div class="resumen-card">
+
               <span>Sueldo anterior</span>
 
               <strong>
@@ -501,94 +456,76 @@
               </strong>
 
               <small>Mensual</small>
+
             </div>
 
             <div class="resumen-card">
-              <span>Vigencia propuesta</span>
+
+              <span>Nueva vigencia</span>
 
               <strong>
                 {{ mostrarFecha(fechaVigencia) }}
               </strong>
 
-              <small>
-                Fecha validada por el servidor
-              </small>
+              <small>Validada por el backend</small>
+
             </div>
 
           </div>
 
-          <div
+          <label
             class="nomina-campo"
-            style="margin-top:25px"
+            style="margin-top:24px"
           >
 
-            <label for="nuevoSueldo">
-              Nuevo sueldo mensual (MXN) *
-            </label>
+            <span>Nuevo sueldo mensual (MXN) *</span>
 
             <input
-              id="nuevoSueldo"
               type="number"
               name="montoNuevo"
               [(ngModel)]="montoNuevo"
               min="0"
               max="99999999.99"
               step="0.01"
-              [disabled]="
-                cambiandoSalario ||
-                resultadoIncierto ||
-                mostrarConfirmacionFinal
-              "
+              [disabled]="cambiandoSalario || mostrarConfirmacionFinal"
               placeholder="Ej. 9500.00"
-              style="width:100%;padding:15px;border:1px solid #dfcfaa;border-radius:12px;background:#fffdf8;color:#2f2a24;font:inherit"
+              style="padding:15px;border:1px solid #dfcfaa;border-radius:12px;font:inherit"
             />
 
-          </div>
+          </label>
 
-          <div
+          <label
             class="nomina-campo"
-            style="margin-top:22px"
+            style="margin-top:20px"
           >
 
-            <label for="motivoCambio">
-              Motivo del cambio *
-            </label>
+            <span>Motivo del cambio *</span>
 
             <textarea
-              id="motivoCambio"
               name="motivoCambio"
               [(ngModel)]="motivoCambio"
               rows="4"
               maxlength="500"
-              [disabled]="
-                cambiandoSalario ||
-                resultadoIncierto ||
-                mostrarConfirmacionFinal
-              "
+              [disabled]="cambiandoSalario || mostrarConfirmacionFinal"
               placeholder="Ej. Ajuste salarial autorizado"
-              style="width:100%;padding:15px;border:1px solid #dfcfaa;border-radius:12px;background:#fffdf8;color:#2f2a24;font:inherit;resize:vertical"
+              style="padding:15px;border:1px solid #dfcfaa;border-radius:12px;font:inherit;resize:vertical"
             ></textarea>
 
-          </div>
+          </label>
 
           <label
-            style="display:flex;gap:12px;align-items:flex-start;margin-top:24px;font-size:13px;color:#756c60;line-height:1.6"
+            style="display:flex;gap:12px;margin-top:20px;font-size:13px"
           >
 
             <input
               type="checkbox"
               name="confirmacionSueldo"
               [(ngModel)]="confirmacionLeida"
-              [disabled]="
-                cambiandoSalario ||
-                resultadoIncierto ||
-                mostrarConfirmacionFinal
-              "
+              [disabled]="cambiandoSalario || mostrarConfirmacionFinal"
             />
 
             <span>
-              He revisado el sueldo anterior
-              y el nuevo monto está autorizado.
+              Confirmo que el nuevo sueldo está autorizado.
             </span>
 
           </label>
@@ -598,7 +535,7 @@
             <div
               class="nomina-error"
               role="alert"
-              style="margin-top:22px"
+              style="margin-top:20px"
             >
               {{ errorCambio }}
             </div>
@@ -608,7 +545,7 @@
           @if (cambiandoSalario) {
 
             <div class="nomina-estado" role="status">
-              ⏳ Registrando cambio salarial...
+              Guardando cambio salarial...
             </div>
 
           }
@@ -632,9 +569,8 @@
                 !puedeConfirmarCambio ||
                 mostrarConfirmacionFinal
               "
-              style="background:#b58a2a;color:white"
             >
-              Revisar cambio salarial
+              Revisar cambio
             </button>
 
           </div>
@@ -643,22 +579,22 @@
 
             <div
               class="nomina-destacado"
-              style="margin-top:25px"
+              style="margin-top:24px"
             >
 
               <strong>Confirmar nuevo sueldo</strong>
 
               <span>
-                Empleado: {{ empleado.nombreCompleto }}
+                {{ empleado.nombreCompleto }}
               </span>
 
               <span>
-                Sueldo anterior:
+                Anterior:
                 {{ mostrarMonto(empleado.salario) }}
               </span>
 
               <span>
-                Nuevo sueldo:
+                Nuevo:
                 {{ mostrarMonto(montoNuevo!) }}
               </span>
 
@@ -666,18 +602,12 @@
                 Motivo: {{ motivoCambio.trim() }}
               </span>
 
-              <small>
-                El cambio actualizará PostgreSQL
-                y conservará el historial.
-              </small>
-
               <div class="nomina-toolbar">
 
                 <button
                   type="button"
                   class="secondary-button"
                   (click)="cancelarConfirmacion()"
-                  [disabled]="cambiandoSalario"
                 >
                   No, regresar
                 </button>
@@ -690,9 +620,8 @@
                     !puedeConfirmarCambio ||
                     cambiandoSalario
                   "
-                  style="background:#b58a2a;color:white"
                 >
-                  Sí, guardar nuevo sueldo
+                  Sí, guardar sueldo
                 </button>
 
               </div>
@@ -705,13 +634,14 @@
 
       }
 
-      <!-- HISTORIAL DE NÓMINA -->
+      <!-- PAGOS DE NÓMINA -->
 
       <section class="nomina-panel">
 
         <div class="section-heading">
 
           <div>
+
             <span class="section-label">
               HISTORIAL DE NÓMINA
             </span>
@@ -719,9 +649,9 @@
             <h2>Pagos registrados</h2>
 
             <p>
-              Consulta periodos, montos,
-              métodos y estados de pago.
+              Consulta los pagos del empleado.
             </p>
+
           </div>
 
           <div class="section-icon">🧾</div>
@@ -731,7 +661,7 @@
         @if (cargandoPagos) {
 
           <div class="nomina-estado" role="status">
-            ⏳ Consultando pagos de nómina...
+            Consultando pagos...
           </div>
 
         } @else if (errorPagos) {
@@ -740,30 +670,13 @@
             {{ errorPagos }}
           </div>
 
-          <button
-            type="button"
-            class="secondary-button"
-            (click)="cargarDetalles()"
-          >
-            Reintentar consulta
-          </button>
-
         } @else if (
           consultaPagosRealizada &&
           pagos.length === 0
         ) {
 
           <div class="nomina-estado">
-
-            <strong>
-              Aún no hay pagos registrados.
-            </strong>
-
-            <p>
-              Los pagos nuevos aparecerán
-              en esta sección.
-            </p>
-
+            Todavía no hay pagos registrados.
           </div>
 
         } @else if (pagos.length > 0) {
@@ -778,9 +691,9 @@
 
               <thead>
                 <tr>
-                  <th>Pago</th>
+                  <th>Folio</th>
                   <th>Periodo</th>
-                  <th>Fecha de pago</th>
+                  <th>Fecha</th>
                   <th>Monto</th>
                   <th>Método</th>
                   <th>Estado</th>
@@ -789,40 +702,35 @@
 
               <tbody>
 
-                @for (
-                  pago of pagos;
-                  track pago.idPago
-                ) {
+                @for (p of pagos; track p.idPago) {
 
                   <tr>
 
-                    <td>#{{ pago.idPago }}</td>
+                    <td>#{{ p.idPago }}</td>
 
                     <td>
-                      {{ mostrarFecha(pago.periodoInicio) }}
+                      {{ mostrarFecha(p.periodoInicio) }}
                       —
-                      {{ mostrarFecha(pago.periodoFin) }}
+                      {{ mostrarFecha(p.periodoFin) }}
                     </td>
 
                     <td>
-                      {{ mostrarFecha(pago.fechaPago) }}
+                      {{ mostrarFecha(p.fechaPago) }}
                     </td>
 
                     <td class="monto-cell">
-                      {{ mostrarMonto(pago.monto) }}
+                      {{ mostrarMonto(p.monto) }}
                     </td>
 
-                    <td>
-                      {{ pago.metodo }}
-                    </td>
+                    <td>{{ p.metodo }}</td>
 
                     <td>
                       <span
                         class="estado-chip"
-                        [class.chip-cancelado]="pago.estado.toLowerCase() === 'cancelado'"
-                        [class.chip-vigente]="pago.estado.toLowerCase() !== 'cancelado'"
+                        [class.chip-cancelado]="p.estado.toLowerCase() === 'cancelado'"
+                        [class.chip-vigente]="p.estado.toLowerCase() !== 'cancelado'"
                       >
-                        {{ pago.estado }}
+                        {{ p.estado }}
                       </span>
                     </td>
 
@@ -838,486 +746,30 @@
 
         }
 
-        <!-- REGISTRAR NUEVO PAGO -->
+        <!-- AHORA NAVEGA A OTRA PANTALLA -->
 
         <div class="nomina-toolbar">
 
           <p>
-            Registra pagos que ya se realizaron
-            por efectivo o transferencia.
+            Registra pagos previamente realizados.
           </p>
 
           <button
             type="button"
             class="secondary-button"
             (click)="abrirRegistroPago()"
-            [disabled]="
-              !puedeAbrirRegistroPago ||
-              mostrarFormularioPago
-            "
+            [disabled]="!puedeAbrirRegistroPago"
           >
             + Registrar pago de nómina
           </button>
 
         </div>
 
-        @if (resultadoPagoIncierto) {
-
-          <div
-            class="nomina-error"
-            role="alert"
-            style="margin-top:20px"
-          >
-            No se pudo confirmar un registro.
-            Consulta el historial antes de intentar
-            registrar nuevamente el mismo pago.
-          </div>
-
-        }
-
       </section>
-
-      <!-- FORMULARIO DE PAGO -->
-
-      @if (mostrarFormularioPago) {
-
-        <section class="nomina-panel">
-
-          <div class="section-heading">
-
-            <div>
-
-              <span class="section-label">
-                REGISTRO DE NÓMINA
-              </span>
-
-              <h2>Registrar pago manual</h2>
-
-              <p>
-                Registra los datos de un pago
-                que ya fue realizado.
-              </p>
-
-            </div>
-
-            <div class="section-icon">💳</div>
-
-          </div>
-
-          <div class="nomina-destacado">
-
-            <span>Empleado seleccionado</span>
-
-            <strong>{{ empleado.nombreCompleto }}</strong>
-
-            <small>
-              {{ empleado.puesto }}
-              · ID: {{ empleado.idPersonal }}
-              · {{ empleado.estatus }}
-            </small>
-
-          </div>
-
-          <div class="resumen-grid">
-
-            <div class="resumen-card">
-
-              <span>Sueldo registrado</span>
-
-              <strong>
-                {{ mostrarMonto(empleado.salario) }}
-              </strong>
-
-              <small>
-                El monto del pago se captura manualmente.
-              </small>
-
-            </div>
-
-            <div class="resumen-card">
-
-              <span>Fecha de contratación</span>
-
-              <strong>
-                {{ mostrarFecha(empleado.fechaContratacion) }}
-              </strong>
-
-              <small>
-                Inicio del historial laboral
-              </small>
-
-            </div>
-
-            <div class="resumen-card">
-
-              <span>Fecha de baja</span>
-
-              <strong>
-                {{ mostrarFecha(empleado.fechaBaja) }}
-              </strong>
-
-              <small>
-                Solo aplica a empleados inactivos
-              </small>
-
-            </div>
-
-          </div>
-
-          <!-- PERIODO -->
-
-          <div
-            class="nomina-campo"
-            style="margin-top:26px"
-          >
-
-            <label for="periodoInicioPago">
-              Inicio del periodo pagado *
-            </label>
-
-            <input
-              id="periodoInicioPago"
-              type="date"
-              name="periodoInicioPago"
-              [(ngModel)]="formularioPago.periodoInicio"
-              [min]="empleado.fechaContratacion.slice(0,10)"
-              [max]="empleado.fechaBaja ? empleado.fechaBaja.slice(0,10) : null"
-              [disabled]="registrandoPago || mostrarConfirmacionPago"
-              style="width:100%;padding:15px;border:1px solid #dfcfaa;border-radius:12px;background:#fffdf8;color:#2f2a24;font:inherit"
-            />
-
-          </div>
-
-          <div
-            class="nomina-campo"
-            style="margin-top:20px"
-          >
-
-            <label for="periodoFinPago">
-              Fin del periodo pagado *
-            </label>
-
-            <input
-              id="periodoFinPago"
-              type="date"
-              name="periodoFinPago"
-              [(ngModel)]="formularioPago.periodoFin"
-              [min]="formularioPago.periodoInicio || empleado.fechaContratacion.slice(0,10)"
-              [max]="empleado.fechaBaja ? empleado.fechaBaja.slice(0,10) : null"
-              [disabled]="registrandoPago || mostrarConfirmacionPago"
-              style="width:100%;padding:15px;border:1px solid #dfcfaa;border-radius:12px;background:#fffdf8;color:#2f2a24;font:inherit"
-            />
-
-          </div>
-
-          <div
-            class="nomina-campo"
-            style="margin-top:20px"
-          >
-
-            <label for="montoPagoNomina">
-              Monto pagado (MXN) *
-            </label>
-
-            <input
-              id="montoPagoNomina"
-              type="number"
-              name="montoPagoNomina"
-              [(ngModel)]="formularioPago.monto"
-              min="0.01"
-              max="9999999999.99"
-              step="0.01"
-              placeholder="Ej. 4500.00"
-              [disabled]="registrandoPago || mostrarConfirmacionPago"
-              style="width:100%;padding:15px;border:1px solid #dfcfaa;border-radius:12px;background:#fffdf8;color:#2f2a24;font:inherit"
-            />
-
-          </div>
-
-          <div
-            class="nomina-campo"
-            style="margin-top:20px"
-          >
-
-            <label for="fechaPagoNomina">
-              Fecha en que se pagó *
-            </label>
-
-            <input
-              id="fechaPagoNomina"
-              type="date"
-              name="fechaPagoNomina"
-              [(ngModel)]="formularioPago.fechaPago"
-              [max]="fechaActual"
-              [disabled]="registrandoPago || mostrarConfirmacionPago"
-              style="width:100%;padding:15px;border:1px solid #dfcfaa;border-radius:12px;background:#fffdf8;color:#2f2a24;font:inherit"
-            />
-
-          </div>
-
-          <!-- METODO -->
-
-          <label
-            class="nomina-campo"
-            style="margin-top:20px"
-          >
-
-            <span>Método de pago *</span>
-
-            <select
-              name="metodoPagoNomina"
-              [(ngModel)]="formularioPago.metodo"
-              [disabled]="registrandoPago || mostrarConfirmacionPago"
-            >
-              <option value="Efectivo">
-                Efectivo
-              </option>
-
-              <option value="Transferencia">
-                Transferencia bancaria
-              </option>
-            </select>
-
-          </label>
-
-          <!-- REFERENCIA -->
-
-          <div
-            class="nomina-campo"
-            style="margin-top:20px"
-          >
-
-            <label for="referenciaPago">
-              Referencia
-              {{
-                formularioPago.metodo === 'Transferencia'
-                  ? '*'
-                  : '(opcional)'
-              }}
-            </label>
-
-            <input
-              id="referenciaPago"
-              type="text"
-              name="referenciaPago"
-              [(ngModel)]="formularioPago.referencia"
-              maxlength="100"
-              [disabled]="registrandoPago || mostrarConfirmacionPago"
-              placeholder="Folio o referencia del comprobante"
-              style="width:100%;padding:15px;border:1px solid #dfcfaa;border-radius:12px;background:#fffdf8;color:#2f2a24;font:inherit"
-            />
-
-          </div>
-
-          <!-- OBSERVACIONES -->
-
-          <div
-            class="nomina-campo"
-            style="margin-top:20px"
-          >
-
-            <label for="observacionesPago">
-              Observaciones (opcional)
-            </label>
-
-            <textarea
-              id="observacionesPago"
-              name="observacionesPago"
-              [(ngModel)]="formularioPago.observaciones"
-              rows="3"
-              [disabled]="registrandoPago || mostrarConfirmacionPago"
-              placeholder="Observaciones sobre el pago realizado"
-              style="width:100%;padding:15px;border:1px solid #dfcfaa;border-radius:12px;background:#fffdf8;color:#2f2a24;font:inherit;resize:vertical"
-            ></textarea>
-
-          </div>
-
-          <!-- ADVERTENCIA -->
-
-          <div
-            class="nomina-estado"
-            style="margin-top:24px;text-align:left"
-          >
-
-            <strong>Información importante</strong>
-
-            <p>
-              El periodo debe corresponder a una
-              sola vigencia salarial mensual.
-              Tampoco puede coincidir con otro pago
-              registrado como Pagado.
-            </p>
-
-            <p>
-              Esta operación registrará el pago en
-              GymFlow. No realizará ninguna transferencia.
-            </p>
-
-          </div>
-
-          <!-- CONFIRMACION -->
-
-          <label
-            style="display:flex;gap:12px;align-items:flex-start;margin-top:24px;font-size:13px;color:#756c60;line-height:1.6"
-          >
-
-            <input
-              type="checkbox"
-              name="confirmacionPagoLeida"
-              [(ngModel)]="confirmacionPagoLeida"
-              [disabled]="registrandoPago || mostrarConfirmacionPago"
-            />
-
-            <span>
-              Confirmo que el pago ya fue realizado
-              y que los datos capturados son correctos.
-            </span>
-
-          </label>
-
-          @if (errorRegistroPago) {
-
-            <div
-              class="nomina-error"
-              role="alert"
-              style="margin-top:22px"
-            >
-              {{ errorRegistroPago }}
-            </div>
-
-          }
-
-          @if (registrandoPago) {
-
-            <div
-              class="nomina-estado"
-              role="status"
-              style="margin-top:20px"
-            >
-              ⏳ Registrando pago de nómina...
-            </div>
-
-          }
-
-          <!-- ACCIONES -->
-
-          <div class="nomina-toolbar">
-
-            <button
-              type="button"
-              class="secondary-button"
-              (click)="cancelarFormularioPago()"
-              [disabled]="registrandoPago"
-            >
-              Cancelar
-            </button>
-
-            <button
-              type="button"
-              class="secondary-button"
-              (click)="prepararRegistroPago()"
-              [disabled]="
-                registrandoPago ||
-                mostrarConfirmacionPago ||
-                resultadoPagoIncierto
-              "
-              style="background:#b58a2a;color:white"
-            >
-              Revisar y confirmar pago
-            </button>
-
-          </div>
-
-          <!-- CONFIRMACION FINAL -->
-
-          @if (mostrarConfirmacionPago) {
-
-            <div
-              class="nomina-destacado"
-              style="margin-top:25px"
-              role="group"
-              aria-label="Confirmación del pago de nómina"
-            >
-
-              <strong>
-                Confirmar registro de pago
-              </strong>
-
-              <span>
-                Empleado: {{ empleado.nombreCompleto }}
-              </span>
-
-              <span>
-                Periodo:
-                {{ mostrarFecha(formularioPago.periodoInicio) }}
-                —
-                {{ mostrarFecha(formularioPago.periodoFin) }}
-              </span>
-
-              <span>
-                Monto:
-                {{ mostrarMonto(formularioPago.monto!) }}
-              </span>
-
-              <span>
-                Fecha de pago:
-                {{ mostrarFecha(formularioPago.fechaPago) }}
-              </span>
-
-              <span>
-                Método:
-                {{ formularioPago.metodo }}
-              </span>
-
-              @if (formularioPago.referencia.trim()) {
-
-                <span>
-                  Referencia:
-                  {{ formularioPago.referencia.trim() }}
-                </span>
-
-              }
-
-              <small>
-                Al confirmar, el sistema registrará
-                el pago como Pagado.
-              </small>
-
-              <div class="nomina-toolbar">
-
-                <button
-                  type="button"
-                  class="secondary-button"
-                  (click)="cancelarConfirmacionPago()"
-                  [disabled]="registrandoPago"
-                >
-                  No, regresar
-                </button>
-
-                <button
-                  type="button"
-                  class="secondary-button"
-                  (click)="confirmarRegistroPago()"
-                  [disabled]="registrandoPago"
-                  style="background:#b58a2a;color:white"
-                >
-                  Sí, registrar pago
-                </button>
-
-              </div>
-
-            </div>
-
-          }
-
-        </section>
-
-      }
 
     } @else if (
       !cargandoEmpleados &&
-      !errorEmpleados &&
-      empleados.length > 0
+      !errorEmpleados
     ) {
 
       <section class="nomina-panel nomina-inicio">
@@ -1327,8 +779,7 @@
         <h2>Selecciona un empleado</h2>
 
         <p>
-          Su información salarial y sus pagos
-          aparecerán aquí.
+          Consulta sus sueldos y pagos.
         </p>
 
       </section>

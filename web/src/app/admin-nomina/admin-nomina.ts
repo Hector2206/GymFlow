@@ -6,9 +6,10 @@ import {
   OnInit
 } from '@angular/core';
 
+import { Location } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 import {
@@ -26,20 +27,8 @@ import {
 import {
   SalarioPersonalAdmin,
   PagoNominaAdmin,
-  CambiarSalarioAdminRequest,
-  MetodoPagoNominaAdmin,
-  RegistrarPagoNominaAdminRequest
+  CambiarSalarioAdminRequest
 } from '../models/admin-nomina.model';
-
-interface FormularioPagoNomina {
-  periodoInicio: string;
-  periodoFin: string;
-  monto: number | null;
-  fechaPago: string;
-  metodo: MetodoPagoNominaAdmin;
-  referencia: string;
-  observaciones: string;
-}
 
 @Component({
   selector: 'app-admin-nomina',
@@ -67,9 +56,7 @@ export class AdminNomina implements OnInit {
   errorSalarios = '';
   errorPagos = '';
 
-  private versionConsulta = 0;
-
-  // CAMBIO SALARIAL EXISTENTE
+  // CAMBIO SALARIAL
 
   mostrarFormularioCambio = false;
   mostrarConfirmacionFinal = false;
@@ -83,27 +70,16 @@ export class AdminNomina implements OnInit {
 
   errorCambio = '';
   mensajeCambio = '';
-
-  fechaVigencia = this.obtenerFechaOperacion();
-
-  // REGISTRO DE PAGO DE NÓMINA
-
-  mostrarFormularioPago = false;
-  mostrarConfirmacionPago = false;
-
-  registrandoPago = false;
-  resultadoPagoIncierto = false;
-
-  errorRegistroPago = '';
   mensajeRegistroPago = '';
 
-  formularioPago: FormularioPagoNomina =
-    this.crearFormularioPago();
+  fechaVigencia = this.obtenerFechaActual();
 
-  confirmacionPagoLeida = false;
+  private versionConsulta = 0;
 
   constructor(
     private router: Router,
+    private route: ActivatedRoute,
+    private location: Location,
     private personalService: AdminPersonalService,
     private nominaService: AdminNominaService,
     private changeDetector: ChangeDetectorRef,
@@ -111,43 +87,58 @@ export class AdminNomina implements OnInit {
   ) {}
 
   ngOnInit(): void {
+
+    const estado = this.location.getState();
+
+    if (
+      estado &&
+      typeof estado === 'object' &&
+      'pagoRegistradoId' in estado
+    ) {
+
+      const id = (
+        estado as { pagoRegistradoId?: unknown }
+      ).pagoRegistradoId;
+
+      if (
+        typeof id === 'number' &&
+        Number.isInteger(id) &&
+        id > 0
+      ) {
+        this.mensajeRegistroPago =
+          `Pago de nómina registrado correctamente. Folio #${id}.`;
+
+        this.location.replaceState(
+          this.router.url,
+          '',
+          {}
+        );
+      }
+    }
+
     this.cargarEmpleados();
   }
 
-  // FECHA DE OPERACIÓN
+  // FECHA LOCAL
 
-  private obtenerFechaOperacion(): string {
+  private obtenerFechaActual(): string {
 
-    // PostgreSQL validará la fecha definitiva.
+    const fecha = new Date();
 
-    return new Date().toISOString().slice(0, 10);
+    const anio = fecha.getFullYear();
+    const mes = String(fecha.getMonth() + 1).padStart(2, '0');
+    const dia = String(fecha.getDate()).padStart(2, '0');
+
+    return `${anio}-${mes}-${dia}`;
   }
 
-  get fechaActual(): string {
-    return this.obtenerFechaOperacion();
-  }
-
-  private crearFormularioPago(): FormularioPagoNomina {
-
-    return {
-      periodoInicio: '',
-      periodoFin: '',
-      monto: null,
-      fechaPago: this.obtenerFechaOperacion(),
-      metodo: 'Efectivo',
-      referencia: '',
-      observaciones: ''
-    };
-  }
-
-  // CONSULTAR EMPLEADOS
+  // CONSULTAR PERSONAL
 
   cargarEmpleados(): void {
 
     if (
       this.cargandoEmpleados ||
-      this.cambiandoSalario ||
-      this.registrandoPago
+      this.cambiandoSalario
     ) {
       return;
     }
@@ -167,7 +158,7 @@ export class AdminNomina implements OnInit {
           if (!Array.isArray(respuesta)) {
 
             this.errorEmpleados =
-              'El servidor devolvió una respuesta inesperada.';
+              'La respuesta del servidor no es válida.';
 
           } else {
 
@@ -178,6 +169,22 @@ export class AdminNomina implements OnInit {
                   'es'
                 )
             );
+
+            const idUrl = Number(
+              this.route.snapshot.queryParamMap.get('empleado')
+            );
+
+            if (
+              Number.isInteger(idUrl) &&
+              idUrl > 0 &&
+              this.empleados.some(e => e.idPersonal === idUrl)
+            ) {
+              this.idPersonalSeleccionado = idUrl;
+            }
+
+            if (this.empleadoSeleccionado) {
+              this.cargarDetalles();
+            }
           }
 
           this.changeDetector.detectChanges();
@@ -197,32 +204,16 @@ export class AdminNomina implements OnInit {
       });
   }
 
-  // EMPLEADO SELECCIONADO
-
   get empleadoSeleccionado(): PersonalAdmin | null {
 
-    if (this.idPersonalSeleccionado === null) {
-      return null;
-    }
-
     return this.empleados.find(
-      empleado =>
-        empleado.idPersonal ===
-        this.idPersonalSeleccionado
+      e => e.idPersonal === this.idPersonalSeleccionado
     ) || null;
   }
 
-  // CAMBIAR EMPLEADO
-
   cambiarEmpleado(): void {
 
-    if (this.cambiandoSalario || this.registrandoPago) {
-      return;
-    }
-
     this.cancelarFormulario();
-    this.cancelarFormularioPago();
-
     this.mensajeCambio = '';
     this.mensajeRegistroPago = '';
 
@@ -233,14 +224,12 @@ export class AdminNomina implements OnInit {
 
   cargarDetalles(): void {
 
-    if (this.cambiandoSalario || this.registrandoPago) {
+    if (this.cambiandoSalario) {
       return;
     }
 
-    this.versionConsulta++;
-
-    const version = this.versionConsulta;
     const empleado = this.empleadoSeleccionado;
+    const version = ++this.versionConsulta;
 
     this.salarios = [];
     this.pagos = [];
@@ -248,11 +237,11 @@ export class AdminNomina implements OnInit {
     this.errorSalarios = '';
     this.errorPagos = '';
 
-    this.cargandoSalarios = false;
-    this.cargandoPagos = false;
-
     this.consultaSalariosRealizada = false;
     this.consultaPagosRealizada = false;
+
+    this.cargandoSalarios = false;
+    this.cargandoPagos = false;
 
     if (!empleado) {
       return;
@@ -268,7 +257,7 @@ export class AdminNomina implements OnInit {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
 
-        next: (respuesta: SalarioPersonalAdmin[]) => {
+        next: respuesta => {
 
           if (version !== this.versionConsulta) {
             return;
@@ -277,14 +266,11 @@ export class AdminNomina implements OnInit {
           this.cargandoSalarios = false;
           this.consultaSalariosRealizada = true;
 
-          if (!Array.isArray(respuesta)) {
-
-            this.errorSalarios =
-              'La respuesta salarial no es válida.';
-
-          } else {
-
+          if (Array.isArray(respuesta)) {
             this.salarios = respuesta;
+          } else {
+            this.errorSalarios =
+              'El historial salarial no es válido.';
           }
 
           this.changeDetector.detectChanges();
@@ -313,7 +299,7 @@ export class AdminNomina implements OnInit {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
 
-        next: (respuesta: PagoNominaAdmin[]) => {
+        next: respuesta => {
 
           if (version !== this.versionConsulta) {
             return;
@@ -322,14 +308,11 @@ export class AdminNomina implements OnInit {
           this.cargandoPagos = false;
           this.consultaPagosRealizada = true;
 
-          if (!Array.isArray(respuesta)) {
-
-            this.errorPagos =
-              'La respuesta de nómina no es válida.';
-
-          } else {
-
+          if (Array.isArray(respuesta)) {
             this.pagos = respuesta;
+          } else {
+            this.errorPagos =
+              'El historial de nómina no es válido.';
           }
 
           this.changeDetector.detectChanges();
@@ -354,46 +337,32 @@ export class AdminNomina implements OnInit {
       });
   }
 
-  // SALARIO VIGENTE
-
   get salarioVigente(): SalarioPersonalAdmin | null {
 
     return this.salarios.find(
-      salario => salario.vigenteHasta === null
+      s => s.vigenteHasta === null
     ) || null;
   }
 
-  // CAMBIO SALARIAL
+  // CAMBIAR SUELDO EXISTENTE
 
   get puedeAbrirCambio(): boolean {
 
     const empleado = this.empleadoSeleccionado;
     const vigente = this.salarioVigente;
 
-    if (
-      !empleado ||
-      !vigente ||
-      empleado.estatus !== 'Activo' ||
-      this.cargandoSalarios ||
-      this.cargandoEmpleados ||
-      !!this.errorSalarios ||
-      this.cambiandoSalario ||
-      this.registrandoPago ||
-      this.mostrarFormularioPago ||
-      this.resultadoIncierto
-    ) {
-      return false;
-    }
-
-    if (vigente.periodicidad !== 'Mensual') {
-      return false;
-    }
-
-    if (Number(vigente.monto) !== Number(empleado.salario)) {
-      return false;
-    }
-
-    return vigente.vigenteDesde < this.obtenerFechaOperacion();
+    return !!(
+      empleado &&
+      vigente &&
+      empleado.estatus === 'Activo' &&
+      vigente.periodicidad === 'Mensual' &&
+      Number(vigente.monto) === Number(empleado.salario) &&
+      vigente.vigenteDesde < this.obtenerFechaActual() &&
+      !this.cargandoSalarios &&
+      !this.cambiandoSalario &&
+      !this.errorSalarios &&
+      !this.resultadoIncierto
+    );
   }
 
   abrirCambioSalario(): void {
@@ -402,12 +371,10 @@ export class AdminNomina implements OnInit {
       return;
     }
 
-    this.fechaVigencia = this.obtenerFechaOperacion();
-
+    this.fechaVigencia = this.obtenerFechaActual();
     this.montoNuevo = null;
     this.motivoCambio = '';
     this.confirmacionLeida = false;
-
     this.errorCambio = '';
     this.mensajeCambio = '';
 
@@ -427,43 +394,27 @@ export class AdminNomina implements OnInit {
     this.montoNuevo = null;
     this.motivoCambio = '';
     this.confirmacionLeida = false;
-
     this.errorCambio = '';
-  }
-
-  private montoSalarioValido(
-    monto: number | null
-  ): boolean {
-
-    return (
-      typeof monto === 'number' &&
-      Number.isFinite(monto) &&
-      monto >= 0 &&
-      monto <= 99999999.99 &&
-      Math.abs(
-        monto * 100 - Math.round(monto * 100)
-      ) < 0.000001
-    );
   }
 
   get puedeConfirmarCambio(): boolean {
 
     const vigente = this.salarioVigente;
+    const monto = this.montoNuevo;
 
-    if (
-      !this.mostrarFormularioCambio ||
-      !this.puedeAbrirCambio ||
-      !vigente ||
-      !this.montoSalarioValido(this.montoNuevo) ||
-      !this.confirmacionLeida ||
-      !this.motivoCambio.trim()
-    ) {
-      return false;
-    }
-
-    return (
-      this.montoNuevo !== Number(vigente.monto) &&
-      this.fechaVigencia === this.obtenerFechaOperacion()
+    return !!(
+      this.mostrarFormularioCambio &&
+      this.puedeAbrirCambio &&
+      vigente &&
+      typeof monto === 'number' &&
+      Number.isFinite(monto) &&
+      monto >= 0 &&
+      monto <= 99999999.99 &&
+      Math.abs(monto * 100 - Math.round(monto * 100)) < 0.000001 &&
+      monto !== Number(vigente.monto) &&
+      this.motivoCambio.trim() &&
+      this.confirmacionLeida &&
+      this.fechaVigencia === this.obtenerFechaActual()
     );
   }
 
@@ -474,8 +425,7 @@ export class AdminNomina implements OnInit {
     if (!this.puedeConfirmarCambio) {
 
       this.errorCambio =
-        'Verifica el sueldo, el motivo y la confirmación. ' +
-        'El nuevo monto debe ser distinto del actual.';
+        'Revisa el monto, el motivo y la autorización.';
 
       return;
     }
@@ -485,11 +435,9 @@ export class AdminNomina implements OnInit {
 
   cancelarConfirmacion(): void {
 
-    if (this.cambiandoSalario) {
-      return;
+    if (!this.cambiandoSalario) {
+      this.mostrarConfirmacionFinal = false;
     }
-
-    this.mostrarConfirmacionFinal = false;
   }
 
   confirmarCambioSalario(): void {
@@ -508,8 +456,6 @@ export class AdminNomina implements OnInit {
       return;
     }
 
-    const idPersonal = empleado.idPersonal;
-
     const datos: CambiarSalarioAdminRequest = {
       monto,
       vigenteDesde: this.fechaVigencia,
@@ -520,42 +466,34 @@ export class AdminNomina implements OnInit {
     this.errorCambio = '';
 
     this.nominaService
-      .cambiarSalario(idPersonal, datos)
+      .cambiarSalario(empleado.idPersonal, datos)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
 
-        next: (respuesta) => {
+        next: respuesta => {
 
           this.cambiandoSalario = false;
+          this.mostrarConfirmacionFinal = false;
 
           if (
-            !respuesta ||
-            respuesta.idPersonal !== idPersonal ||
+            respuesta?.idPersonal !== empleado.idPersonal ||
             !Number.isInteger(respuesta.idSalario) ||
             respuesta.idSalario <= 0
           ) {
 
             this.resultadoIncierto = true;
-
             this.errorCambio =
-              'El servidor respondió de forma inesperada. ' +
-              'Comprueba el historial antes de intentar otro cambio.';
+              'Respuesta inesperada. Consulta el historial ' +
+              'antes de intentar otro cambio.';
 
-            this.mostrarConfirmacionFinal = false;
             this.changeDetector.detectChanges();
             return;
           }
 
-          this.mostrarFormularioCambio = false;
-          this.mostrarConfirmacionFinal = false;
-
-          this.montoNuevo = null;
-          this.motivoCambio = '';
-          this.confirmacionLeida = false;
+          this.cancelarFormulario();
 
           this.mensajeCambio =
-            'Sueldo actualizado correctamente. ' +
-            `Registro salarial: #${respuesta.idSalario}.`;
+            `Sueldo actualizado. Registro #${respuesta.idSalario}.`;
 
           this.cargarEmpleados();
           this.cargarDetalles();
@@ -568,72 +506,37 @@ export class AdminNomina implements OnInit {
           this.cambiandoSalario = false;
           this.mostrarConfirmacionFinal = false;
 
-          const mensajeServidor = this.obtenerMensajeError(
-            error,
-            'No fue posible actualizar el sueldo.'
-          );
-
           if (
             error.status === 0 ||
-            error.status >= 500
+            error.status >= 500 ||
+            error.status === 409
           ) {
-
             this.resultadoIncierto = true;
-
-            this.errorCambio =
-              'No se pudo confirmar si el cambio se guardó. ' +
-              'Revisa el historial salarial antes de volver a intentarlo.';
-
-          } else if (error.status === 409) {
-
-            this.resultadoIncierto = true;
-
-            this.errorCambio =
-              mensajeServidor +
-              ' Actualiza la consulta para revisar el salario.';
-
-          } else {
-
-            this.errorCambio = mensajeServidor;
           }
+
+          this.errorCambio = this.obtenerMensajeError(
+            error,
+            'No fue posible cambiar el sueldo.'
+          );
 
           this.changeDetector.detectChanges();
         }
       });
   }
 
-  // VALIDAR FECHAS DE PAGO
-
-  private fechaValida(fecha: string): boolean {
-
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(fecha)) {
-      return false;
-    }
-
-    const valor = new Date(`${fecha}T00:00:00Z`);
-
-    return (
-      !Number.isNaN(valor.getTime()) &&
-      valor.toISOString().slice(0, 10) === fecha
-    );
-  }
-
-  // ABRIR REGISTRO DE PAGO
+  // ABRIR PANTALLA INDEPENDIENTE DE PAGO
 
   get puedeAbrirRegistroPago(): boolean {
 
-    return (
-      this.empleadoSeleccionado !== null &&
+    return !!(
+      this.empleadoSeleccionado &&
       this.consultaSalariosRealizada &&
       this.consultaPagosRealizada &&
-      !this.cargandoEmpleados &&
       !this.cargandoSalarios &&
       !this.cargandoPagos &&
       !this.cambiandoSalario &&
-      !this.registrandoPago &&
       !this.mostrarFormularioCambio &&
       !this.resultadoIncierto &&
-      !this.resultadoPagoIncierto &&
       !this.errorSalarios &&
       !this.errorPagos &&
       this.salarios.some(s => s.periodicidad === 'Mensual')
@@ -642,333 +545,29 @@ export class AdminNomina implements OnInit {
 
   abrirRegistroPago(): void {
 
-    if (!this.puedeAbrirRegistroPago) {
-      return;
-    }
-
-    this.formularioPago = this.crearFormularioPago();
-
-    this.confirmacionPagoLeida = false;
-    this.errorRegistroPago = '';
-    this.mensajeRegistroPago = '';
-
-    this.mostrarFormularioPago = true;
-    this.mostrarConfirmacionPago = false;
-  }
-
-  cancelarFormularioPago(): void {
-
-    if (this.registrandoPago) {
-      return;
-    }
-
-    this.mostrarFormularioPago = false;
-    this.mostrarConfirmacionPago = false;
-
-    this.confirmacionPagoLeida = false;
-    this.errorRegistroPago = '';
-
-    this.formularioPago = this.crearFormularioPago();
-  }
-
-  // VERIFICAR PERIODO Y DATOS
-
-  private validarPago(): string {
-
-    const empleado = this.empleadoSeleccionado;
-    const pago = this.formularioPago;
-
-    if (!empleado) {
-      return 'Selecciona un empleado.';
-    }
-
-    if (
-      !this.fechaValida(pago.periodoInicio) ||
-      !this.fechaValida(pago.periodoFin)
-    ) {
-      return 'Selecciona el inicio y el fin del periodo.';
-    }
-
-    if (pago.periodoFin < pago.periodoInicio) {
-      return 'El fin del periodo debe ser igual o posterior al inicio.';
-    }
-
-    if (
-      pago.periodoInicio <
-      empleado.fechaContratacion.slice(0, 10)
-    ) {
-      return 'El periodo no puede empezar antes de la contratación.';
-    }
-
-    if (
-      empleado.fechaBaja &&
-      pago.periodoFin > empleado.fechaBaja.slice(0, 10)
-    ) {
-      return 'El periodo no puede terminar después de la baja laboral.';
-    }
-
-    const salariosQueCubrenPeriodo = this.salarios.filter(
-      salario =>
-        salario.periodicidad === 'Mensual' &&
-        salario.vigenteDesde <= pago.periodoInicio &&
-        (
-          salario.vigenteHasta === null ||
-          salario.vigenteHasta >= pago.periodoFin
-        )
-    );
-
-    if (salariosQueCubrenPeriodo.length !== 1) {
-      return (
-        'El periodo debe estar cubierto por un único ' +
-        'salario mensual. Si cruza un cambio salarial, ' +
-        'divide el pago en periodos separados.'
-      );
-    }
-
-    const duplicado = this.pagos.some(
-      pagoExistente =>
-        pagoExistente.estado.toLowerCase() === 'pagado' &&
-        pagoExistente.periodoInicio <= pago.periodoFin &&
-        pagoExistente.periodoFin >= pago.periodoInicio
-    );
-
-    if (duplicado) {
-      return 'El periodo se solapa con un pago ya registrado.';
-    }
-
-    if (
-      typeof pago.monto !== 'number' ||
-      !Number.isFinite(pago.monto) ||
-      pago.monto <= 0 ||
-      pago.monto > 9999999999.99 ||
-      Math.abs(
-        pago.monto * 100 - Math.round(pago.monto * 100)
-      ) >= 0.000001
-    ) {
-      return 'Ingresa un monto positivo con máximo dos decimales.';
-    }
-
-    if (
-      !this.fechaValida(pago.fechaPago) ||
-      pago.fechaPago > this.obtenerFechaOperacion()
-    ) {
-      return 'La fecha de pago no puede ser futura.';
-    }
-
-    if (
-      pago.metodo !== 'Efectivo' &&
-      pago.metodo !== 'Transferencia'
-    ) {
-      return 'Selecciona un método de pago válido.';
-    }
-
-    if (pago.referencia.trim().length > 100) {
-      return 'La referencia no puede superar 100 caracteres.';
-    }
-
-    if (
-      pago.metodo === 'Transferencia' &&
-      !pago.referencia.trim()
-    ) {
-      return 'La referencia es obligatoria para transferencias.';
-    }
-
-    if (!this.confirmacionPagoLeida) {
-      return 'Confirma que el pago ya fue realizado.';
-    }
-
-    return '';
-  }
-
-  // VALIDACIONES PARA ENVIAR
-
-  get puedeRegistrarPago(): boolean {
-
-    return (
-      this.mostrarFormularioPago &&
-      !this.mostrarConfirmacionPago &&
-      !this.registrandoPago &&
-      !this.cambiandoSalario &&
-      !this.resultadoPagoIncierto &&
-      this.consultaSalariosRealizada &&
-      this.consultaPagosRealizada &&
-      !this.errorSalarios &&
-      !this.errorPagos &&
-      this.validarPago() === ''
-    );
-  }
-
-  prepararRegistroPago(): void {
-
-    this.errorRegistroPago = '';
-
-    if (
-      this.registrandoPago ||
-      this.cambiandoSalario ||
-      this.resultadoPagoIncierto ||
-      !this.mostrarFormularioPago ||
-      this.mostrarConfirmacionPago ||
-      !this.consultaSalariosRealizada ||
-      !this.consultaPagosRealizada ||
-      !!this.errorSalarios ||
-      !!this.errorPagos
-    ) {
-      return;
-    }
-
-    const error = this.validarPago();
-
-    if (error) {
-      this.errorRegistroPago = error;
-      return;
-    }
-
-    this.mostrarConfirmacionPago = true;
-  }
-
-  cancelarConfirmacionPago(): void {
-
-    if (this.registrandoPago) {
-      return;
-    }
-
-    this.mostrarConfirmacionPago = false;
-  }
-
-  // REGISTRAR PAGO REAL
-
-  confirmarRegistroPago(): void {
-
-    if (
-      !this.mostrarConfirmacionPago ||
-      this.registrandoPago ||
-      this.resultadoPagoIncierto
-    ) {
-      return;
-    }
-
     const empleado = this.empleadoSeleccionado;
 
-    if (!empleado) {
+    if (!empleado || !this.puedeAbrirRegistroPago) {
       return;
     }
 
-    const error = this.validarPago();
-
-    if (error) {
-      this.mostrarConfirmacionPago = false;
-      this.errorRegistroPago = error;
-      return;
-    }
-
-    const idPersonal = empleado.idPersonal;
-    const pago = this.formularioPago;
-
-    const datos: RegistrarPagoNominaAdminRequest = {
-      periodoInicio: pago.periodoInicio,
-      periodoFin: pago.periodoFin,
-      monto: pago.monto!,
-      fechaPago: pago.fechaPago,
-      metodo: pago.metodo,
-      referencia: pago.referencia.trim() || null,
-      observaciones: pago.observaciones.trim() || null
-    };
-
-    this.registrandoPago = true;
-    this.errorRegistroPago = '';
-    this.mostrarConfirmacionPago = false;
-
-    this.nominaService
-      .registrarPagoNomina(idPersonal, datos)
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({
-
-        next: (respuesta) => {
-
-          this.registrandoPago = false;
-
-          if (
-            !respuesta ||
-            respuesta.idPersonal !== idPersonal ||
-            !Number.isInteger(respuesta.idPago) ||
-            respuesta.idPago <= 0
-          ) {
-
-            this.resultadoPagoIncierto = true;
-
-            this.errorRegistroPago =
-              'El servidor respondió de forma inesperada. ' +
-              'Revisa el historial de pagos antes de registrar otro.';
-
-            this.changeDetector.detectChanges();
-            return;
-          }
-
-          this.mostrarFormularioPago = false;
-          this.confirmacionPagoLeida = false;
-          this.formularioPago = this.crearFormularioPago();
-
-          this.mensajeRegistroPago =
-            'Pago de nómina registrado correctamente. ' +
-            `Folio: #${respuesta.idPago}.`;
-
-          this.cargarDetalles();
-
-          this.changeDetector.detectChanges();
-        },
-
-        error: (error: HttpErrorResponse) => {
-
-          this.registrandoPago = false;
-
-          const mensaje = this.obtenerMensajeError(
-            error,
-            'No fue posible registrar el pago.'
-          );
-
-          if (error.status === 0 || error.status >= 500) {
-
-            this.resultadoPagoIncierto = true;
-
-            this.errorRegistroPago =
-              'No se pudo confirmar si el pago se registró. ' +
-              'Consulta el historial antes de intentar nuevamente.';
-
-          } else if (error.status === 409) {
-
-            this.resultadoPagoIncierto = true;
-
-            this.errorRegistroPago =
-              mensaje +
-              ' Revisa los pagos antes de registrar otro.';
-
-          } else {
-
-            this.errorRegistroPago = mensaje;
-          }
-
-          this.changeDetector.detectChanges();
-        }
-      });
+    this.router.navigate([
+      '/admin/personal/nomina/pago',
+      empleado.idPersonal
+    ]);
   }
 
   // FORMATOS
 
   mostrarMonto(monto: number): string {
 
-    if (
-      monto === null ||
-      monto === undefined ||
-      !Number.isFinite(Number(monto))
-    ) {
+    if (!Number.isFinite(Number(monto))) {
       return 'No disponible';
     }
 
     return new Intl.NumberFormat('es-MX', {
       style: 'currency',
-      currency: 'MXN',
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2
+      currency: 'MXN'
     }).format(monto);
   }
 
@@ -978,21 +577,16 @@ export class AdminNomina implements OnInit {
       return '—';
     }
 
-    const corta = fecha.slice(0, 10);
-    const partes = corta.split('-');
+    const partes = fecha.slice(0, 10).split('-');
 
-    if (partes.length !== 3) {
-      return corta;
-    }
-
-    return `${partes[2]}/${partes[1]}/${partes[0]}`;
+    return partes.length === 3
+      ? `${partes[2]}/${partes[1]}/${partes[0]}`
+      : fecha;
   }
-
-  // MANEJAR ERRORES
 
   private obtenerMensajeError(
     error: HttpErrorResponse,
-    mensajeDefault: string
+    predeterminado: string
   ): string {
 
     if (error.status === 401) {
@@ -1000,34 +594,28 @@ export class AdminNomina implements OnInit {
     }
 
     if (error.status === 403) {
-      return 'No tienes permisos para consultar o modificar nómina.';
+      return 'No tienes permisos para esta operación.';
     }
 
     if (error.status === 404) {
-      return 'El empleado solicitado no fue encontrado.';
+      return 'El expediente no fue encontrado.';
     }
 
     if (error.status === 0 || error.status >= 500) {
-      return 'No fue posible conectar con el servidor.';
+      return 'No fue posible confirmar la operación con el servidor.';
     }
 
-    if (typeof error.error?.mensaje === 'string') {
-      return error.error.mensaje;
-    }
-
-    if (typeof error.error?.detail === 'string') {
-      return error.error.detail;
-    }
-
-    return mensajeDefault;
+    return (
+      typeof error.error?.mensaje === 'string'
+        ? error.error.mensaje
+        : predeterminado
+    );
   }
 
   volverDirectorio(): void {
 
-    if (this.cambiandoSalario || this.registrandoPago) {
-      return;
+    if (!this.cambiandoSalario) {
+      this.router.navigate(['/admin/personal']);
     }
-
-    this.router.navigate(['/admin/personal']);
   }
 }

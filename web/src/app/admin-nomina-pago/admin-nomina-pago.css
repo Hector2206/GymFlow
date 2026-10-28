@@ -1,0 +1,413 @@
+
+:host {
+  display: block;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+.pago-page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: linear-gradient(180deg, #f8f5ef, #f2ede4);
+  color: #2f2a24;
+}
+
+.pago-header {
+  padding: 35px 40px;
+  background: #fffdf8;
+  border-bottom: 1px solid #e7dfd2;
+}
+
+.header-content {
+  max-width: 1100px;
+  margin: auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 24px;
+}
+
+.section-label {
+  color: #a47c27;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+}
+
+.pago-header h1 {
+  margin: 12px 0;
+  font-size: clamp(27px, 3vw, 36px);
+}
+
+.pago-header p {
+  color: #81776c;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.pago-content {
+  width: 100%;
+  max-width: 1100px;
+  margin: auto;
+  padding: 36px 25px 65px;
+  flex: 1;
+}
+
+.pago-panel {
+  padding: 32px;
+  margin-bottom: 24px;
+  border: 1px solid #dfcfaa;
+  border-radius: 20px;
+  background: #fffdf8;
+  box-shadow: 0 8px 24px rgba(76, 62, 36, 0.05);
+}
+
+.panel-heading {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  margin-bottom: 27px;
+}
+
+.panel-icon,
+.estado-icon {
+  width: 54px;
+  height: 54px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f4ead5;
+  border-radius: 16px;
+  font-size: 25px;
+}
+
+.panel-heading h2 {
+  margin: 8px 0;
+  font-size: 22px;
+}
+
+.panel-heading p {
+  margin: 0;
+  color: #81776c;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.resumen-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.resumen-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+  padding: 20px;
+  border: 1px solid #e9dfcf;
+  border-radius: 14px;
+  background: #faf7f0;
+}
+
+.resumen-card span {
+  color: #81776c;
+  font-size: 12px;
+}
+
+.resumen-card strong {
+  color: #87671d;
+  font-size: 17px;
+  overflow-wrap: anywhere;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 22px;
+}
+
+.campo {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  min-width: 0;
+}
+
+.campo span {
+  font-size: 13px;
+  font-weight: 700;
+  color: #756c60;
+}
+
+.campo input,
+.campo select,
+.campo textarea {
+  width: 100%;
+  padding: 14px 15px;
+  border: 1px solid #dfcfaa;
+  border-radius: 12px;
+  background: #fffdf8;
+  color: #2f2a24;
+  font: inherit;
+  font-size: 14px;
+}
+
+.campo input:focus,
+.campo select:focus,
+.campo textarea:focus {
+  outline: none;
+  border-color: #b58a2a;
+  box-shadow: 0 0 0 3px rgba(181, 138, 42, 0.12);
+}
+
+.campo textarea {
+  resize: vertical;
+}
+
+.campo-completo {
+  margin-top: 24px;
+}
+
+.advertencia {
+  margin-top: 26px;
+  padding: 20px;
+  background: #faf3e5;
+  border: 1px solid #e7d4af;
+  border-radius: 14px;
+  color: #806025;
+}
+
+.advertencia strong {
+  font-size: 13px;
+}
+
+.advertencia p {
+  margin: 9px 0 0;
+  font-size: 13px;
+  line-height: 1.65;
+}
+
+.aceptacion {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-top: 25px;
+  font-size: 13px;
+  line-height: 1.6;
+  color: #756c60;
+  cursor: pointer;
+}
+
+.aceptacion input {
+  width: 17px;
+  height: 17px;
+  flex-shrink: 0;
+  accent-color: #b58a2a;
+}
+
+.acciones,
+.modal-acciones {
+  display: flex;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 13px;
+  margin-top: 30px;
+}
+
+.acciones {
+  padding-top: 24px;
+  border-top: 1px solid #eee7dc;
+}
+
+.btn-secundario,
+.btn-principal {
+  padding: 13px 20px;
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.btn-secundario {
+  border: 1px solid #dfcfaa;
+  background: #f4ead5;
+  color: #87671d;
+}
+
+.btn-principal {
+  border: none;
+  background: #b58a2a;
+  color: white;
+}
+
+.btn-principal:hover:not(:disabled) {
+  background: #98711d;
+}
+
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+button:focus-visible {
+  outline: 3px solid #b58a2a;
+  outline-offset: 3px;
+}
+
+.error-box {
+  margin-top: 22px;
+  padding: 18px;
+  border: 1px solid #e7b2ad;
+  border-radius: 12px;
+  background: #fff0ef;
+  color: #a52f35;
+  font-size: 13px;
+  line-height: 1.65;
+}
+
+.estado-guardando {
+  margin-top: 20px;
+  padding: 17px;
+  border-radius: 12px;
+  background: #f4ead5;
+  color: #87671d;
+  font-size: 13px;
+}
+
+.estado-panel {
+  padding: 55px 25px;
+  text-align: center;
+}
+
+.estado-panel .estado-icon {
+  margin: auto;
+}
+
+.estado-panel p {
+  color: #81776c;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.modal-fondo {
+  position: fixed;
+  inset: 0;
+  z-index: 1100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 18px;
+  background: rgba(35, 29, 22, 0.58);
+}
+
+.modal-confirmacion {
+  width: 100%;
+  max-width: 520px;
+  max-height: 90vh;
+  overflow-y: auto;
+  padding: 30px;
+  background: #fffdf8;
+  border: 1px solid #dfcfaa;
+  border-radius: 22px;
+  box-shadow: 0 22px 60px rgba(35, 29, 22, 0.2);
+  text-align: center;
+}
+
+.modal-icon {
+  font-size: 36px;
+  margin-bottom: 12px;
+}
+
+.modal-confirmacion h2 {
+  font-size: 23px;
+}
+
+.modal-confirmacion p {
+  font-size: 13px;
+  color: #81776c;
+  line-height: 1.6;
+}
+
+.modal-detalles {
+  margin-top: 22px;
+  padding: 20px;
+  background: #faf7f0;
+  border: 1px solid #e7dac2;
+  border-radius: 14px;
+  text-align: left;
+}
+
+.modal-detalles div {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 9px 0;
+}
+
+.modal-detalles span {
+  color: #81776c;
+  font-size: 12px;
+}
+
+.modal-detalles strong {
+  color: #2f2a24;
+  font-size: 14px;
+  overflow-wrap: anywhere;
+}
+
+.modal-aviso {
+  color: #87671d !important;
+  font-weight: 700;
+}
+
+.pago-footer {
+  padding: 25px;
+  border-top: 1px solid #e7dfd2;
+  text-align: center;
+  color: #938a7d;
+  font-size: 12px;
+}
+
+@media (max-width: 750px) {
+
+  .pago-header {
+    padding: 25px 20px;
+  }
+
+  .header-content {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .pago-content {
+    padding: 25px 16px 45px;
+  }
+
+  .pago-panel {
+    padding: 22px;
+  }
+
+  .resumen-grid,
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .acciones,
+  .modal-acciones {
+    flex-direction: column;
+  }
+
+  .acciones button,
+  .modal-acciones button {
+    width: 100%;
+  }
+
+  .modal-confirmacion {
+    padding: 22px;
+  }
+}

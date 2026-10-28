@@ -95,6 +95,10 @@ import {
 } from './admin-nomina/admin-nomina';
 
 import {
+  AdminNominaPago
+} from './admin-nomina-pago/admin-nomina-pago';
+
+import {
   AsignacionEntrenadores
 } from './asignacion-entrenadores/asignacion-entrenadores';
 
@@ -160,6 +164,14 @@ export const routes: Routes = [
   {
     path: 'admin/personal/bajas',
     component: AdminPersonalBajas,
+    canActivate: [authGuard, administradorGuard]
+  },
+
+  // REGISTRAR PAGO - RUTA INDEPENDIENTE
+
+  {
+    path: 'admin/personal/nomina/pago/:id',
+    component: AdminNominaPago,
     canActivate: [authGuard, administradorGuard]
   },
 
@@ -288,8 +300,6 @@ export const routes: Routes = [
     component: AdministrarRutinas,
     canActivate: [authGuard, entrenadorGuard]
   },
-
-  // INICIO
 
   {
     path: '',
