@@ -199,7 +199,8 @@ irClientesAdministrador(): void {
 }
 
 
-irRecepcionistasAdministrador(): void {
+
+irPersonalAdministrador(): void {
 
   if (!this.esAdministrador()) {
 
@@ -211,38 +212,11 @@ irRecepcionistasAdministrador(): void {
     return;
   }
 
-  this.router.navigate(
-    ['/admin/personal'],
-    {
-      queryParams: {
-        puesto: 'Recepcionista'
-      }
-    }
-  );
+  this.router.navigate([
+    '/admin/personal'
+  ]);
 }
 
-
-irEntrenadoresAdministrador(): void {
-
-  if (!this.esAdministrador()) {
-
-    this.mensaje =
-      'Esta opción está disponible únicamente para administradores.';
-
-    this.changeDetector.detectChanges();
-
-    return;
-  }
-
-  this.router.navigate(
-    ['/admin/personal'],
-    {
-      queryParams: {
-        puesto: 'Entrenador'
-      }
-    }
-  );
-}
 
 
 
