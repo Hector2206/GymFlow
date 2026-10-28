@@ -1,0 +1,115 @@
+
+<div class="admin-page">
+
+  <header class="admin-header">
+    <div class="header-content">
+
+      <div>
+        <span class="header-label">
+          GYMFLOW / ADMINISTRACIÓN
+        </span>
+
+        <h1>Panel de Administrador</h1>
+
+        <p>
+          Consulta los indicadores y la actividad
+          general de tu gimnasio.
+        </p>
+      </div>
+
+      <button
+        type="button"
+        class="back-button"
+        (click)="volverInicio()">
+        ← Volver al inicio
+      </button>
+
+    </div>
+  </header>
+
+  <main class="admin-content">
+
+    <section class="section-heading">
+      <div>
+        <span class="section-label">
+          RESUMEN GENERAL
+        </span>
+        <h2>Indicadores del gimnasio</h2>
+        <p>
+          Información administrativa actualizada
+          desde GymFlow.
+        </p>
+      </div>
+    </section>
+
+    <section class="stats-grid">
+
+      <article class="stat-card">
+        <div class="stat-icon">👥</div>
+        <span class="stat-title">
+          Total de clientes
+        </span>
+        <strong class="stat-value">—</strong>
+        <p>Clientes registrados en el sistema</p>
+      </article>
+
+      <article class="stat-card">
+        <div class="stat-icon">🎫</div>
+        <span class="stat-title">
+          Membresías activas
+        </span>
+        <strong class="stat-value">—</strong>
+        <p>Clientes con membresía vigente</p>
+      </article>
+
+      <article class="stat-card">
+        <div class="stat-icon">📅</div>
+        <span class="stat-title">
+          Asistencias del día
+        </span>
+        <strong class="stat-value">—</strong>
+        <p>Accesos aprobados durante el día</p>
+      </article>
+
+      <article class="stat-card">
+        <div class="stat-icon">💳</div>
+        <span class="stat-title">
+          Pagos registrados
+        </span>
+        <strong class="stat-value">—</strong>
+        <p>Pagos de clientes registrados</p>
+      </article>
+
+    </section>
+
+    <section class="finance-section">
+      <div class="finance-heading">
+        <div>
+          <span class="section-label">
+            INFORMACIÓN FINANCIERA
+          </span>
+          <h2>Ingresos por periodo</h2>
+          <p>
+            Consulta los ingresos brutos obtenidos
+            por pagos de clientes.
+          </p>
+        </div>
+      </div>
+
+      <div class="finance-placeholder">
+        <div class="finance-icon">📈</div>
+        <h3>Resumen de ingresos</h3>
+        <p>
+          Aquí se mostrarán los ingresos del periodo
+          seleccionado cuando conectemos el servicio.
+        </p>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="admin-footer">
+    GymFlow · Panel administrativo
+  </footer>
+
+</div>
