@@ -30,7 +30,7 @@ import {
 })
 export class AdminPersonal implements OnInit {
 
-  // EMPLEADOS REGISTRADOS
+  // DIRECTORIO DE EMPLEADOS
 
   empleados: PersonalAdmin[] = [];
 
@@ -38,16 +38,12 @@ export class AdminPersonal implements OnInit {
   error = '';
   consultaRealizada = false;
 
-  // FILTROS
+  // FILTROS DEL DIRECTORIO
 
   filtroPuesto: PuestoPersonalAdmin | '' = '';
   filtroEstatus: EstatusPersonalAdmin | '' = '';
 
-  // FORMULARIO DE ALTA
-
-  mostrarFormularioAlta = false;
-
-  nuevoEmpleado = this.crearFormularioVacio();
+  // SERVICIOS NECESARIOS
 
   constructor(
     private router: Router,
@@ -56,42 +52,19 @@ export class AdminPersonal implements OnInit {
     private destroyRef: DestroyRef
   ) {}
 
+  // CARGAR EMPLEADOS AL ENTRAR
+
   ngOnInit(): void {
     this.cargarPersonal();
   }
 
-  // ABRIR FORMULARIO
+  // NAVEGAR AL FORMULARIO INDEPENDIENTE
 
-  abrirFormularioAlta(): void {
+  irRegistrarPersonal(): void {
 
-    this.nuevoEmpleado = this.crearFormularioVacio();
-
-    this.mostrarFormularioAlta = true;
-  }
-
-  // CERRAR FORMULARIO
-
-  cerrarFormularioAlta(): void {
-
-    this.mostrarFormularioAlta = false;
-
-    // Limpiar todos los campos, incluida la contrasena
-    this.nuevoEmpleado = this.crearFormularioVacio();
-  }
-
-  // DATOS INICIALES DEL FORMULARIO
-
-  private crearFormularioVacio() {
-
-    return {
-      nombreCompleto: '',
-      correo: '',
-      telefono: '',
-      fechaContratacion: '',
-      puesto: '' as PuestoPersonalAdmin | '',
-      sueldo: null as number | null,
-      password: ''
-    };
+    this.router.navigate([
+      '/admin/personal/nuevo'
+    ]);
   }
 
   // FILTRAR EMPLEADOS
@@ -112,6 +85,8 @@ export class AdminPersonal implements OnInit {
     });
   }
 
+  // VERIFICAR FILTROS ACTIVOS
+
   get hayFiltrosActivos(): boolean {
 
     return (
@@ -128,7 +103,7 @@ export class AdminPersonal implements OnInit {
     this.filtroEstatus = '';
   }
 
-  // CONSULTAR EMPLEADOS
+  // CONSULTAR EMPLEADOS REALES
 
   cargarPersonal(): void {
 
@@ -143,10 +118,12 @@ export class AdminPersonal implements OnInit {
 
     this.personalService
       .obtenerPersonal()
-      .pipe(takeUntilDestroyed(this.destroyRef))
+      .pipe(
+        takeUntilDestroyed(this.destroyRef)
+      )
       .subscribe({
 
-        next: (respuesta) => {
+        next: (respuesta: PersonalAdmin[]) => {
 
           this.cargando = false;
           this.consultaRealizada = true;
@@ -209,7 +186,7 @@ export class AdminPersonal implements OnInit {
       });
   }
 
-  // FORMATO DE SALARIO
+  // FORMATO DE SUELDOS EN PESOS MEXICANOS
 
   mostrarSalario(monto: number): string {
 
@@ -246,7 +223,12 @@ export class AdminPersonal implements OnInit {
     return `${partes[2]}/${partes[1]}/${partes[0]}`;
   }
 
+  // REGRESAR AL HOME
+
   volverInicio(): void {
-    this.router.navigate(['/home']);
+
+    this.router.navigate([
+      '/home'
+    ]);
   }
 }

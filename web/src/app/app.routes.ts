@@ -85,6 +85,12 @@ import {
 } from './admin-personal/admin-personal';
 
 
+import {
+  AdminPersonalAlta
+} from './admin-personal-alta/admin-personal-alta';
+
+
+
 
 import {
   recepcionistaGuard,
@@ -139,6 +145,16 @@ export const routes: Routes = [
 {
   path: 'admin/clientes',
   component: AdminClientes,
+  canActivate: [
+    authGuard,
+    administradorGuard
+  ]
+},
+
+
+{
+  path: 'admin/personal/nuevo',
+  component: AdminPersonalAlta,
   canActivate: [
     authGuard,
     administradorGuard
