@@ -180,6 +180,25 @@ export class Home implements OnInit {
     ]);
   }
 
+  
+irClientesAdministrador(): void {
+
+  if (!this.esAdministrador()) {
+
+    this.mensaje =
+      'Esta opción está disponible únicamente para administradores.';
+
+    this.changeDetector.detectChanges();
+
+    return;
+  }
+
+  this.router.navigate([
+    '/admin/clientes'
+  ]);
+}
+
+
 
   irRegistrarCliente(): void {
 
