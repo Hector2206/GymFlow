@@ -77,15 +77,42 @@ export class AdminClientes implements OnInit {
         this.cargarClientes();
       });
 
-    // Mostrar todos al entrar
     this.cargarClientes();
   }
 
-  // DETECTAR CAMBIO DE CUALQUIER FILTRO
+  // DETECTAR SI HAY FILTROS ACTIVOS
+
+  get hayFiltrosActivos(): boolean {
+
+    return (
+      this.nombreBusqueda.trim().length > 0 ||
+      this.correoBusqueda.trim().length > 0 ||
+      this.estatusBusqueda !== '' ||
+      this.vigenciaBusqueda !== '' ||
+      this.idMembresiaBusqueda !== null
+    );
+  }
+
+  // LIMPIAR TODOS LOS FILTROS
+
+  limpiarFiltros(): void {
+
+    this.nombreBusqueda = '';
+    this.correoBusqueda = '';
+
+    this.estatusBusqueda = '';
+    this.vigenciaBusqueda = '';
+    this.idMembresiaBusqueda = null;
+
+    // Ejecutar nuevamente la consulta sin filtros
+    this.alCambiarBusqueda();
+  }
+
+  // DETECTAR CAMBIOS DE BUSQUEDA
 
   alCambiarBusqueda(): void {
 
-    // Cancelar consultas anteriores
+    // Cancelar una consulta anterior
     this.consultaClientes?.unsubscribe();
 
     this.clientes = [];
@@ -93,7 +120,7 @@ export class AdminClientes implements OnInit {
     this.cargando = true;
     this.consultaRealizada = false;
 
-    // Solicitar nueva busqueda
+    // Esperar antes de consultar nuevamente
     this.cambiosBusqueda.next();
   }
 
@@ -127,6 +154,7 @@ export class AdminClientes implements OnInit {
     ) {
 
       this.cargando = false;
+
       this.error =
         'El nombre y el correo no pueden superar 150 caracteres.';
 
@@ -134,7 +162,7 @@ export class AdminClientes implements OnInit {
       return;
     }
 
-    // VALIDACION DE MEMBRESIA
+    // VALIDACION DEL ID DE MEMBRESIA
 
     if (
       idMembresia !== null &&
@@ -145,6 +173,7 @@ export class AdminClientes implements OnInit {
     ) {
 
       this.cargando = false;
+
       this.error =
         'El ID de membresía debe ser un número entero mayor que cero.';
 

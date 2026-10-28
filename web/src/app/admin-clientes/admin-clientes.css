@@ -530,3 +530,59 @@
     grid-template-columns: 1fr;
   }
 }
+
+
+/* SPRINT 7 - ACCIONES DE FILTROS */
+
+.filtros-acciones {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  margin-top: 20px;
+  flex-wrap: wrap;
+}
+
+.filtros-acciones .busqueda-ayuda {
+  margin: 0;
+}
+
+.limpiar-button {
+  padding: 11px 17px;
+  border: 1px solid #dfcfaa;
+  border-radius: 12px;
+  background: #f4ead5;
+  color: #87671d;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition:
+    background 0.2s ease,
+    transform 0.2s ease;
+}
+
+.limpiar-button:hover {
+  background: #e9d7ae;
+  transform: translateY(-1px);
+}
+
+.limpiar-button:focus-visible {
+  outline: 3px solid #b58a2a;
+  outline-offset: 3px;
+}
+
+.limpiar-centrado {
+  display: inline-block;
+  margin-top: 24px;
+}
+
+@media (max-width: 650px) {
+  .filtros-acciones {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .filtros-acciones .limpiar-button {
+    width: 100%;
+  }
+}

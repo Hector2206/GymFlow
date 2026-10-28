@@ -189,11 +189,28 @@
 
 </div>
 
-<p class="busqueda-ayuda">
-  🔎 Puedes combinar varios filtros.
-  Los resultados se actualizan automáticamente
-  al modificar cualquier campo.
-</p>
+
+<div class="filtros-acciones">
+
+  <p class="busqueda-ayuda">
+    🔎 Puedes combinar varios filtros.
+    Los resultados se actualizan automáticamente.
+  </p>
+
+  @if (hayFiltrosActivos) {
+
+    <button
+      type="button"
+      class="limpiar-button"
+      (click)="limpiarFiltros()"
+    >
+      ✕ Limpiar filtros
+    </button>
+
+  }
+
+</div>
+
 
 
     </section>
@@ -271,17 +288,44 @@
 
         <!-- SIN RESULTADOS -->
 
-        <div class="results-placeholder">
 
-          <div class="placeholder-icon">👥</div>
+<div class="results-placeholder">
 
-          <h3>No hay clientes para mostrar</h3>
+  <div class="placeholder-icon">
+    🔎
+  </div>
 
-          <p>
-            No se encontraron clientes registrados.
-          </p>
+  @if (hayFiltrosActivos) {
 
-        </div>
+    <h3>No encontramos coincidencias</h3>
+
+    <p>
+      No hay clientes que coincidan con
+      los filtros seleccionados.
+      Prueba con otros criterios.
+    </p>
+
+    <button
+      type="button"
+      class="limpiar-button limpiar-centrado"
+      (click)="limpiarFiltros()"
+    >
+      Limpiar filtros y mostrar todos
+    </button>
+
+  } @else {
+
+    <h3>No hay clientes registrados</h3>
+
+    <p>
+      Actualmente no existen clientes
+      registrados para mostrar.
+    </p>
+
+  }
+
+</div>
+
 
       } @else if (clientes.length > 0) {
 
