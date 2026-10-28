@@ -72,22 +72,50 @@
 
       </div>
 
-      <div class="setup-notice">
 
-        <span class="notice-icon">⚙️</span>
+<!-- BUSQUEDA POR NOMBRE Y CORREO -->
 
-        <div>
-          <strong>
-            Filtros en preparación
-          </strong>
+<div class="busqueda-form">
 
-          <p>
-            Por ahora se muestran todos los clientes.
-            Próximamente podrás aplicar filtros.
-          </p>
-        </div>
+  <label class="busqueda-campo">
 
-      </div>
+    <span>Nombre del cliente</span>
+
+    <input
+      type="text"
+      name="nombreBusqueda"
+      [(ngModel)]="nombreBusqueda"
+      (ngModelChange)="alCambiarBusqueda()"
+      maxlength="150"
+      placeholder="Ej. Juan Pérez"
+      autocomplete="off"
+    />
+
+  </label>
+
+  <label class="busqueda-campo">
+
+    <span>Correo electrónico</span>
+
+    <input
+      type="text"
+      name="correoBusqueda"
+      [(ngModel)]="correoBusqueda"
+      (ngModelChange)="alCambiarBusqueda()"
+      maxlength="150"
+      placeholder="Ej. cliente@correo.com"
+      autocomplete="off"
+    />
+
+  </label>
+
+</div>
+
+<p class="busqueda-ayuda">
+  🔎 Los resultados se actualizan automáticamente
+  mientras escribes. Puedes combinar ambos campos.
+</p>
+
 
     </section>
 

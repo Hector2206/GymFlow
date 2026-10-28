@@ -428,3 +428,63 @@
     width: fit-content;
   }
 }
+
+/* SPRINT 7 - BUSQUEDA DE CLIENTES */
+
+.busqueda-form {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+  margin-top: 28px;
+}
+
+.busqueda-campo {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.busqueda-campo span {
+  color: #756c60;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.busqueda-campo input {
+  width: 100%;
+  min-width: 0;
+  padding: 14px 16px;
+  border: 1px solid #dfcfaa;
+  border-radius: 12px;
+  background: #fffdf8;
+  color: #2f2a24;
+  font-size: 14px;
+  font-family: inherit;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.busqueda-campo input::placeholder {
+  color: #a59a8c;
+}
+
+.busqueda-campo input:focus {
+  outline: none;
+  border-color: #b58a2a;
+  box-shadow: 0 0 0 3px rgba(181, 138, 42, 0.12);
+}
+
+.busqueda-ayuda {
+  margin: 18px 0 0;
+  color: #91877a;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+@media (max-width: 650px) {
+  .busqueda-form {
+    grid-template-columns: 1fr;
+    gap: 18px;
+  }
+}

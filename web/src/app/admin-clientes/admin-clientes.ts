@@ -6,20 +6,18 @@ import {
   OnInit
 } from '@angular/core';
 
-import {
-  HttpErrorResponse
-} from '@angular/common/http';
-
-import {
-  Router
-} from '@angular/router';
+import { HttpErrorResponse } from '@angular/common/http';
+import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
 
 import {
   takeUntilDestroyed
 } from '@angular/core/rxjs-interop';
 
 import {
-  Subscription
+  Subject,
+  Subscription,
+  debounceTime
 } from 'rxjs';
 
 import {
@@ -33,7 +31,7 @@ import {
 @Component({
   selector: 'app-admin-clientes',
   standalone: true,
-  imports: [],
+  imports: [FormsModule],
   templateUrl: './admin-clientes.html',
   styleUrl: './admin-clientes.css'
 })
@@ -45,6 +43,11 @@ export class AdminClientes implements OnInit {
   error = '';
   consultaRealizada = false;
 
+  // Sprint 7 - Busqueda por nombre y correo
+  nombreBusqueda = '';
+  correoBusqueda = '';
+
+  private cambiosBusqueda = new Subject<void>();
   private consultaClientes?: Subscription;
 
   constructor(
@@ -55,24 +58,69 @@ export class AdminClientes implements OnInit {
   ) {}
 
   ngOnInit(): void {
+
+    // Esperar 350 ms despues de escribir
+    this.cambiosBusqueda
+      .pipe(
+        debounceTime(350),
+        takeUntilDestroyed(this.destroyRef)
+      )
+      .subscribe(() => {
+        this.cargarClientes();
+      });
+
+    // Consulta inicial sin filtros
     this.cargarClientes();
   }
 
-  // OBTENER CLIENTES REALES
+  // DETECTAR CAMBIOS EN LOS CAMPOS
+
+  alCambiarBusqueda(): void {
+
+    // Cancelar la solicitud anterior inmediatamente
+    this.consultaClientes?.unsubscribe();
+
+    this.clientes = [];
+    this.error = '';
+    this.cargando = true;
+    this.consultaRealizada = false;
+
+    this.cambiosBusqueda.next();
+  }
+
+  // CONSULTAR CLIENTES CON FILTROS
 
   cargarClientes(): void {
 
-    // Evitar respuestas anteriores fuera de orden
     this.consultaClientes?.unsubscribe();
 
-    this.cargando = true;
+    const nombre = this.nombreBusqueda.trim();
+    const correo = this.correoBusqueda.trim();
+
     this.error = '';
-    this.consultaRealizada = false;
     this.clientes = [];
+    this.consultaRealizada = false;
+
+    // Validacion de longitud
+    if (nombre.length > 150 || correo.length > 150) {
+
+      this.cargando = false;
+
+      this.error =
+        'El nombre y el correo no pueden superar 150 caracteres.';
+
+      this.changeDetector.detectChanges();
+      return;
+    }
+
+    this.cargando = true;
 
     this.consultaClientes =
       this.adminClienteService
-        .obtenerTodos()
+        .buscarClientes({
+          nombre: nombre || undefined,
+          correo: correo || undefined
+        })
         .pipe(
           takeUntilDestroyed(this.destroyRef)
         )
@@ -80,21 +128,19 @@ export class AdminClientes implements OnInit {
 
           next: (respuesta) => {
 
+            this.cargando = false;
+            this.consultaRealizada = true;
+
             if (!Array.isArray(respuesta)) {
+
               this.error =
                 'El servidor devolvió una respuesta inesperada.';
-
-              this.cargando = false;
-              this.consultaRealizada = true;
 
               this.changeDetector.detectChanges();
               return;
             }
 
             this.clientes = respuesta;
-
-            this.cargando = false;
-            this.consultaRealizada = true;
 
             this.changeDetector.detectChanges();
           },
@@ -140,12 +186,10 @@ export class AdminClientes implements OnInit {
 
             this.changeDetector.detectChanges();
           }
-
         });
-
   }
 
-  // FECHA SIN CAMBIOS DE ZONA HORARIA
+  // FORMATO DE FECHA
 
   mostrarFecha(
     fecha: string | null
