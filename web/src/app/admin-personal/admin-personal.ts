@@ -43,6 +43,12 @@ export class AdminPersonal implements OnInit {
   filtroPuesto: PuestoPersonalAdmin | '' = '';
   filtroEstatus: EstatusPersonalAdmin | '' = '';
 
+  // FORMULARIO DE ALTA
+
+  mostrarFormularioAlta = false;
+
+  nuevoEmpleado = this.crearFormularioVacio();
+
   constructor(
     private router: Router,
     private personalService: AdminPersonalService,
@@ -54,7 +60,41 @@ export class AdminPersonal implements OnInit {
     this.cargarPersonal();
   }
 
-  // FILTRAR EMPLEADOS SIN MODIFICAR LISTA ORIGINAL
+  // ABRIR FORMULARIO
+
+  abrirFormularioAlta(): void {
+
+    this.nuevoEmpleado = this.crearFormularioVacio();
+
+    this.mostrarFormularioAlta = true;
+  }
+
+  // CERRAR FORMULARIO
+
+  cerrarFormularioAlta(): void {
+
+    this.mostrarFormularioAlta = false;
+
+    // Limpiar todos los campos, incluida la contrasena
+    this.nuevoEmpleado = this.crearFormularioVacio();
+  }
+
+  // DATOS INICIALES DEL FORMULARIO
+
+  private crearFormularioVacio() {
+
+    return {
+      nombreCompleto: '',
+      correo: '',
+      telefono: '',
+      fechaContratacion: '',
+      puesto: '' as PuestoPersonalAdmin | '',
+      sueldo: null as number | null,
+      password: ''
+    };
+  }
+
+  // FILTRAR EMPLEADOS
 
   get empleadosFiltrados(): PersonalAdmin[] {
 
@@ -80,7 +120,7 @@ export class AdminPersonal implements OnInit {
     );
   }
 
-  // RESTABLECER FILTROS
+  // LIMPIAR FILTROS
 
   limpiarFiltros(): void {
 
@@ -88,7 +128,7 @@ export class AdminPersonal implements OnInit {
     this.filtroEstatus = '';
   }
 
-  // CONSULTAR EMPLEADOS REALES
+  // CONSULTAR EMPLEADOS
 
   cargarPersonal(): void {
 
@@ -205,8 +245,6 @@ export class AdminPersonal implements OnInit {
 
     return `${partes[2]}/${partes[1]}/${partes[0]}`;
   }
-
-  // NAVEGACION
 
   volverInicio(): void {
     this.router.navigate(['/home']);

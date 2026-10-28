@@ -53,7 +53,227 @@
         el puesto y el estado de los empleados.
       </p>
 
+
+    <div class="alta-toolbar">
+
+    <button
+        type="button"
+        class="nuevo-empleado-button"
+        (click)="abrirFormularioAlta()"
+        [disabled]="mostrarFormularioAlta"
+    >
+        + Nuevo empleado
+    </button>
+
+    </div>
+
     </section>
+
+    
+<!-- FORMULARIO DE REGISTRO -->
+
+@if (mostrarFormularioAlta) {
+
+  <section class="alta-panel">
+
+    <div class="alta-heading">
+
+      <div>
+
+        <span class="section-label">
+          ALTA DE PERSONAL
+        </span>
+
+        <h2>Registrar nuevo empleado</h2>
+
+        <p>
+          Completa la información laboral del nuevo
+          entrenador o recepcionista.
+        </p>
+
+      </div>
+
+      <button
+        type="button"
+        class="cerrar-alta-button"
+        (click)="cerrarFormularioAlta()"
+      >
+        ✕ Cerrar
+      </button>
+
+    </div>
+
+    <div class="alta-form-grid">
+
+      <!-- NOMBRE -->
+
+      <label class="alta-campo">
+
+        <span>Nombre completo *</span>
+
+        <input
+          type="text"
+          name="nombreNuevoPersonal"
+          [(ngModel)]="nuevoEmpleado.nombreCompleto"
+          maxlength="150"
+          placeholder="Nombre y apellidos"
+          autocomplete="off"
+        />
+
+      </label>
+
+      <!-- CORREO -->
+
+      <label class="alta-campo">
+
+        <span>Correo electrónico *</span>
+
+        <input
+          type="email"
+          name="correoNuevoPersonal"
+          [(ngModel)]="nuevoEmpleado.correo"
+          maxlength="150"
+          placeholder="empleado@correo.com"
+          autocomplete="off"
+        />
+
+      </label>
+
+      <!-- TELEFONO -->
+
+      <label class="alta-campo">
+
+        <span>Teléfono *</span>
+
+        <input
+          type="tel"
+          name="telefonoNuevoPersonal"
+          [(ngModel)]="nuevoEmpleado.telefono"
+          maxlength="20"
+          placeholder="4421234567"
+          autocomplete="off"
+        />
+
+      </label>
+
+      <!-- PUESTO -->
+
+      <label class="alta-campo">
+
+        <span>Puesto *</span>
+
+        <select
+          name="puestoNuevoPersonal"
+          [(ngModel)]="nuevoEmpleado.puesto"
+        >
+
+          <option value="">
+            Seleccionar puesto
+          </option>
+
+          <option value="Entrenador">
+            Entrenador
+          </option>
+
+          <option value="Recepcionista">
+            Recepcionista
+          </option>
+
+        </select>
+
+      </label>
+
+      <!-- CONTRATACION -->
+
+      <label class="alta-campo">
+
+        <span>Fecha de contratación *</span>
+
+        <input
+          type="date"
+          name="fechaNuevoPersonal"
+          [(ngModel)]="nuevoEmpleado.fechaContratacion"
+        />
+
+      </label>
+
+      <!-- SUELDO -->
+
+      <label class="alta-campo">
+
+        <span>Sueldo mensual (MXN) *</span>
+
+        <input
+          type="number"
+          name="sueldoNuevoPersonal"
+          [(ngModel)]="nuevoEmpleado.sueldo"
+          min="0"
+          max="99999999.99"
+          step="0.01"
+          placeholder="Ej. 8500.00"
+        />
+
+      </label>
+
+      <!-- CONTRASENA -->
+
+      <label class="alta-campo alta-campo-completo">
+
+        <span>Contraseña inicial *</span>
+
+        <input
+          type="password"
+          name="passwordNuevoPersonal"
+          [(ngModel)]="nuevoEmpleado.password"
+          minlength="8"
+          autocomplete="new-password"
+          placeholder="Mínimo 8 caracteres"
+        />
+
+        <small>
+          Esta contraseña se utilizará para que
+          el empleado inicie sesión en GymFlow.
+        </small>
+
+      </label>
+
+    </div>
+
+    <div class="alta-acciones">
+
+      <p>
+        * Campos obligatorios.
+        El registro se conectará al backend
+        en el siguiente commit.
+      </p>
+
+      <div class="alta-botones">
+
+        <button
+          type="button"
+          class="cerrar-alta-button"
+          (click)="cerrarFormularioAlta()"
+        >
+          Cancelar
+        </button>
+
+        <button
+          type="button"
+          class="guardar-alta-button"
+          disabled
+        >
+          Guardar empleado
+        </button>
+
+      </div>
+
+    </div>
+
+  </section>
+
+}
+
+
 
     <!-- AREAS DEL PERSONAL -->
 
