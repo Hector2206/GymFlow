@@ -35,7 +35,7 @@ export interface PagoNominaAdmin {
   creadoEn: string;
 }
 
-// CAMBIOS SALARIALES
+// CAMBIO SALARIAL
 
 export interface CambiarSalarioAdminRequest {
   monto: number;
@@ -65,6 +65,18 @@ export interface RegistrarPagoNominaAdminRequest {
 }
 
 export interface RegistrarPagoNominaAdminResponse {
+  mensaje: string;
+  idPersonal: number;
+  idPago: number;
+}
+
+// CANCELACIÓN DE UN REGISTRO DE NÓMINA
+
+export interface CancelarPagoNominaAdminRequest {
+  motivo: string;
+}
+
+export interface CancelarPagoNominaAdminResponse {
   mensaje: string;
   idPersonal: number;
   idPago: number;

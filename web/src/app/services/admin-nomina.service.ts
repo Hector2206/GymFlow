@@ -13,7 +13,9 @@ import {
   CambiarSalarioAdminRequest,
   CambiarSalarioAdminResponse,
   RegistrarPagoNominaAdminRequest,
-  RegistrarPagoNominaAdminResponse
+  RegistrarPagoNominaAdminResponse,
+  CancelarPagoNominaAdminRequest,
+  CancelarPagoNominaAdminResponse
 } from '../models/admin-nomina.model';
 
 @Injectable({
@@ -28,7 +30,7 @@ export class AdminNominaService {
     private http: HttpClient
   ) {}
 
-  // CONSULTAR HISTORIAL SALARIAL
+  // HISTORIAL SALARIAL
 
   obtenerHistorialSalarial(
     idPersonal: number
@@ -39,7 +41,7 @@ export class AdminNominaService {
     );
   }
 
-  // CONSULTAR PAGOS DE NÓMINA
+  // HISTORIAL DE PAGOS
 
   obtenerHistorialNomina(
     idPersonal: number
@@ -50,7 +52,7 @@ export class AdminNominaService {
     );
   }
 
-  // CAMBIAR SUELDO MENSUAL
+  // CAMBIAR SUELDO
 
   cambiarSalario(
     idPersonal: number,
@@ -63,7 +65,7 @@ export class AdminNominaService {
     );
   }
 
-  // REGISTRAR PAGO MANUAL DE NÓMINA
+  // REGISTRAR PAGO
 
   registrarPagoNomina(
     idPersonal: number,
@@ -72,6 +74,20 @@ export class AdminNominaService {
 
     return this.http.post<RegistrarPagoNominaAdminResponse>(
       `${this.apiUrl}/${idPersonal}/nomina`,
+      datos
+    );
+  }
+
+  // CANCELAR PAGO (BAJA LÓGICA DEL REGISTRO)
+
+  cancelarPagoNomina(
+    idPersonal: number,
+    idPago: number,
+    datos: CancelarPagoNominaAdminRequest
+  ): Observable<CancelarPagoNominaAdminResponse> {
+
+    return this.http.patch<CancelarPagoNominaAdminResponse>(
+      `${this.apiUrl}/${idPersonal}/nomina/${idPago}/cancelacion`,
       datos
     );
   }

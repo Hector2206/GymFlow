@@ -27,7 +27,8 @@ import {
 import {
   SalarioPersonalAdmin,
   PagoNominaAdmin,
-  CambiarSalarioAdminRequest
+  CambiarSalarioAdminRequest,
+  CancelarPagoNominaAdminRequest
 } from '../models/admin-nomina.model';
 
 @Component({
@@ -56,6 +57,8 @@ export class AdminNomina implements OnInit {
   errorSalarios = '';
   errorPagos = '';
 
+  private versionConsulta = 0;
+
   // CAMBIO SALARIAL
 
   mostrarFormularioCambio = false;
@@ -70,11 +73,25 @@ export class AdminNomina implements OnInit {
 
   errorCambio = '';
   mensajeCambio = '';
-  mensajeRegistroPago = '';
 
   fechaVigencia = this.obtenerFechaActual();
 
-  private versionConsulta = 0;
+  // REGISTRO DE PAGO (PANTALLA INDEPENDIENTE)
+
+  mensajeRegistroPago = '';
+
+  // CANCELACIÓN DE PAGOS
+
+  pagoParaCancelar: PagoNominaAdmin | null = null;
+
+  motivoCancelacion = '';
+  confirmacionCancelacionLeida = false;
+
+  cancelandoPago = false;
+  errorCancelacion = '';
+  mensajeCancelacion = '';
+
+  resultadoCancelacionIncierto = false;
 
   constructor(
     private router: Router,
@@ -105,8 +122,9 @@ export class AdminNomina implements OnInit {
         Number.isInteger(id) &&
         id > 0
       ) {
+
         this.mensajeRegistroPago =
-          `Pago de nómina registrado correctamente. Folio #${id}.`;
+          `Pago registrado correctamente. Folio #${id}.`;
 
         this.location.replaceState(
           this.router.url,
@@ -138,7 +156,8 @@ export class AdminNomina implements OnInit {
 
     if (
       this.cargandoEmpleados ||
-      this.cambiandoSalario
+      this.cambiandoSalario ||
+      this.cancelandoPago
     ) {
       return;
     }
@@ -213,9 +232,20 @@ export class AdminNomina implements OnInit {
 
   cambiarEmpleado(): void {
 
+    if (
+      this.cambiandoSalario ||
+      this.cancelandoPago ||
+      this.pagoParaCancelar
+    ) {
+      return;
+    }
+
     this.cancelarFormulario();
+
     this.mensajeCambio = '';
     this.mensajeRegistroPago = '';
+    this.mensajeCancelacion = '';
+    this.errorCancelacion = '';
 
     this.cargarDetalles();
   }
@@ -224,7 +254,7 @@ export class AdminNomina implements OnInit {
 
   cargarDetalles(): void {
 
-    if (this.cambiandoSalario) {
+    if (this.cambiandoSalario || this.cancelandoPago) {
       return;
     }
 
@@ -252,6 +282,8 @@ export class AdminNomina implements OnInit {
     this.cargandoSalarios = true;
     this.cargandoPagos = true;
 
+    // SALARIOS
+
     this.nominaService
       .obtenerHistorialSalarial(id)
       .pipe(takeUntilDestroyed(this.destroyRef))
@@ -267,8 +299,11 @@ export class AdminNomina implements OnInit {
           this.consultaSalariosRealizada = true;
 
           if (Array.isArray(respuesta)) {
+
             this.salarios = respuesta;
+
           } else {
+
             this.errorSalarios =
               'El historial salarial no es válido.';
           }
@@ -294,6 +329,8 @@ export class AdminNomina implements OnInit {
         }
       });
 
+    // PAGOS
+
     this.nominaService
       .obtenerHistorialNomina(id)
       .pipe(takeUntilDestroyed(this.destroyRef))
@@ -309,8 +346,11 @@ export class AdminNomina implements OnInit {
           this.consultaPagosRealizada = true;
 
           if (Array.isArray(respuesta)) {
+
             this.pagos = respuesta;
+
           } else {
+
             this.errorPagos =
               'El historial de nómina no es válido.';
           }
@@ -344,7 +384,7 @@ export class AdminNomina implements OnInit {
     ) || null;
   }
 
-  // CAMBIAR SUELDO EXISTENTE
+  // CAMBIO DE SUELDO
 
   get puedeAbrirCambio(): boolean {
 
@@ -360,8 +400,11 @@ export class AdminNomina implements OnInit {
       vigente.vigenteDesde < this.obtenerFechaActual() &&
       !this.cargandoSalarios &&
       !this.cambiandoSalario &&
+      !this.cancelandoPago &&
+      !this.pagoParaCancelar &&
       !this.errorSalarios &&
-      !this.resultadoIncierto
+      !this.resultadoIncierto &&
+      !this.resultadoCancelacionIncierto
     );
   }
 
@@ -372,9 +415,11 @@ export class AdminNomina implements OnInit {
     }
 
     this.fechaVigencia = this.obtenerFechaActual();
+
     this.montoNuevo = null;
     this.motivoCambio = '';
     this.confirmacionLeida = false;
+
     this.errorCambio = '';
     this.mensajeCambio = '';
 
@@ -394,6 +439,7 @@ export class AdminNomina implements OnInit {
     this.montoNuevo = null;
     this.motivoCambio = '';
     this.confirmacionLeida = false;
+
     this.errorCambio = '';
   }
 
@@ -410,7 +456,9 @@ export class AdminNomina implements OnInit {
       Number.isFinite(monto) &&
       monto >= 0 &&
       monto <= 99999999.99 &&
-      Math.abs(monto * 100 - Math.round(monto * 100)) < 0.000001 &&
+      Math.abs(
+        monto * 100 - Math.round(monto * 100)
+      ) < 0.000001 &&
       monto !== Number(vigente.monto) &&
       this.motivoCambio.trim() &&
       this.confirmacionLeida &&
@@ -482,6 +530,7 @@ export class AdminNomina implements OnInit {
           ) {
 
             this.resultadoIncierto = true;
+
             this.errorCambio =
               'Respuesta inesperada. Consulta el historial ' +
               'antes de intentar otro cambio.';
@@ -524,7 +573,7 @@ export class AdminNomina implements OnInit {
       });
   }
 
-  // ABRIR PANTALLA INDEPENDIENTE DE PAGO
+  // REGISTRO DE PAGOS EN PANTALLA INDEPENDIENTE
 
   get puedeAbrirRegistroPago(): boolean {
 
@@ -535,8 +584,11 @@ export class AdminNomina implements OnInit {
       !this.cargandoSalarios &&
       !this.cargandoPagos &&
       !this.cambiandoSalario &&
+      !this.cancelandoPago &&
+      !this.pagoParaCancelar &&
       !this.mostrarFormularioCambio &&
       !this.resultadoIncierto &&
+      !this.resultadoCancelacionIncierto &&
       !this.errorSalarios &&
       !this.errorPagos &&
       this.salarios.some(s => s.periodicidad === 'Mensual')
@@ -555,6 +607,165 @@ export class AdminNomina implements OnInit {
       '/admin/personal/nomina/pago',
       empleado.idPersonal
     ]);
+  }
+
+  // CANCELAR PAGO REGISTRADO
+
+  puedeCancelarPago(pago: PagoNominaAdmin): boolean {
+
+    return !!(
+      this.empleadoSeleccionado &&
+      pago.idPersonal === this.empleadoSeleccionado.idPersonal &&
+      pago.estado === 'Pagado' &&
+      this.consultaPagosRealizada &&
+      !this.cargandoPagos &&
+      !this.cambiandoSalario &&
+      !this.cancelandoPago &&
+      !this.mostrarFormularioCambio &&
+      !this.pagoParaCancelar &&
+      !this.resultadoIncierto &&
+      !this.resultadoCancelacionIncierto
+    );
+  }
+
+  abrirCancelacion(pago: PagoNominaAdmin): void {
+
+    if (!this.puedeCancelarPago(pago)) {
+      return;
+    }
+
+    this.pagoParaCancelar = pago;
+    this.motivoCancelacion = '';
+    this.confirmacionCancelacionLeida = false;
+    this.errorCancelacion = '';
+    this.mensajeCancelacion = '';
+  }
+
+  cerrarCancelacion(): void {
+
+    if (this.cancelandoPago) {
+      return;
+    }
+
+    this.pagoParaCancelar = null;
+    this.motivoCancelacion = '';
+    this.confirmacionCancelacionLeida = false;
+
+    if (!this.resultadoCancelacionIncierto) {
+      this.errorCancelacion = '';
+    }
+  }
+
+  get puedeConfirmarCancelacion(): boolean {
+
+    const pago = this.pagoParaCancelar;
+    const empleado = this.empleadoSeleccionado;
+
+    return !!(
+      pago &&
+      empleado &&
+      pago.idPersonal === empleado.idPersonal &&
+      pago.estado === 'Pagado' &&
+      this.pagos.some(
+        registro =>
+          registro.idPago === pago.idPago &&
+          registro.estado === 'Pagado'
+      ) &&
+      this.motivoCancelacion.trim().length > 0 &&
+      this.confirmacionCancelacionLeida &&
+      !this.cambiandoSalario &&
+      !this.cancelandoPago &&
+      !this.resultadoCancelacionIncierto
+    );
+  }
+
+  confirmarCancelacion(): void {
+
+    if (!this.puedeConfirmarCancelacion) {
+      return;
+    }
+
+    const pago = this.pagoParaCancelar;
+    const empleado = this.empleadoSeleccionado;
+
+    if (!pago || !empleado) {
+      return;
+    }
+
+    const idPersonal = empleado.idPersonal;
+    const idPago = pago.idPago;
+
+    const datos: CancelarPagoNominaAdminRequest = {
+      motivo: this.motivoCancelacion.trim()
+    };
+
+    this.cancelandoPago = true;
+    this.errorCancelacion = '';
+
+    this.nominaService
+      .cancelarPagoNomina(idPersonal, idPago, datos)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+
+        next: respuesta => {
+
+          this.cancelandoPago = false;
+
+          if (
+            !respuesta ||
+            respuesta.idPersonal !== idPersonal ||
+            respuesta.idPago !== idPago
+          ) {
+
+            this.resultadoCancelacionIncierto = true;
+
+            this.errorCancelacion =
+              'El servidor respondió de forma inesperada. ' +
+              'Revisa el historial antes de intentar otra operación.';
+
+            this.pagoParaCancelar = null;
+            this.changeDetector.detectChanges();
+            return;
+          }
+
+          this.cerrarCancelacion();
+
+          this.mensajeCancelacion =
+            `El pago #${idPago} se canceló correctamente. ` +
+            'El registro permanece en el historial.';
+
+          this.cargarDetalles();
+          this.changeDetector.detectChanges();
+        },
+
+        error: (error: HttpErrorResponse) => {
+
+          this.cancelandoPago = false;
+
+          if (
+            error.status === 0 ||
+            error.status >= 500
+          ) {
+
+            this.resultadoCancelacionIncierto = true;
+
+            this.errorCancelacion =
+              'No se pudo confirmar si el registro fue cancelado. ' +
+              'Revisa el historial antes de realizar otra operación.';
+
+            this.pagoParaCancelar = null;
+
+          } else {
+
+            this.errorCancelacion = this.obtenerMensajeError(
+              error,
+              'No fue posible cancelar el pago.'
+            );
+          }
+
+          this.changeDetector.detectChanges();
+        }
+      });
   }
 
   // FORMATOS
@@ -598,23 +809,27 @@ export class AdminNomina implements OnInit {
     }
 
     if (error.status === 404) {
-      return 'El expediente no fue encontrado.';
+      return 'El expediente o pago no fue encontrado.';
     }
 
     if (error.status === 0 || error.status >= 500) {
       return 'No fue posible confirmar la operación con el servidor.';
     }
 
-    return (
-      typeof error.error?.mensaje === 'string'
-        ? error.error.mensaje
-        : predeterminado
-    );
+    if (typeof error.error?.mensaje === 'string') {
+      return error.error.mensaje;
+    }
+
+    if (typeof error.error?.detail === 'string') {
+      return error.error.detail;
+    }
+
+    return predeterminado;
   }
 
   volverDirectorio(): void {
 
-    if (!this.cambiandoSalario) {
+    if (!this.cambiandoSalario && !this.cancelandoPago) {
       this.router.navigate(['/admin/personal']);
     }
   }
