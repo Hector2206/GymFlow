@@ -71,14 +71,20 @@ import {
 } from './auth-guard';
 
 import {
+  AdminDashboard
+} from './admin-dashboard/admin-dashboard';
+
+import {
   recepcionistaGuard,
   entrenadorGuard,
-  clienteGuard
+  clienteGuard,
+  administradorGuard
 } from './role-guard';
 
 import {
   AsignacionEntrenadores
 } from './asignacion-entrenadores/asignacion-entrenadores';
+
 
 export const routes: Routes = [
 
@@ -107,6 +113,15 @@ export const routes: Routes = [
       authGuard
     ]
   },
+
+  {
+  path: 'admin/dashboard',
+  component: AdminDashboard,
+  canActivate: [
+    authGuard,
+    administradorGuard
+  ]
+},
 
   {
     path: 'registrar-cliente',
