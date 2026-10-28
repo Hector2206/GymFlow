@@ -81,6 +81,12 @@ import {
 
 
 import {
+  AdminPersonal
+} from './admin-personal/admin-personal';
+
+
+
+import {
   recepcionistaGuard,
   entrenadorGuard,
   clienteGuard,
@@ -138,6 +144,17 @@ export const routes: Routes = [
     administradorGuard
   ]
 },
+
+
+{
+  path: 'admin/personal',
+  component: AdminPersonal,
+  canActivate: [
+    authGuard,
+    administradorGuard
+  ]
+},
+
 
 
   {
