@@ -341,3 +341,187 @@
     padding: 40px 15px;
   }
 }
+
+
+/* SPRINT 7 - LISTADO DE EMPLEADOS */
+
+.personal-summary {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 18px;
+}
+
+.personal-summary span {
+  padding: 10px 16px;
+  border: 1px solid #dfcfaa;
+  border-radius: 20px;
+  background: #f4ead5;
+  color: #87671d;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+/* TABLA */
+
+.personal-table-container {
+  width: 100%;
+  overflow-x: auto;
+  border: 1px solid #e9e0d2;
+  border-radius: 15px;
+}
+
+.personal-table {
+  width: 100%;
+  min-width: 1150px;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.personal-table thead {
+  background: #f7f0e3;
+}
+
+.personal-table th {
+  padding: 17px 15px;
+  color: #87671d;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.personal-table td {
+  padding: 18px 15px;
+  border-top: 1px solid #eee7dc;
+  color: #4b443a;
+  font-size: 12px;
+  vertical-align: middle;
+}
+
+.personal-table tbody tr:hover {
+  background: #fdfaf4;
+}
+
+/* INFORMACION DEL EMPLEADO */
+
+.empleado-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.empleado-avatar {
+  width: 38px;
+  height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border-radius: 11px;
+  background: #f4ead5;
+  font-size: 18px;
+}
+
+.empleado-info strong {
+  display: block;
+  color: #2f2a24;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.empleado-id {
+  display: block;
+  margin-top: 6px;
+  color: #968a7a;
+  font-size: 11px;
+}
+
+/* CONTACTO */
+
+.empleado-contacto span {
+  display: block;
+  overflow-wrap: anywhere;
+}
+
+.empleado-contacto small {
+  display: block;
+  margin-top: 6px;
+  color: #968a7a;
+  font-size: 11px;
+}
+
+/* PUESTOS */
+
+.puesto-badge,
+.personal-estado {
+  display: inline-block;
+  padding: 7px 11px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.puesto-entrenador {
+  background: #e9e6f8;
+  color: #6554a3;
+}
+
+.puesto-recepcion {
+  background: #e5f0fa;
+  color: #35719b;
+}
+
+/* ESTATUS */
+
+.personal-activo {
+  background: #e7f5ec;
+  color: #247a45;
+}
+
+.personal-inactivo {
+  background: #fde8e8;
+  color: #ba3441;
+}
+
+/* SUELDOS Y FECHAS */
+
+.salario-cell {
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.horario-cell {
+  min-width: 145px;
+}
+
+.fecha-cell {
+  white-space: nowrap;
+}
+
+/* REINTENTAR */
+
+.personal-retry-button {
+  margin-top: 22px;
+  padding: 11px 21px;
+  border: 1px solid #dfcfaa;
+  border-radius: 12px;
+  background: #f4ead5;
+  color: #87671d;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.personal-retry-button:hover {
+  background: #e9d7ae;
+}
+
+.personal-retry-button:focus-visible {
+  outline: 3px solid #b58a2a;
+  outline-offset: 3px;
+}
+
+@media (max-width: 600px) {
+  .personal-summary {
+    justify-content: flex-start;
+  }
+}

@@ -135,21 +135,189 @@
 
       </div>
 
-      <div class="directory-placeholder">
 
-        <div class="placeholder-icon">
-          📋
-        </div>
+<!-- LISTADO REAL DE EMPLEADOS -->
 
-        <h3>Directorio de empleados</h3>
+@if (cargando) {
 
-        <p>
-          Aquí aparecerán los entrenadores
-          y recepcionistas registrados,
-          junto con su información laboral.
-        </p>
+  <div class="directory-placeholder" role="status">
 
-      </div>
+    <div class="placeholder-icon">⏳</div>
+
+    <h3>Cargando empleados...</h3>
+
+    <p>
+      Consultando la información del personal
+      registrado en GymFlow.
+    </p>
+
+  </div>
+
+} @else if (error) {
+
+  <div class="directory-placeholder">
+
+    <div class="placeholder-icon">⚠️</div>
+
+    <h3>No fue posible cargar empleados</h3>
+
+    <p role="alert">
+      {{ error }}
+    </p>
+
+    <button
+      type="button"
+      class="personal-retry-button"
+      (click)="cargarPersonal()"
+    >
+      Reintentar
+    </button>
+
+  </div>
+
+} @else if (consultaRealizada && empleados.length === 0) {
+
+  <div class="directory-placeholder">
+
+    <div class="placeholder-icon">👥</div>
+
+    <h3>No hay empleados registrados</h3>
+
+    <p>
+      Actualmente no existen entrenadores
+      o recepcionistas para mostrar.
+    </p>
+
+  </div>
+
+} @else if (empleados.length > 0) {
+
+  <div class="personal-summary">
+    <span>
+      👥 {{ empleados.length }} empleados encontrados
+    </span>
+  </div>
+
+  <div class="personal-table-container">
+
+    <table class="personal-table">
+
+      <thead>
+
+        <tr>
+          <th>Empleado</th>
+          <th>Puesto</th>
+          <th>Contacto</th>
+          <th>Sueldo mensual</th>
+          <th>Horario</th>
+          <th>Estatus</th>
+          <th>Contratación</th>
+          <th>Baja</th>
+        </tr>
+
+      </thead>
+
+      <tbody>
+
+        @for (
+          empleado of empleados;
+          track empleado.idPersonal
+        ) {
+
+          <tr>
+
+            <td>
+
+              <div class="empleado-info">
+
+                <div class="empleado-avatar">
+                  👤
+                </div>
+
+                <div>
+
+                  <strong>
+                    {{ empleado.nombreCompleto }}
+                  </strong>
+
+                  <span class="empleado-id">
+                    ID personal: {{ empleado.idPersonal }}
+                  </span>
+
+                </div>
+
+              </div>
+
+            </td>
+
+            <td>
+
+              <span
+                class="puesto-badge"
+                [class.puesto-entrenador]="empleado.puesto === 'Entrenador'"
+                [class.puesto-recepcion]="empleado.puesto === 'Recepcionista'"
+              >
+                {{ empleado.puesto }}
+              </span>
+
+            </td>
+
+            <td>
+
+              <div class="empleado-contacto">
+
+                <span>
+                  {{ empleado.correo }}
+                </span>
+
+                <small>
+                  {{ empleado.telefono }}
+                </small>
+
+              </div>
+
+            </td>
+
+            <td class="salario-cell">
+              {{ mostrarSalario(empleado.salario) }}
+            </td>
+
+            <td class="horario-cell">
+              {{ empleado.horario || 'Sin asignar' }}
+            </td>
+
+            <td>
+
+              <span
+                class="personal-estado"
+                [class.personal-activo]="empleado.estatus === 'Activo'"
+                [class.personal-inactivo]="empleado.estatus === 'Inactivo'"
+              >
+                {{ empleado.estatus }}
+              </span>
+
+            </td>
+
+            <td class="fecha-cell">
+              {{ mostrarFecha(empleado.fechaContratacion) }}
+            </td>
+
+            <td class="fecha-cell">
+              {{ mostrarFecha(empleado.fechaBaja) }}
+            </td>
+
+          </tr>
+
+        }
+
+      </tbody>
+
+    </table>
+
+  </div>
+
+}
+
 
     </section>
 
