@@ -1,0 +1,595 @@
+
+<div class="administradores-page">
+
+  <!-- ENCABEZADO -->
+
+  <header class="administradores-header">
+
+    <div class="header-content">
+
+      <div>
+
+        <span class="section-label">
+          GYMFLOW / ADMINISTRACIÓN
+        </span>
+
+        <h1>Administrar Administradores</h1>
+
+        <p>
+          Consulta cuentas administrativas y prepara
+          el registro de nuevos administradores.
+        </p>
+
+      </div>
+
+      <button
+        type="button"
+        class="back-button"
+        (click)="volverInicio()"
+      >
+        ← Volver al inicio
+      </button>
+
+    </div>
+
+  </header>
+
+  <main class="administradores-content">
+
+    <!-- ESTADO DEL MÓDULO -->
+
+    <section class="aviso-integracion">
+
+      <div class="aviso-icon">🔐</div>
+
+      <div>
+
+        <strong>
+          Gestión de cuentas protegidas
+        </strong>
+
+        <p>
+          Esta interfaz aún no está conectada
+          a los endpoints de administradores.
+          Ninguna cuenta se creará, modificará
+          ni desactivará desde esta pantalla
+          por el momento.
+        </p>
+
+      </div>
+
+    </section>
+
+    <!-- PRESENTACIÓN -->
+
+    <section class="intro-section">
+
+      <span class="section-label">
+        GESTIÓN DE ACCESOS
+      </span>
+
+      <h2>Administradores de GymFlow</h2>
+
+      <p>
+        Los administradores pueden acceder
+        a funciones sensibles como personal,
+        nómina, membresías y gestión del gimnasio.
+      </p>
+
+    </section>
+
+    <!-- NAVEGACIÓN -->
+
+    <nav
+      class="administradores-tabs"
+      aria-label="Secciones de administradores"
+    >
+
+      <button
+        type="button"
+        [class.tab-activa]="vista === 'listado'"
+        [attr.aria-current]="
+          vista === 'listado' ? 'page' : null
+        "
+        (click)="cambiarVista('listado')"
+      >
+        👥 Administradores
+      </button>
+
+      <button
+        type="button"
+        [class.tab-activa]="vista === 'nuevo'"
+        [attr.aria-current]="
+          vista === 'nuevo' ? 'page' : null
+        "
+        (click)="cambiarVista('nuevo')"
+      >
+        ➕ Nuevo administrador
+      </button>
+
+      <button
+        type="button"
+        [class.tab-activa]="vista === 'gestion'"
+        [attr.aria-current]="
+          vista === 'gestion' ? 'page' : null
+        "
+        (click)="cambiarVista('gestion')"
+      >
+        🛡️ Gestión de cuentas
+      </button>
+
+    </nav>
+
+    <!-- CONSULTA DE ADMINISTRADORES -->
+
+    @if (vista === 'listado') {
+
+      <section class="administradores-panel">
+
+        <div class="panel-heading">
+
+          <div>
+
+            <span class="section-label">
+              DIRECTORIO ADMINISTRATIVO
+            </span>
+
+            <h2>Administradores registrados</h2>
+
+            <p>
+              Consulta las cuentas que tienen
+              acceso administrativo al sistema.
+            </p>
+
+          </div>
+
+          <div class="panel-icon">👥</div>
+
+        </div>
+
+        <div class="estado-vacio">
+
+          <div class="estado-icon">🗂️</div>
+
+          <h3>Listado pendiente de integración</h3>
+
+          <p>
+            Para mostrar administradores reales
+            necesitamos el endpoint de consulta
+            de usuarios con rol Administrador.
+          </p>
+
+          <p>
+            Por seguridad, no mostraremos
+            usuarios ficticios ni reutilizaremos
+            el listado de empleados.
+          </p>
+
+        </div>
+
+        <div class="acciones-panel">
+
+          <button
+            type="button"
+            class="boton-primario"
+            (click)="cambiarVista('nuevo')"
+          >
+            + Preparar nuevo administrador
+          </button>
+
+        </div>
+
+      </section>
+
+    }
+
+    <!-- REGISTRO -->
+
+    @if (vista === 'nuevo') {
+
+      <section class="administradores-panel">
+
+        <div class="panel-heading">
+
+          <div>
+
+            <span class="section-label">
+              ALTA DE ADMINISTRADORES
+            </span>
+
+            <h2>Registrar otro administrador</h2>
+
+            <p>
+              Prepara los datos de la cuenta
+              administrativa que se creará
+              cuando Backend esté listo.
+            </p>
+
+          </div>
+
+          <div class="panel-icon">➕</div>
+
+        </div>
+
+        <!-- ROL FIJO -->
+
+        <div class="rol-asignado">
+
+          <div>
+
+            <small>ROL ASIGNADO</small>
+
+            <strong>🛡️ Administrador</strong>
+
+          </div>
+
+          <span class="rol-chip">
+            Rol protegido
+          </span>
+
+        </div>
+
+        <div class="form-grid">
+
+          <label class="campo">
+
+            <span>Nombre completo *</span>
+
+            <input
+              type="text"
+              name="nombreAdministrador"
+              [(ngModel)]="nuevoAdministrador.nombreCompleto"
+              (ngModelChange)="reiniciarRevision()"
+              maxlength="150"
+              placeholder="Nombre del administrador"
+              autocomplete="off"
+            />
+
+          </label>
+
+          <label class="campo">
+
+            <span>Correo electrónico *</span>
+
+            <input
+              type="email"
+              name="correoAdministrador"
+              [(ngModel)]="nuevoAdministrador.correo"
+              (ngModelChange)="reiniciarRevision()"
+              maxlength="150"
+              placeholder="correo@ejemplo.com"
+              autocomplete="off"
+            />
+
+          </label>
+
+          <label class="campo">
+
+            <span>Teléfono *</span>
+
+            <input
+              type="tel"
+              name="telefonoAdministrador"
+              [(ngModel)]="nuevoAdministrador.telefono"
+              (ngModelChange)="reiniciarRevision()"
+              placeholder="10 dígitos"
+              autocomplete="off"
+            />
+
+          </label>
+
+          <div class="campo">
+
+            <span>Estado inicial</span>
+
+            <div class="estado-inicial">
+
+              <strong>Activo</strong>
+
+              <small>
+                Propuesto para una nueva cuenta
+              </small>
+
+            </div>
+
+          </div>
+
+        </div>
+
+        <!-- SEGURIDAD -->
+
+        <div class="form-subtitle">
+
+          <span class="section-label">
+            SEGURIDAD DE LA CUENTA
+          </span>
+
+          <h3>Contraseña inicial</h3>
+
+          <p>
+            La contraseña solo se usará para
+            validar el formulario localmente.
+            No se guardará ni se enviará
+            a ningún servidor.
+          </p>
+
+        </div>
+
+        <div class="form-grid">
+
+          <label class="campo">
+
+            <span>Contraseña *</span>
+
+            <input
+              type="password"
+              name="passwordAdministrador"
+              [(ngModel)]="nuevoAdministrador.password"
+              (ngModelChange)="reiniciarRevision()"
+              placeholder="Mínimo 8 caracteres"
+              autocomplete="new-password"
+            />
+
+          </label>
+
+          <label class="campo">
+
+            <span>Confirmar contraseña *</span>
+
+            <input
+              type="password"
+              name="confirmarPassword"
+              [(ngModel)]="nuevoAdministrador.confirmarPassword"
+              (ngModelChange)="reiniciarRevision()"
+              placeholder="Repite la contraseña"
+              autocomplete="new-password"
+            />
+
+          </label>
+
+        </div>
+
+        <div class="form-nota">
+
+          <strong>
+            Seguridad obligatoria
+          </strong>
+
+          <p>
+            El backend deberá verificar
+            que únicamente un administrador
+            autorizado pueda crear esta cuenta,
+            asignar el rol de forma segura,
+            generar el hash de contraseña
+            y registrar la operación en auditoría.
+          </p>
+
+        </div>
+
+        @if (error) {
+
+          <div
+            class="mensaje-error"
+            role="alert"
+          >
+            {{ error }}
+          </div>
+
+        }
+
+        <div class="form-actions">
+
+          <button
+            type="button"
+            class="boton-secundario"
+            (click)="limpiarFormulario()"
+          >
+            Limpiar formulario
+          </button>
+
+          <button
+            type="button"
+            class="boton-primario"
+            (click)="revisarFormulario()"
+          >
+            Revisar datos
+          </button>
+
+        </div>
+
+      </section>
+
+      <!-- CONFIRMACIÓN DE VISTA PREVIA -->
+
+      @if (formularioRevisado) {
+
+        <section class="administradores-panel">
+
+          <div class="panel-heading">
+
+            <div>
+
+              <span class="section-label">
+                VISTA PREVIA
+              </span>
+
+              <h2>Datos revisados</h2>
+
+              <p>
+                La siguiente información
+                no se ha registrado.
+              </p>
+
+            </div>
+
+            <div class="panel-icon">✅</div>
+
+          </div>
+
+          <div class="preview-usuario">
+
+            <div class="usuario-avatar">
+              👤
+            </div>
+
+            <div class="usuario-detalle">
+
+              <strong>
+                {{ nuevoAdministrador.nombreCompleto }}
+              </strong>
+
+              <span>
+                {{ nuevoAdministrador.correo }}
+              </span>
+
+              <small>
+                {{ nuevoAdministrador.telefono }}
+              </small>
+
+            </div>
+
+            <span class="rol-chip">
+              Administrador
+            </span>
+
+          </div>
+
+          <div class="guardado-pendiente">
+
+            <strong>
+              🔒 Registro pendiente de integración
+            </strong>
+
+            <p>
+              El formulario pasó las validaciones
+              locales. Todavía no se ha creado
+              ningún usuario en GymFlow.
+            </p>
+
+            <p>
+              La contraseña no se muestra
+              en esta vista previa.
+            </p>
+
+          </div>
+
+        </section>
+
+      }
+
+    }
+
+    <!-- GESTIÓN DE CUENTAS -->
+
+    @if (vista === 'gestion') {
+
+      <section class="administradores-panel">
+
+        <div class="panel-heading">
+
+          <div>
+
+            <span class="section-label">
+              PERMISOS Y CONTROL DE ACCESO
+            </span>
+
+            <h2>Gestión de administradores</h2>
+
+            <p>
+              Operaciones reservadas para
+              administradores autorizados.
+            </p>
+
+          </div>
+
+          <div class="panel-icon">🛡️</div>
+
+        </div>
+
+        <div class="funciones-grid">
+
+          <div class="funcion-card">
+
+            <div class="funcion-icon">✏️</div>
+
+            <h3>Editar información</h3>
+
+            <p>
+              Actualizar nombre, correo y
+              teléfono de una cuenta
+              administrativa existente.
+            </p>
+
+            <small>
+              Pendiente de endpoint
+            </small>
+
+          </div>
+
+          <div class="funcion-card">
+
+            <div class="funcion-icon">🔒</div>
+
+            <h3>Desactivar cuenta</h3>
+
+            <p>
+              Dar de baja un administrador,
+              conservando su registro
+              y el historial de auditoría.
+            </p>
+
+            <small>
+              Pendiente de endpoint
+            </small>
+
+          </div>
+
+          <div class="funcion-card">
+
+            <div class="funcion-icon">📋</div>
+
+            <h3>Consultar estado</h3>
+
+            <p>
+              Identificar cuáles cuentas
+              están activas o inactivas
+              y revisar sus datos.
+            </p>
+
+            <small>
+              Pendiente de endpoint
+            </small>
+
+          </div>
+
+        </div>
+
+        <div class="form-nota">
+
+          <strong>
+            Protección de administradores
+          </strong>
+
+          <p>
+            El sistema deberá impedir que
+            se desactive la última cuenta
+            de Administrador activa.
+            También deberá evitar que un
+            administrador se desactive a sí
+            mismo sin un procedimiento
+            de recuperación seguro.
+          </p>
+
+        </div>
+
+      </section>
+
+    }
+
+  </main>
+
+  <footer class="administradores-footer">
+    GymFlow · Gestión de administradores
+  </footer>
+
+</div>

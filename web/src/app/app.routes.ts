@@ -79,6 +79,10 @@ import {
 } from './admin-membresias/admin-membresias';
 
 import {
+  AdminAdministradores
+} from './admin-administradores/admin-administradores';
+
+import {
   AdminPersonal
 } from './admin-personal/admin-personal';
 
@@ -157,13 +161,21 @@ export const routes: Routes = [
     canActivate: [authGuard, administradorGuard]
   },
 
-  // ADMINISTRAR MEMBRESÍAS
-
   {
     path: 'admin/membresias',
     component: AdminMembresias,
     canActivate: [authGuard, administradorGuard]
   },
+
+  // NUEVO: ADMINISTRAR ADMINISTRADORES
+
+  {
+    path: 'admin/administradores',
+    component: AdminAdministradores,
+    canActivate: [authGuard, administradorGuard]
+  },
+
+  // PERSONAL
 
   {
     path: 'admin/personal/nuevo',

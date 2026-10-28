@@ -82,7 +82,9 @@ export class Home implements OnInit {
 
             this.authService.cerrarSesion();
 
-            this.router.navigate(['/login']);
+            this.router.navigate([
+              '/login'
+            ]);
 
             return;
           }
@@ -124,7 +126,6 @@ export class Home implements OnInit {
   // PERFIL
 
   irPerfil(): void {
-
     this.router.navigate(['/perfil']);
   }
 
@@ -141,9 +142,7 @@ export class Home implements OnInit {
       return;
     }
 
-    this.router.navigate([
-      '/admin/dashboard'
-    ]);
+    this.router.navigate(['/admin/dashboard']);
   }
 
   irClientesAdministrador(): void {
@@ -157,9 +156,7 @@ export class Home implements OnInit {
       return;
     }
 
-    this.router.navigate([
-      '/admin/clientes'
-    ]);
+    this.router.navigate(['/admin/clientes']);
   }
 
   irPersonalAdministrador(): void {
@@ -173,12 +170,8 @@ export class Home implements OnInit {
       return;
     }
 
-    this.router.navigate([
-      '/admin/personal'
-    ]);
+    this.router.navigate(['/admin/personal']);
   }
-
-  // HORARIOS Y ASISTENCIAS
 
   irHorariosAdministrador(): void {
 
@@ -196,8 +189,6 @@ export class Home implements OnInit {
     ]);
   }
 
-  // NUEVO: ADMINISTRAR MEMBRESÍAS
-
   irMembresiasAdministrador(): void {
 
     if (!this.esAdministrador()) {
@@ -209,8 +200,24 @@ export class Home implements OnInit {
       return;
     }
 
+    this.router.navigate(['/admin/membresias']);
+  }
+
+  // NUEVO: ADMINISTRAR ADMINISTRADORES
+
+  irAdministradores(): void {
+
+    if (!this.esAdministrador()) {
+
+      this.mensaje =
+        'Solo los administradores pueden gestionar otras cuentas administrativas.';
+
+      this.changeDetector.detectChanges();
+      return;
+    }
+
     this.router.navigate([
-      '/admin/membresias'
+      '/admin/administradores'
     ]);
   }
 
@@ -227,9 +234,7 @@ export class Home implements OnInit {
       return;
     }
 
-    this.router.navigate([
-      '/registrar-cliente'
-    ]);
+    this.router.navigate(['/registrar-cliente']);
   }
 
   irControlAcceso(): void {
@@ -243,9 +248,7 @@ export class Home implements OnInit {
       return;
     }
 
-    this.router.navigate([
-      '/control-acceso'
-    ]);
+    this.router.navigate(['/control-acceso']);
   }
 
   irHistorialAsistencias(): void {
@@ -259,9 +262,7 @@ export class Home implements OnInit {
       return;
     }
 
-    this.router.navigate([
-      '/historial-asistencias'
-    ]);
+    this.router.navigate(['/historial-asistencias']);
   }
 
   irRegistrarPago(): void {
@@ -275,9 +276,7 @@ export class Home implements OnInit {
       return;
     }
 
-    this.router.navigate([
-      '/registrar-pago'
-    ]);
+    this.router.navigate(['/registrar-pago']);
   }
 
   irHistorialPagos(): void {
@@ -291,9 +290,7 @@ export class Home implements OnInit {
       return;
     }
 
-    this.router.navigate([
-      '/historial-pagos'
-    ]);
+    this.router.navigate(['/historial-pagos']);
   }
 
   irAsignacionEntrenadores(): void {
@@ -325,9 +322,7 @@ export class Home implements OnInit {
       return;
     }
 
-    this.router.navigate([
-      '/mi-codigo-acceso'
-    ]);
+    this.router.navigate(['/mi-codigo-acceso']);
   }
 
   irMisAsistencias(): void {
@@ -341,9 +336,7 @@ export class Home implements OnInit {
       return;
     }
 
-    this.router.navigate([
-      '/mis-asistencias'
-    ]);
+    this.router.navigate(['/mis-asistencias']);
   }
 
   irMisPagos(): void {
@@ -357,9 +350,7 @@ export class Home implements OnInit {
       return;
     }
 
-    this.router.navigate([
-      '/mis-pagos'
-    ]);
+    this.router.navigate(['/mis-pagos']);
   }
 
   irRutinasCliente(): void {
@@ -373,9 +364,7 @@ export class Home implements OnInit {
       return;
     }
 
-    this.router.navigate([
-      '/rutinas'
-    ]);
+    this.router.navigate(['/rutinas']);
   }
 
   irMiProgreso(): void {
@@ -389,9 +378,7 @@ export class Home implements OnInit {
       return;
     }
 
-    this.router.navigate([
-      '/mi-progreso'
-    ]);
+    this.router.navigate(['/mi-progreso']);
   }
 
   // ENTRENADOR
@@ -467,8 +454,6 @@ export class Home implements OnInit {
 
     this.authService.cerrarSesion();
 
-    this.router.navigate([
-      '/login'
-    ]);
+    this.router.navigate(['/login']);
   }
 }
