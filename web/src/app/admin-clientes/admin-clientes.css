@@ -488,3 +488,45 @@
     gap: 18px;
   }
 }
+
+
+/* SPRINT 7 - FILTROS ADMINISTRATIVOS */
+
+.busqueda-campo select {
+  width: 100%;
+  min-width: 0;
+  padding: 14px 16px;
+  border: 1px solid #dfcfaa;
+  border-radius: 12px;
+  background: #fffdf8;
+  color: #2f2a24;
+  font-size: 14px;
+  font-family: inherit;
+  cursor: pointer;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.busqueda-campo select:focus {
+  outline: none;
+  border-color: #b58a2a;
+  box-shadow:
+    0 0 0 3px rgba(181, 138, 42, 0.12);
+}
+
+.busqueda-campo input[type="number"] {
+  appearance: textfield;
+  -moz-appearance: textfield;
+}
+
+.busqueda-campo input[type="number"]::-webkit-inner-spin-button,
+.busqueda-campo input[type="number"]::-webkit-outer-spin-button {
+  margin: 0;
+}
+
+@media (max-width: 650px) {
+  .busqueda-form {
+    grid-template-columns: 1fr;
+  }
+}

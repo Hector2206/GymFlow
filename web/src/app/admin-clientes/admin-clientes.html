@@ -73,9 +73,11 @@
       </div>
 
 
-<!-- BUSQUEDA POR NOMBRE Y CORREO -->
+<!-- BUSQUEDA Y FILTROS ADMINISTRATIVOS -->
 
 <div class="busqueda-form">
+
+  <!-- NOMBRE -->
 
   <label class="busqueda-campo">
 
@@ -93,6 +95,8 @@
 
   </label>
 
+  <!-- CORREO -->
+
   <label class="busqueda-campo">
 
     <span>Correo electrónico</span>
@@ -109,11 +113,86 @@
 
   </label>
 
+  <!-- ESTATUS -->
+
+  <label class="busqueda-campo">
+
+    <span>Estatus del cliente</span>
+
+    <select
+      name="estatusBusqueda"
+      [(ngModel)]="estatusBusqueda"
+      (ngModelChange)="alCambiarBusqueda()"
+    >
+      <option value="">
+        Todos los estatus
+      </option>
+
+      <option value="Activo">
+        Activo
+      </option>
+
+      <option value="Inactivo">
+        Inactivo
+      </option>
+    </select>
+
+  </label>
+
+  <!-- VIGENCIA -->
+
+  <label class="busqueda-campo">
+
+    <span>Vigencia de membresía</span>
+
+    <select
+      name="vigenciaBusqueda"
+      [(ngModel)]="vigenciaBusqueda"
+      (ngModelChange)="alCambiarBusqueda()"
+    >
+      <option value="">
+        Todas las vigencias
+      </option>
+
+      <option value="Vigente">
+        Vigente
+      </option>
+
+      <option value="Vencida">
+        Vencida
+      </option>
+
+      <option value="SinPagos">
+        Sin pagos
+      </option>
+    </select>
+
+  </label>
+
+  <!-- ID MEMBRESIA -->
+
+  <label class="busqueda-campo">
+
+    <span>ID de membresía</span>
+
+    <input
+      type="number"
+      name="idMembresiaBusqueda"
+      [(ngModel)]="idMembresiaBusqueda"
+      (ngModelChange)="alCambiarBusqueda()"
+      min="1"
+      step="1"
+      placeholder="Ej. 1"
+    />
+
+  </label>
+
 </div>
 
 <p class="busqueda-ayuda">
-  🔎 Los resultados se actualizan automáticamente
-  mientras escribes. Puedes combinar ambos campos.
+  🔎 Puedes combinar varios filtros.
+  Los resultados se actualizan automáticamente
+  al modificar cualquier campo.
 </p>
 
 

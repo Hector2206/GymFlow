@@ -25,7 +25,9 @@ import {
 } from '../services/admin-cliente.service';
 
 import {
-  ClienteAdmin
+  ClienteAdmin,
+  EstatusClienteAdmin,
+  VigenciaClienteAdmin
 } from '../models/admin-cliente.model';
 
 @Component({
@@ -43,9 +45,16 @@ export class AdminClientes implements OnInit {
   error = '';
   consultaRealizada = false;
 
-  // Sprint 7 - Busqueda por nombre y correo
+  // BUSQUEDA POR TEXTO
+
   nombreBusqueda = '';
   correoBusqueda = '';
+
+  // FILTROS ADMINISTRATIVOS
+
+  estatusBusqueda: EstatusClienteAdmin | '' = '';
+  vigenciaBusqueda: VigenciaClienteAdmin | '' = '';
+  idMembresiaBusqueda: number | null = null;
 
   private cambiosBusqueda = new Subject<void>();
   private consultaClientes?: Subscription;
@@ -59,7 +68,6 @@ export class AdminClientes implements OnInit {
 
   ngOnInit(): void {
 
-    // Esperar 350 ms despues de escribir
     this.cambiosBusqueda
       .pipe(
         debounceTime(350),
@@ -69,15 +77,15 @@ export class AdminClientes implements OnInit {
         this.cargarClientes();
       });
 
-    // Consulta inicial sin filtros
+    // Mostrar todos al entrar
     this.cargarClientes();
   }
 
-  // DETECTAR CAMBIOS EN LOS CAMPOS
+  // DETECTAR CAMBIO DE CUALQUIER FILTRO
 
   alCambiarBusqueda(): void {
 
-    // Cancelar la solicitud anterior inmediatamente
+    // Cancelar consultas anteriores
     this.consultaClientes?.unsubscribe();
 
     this.clientes = [];
@@ -85,10 +93,11 @@ export class AdminClientes implements OnInit {
     this.cargando = true;
     this.consultaRealizada = false;
 
+    // Solicitar nueva busqueda
     this.cambiosBusqueda.next();
   }
 
-  // CONSULTAR CLIENTES CON FILTROS
+  // CONSULTAR CLIENTES AL BACKEND
 
   cargarClientes(): void {
 
@@ -97,17 +106,47 @@ export class AdminClientes implements OnInit {
     const nombre = this.nombreBusqueda.trim();
     const correo = this.correoBusqueda.trim();
 
+    const estatus =
+      this.estatusBusqueda || undefined;
+
+    const vigencia =
+      this.vigenciaBusqueda || undefined;
+
+    const idMembresia =
+      this.idMembresiaBusqueda;
+
     this.error = '';
     this.clientes = [];
     this.consultaRealizada = false;
 
-    // Validacion de longitud
-    if (nombre.length > 150 || correo.length > 150) {
+    // VALIDACION DE TEXTO
+
+    if (
+      nombre.length > 150 ||
+      correo.length > 150
+    ) {
 
       this.cargando = false;
-
       this.error =
         'El nombre y el correo no pueden superar 150 caracteres.';
+
+      this.changeDetector.detectChanges();
+      return;
+    }
+
+    // VALIDACION DE MEMBRESIA
+
+    if (
+      idMembresia !== null &&
+      (
+        !Number.isInteger(idMembresia) ||
+        idMembresia <= 0
+      )
+    ) {
+
+      this.cargando = false;
+      this.error =
+        'El ID de membresía debe ser un número entero mayor que cero.';
 
       this.changeDetector.detectChanges();
       return;
@@ -118,8 +157,20 @@ export class AdminClientes implements OnInit {
     this.consultaClientes =
       this.adminClienteService
         .buscarClientes({
+
           nombre: nombre || undefined,
-          correo: correo || undefined
+
+          correo: correo || undefined,
+
+          estatus,
+
+          vigencia,
+
+          idMembresia:
+            idMembresia === null
+              ? undefined
+              : idMembresia
+
         })
         .pipe(
           takeUntilDestroyed(this.destroyRef)
