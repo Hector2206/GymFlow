@@ -1,14 +1,14 @@
+
 import { Routes } from '@angular/router';
 
 import { Splash } from './splash/splash';
-
 import { Login } from './login/login';
-
 import { Home } from './home/home';
-
 import { Perfil } from './perfil/perfil';
 
-import { ControlAcceso } from './control-acceso/control-acceso';
+import {
+  ControlAcceso
+} from './control-acceso/control-acceso';
 
 import {
   HistorialAsistencias
@@ -67,30 +67,30 @@ import {
 } from './mi-progreso/mi-progreso';
 
 import {
-  authGuard
-} from './auth-guard';
-
-import {
   AdminDashboard
 } from './admin-dashboard/admin-dashboard';
-
 
 import {
   AdminClientes
 } from './admin-clientes/admin-clientes';
 
-
 import {
   AdminPersonal
 } from './admin-personal/admin-personal';
-
 
 import {
   AdminPersonalAlta
 } from './admin-personal-alta/admin-personal-alta';
 
+import {
+  AdminPersonalEditar
+} from './admin-personal-editar/admin-personal-editar';
 
+import {
+  AsignacionEntrenadores
+} from './asignacion-entrenadores/asignacion-entrenadores';
 
+import { authGuard } from './auth-guard';
 
 import {
   recepcionistaGuard,
@@ -98,11 +98,6 @@ import {
   clienteGuard,
   administradorGuard
 } from './role-guard';
-
-import {
-  AsignacionEntrenadores
-} from './asignacion-entrenadores/asignacion-entrenadores';
-
 
 export const routes: Routes = [
 
@@ -119,220 +114,162 @@ export const routes: Routes = [
   {
     path: 'home',
     component: Home,
-    canActivate: [
-      authGuard
-    ]
+    canActivate: [authGuard]
   },
 
   {
     path: 'perfil',
     component: Perfil,
-    canActivate: [
-      authGuard
-    ]
+    canActivate: [authGuard]
+  },
+
+  // ADMINISTRADOR
+
+  {
+    path: 'admin/dashboard',
+    component: AdminDashboard,
+    canActivate: [authGuard, administradorGuard]
   },
 
   {
-  path: 'admin/dashboard',
-  component: AdminDashboard,
-  canActivate: [
-    authGuard,
-    administradorGuard
-  ]
-},
+    path: 'admin/clientes',
+    component: AdminClientes,
+    canActivate: [authGuard, administradorGuard]
+  },
 
+  {
+    path: 'admin/personal/nuevo',
+    component: AdminPersonalAlta,
+    canActivate: [authGuard, administradorGuard]
+  },
 
-{
-  path: 'admin/clientes',
-  component: AdminClientes,
-  canActivate: [
-    authGuard,
-    administradorGuard
-  ]
-},
+  {
+    path: 'admin/personal/editar/:id',
+    component: AdminPersonalEditar,
+    canActivate: [authGuard, administradorGuard]
+  },
 
+  {
+    path: 'admin/personal',
+    component: AdminPersonal,
+    canActivate: [authGuard, administradorGuard]
+  },
 
-{
-  path: 'admin/personal/nuevo',
-  component: AdminPersonalAlta,
-  canActivate: [
-    authGuard,
-    administradorGuard
-  ]
-},
-
-
-{
-  path: 'admin/personal',
-  component: AdminPersonal,
-  canActivate: [
-    authGuard,
-    administradorGuard
-  ]
-},
-
-
+  // RECEPCION
 
   {
     path: 'registrar-cliente',
     component: RegistrarCliente,
-    canActivate: [
-      authGuard,
-      recepcionistaGuard
-    ]
+    canActivate: [authGuard, recepcionistaGuard]
   },
 
   {
     path: 'control-acceso',
     component: ControlAcceso,
-    canActivate: [
-      authGuard,
-      recepcionistaGuard
-    ]
+    canActivate: [authGuard, recepcionistaGuard]
   },
 
   {
     path: 'historial-asistencias',
     component: HistorialAsistencias,
-    canActivate: [
-      authGuard,
-      recepcionistaGuard
-    ]
+    canActivate: [authGuard, recepcionistaGuard]
   },
 
   {
     path: 'registrar-pago',
     component: RegistrarPago,
-    canActivate: [
-      authGuard,
-      recepcionistaGuard
-    ]
+    canActivate: [authGuard, recepcionistaGuard]
   },
 
   {
     path: 'historial-pagos',
     component: HistorialPagos,
-    canActivate: [
-      authGuard,
-      recepcionistaGuard
-    ]
+    canActivate: [authGuard, recepcionistaGuard]
   },
 
   {
-  path: 'asignacion-entrenadores',
-  component: AsignacionEntrenadores,
-  canActivate: [
-    authGuard,
-    recepcionistaGuard
-  ]
-},
+    path: 'asignacion-entrenadores',
+    component: AsignacionEntrenadores,
+    canActivate: [authGuard, recepcionistaGuard]
+  },
+
+  // CLIENTE
 
   {
     path: 'mi-codigo-acceso',
     component: MiCodigoAcceso,
-    canActivate: [
-      authGuard,
-      clienteGuard
-    ]
+    canActivate: [authGuard, clienteGuard]
   },
 
   {
     path: 'mis-asistencias',
     component: MisAsistencias,
-    canActivate: [
-      authGuard,
-      clienteGuard
-    ]
+    canActivate: [authGuard, clienteGuard]
   },
 
   {
     path: 'mis-pagos',
     component: MisPagos,
-    canActivate: [
-      authGuard,
-      clienteGuard
-    ]
+    canActivate: [authGuard, clienteGuard]
   },
 
   {
     path: 'rutinas',
     component: MiRutina,
-    canActivate: [
-      authGuard,
-      clienteGuard
-    ]
+    canActivate: [authGuard, clienteGuard]
   },
 
   {
-  path: 'mi-progreso',
-  component: MiProgreso,
-  canActivate: [
-    authGuard,
-    clienteGuard
-  ]
-},
+    path: 'mi-progreso',
+    component: MiProgreso,
+    canActivate: [authGuard, clienteGuard]
+  },
+
+  // ENTRENADOR
+
   {
     path: 'entrenador/mis-clientes',
     component: MisClientesEntrenador,
-    canActivate: [
-      authGuard,
-      entrenadorGuard
-    ]
+    canActivate: [authGuard, entrenadorGuard]
   },
 
   {
     path: 'entrenador/ejercicios/nuevo',
     component: FormularioEjercicio,
-    canActivate: [
-      authGuard,
-      entrenadorGuard
-    ]
+    canActivate: [authGuard, entrenadorGuard]
   },
 
   {
     path: 'entrenador/ejercicios/editar/:id',
     component: FormularioEjercicio,
-    canActivate: [
-      authGuard,
-      entrenadorGuard
-    ]
+    canActivate: [authGuard, entrenadorGuard]
   },
 
   {
     path: 'entrenador/ejercicios',
     component: AdministrarEjercicios,
-    canActivate: [
-      authGuard,
-      entrenadorGuard
-    ]
+    canActivate: [authGuard, entrenadorGuard]
   },
 
   {
     path: 'entrenador/rutinas/nueva',
     component: FormularioRutina,
-    canActivate: [
-      authGuard,
-      entrenadorGuard
-    ]
+    canActivate: [authGuard, entrenadorGuard]
   },
 
   {
     path: 'entrenador/rutinas/editar/:id',
     component: FormularioRutina,
-    canActivate: [
-      authGuard,
-      entrenadorGuard
-    ]
+    canActivate: [authGuard, entrenadorGuard]
   },
 
   {
     path: 'entrenador/rutinas',
     component: AdministrarRutinas,
-    canActivate: [
-      authGuard,
-      entrenadorGuard
-    ]
+    canActivate: [authGuard, entrenadorGuard]
   },
+
+  // INICIO
 
   {
     path: '',

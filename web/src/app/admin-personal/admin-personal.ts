@@ -6,11 +6,11 @@ import {
   OnInit
 } from '@angular/core';
 
+import { Location } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { Location } from '@angular/common';
 
 import {
   AdminPersonalService
@@ -31,20 +31,21 @@ import {
 })
 export class AdminPersonal implements OnInit {
 
-  // DIRECTORIO DE EMPLEADOS
-
   empleados: PersonalAdmin[] = [];
-  mensajeRegistro = '';
+
   cargando = false;
   error = '';
   consultaRealizada = false;
 
-  // FILTROS DEL DIRECTORIO
+  mensajeRegistro = '';
 
   filtroPuesto: PuestoPersonalAdmin | '' = '';
   filtroEstatus: EstatusPersonalAdmin | '' = '';
 
-  // SERVICIOS NECESARIOS
+  // SELECTOR DE EMPLEADOS
+
+  mostrarSelectorEdicion = false;
+  idPersonalSeleccionado: number | null = null;
 
   constructor(
     private router: Router,
@@ -54,49 +55,41 @@ export class AdminPersonal implements OnInit {
     private location: Location
   ) {}
 
-  // CARGAR EMPLEADOS AL ENTRAR
+  ngOnInit(): void {
 
-  
-ngOnInit(): void {
-
-  const estado = this.location.getState();
-
-  if (
-    estado &&
-    typeof estado === 'object' &&
-    'empleadoRegistradoId' in estado
-  ) {
-
-    const idPersonal =
-      (estado as {
-        empleadoRegistradoId?: unknown
-      }).empleadoRegistradoId;
+    const estado = this.location.getState();
 
     if (
-      typeof idPersonal === 'number' &&
-      Number.isInteger(idPersonal) &&
-      idPersonal > 0
+      estado &&
+      typeof estado === 'object' &&
+      'empleadoRegistradoId' in estado
     ) {
 
-      this.mensajeRegistro =
-        `Empleado registrado correctamente. ` +
-        `ID de personal: ${idPersonal}.`;
+      const id = (
+        estado as { empleadoRegistradoId?: unknown }
+      ).empleadoRegistradoId;
 
-      // Consumir la confirmacion para que
-      // no reaparezca al recargar la pagina.
-      this.location.replaceState(
-        '/admin/personal',
-        '',
-        {}
-      );
+      if (
+        typeof id === 'number' &&
+        Number.isInteger(id) &&
+        id > 0
+      ) {
+
+        this.mensajeRegistro =
+          `Empleado registrado correctamente. ID: ${id}.`;
+
+        this.location.replaceState(
+          '/admin/personal',
+          '',
+          {}
+        );
+      }
     }
+
+    this.cargarPersonal();
   }
 
-  this.cargarPersonal();
-}
-
-
-  // NAVEGAR AL FORMULARIO INDEPENDIENTE
+  // REGISTRAR EMPLEADO
 
   irRegistrarPersonal(): void {
 
@@ -105,42 +98,74 @@ ngOnInit(): void {
     ]);
   }
 
-  
-irEditarPersonal(idPersonal: number): void {
+  // ABRIR SELECTOR DE EDICION
 
-  if (
-    !Number.isInteger(idPersonal) ||
-    idPersonal <= 0
-  ) {
-    return;
+  abrirSelectorEdicion(): void {
+
+    this.idPersonalSeleccionado = null;
+    this.mostrarSelectorEdicion = true;
   }
 
-  this.router.navigate([
-    '/admin/personal/editar',
-    idPersonal
-  ]);
-}
+  // CERRAR SELECTOR
 
+  cerrarSelectorEdicion(): void {
 
-  // FILTRAR EMPLEADOS
+    this.mostrarSelectorEdicion = false;
+    this.idPersonalSeleccionado = null;
+  }
+
+  // MOSTRAR SOLO EMPLEADOS ACTIVOS
+
+  get empleadosDisponibles(): PersonalAdmin[] {
+
+    return this.empleados.filter(
+      empleado => empleado.estatus === 'Activo'
+    );
+  }
+
+  // IR A LA PANTALLA DE EDICION
+
+  continuarEdicion(): void {
+
+    const id = this.idPersonalSeleccionado;
+
+    if (id === null) {
+      return;
+    }
+
+    const existe = this.empleadosDisponibles.some(
+      empleado => empleado.idPersonal === id
+    );
+
+    if (!existe) {
+      return;
+    }
+
+    this.cerrarSelectorEdicion();
+
+    this.router.navigate([
+      '/admin/personal/editar',
+      id
+    ]);
+  }
+
+  // FILTROS DEL DIRECTORIO
 
   get empleadosFiltrados(): PersonalAdmin[] {
 
     return this.empleados.filter(empleado => {
 
-      const coincidePuesto =
+      const puestoValido =
         !this.filtroPuesto ||
         empleado.puesto === this.filtroPuesto;
 
-      const coincideEstatus =
+      const estatusValido =
         !this.filtroEstatus ||
         empleado.estatus === this.filtroEstatus;
 
-      return coincidePuesto && coincideEstatus;
+      return puestoValido && estatusValido;
     });
   }
-
-  // VERIFICAR FILTROS ACTIVOS
 
   get hayFiltrosActivos(): boolean {
 
@@ -150,15 +175,13 @@ irEditarPersonal(idPersonal: number): void {
     );
   }
 
-  // LIMPIAR FILTROS
-
   limpiarFiltros(): void {
 
     this.filtroPuesto = '';
     this.filtroEstatus = '';
   }
 
-  // CONSULTAR EMPLEADOS REALES
+  // CONSULTAR PERSONAL
 
   cargarPersonal(): void {
 
@@ -188,11 +211,10 @@ irEditarPersonal(idPersonal: number): void {
             this.error =
               'El servidor devolvió una respuesta inesperada.';
 
-            this.changeDetector.detectChanges();
-            return;
-          }
+          } else {
 
-          this.empleados = respuesta;
+            this.empleados = respuesta;
+          }
 
           this.changeDetector.detectChanges();
         },
@@ -222,17 +244,9 @@ irEditarPersonal(idPersonal: number): void {
 
           } else {
 
-            const mensajeServidor =
-              typeof error.error?.mensaje === 'string'
-                ? error.error.mensaje
-                : typeof error.error?.detail === 'string'
-                  ? error.error.detail
-                  : typeof error.error?.title === 'string'
-                    ? error.error.title
-                    : '';
-
             this.error =
-              mensajeServidor ||
+              error.error?.mensaje ||
+              error.error?.detail ||
               'No se pudieron consultar los empleados.';
           }
 
@@ -241,7 +255,7 @@ irEditarPersonal(idPersonal: number): void {
       });
   }
 
-  // FORMATO DE SUELDOS EN PESOS MEXICANOS
+  // FORMATO DE SALARIO
 
   mostrarSalario(monto: number): string {
 
@@ -255,13 +269,11 @@ irEditarPersonal(idPersonal: number): void {
 
     return new Intl.NumberFormat('es-MX', {
       style: 'currency',
-      currency: 'MXN',
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2
+      currency: 'MXN'
     }).format(monto);
   }
 
-  // FORMATO DE FECHAS
+  // FORMATO DE FECHA
 
   mostrarFecha(fecha: string | null): string {
 
@@ -278,12 +290,8 @@ irEditarPersonal(idPersonal: number): void {
     return `${partes[2]}/${partes[1]}/${partes[0]}`;
   }
 
-  // REGRESAR AL HOME
-
   volverInicio(): void {
 
-    this.router.navigate([
-      '/home'
-    ]);
+    this.router.navigate(['/home']);
   }
 }
