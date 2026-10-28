@@ -75,6 +75,10 @@ import {
 } from './admin-clientes/admin-clientes';
 
 import {
+  AdminMembresias
+} from './admin-membresias/admin-membresias';
+
+import {
   AdminPersonal
 } from './admin-personal/admin-personal';
 
@@ -153,6 +157,14 @@ export const routes: Routes = [
     canActivate: [authGuard, administradorGuard]
   },
 
+  // ADMINISTRAR MEMBRESÍAS
+
+  {
+    path: 'admin/membresias',
+    component: AdminMembresias,
+    canActivate: [authGuard, administradorGuard]
+  },
+
   {
     path: 'admin/personal/nuevo',
     component: AdminPersonalAlta,
@@ -171,7 +183,7 @@ export const routes: Routes = [
     canActivate: [authGuard, administradorGuard]
   },
 
-  // REGISTRO DE NOMINA
+  // NÓMINA
 
   {
     path: 'admin/personal/nomina/pago/:id',
@@ -185,7 +197,7 @@ export const routes: Routes = [
     canActivate: [authGuard, administradorGuard]
   },
 
-  // NUEVO: HORARIOS Y ASISTENCIAS
+  // HORARIOS Y ASISTENCIAS
 
   {
     path: 'admin/personal/operaciones',
@@ -199,7 +211,7 @@ export const routes: Routes = [
     canActivate: [authGuard, administradorGuard]
   },
 
-  // RECEPCION
+  // RECEPCIÓN
 
   {
     path: 'registrar-cliente',

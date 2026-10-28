@@ -65,6 +65,7 @@ export class Home implements OnInit {
           );
 
           this.cargando = false;
+
           this.changeDetector.detectChanges();
         },
 
@@ -81,9 +82,7 @@ export class Home implements OnInit {
 
             this.authService.cerrarSesion();
 
-            this.router.navigate([
-              '/login'
-            ]);
+            this.router.navigate(['/login']);
 
             return;
           }
@@ -126,9 +125,7 @@ export class Home implements OnInit {
 
   irPerfil(): void {
 
-    this.router.navigate([
-      '/perfil'
-    ]);
+    this.router.navigate(['/perfil']);
   }
 
   // ADMINISTRADOR
@@ -181,7 +178,7 @@ export class Home implements OnInit {
     ]);
   }
 
-  // NUEVO: HORARIOS Y ASISTENCIAS
+  // HORARIOS Y ASISTENCIAS
 
   irHorariosAdministrador(): void {
 
@@ -199,7 +196,25 @@ export class Home implements OnInit {
     ]);
   }
 
-  // RECEPCION
+  // NUEVO: ADMINISTRAR MEMBRESÍAS
+
+  irMembresiasAdministrador(): void {
+
+    if (!this.esAdministrador()) {
+
+      this.mensaje =
+        'Solo los administradores pueden gestionar membresías.';
+
+      this.changeDetector.detectChanges();
+      return;
+    }
+
+    this.router.navigate([
+      '/admin/membresias'
+    ]);
+  }
+
+  // RECEPCIÓN
 
   irRegistrarCliente(): void {
 
@@ -446,7 +461,7 @@ export class Home implements OnInit {
     }, 3000);
   }
 
-  // CERRAR SESION
+  // CERRAR SESIÓN
 
   cerrarSesion(): void {
 
