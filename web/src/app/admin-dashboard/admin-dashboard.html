@@ -49,7 +49,35 @@
         <span class="stat-title">
           Total de clientes
         </span>
-        <strong class="stat-value">—</strong>
+                
+        @if (cargandoClientes) {
+
+        <div class="stat-loading">
+            Cargando clientes...
+        </div>
+
+        } @else if (errorClientes) {
+
+        <div class="stat-error" role="alert">
+            {{ errorClientes }}
+        </div>
+
+        <button
+            type="button"
+            class="retry-button"
+            (click)="cargarTotalClientes()"
+        >
+            Reintentar
+        </button>
+
+        } @else {
+
+        <strong class="stat-value">
+            {{ totalClientes }}
+        </strong>
+
+        }
+
         <p>Clientes registrados en el sistema</p>
       </article>
 

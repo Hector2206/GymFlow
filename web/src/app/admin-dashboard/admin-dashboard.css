@@ -232,3 +232,43 @@
     padding: 22px;
   }
 }
+
+
+/* SPRINT 7 - ESTADOS DE INDICADORES */
+
+.stat-loading {
+  margin: 16px 0;
+  color: #a47c27;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.stat-error {
+  margin: 14px 0;
+  color: #b42332;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.retry-button {
+  margin-top: 5px;
+  padding: 9px 15px;
+  background: #f4ead5;
+  border: 1px solid #d8c8a5;
+  border-radius: 10px;
+  color: #87671d;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.retry-button:hover {
+  background: #e9d7ae;
+}
+
+.retry-button:focus-visible {
+  outline: 3px solid #b58a2a;
+  outline-offset: 3px;
+}
+
