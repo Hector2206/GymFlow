@@ -73,8 +73,7 @@ export class AdminPersonal implements OnInit {
         datos.empleadoRegistradoId > 0
       ) {
 
-        this.tituloOperacion =
-          'Empleado registrado';
+        this.tituloOperacion = 'Empleado registrado';
 
         this.mensajeOperacion =
           `Empleado registrado correctamente. ` +
@@ -88,8 +87,7 @@ export class AdminPersonal implements OnInit {
         datos.empleadoEditadoId > 0
       ) {
 
-        this.tituloOperacion =
-          'Empleado actualizado';
+        this.tituloOperacion = 'Empleado actualizado';
 
         this.mensajeOperacion =
           `Los datos del empleado con ID ` +
@@ -104,8 +102,7 @@ export class AdminPersonal implements OnInit {
         datos.empleadoBajaId > 0
       ) {
 
-        this.tituloOperacion =
-          'Baja laboral registrada';
+        this.tituloOperacion = 'Baja laboral registrada';
 
         this.mensajeOperacion =
           `El empleado con ID ${datos.empleadoBajaId} ` +
@@ -138,7 +135,7 @@ export class AdminPersonal implements OnInit {
     );
   }
 
-  // REGISTRO
+  // REGISTRAR EMPLEADO
 
   irRegistrarPersonal(): void {
 
@@ -147,7 +144,7 @@ export class AdminPersonal implements OnInit {
     ]);
   }
 
-  // BAJAS
+  // BAJAS DE EMPLEADOS
 
   irBajasPersonal(): void {
 
@@ -156,7 +153,16 @@ export class AdminPersonal implements OnInit {
     ]);
   }
 
-  // SELECCION DE EDICION
+  // SALARIOS Y NOMINA
+
+  irNominaPersonal(): void {
+
+    this.router.navigate([
+      '/admin/personal/nomina'
+    ]);
+  }
+
+  // SELECTOR DE EDICION
 
   abrirSelectorEdicion(): void {
 
@@ -201,7 +207,7 @@ export class AdminPersonal implements OnInit {
     ]);
   }
 
-  // FILTROS
+  // FILTROS DEL DIRECTORIO
 
   get empleadosFiltrados(): PersonalAdmin[] {
 

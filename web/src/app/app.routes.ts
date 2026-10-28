@@ -91,6 +91,10 @@ import {
 } from './admin-personal-bajas/admin-personal-bajas';
 
 import {
+  AdminNomina
+} from './admin-nomina/admin-nomina';
+
+import {
   AsignacionEntrenadores
 } from './asignacion-entrenadores/asignacion-entrenadores';
 
@@ -156,6 +160,12 @@ export const routes: Routes = [
   {
     path: 'admin/personal/bajas',
     component: AdminPersonalBajas,
+    canActivate: [authGuard, administradorGuard]
+  },
+
+  {
+    path: 'admin/personal/nomina',
+    component: AdminNomina,
     canActivate: [authGuard, administradorGuard]
   },
 
@@ -278,6 +288,8 @@ export const routes: Routes = [
     component: AdministrarRutinas,
     canActivate: [authGuard, entrenadorGuard]
   },
+
+  // INICIO
 
   {
     path: '',

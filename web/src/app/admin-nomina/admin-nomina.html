@@ -1,0 +1,547 @@
+
+<div class="nomina-page">
+
+  <!-- ENCABEZADO -->
+
+  <header class="nomina-header">
+
+    <div class="header-content">
+
+      <div>
+
+        <span class="section-label">
+          GYMFLOW / ADMINISTRACIÓN
+        </span>
+
+        <h1>Salarios y nómina</h1>
+
+        <p>
+          Consulta los sueldos y pagos
+          registrados del personal.
+        </p>
+
+      </div>
+
+      <button
+        type="button"
+        class="back-button"
+        (click)="volverDirectorio()"
+      >
+        ← Volver al directorio
+      </button>
+
+    </div>
+
+  </header>
+
+  <main class="nomina-content">
+
+    <!-- SELECTOR DE EMPLEADOS -->
+
+    <section class="nomina-panel">
+
+      <div class="panel-heading">
+
+        <div class="panel-icon">💰</div>
+
+        <div>
+
+          <span class="section-label">
+            ADMINISTRACIÓN LABORAL
+          </span>
+
+          <h2>Consultar expediente de nómina</h2>
+
+          <p>
+            Selecciona un empleado para consultar
+            su salario e historial de pagos.
+          </p>
+
+        </div>
+
+      </div>
+
+      @if (cargandoEmpleados) {
+
+        <div class="nomina-estado" role="status">
+          ⏳ Cargando empleados...
+        </div>
+
+      } @else if (errorEmpleados) {
+
+        <div class="nomina-error" role="alert">
+          {{ errorEmpleados }}
+        </div>
+
+        <button
+          type="button"
+          class="secondary-button"
+          (click)="cargarEmpleados()"
+        >
+          Reintentar
+        </button>
+
+      } @else {
+
+        <label class="nomina-campo">
+
+          <span>Seleccionar empleado</span>
+
+          <select
+            name="empleadoNomina"
+            [(ngModel)]="idPersonalSeleccionado"
+            (ngModelChange)="cambiarEmpleado()"
+          >
+
+            <option [ngValue]="null">
+              Seleccionar entrenador o recepcionista
+            </option>
+
+            @for (
+              empleado of empleados;
+              track empleado.idPersonal
+            ) {
+
+              <option [ngValue]="empleado.idPersonal">
+                {{ empleado.nombreCompleto }}
+                — {{ empleado.puesto }}
+                — {{ empleado.estatus }}
+              </option>
+
+            }
+
+          </select>
+
+        </label>
+
+        @if (empleados.length === 0) {
+
+          <div class="nomina-estado">
+            No hay empleados registrados.
+          </div>
+
+        }
+
+      }
+
+    </section>
+
+    @if (empleadoSeleccionado; as empleado) {
+
+      <!-- RESUMEN LABORAL -->
+
+      <section class="nomina-panel">
+
+        <div class="panel-heading">
+
+          <div class="panel-icon">👤</div>
+
+          <div>
+
+            <span class="section-label">
+              EXPEDIENTE LABORAL
+            </span>
+
+            <h2>{{ empleado.nombreCompleto }}</h2>
+
+            <p>
+              ID: {{ empleado.idPersonal }}
+              · {{ empleado.puesto }}
+            </p>
+
+          </div>
+
+        </div>
+
+        <div class="resumen-grid">
+
+          <div class="resumen-card">
+
+            <span>Sueldo mensual registrado</span>
+
+            <strong>
+              {{ mostrarMonto(empleado.salario) }}
+            </strong>
+
+            <small>
+              Dato del expediente del personal
+            </small>
+
+          </div>
+
+          <div class="resumen-card">
+
+            <span>Estatus del empleado</span>
+
+            <strong
+              [class.inactivo]="empleado.estatus === 'Inactivo'"
+            >
+              {{ empleado.estatus }}
+            </strong>
+
+            <small>
+              {{ empleado.puesto }}
+            </small>
+
+          </div>
+
+          <div class="resumen-card">
+
+            <span>Contratación</span>
+
+            <strong>
+              {{ mostrarFecha(empleado.fechaContratacion) }}
+            </strong>
+
+            <small>
+              Fecha de ingreso
+            </small>
+
+          </div>
+
+        </div>
+
+        <div class="nomina-toolbar">
+
+          <p>
+            Los datos se consultan directamente
+            desde GymFlow.
+          </p>
+
+          <button
+            type="button"
+            class="secondary-button"
+            (click)="cargarDetalles()"
+            [disabled]="cargandoSalarios || cargandoPagos"
+          >
+            ↻ Actualizar consulta
+          </button>
+
+        </div>
+
+      </section>
+
+      <!-- HISTORIAL SALARIAL -->
+
+      <section class="nomina-panel">
+
+        <div class="section-heading">
+
+          <div>
+
+            <span class="section-label">
+              HISTORIAL SALARIAL
+            </span>
+
+            <h2>Sueldos del empleado</h2>
+
+            <p>
+              Consulta las vigencias y cambios
+              salariales registrados.
+            </p>
+
+          </div>
+
+          <div class="section-icon">📈</div>
+
+        </div>
+
+        @if (cargandoSalarios) {
+
+          <div class="nomina-estado" role="status">
+            ⏳ Consultando historial salarial...
+          </div>
+
+        } @else if (errorSalarios) {
+
+          <div class="nomina-error" role="alert">
+            {{ errorSalarios }}
+          </div>
+
+          <button
+            type="button"
+            class="secondary-button"
+            (click)="cargarDetalles()"
+          >
+            Reintentar consulta
+          </button>
+
+        } @else if (
+          consultaSalariosRealizada &&
+          salarios.length === 0
+        ) {
+
+          <div class="nomina-estado">
+            Todavía no hay movimientos
+            en el historial salarial.
+          </div>
+
+        } @else if (salarios.length > 0) {
+
+          <div class="nomina-destacado">
+
+            <span>Sueldo vigente en historial</span>
+
+            @if (salarioVigente; as vigente) {
+
+              <strong>
+                {{ mostrarMonto(vigente.monto) }}
+              </strong>
+
+              <small>
+                Desde {{ mostrarFecha(vigente.vigenteDesde) }}
+                · {{ vigente.periodicidad }}
+              </small>
+
+            } @else {
+
+              <strong>Sin salario vigente</strong>
+
+              <small>
+                Solo se encontraron registros históricos.
+              </small>
+
+            }
+
+          </div>
+
+          <div class="nomina-tabla-container">
+
+            <table class="nomina-tabla">
+
+              <thead>
+                <tr>
+                  <th>Monto</th>
+                  <th>Periodicidad</th>
+                  <th>Desde</th>
+                  <th>Hasta</th>
+                  <th>Motivo</th>
+                  <th>Vigencia</th>
+                </tr>
+              </thead>
+
+              <tbody>
+
+                @for (
+                  salario of salarios;
+                  track salario.idSalario
+                ) {
+
+                  <tr>
+
+                    <td class="monto-cell">
+                      {{ mostrarMonto(salario.monto) }}
+                    </td>
+
+                    <td>
+                      {{ salario.periodicidad }}
+                    </td>
+
+                    <td>
+                      {{ mostrarFecha(salario.vigenteDesde) }}
+                    </td>
+
+                    <td>
+                      {{ mostrarFecha(salario.vigenteHasta) }}
+                    </td>
+
+                    <td class="motivo-cell">
+                      {{ salario.motivo || 'Sin motivo registrado' }}
+                    </td>
+
+                    <td>
+
+                      <span
+                        class="estado-chip"
+                        [class.chip-vigente]="salario.vigenteHasta === null"
+                      >
+                        {{
+                          salario.vigenteHasta === null
+                            ? 'Vigente'
+                            : 'Histórico'
+                        }}
+                      </span>
+
+                    </td>
+
+                  </tr>
+
+                }
+
+              </tbody>
+
+            </table>
+
+          </div>
+
+        }
+
+      </section>
+
+      <!-- PAGOS DE NOMINA -->
+
+      <section class="nomina-panel">
+
+        <div class="section-heading">
+
+          <div>
+
+            <span class="section-label">
+              HISTORIAL DE NÓMINA
+            </span>
+
+            <h2>Pagos registrados</h2>
+
+            <p>
+              Consulta los periodos, montos,
+              métodos y estados de los pagos.
+            </p>
+
+          </div>
+
+          <div class="section-icon">🧾</div>
+
+        </div>
+
+        @if (cargandoPagos) {
+
+          <div class="nomina-estado" role="status">
+            ⏳ Consultando pagos de nómina...
+          </div>
+
+        } @else if (errorPagos) {
+
+          <div class="nomina-error" role="alert">
+            {{ errorPagos }}
+          </div>
+
+          <button
+            type="button"
+            class="secondary-button"
+            (click)="cargarDetalles()"
+          >
+            Reintentar consulta
+          </button>
+
+        } @else if (
+          consultaPagosRealizada &&
+          pagos.length === 0
+        ) {
+
+          <div class="nomina-estado">
+
+            <strong>Aún no hay pagos registrados.</strong>
+
+            <p>
+              Cuando se registren pagos de nómina,
+              aparecerán en esta sección.
+            </p>
+
+          </div>
+
+        } @else if (pagos.length > 0) {
+
+          <div class="nomina-contador">
+            {{ pagos.length }} registros encontrados
+          </div>
+
+          <div class="nomina-tabla-container">
+
+            <table class="nomina-tabla">
+
+              <thead>
+                <tr>
+                  <th>Pago</th>
+                  <th>Periodo</th>
+                  <th>Fecha de pago</th>
+                  <th>Monto</th>
+                  <th>Método</th>
+                  <th>Estado</th>
+                </tr>
+              </thead>
+
+              <tbody>
+
+                @for (
+                  pago of pagos;
+                  track pago.idPago
+                ) {
+
+                  <tr>
+
+                    <td>
+                      #{{ pago.idPago }}
+                    </td>
+
+                    <td>
+                      {{ mostrarFecha(pago.periodoInicio) }}
+                      —
+                      {{ mostrarFecha(pago.periodoFin) }}
+                    </td>
+
+                    <td>
+                      {{ mostrarFecha(pago.fechaPago) }}
+                    </td>
+
+                    <td class="monto-cell">
+                      {{ mostrarMonto(pago.monto) }}
+                    </td>
+
+                    <td>
+                      {{ pago.metodo }}
+                    </td>
+
+                    <td>
+
+                      <span
+                        class="estado-chip"
+                        [class.chip-cancelado]="pago.estado.toLowerCase() === 'cancelado'"
+                        [class.chip-vigente]="pago.estado.toLowerCase() !== 'cancelado'"
+                      >
+                        {{ pago.estado }}
+                      </span>
+
+                    </td>
+
+                  </tr>
+
+                }
+
+              </tbody>
+
+            </table>
+
+          </div>
+
+        }
+
+      </section>
+
+    } @else if (
+      !cargandoEmpleados &&
+      !errorEmpleados &&
+      empleados.length > 0
+    ) {
+
+      <section class="nomina-panel nomina-inicio">
+
+        <div class="inicio-icon">👥</div>
+
+        <h2>Selecciona un empleado</h2>
+
+        <p>
+          Su información salarial y sus pagos
+          aparecerán aquí.
+        </p>
+
+      </section>
+
+    }
+
+  </main>
+
+  <footer class="nomina-footer">
+    GymFlow · Administración de personal
+  </footer>
+
+</div>

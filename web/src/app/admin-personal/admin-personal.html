@@ -2,9 +2,11 @@
 <div class="personal-page">
 
   <header class="personal-header">
+
     <div class="header-content">
 
       <div>
+
         <span class="section-label">
           GYMFLOW / ADMINISTRACIÓN
         </span>
@@ -15,6 +17,7 @@
           Gestiona entrenadores y recepcionistas
           del gimnasio.
         </p>
+
       </div>
 
       <button
@@ -26,6 +29,7 @@
       </button>
 
     </div>
+
   </header>
 
   <main class="personal-content">
@@ -45,7 +49,7 @@
 
     </section>
 
-    <!-- TARJETAS ADMINISTRATIVAS -->
+    <!-- ACCIONES ADMINISTRATIVAS -->
 
     <section class="management-section">
 
@@ -61,6 +65,8 @@
       </p>
 
       <div class="management-grid">
+
+        <!-- REGISTRAR -->
 
         <button
           type="button"
@@ -83,6 +89,8 @@
 
         </button>
 
+        <!-- EDITAR -->
+
         <button
           type="button"
           class="management-card management-action"
@@ -104,7 +112,7 @@
 
         </button>
 
-        <!-- BAJAS ACTIVADAS -->
+        <!-- BAJAS -->
 
         <button
           type="button"
@@ -117,7 +125,7 @@
           <h3>Bajas de empleados</h3>
 
           <p>
-            Preparar bajas laborales conservando
+            Registrar bajas laborales conservando
             el historial de los empleados.
           </p>
 
@@ -127,9 +135,13 @@
 
         </button>
 
-        <!-- NOMINA -->
+        <!-- SALARIOS Y NOMINA -->
 
-        <article class="management-card">
+        <button
+          type="button"
+          class="management-card management-action"
+          (click)="irNominaPersonal()"
+        >
 
           <div class="management-icon">💰</div>
 
@@ -140,17 +152,17 @@
             y pagos registrados.
           </p>
 
-          <span class="management-pending">
-            Próximamente
+          <span class="management-link">
+            Abrir módulo de nómina
           </span>
 
-        </article>
+        </button>
 
       </div>
 
     </section>
 
-    <!-- CONFIRMACION DE OPERACION -->
+    <!-- CONFIRMACION -->
 
     @if (mensajeOperacion) {
 
@@ -175,6 +187,7 @@
       <div class="directory-heading">
 
         <div>
+
           <span class="section-label">
             DIRECTORIO LABORAL
           </span>
@@ -184,11 +197,14 @@
           <p>
             Información obtenida del sistema GymFlow.
           </p>
+
         </div>
 
         <div class="heading-icon">👥</div>
 
       </div>
+
+      <!-- FILTROS -->
 
       <div class="personal-filtros">
 
@@ -200,9 +216,19 @@
             name="filtroPuesto"
             [(ngModel)]="filtroPuesto"
           >
-            <option value="">Todos los empleados</option>
-            <option value="Entrenador">Entrenadores</option>
-            <option value="Recepcionista">Recepcionistas</option>
+
+            <option value="">
+              Todos los empleados
+            </option>
+
+            <option value="Entrenador">
+              Entrenadores
+            </option>
+
+            <option value="Recepcionista">
+              Recepcionistas
+            </option>
+
           </select>
 
         </label>
@@ -215,9 +241,19 @@
             name="filtroEstatus"
             [(ngModel)]="filtroEstatus"
           >
-            <option value="">Todos los estatus</option>
-            <option value="Activo">Activos</option>
-            <option value="Inactivo">Inactivos</option>
+
+            <option value="">
+              Todos los estatus
+            </option>
+
+            <option value="Activo">
+              Activos
+            </option>
+
+            <option value="Inactivo">
+              Inactivos
+            </option>
+
           </select>
 
         </label>
@@ -236,6 +272,8 @@
 
       </div>
 
+      <!-- CARGANDO -->
+
       @if (cargando) {
 
         <div class="directory-placeholder" role="status">
@@ -252,13 +290,17 @@
 
       } @else if (error) {
 
+        <!-- ERROR -->
+
         <div class="directory-placeholder">
 
           <div class="placeholder-icon">⚠️</div>
 
           <h3>No fue posible cargar empleados</h3>
 
-          <p role="alert">{{ error }}</p>
+          <p role="alert">
+            {{ error }}
+          </p>
 
           <button
             type="button"
@@ -323,6 +365,7 @@
           <table class="personal-table">
 
             <thead>
+
               <tr>
                 <th>Empleado</th>
                 <th>Puesto</th>
@@ -333,6 +376,7 @@
                 <th>Contratación</th>
                 <th>Baja</th>
               </tr>
+
             </thead>
 
             <tbody>
@@ -345,11 +389,15 @@
                 <tr>
 
                   <td>
+
                     <div class="empleado-info">
 
-                      <div class="empleado-avatar">👤</div>
+                      <div class="empleado-avatar">
+                        👤
+                      </div>
 
                       <div>
+
                         <strong>
                           {{ empleado.nombreCompleto }}
                         </strong>
@@ -357,12 +405,15 @@
                         <span class="empleado-id">
                           ID: {{ empleado.idPersonal }}
                         </span>
+
                       </div>
 
                     </div>
+
                   </td>
 
                   <td>
+
                     <span
                       class="puesto-badge"
                       [class.puesto-entrenador]="empleado.puesto === 'Entrenador'"
@@ -370,9 +421,11 @@
                     >
                       {{ empleado.puesto }}
                     </span>
+
                   </td>
 
                   <td>
+
                     <div class="empleado-contacto">
 
                       <span>
@@ -384,6 +437,7 @@
                       </small>
 
                     </div>
+
                   </td>
 
                   <td class="salario-cell">
@@ -395,6 +449,7 @@
                   </td>
 
                   <td>
+
                     <span
                       class="personal-estado"
                       [class.personal-activo]="empleado.estatus === 'Activo'"
@@ -402,6 +457,7 @@
                     >
                       {{ empleado.estatus }}
                     </span>
+
                   </td>
 
                   <td class="fecha-cell">
@@ -428,7 +484,7 @@
 
   </main>
 
-  <!-- SELECTOR DE EDICION EXISTENTE -->
+  <!-- SELECTOR DE EDICION -->
 
   @if (mostrarSelectorEdicion) {
 
@@ -444,6 +500,7 @@
         <div class="selector-heading">
 
           <div>
+
             <span class="section-label">
               EDICIÓN DE PERSONAL
             </span>
@@ -456,6 +513,7 @@
               Elige el entrenador o recepcionista
               que deseas editar.
             </p>
+
           </div>
 
           <button
@@ -543,7 +601,9 @@
                     {{ empleado.nombreCompleto }}
                   </strong>
 
-                  <span>{{ empleado.correo }}</span>
+                  <span>
+                    {{ empleado.correo }}
+                  </span>
 
                   <small>
                     {{ empleado.puesto }}
