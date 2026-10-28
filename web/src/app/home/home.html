@@ -438,36 +438,42 @@
 
 
 
-        <button
-          class="dashboard-card"
-          (click)="proximamente('Administrar recepcionistas')"
-        >
-          <div class="card-icon">🧑‍💼</div>
 
-          <h2>
-            Administrar Recepcionistas
-          </h2>
+<button
+  class="dashboard-card"
+  (click)="irRecepcionistasAdministrador()"
+>
+  <div class="card-icon">🧑‍💼</div>
 
-          <p>
-            Consultar y administrar recepcionistas
-          </p>
-        </button>
+  <h2>
+    Administrar Recepcionistas
+  </h2>
+
+  <p>
+    Consultar personal de recepción,
+    expedientes y datos laborales
+  </p>
+</button>
 
 
-        <button
-          class="dashboard-card"
-          (click)="proximamente('Administrar entrenadores')"
-        >
-          <div class="card-icon">🏋️</div>
 
-          <h2>
-            Administrar Entrenadores
-          </h2>
 
-          <p>
-            Consultar y administrar entrenadores
-          </p>
-        </button>
+<button
+  class="dashboard-card"
+  (click)="irEntrenadoresAdministrador()"
+>
+  <div class="card-icon">🏋️</div>
+
+  <h2>
+    Administrar Entrenadores
+  </h2>
+
+  <p>
+    Consultar entrenadores,
+    expedientes y datos laborales
+  </p>
+</button>
+
 
 
         <button

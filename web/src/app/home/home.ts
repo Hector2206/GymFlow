@@ -199,6 +199,52 @@ irClientesAdministrador(): void {
 }
 
 
+irRecepcionistasAdministrador(): void {
+
+  if (!this.esAdministrador()) {
+
+    this.mensaje =
+      'Esta opción está disponible únicamente para administradores.';
+
+    this.changeDetector.detectChanges();
+
+    return;
+  }
+
+  this.router.navigate(
+    ['/admin/personal'],
+    {
+      queryParams: {
+        puesto: 'Recepcionista'
+      }
+    }
+  );
+}
+
+
+irEntrenadoresAdministrador(): void {
+
+  if (!this.esAdministrador()) {
+
+    this.mensaje =
+      'Esta opción está disponible únicamente para administradores.';
+
+    this.changeDetector.detectChanges();
+
+    return;
+  }
+
+  this.router.navigate(
+    ['/admin/personal'],
+    {
+      queryParams: {
+        puesto: 'Entrenador'
+      }
+    }
+  );
+}
+
+
 
   irRegistrarCliente(): void {
 
