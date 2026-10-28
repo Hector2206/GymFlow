@@ -239,7 +239,8 @@
 /* GESTION ADMINISTRATIVA */
 
 .management-section {
-  margin-top: 42px;
+  margin-top: 20px;
+  margin-bottom: 30px;
 }
 
 .management-description {
@@ -782,4 +783,68 @@
   .alta-botones {
     justify-content: flex-end;
   }
+}
+
+
+/* SPRINT 7 - TARJETAS DE ACCION */
+
+.management-action {
+  display: block;
+  width: 100%;
+  text-align: left;
+  font-family: inherit;
+  cursor: pointer;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.management-action:hover:not(:disabled) {
+  transform: translateY(-3px);
+  border-color: #c9a85e;
+  box-shadow:
+    0 12px 28px rgba(76, 62, 36, 0.10);
+}
+
+.management-action:focus-visible {
+  outline: 3px solid #b58a2a;
+  outline-offset: 3px;
+}
+
+.management-action:disabled {
+  cursor: default;
+  opacity: 0.7;
+}
+
+.management-link {
+  display: inline-block;
+  margin-top: 18px;
+  color: #a47c27;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.management-pending {
+  display: inline-block;
+  margin-top: 18px;
+  color: #91877a;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+/* CONSERVAR ALTURA VISUAL */
+
+.management-card {
+  min-height: 190px;
+}
+
+.management-card p {
+  flex-grow: 1;
+}
+
+.management-grid .management-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
 }
