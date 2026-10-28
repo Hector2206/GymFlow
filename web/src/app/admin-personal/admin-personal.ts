@@ -56,9 +56,45 @@ export class AdminPersonal implements OnInit {
 
   // CARGAR EMPLEADOS AL ENTRAR
 
-  ngOnInit(): void {
-    this.cargarPersonal();
+  
+ngOnInit(): void {
+
+  const estado = this.location.getState();
+
+  if (
+    estado &&
+    typeof estado === 'object' &&
+    'empleadoRegistradoId' in estado
+  ) {
+
+    const idPersonal =
+      (estado as {
+        empleadoRegistradoId?: unknown
+      }).empleadoRegistradoId;
+
+    if (
+      typeof idPersonal === 'number' &&
+      Number.isInteger(idPersonal) &&
+      idPersonal > 0
+    ) {
+
+      this.mensajeRegistro =
+        `Empleado registrado correctamente. ` +
+        `ID de personal: ${idPersonal}.`;
+
+      // Consumir la confirmacion para que
+      // no reaparezca al recargar la pagina.
+      this.location.replaceState(
+        '/admin/personal',
+        '',
+        {}
+      );
+    }
   }
+
+  this.cargarPersonal();
+}
+
 
   // NAVEGAR AL FORMULARIO INDEPENDIENTE
 
@@ -68,6 +104,23 @@ export class AdminPersonal implements OnInit {
       '/admin/personal/nuevo'
     ]);
   }
+
+  
+irEditarPersonal(idPersonal: number): void {
+
+  if (
+    !Number.isInteger(idPersonal) ||
+    idPersonal <= 0
+  ) {
+    return;
+  }
+
+  this.router.navigate([
+    '/admin/personal/editar',
+    idPersonal
+  ]);
+}
+
 
   // FILTRAR EMPLEADOS
 

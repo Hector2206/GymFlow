@@ -1,0 +1,256 @@
+
+:host {
+  display: block;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+.editar-page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: linear-gradient(
+    180deg,
+    #f8f5ef 0%,
+    #f2ede4 100%
+  );
+  color: #2f2a24;
+}
+
+.editar-header {
+  padding: 35px 40px;
+  background: #fffdf8;
+  border-bottom: 1px solid #e7dfd2;
+}
+
+.header-content {
+  max-width: 1100px;
+  margin: auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 24px;
+}
+
+.section-label {
+  color: #a47c27;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+}
+
+.editar-header h1 {
+  margin: 12px 0;
+  font-size: clamp(25px, 3vw, 35px);
+}
+
+.editar-header p,
+.empleado-heading p {
+  color: #81776c;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.editar-content {
+  width: 100%;
+  max-width: 1100px;
+  margin: auto;
+  padding: 45px 25px 70px;
+  flex: 1;
+}
+
+.editar-panel {
+  padding: 35px;
+  background: #fffdf8;
+  border: 1px solid #dfcfaa;
+  border-radius: 22px;
+  box-shadow: 0 8px 24px rgba(76, 62, 36, 0.05);
+}
+
+.empleado-heading {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  margin-bottom: 30px;
+}
+
+.empleado-heading h2 {
+  margin: 9px 0 5px;
+  font-size: 23px;
+}
+
+.empleado-heading p {
+  margin: 0;
+}
+
+.empleado-icon,
+.estado-icon {
+  width: 55px;
+  height: 55px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border-radius: 16px;
+  background: #f4ead5;
+  font-size: 25px;
+}
+
+.editar-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 23px;
+}
+
+.editar-campo {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  min-width: 0;
+}
+
+.editar-campo span {
+  color: #756c60;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.editar-campo input {
+  width: 100%;
+  min-width: 0;
+  padding: 14px 16px;
+  border: 1px solid #dfcfaa;
+  border-radius: 12px;
+  background: #fffdf8;
+  color: #2f2a24;
+  font: inherit;
+  font-size: 14px;
+}
+
+.editar-campo input:focus {
+  outline: none;
+  border-color: #b58a2a;
+  box-shadow: 0 0 0 3px rgba(181, 138, 42, 0.12);
+}
+
+.editar-campo input:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.editar-nota {
+  margin-top: 28px;
+  padding: 18px;
+  border-radius: 12px;
+  background: #f7f0e3;
+  color: #76654a;
+}
+
+.editar-nota strong {
+  font-size: 13px;
+}
+
+.editar-nota p {
+  margin: 8px 0 0;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.empleado-advertencia {
+  padding: 15px 18px;
+  margin-bottom: 24px;
+  border: 1px solid #e3c89a;
+  border-radius: 12px;
+  background: #fbf1df;
+  color: #805d20;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.editar-acciones {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 30px;
+  padding-top: 24px;
+  border-top: 1px solid #eee7dc;
+}
+
+.back-button,
+.cancelar-button {
+  padding: 12px 20px;
+  border: 1px solid #dfcfaa;
+  border-radius: 12px;
+  background: #f4ead5;
+  color: #87671d;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.guardar-button {
+  padding: 13px 22px;
+  border: none;
+  border-radius: 12px;
+  background: #b58a2a;
+  color: white;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.guardar-button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+button:focus-visible {
+  outline: 3px solid #b58a2a;
+  outline-offset: 3px;
+}
+
+.estado-panel {
+  text-align: center;
+}
+
+.estado-icon {
+  margin: 0 auto 18px;
+}
+
+.estado-panel p {
+  margin: 12px 0 20px;
+  color: #81776c;
+  font-size: 13px;
+}
+
+.editar-footer {
+  padding: 25px;
+  border-top: 1px solid #e7dfd2;
+  color: #938a7d;
+  font-size: 12px;
+  text-align: center;
+}
+
+@media (max-width: 700px) {
+  .editar-header {
+    padding: 25px 20px;
+  }
+
+  .header-content {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .editar-content {
+    padding: 25px 16px 45px;
+  }
+
+  .editar-panel {
+    padding: 22px;
+  }
+
+  .editar-grid {
+    grid-template-columns: 1fr;
+  }
+}

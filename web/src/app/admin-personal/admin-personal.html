@@ -99,22 +99,27 @@
 
     <!-- EDICION DE EMPLEADOS -->
 
-    <article class="management-card">
 
-      <div class="management-icon">📝</div>
+<a
+  class="management-card management-action"
+  href="#directorio-personal"
+>
 
-      <h3>Editar información</h3>
+  <div class="management-icon">📝</div>
 
-      <p>
-        Actualizar datos personales,
-        contacto y horarios laborales.
-      </p>
+  <h3>Editar información</h3>
 
-      <span class="management-pending">
-        Próximamente
-      </span>
+  <p>
+    Selecciona un empleado activo
+    del directorio para editarlo.
+  </p>
 
-    </article>
+  <span class="management-link">
+    Elegir empleado
+  </span>
+
+</a>
+
 
     <!-- BAJAS DE EMPLEADOS -->
 
@@ -159,6 +164,24 @@
 </section>
 
     
+<!-- REGISTRO EXITOSO -->
+
+@if (mensajeRegistro) {
+
+  <div class="personal-registro-exito" role="status">
+
+    <strong>✓ Empleado registrado</strong>
+
+    <p>
+      {{ mensajeRegistro }}
+    </p>
+
+  </div>
+
+}
+
+
+
     <!-- DIRECTORIO -->
 
     <section class="directory-panel">
@@ -343,6 +366,7 @@
           <th>Estatus</th>
           <th>Contratación</th>
           <th>Baja</th>
+          <th>Acciones</th>
         </tr>
 
       </thead>
@@ -434,6 +458,21 @@
             <td class="fecha-cell">
               {{ mostrarFecha(empleado.fechaBaja) }}
             </td>
+
+            
+<td>
+
+  <button
+    type="button"
+    class="personal-edit-button"
+    (click)="irEditarPersonal(empleado.idPersonal)"
+    [disabled]="empleado.estatus !== 'Activo'"
+  >
+    Editar
+  </button>
+
+</td>
+
 
           </tr>
 
