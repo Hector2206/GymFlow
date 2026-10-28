@@ -125,14 +125,49 @@
         </article>
 
 
-      <article class="stat-card">
-        <div class="stat-icon">📅</div>
-        <span class="stat-title">
-          Asistencias del día
-        </span>
-        <strong class="stat-value">—</strong>
-        <p>Accesos aprobados durante el día</p>
-      </article>
+      
+<article class="stat-card">
+
+  <div class="stat-icon">📅</div>
+
+  <span class="stat-title">
+    Asistencias del día
+  </span>
+
+  @if (cargandoAsistencias) {
+
+    <div class="stat-loading">
+      Cargando asistencias...
+    </div>
+
+  } @else if (errorAsistencias) {
+
+    <div class="stat-error" role="alert">
+      {{ errorAsistencias }}
+    </div>
+
+    <button
+      type="button"
+      class="retry-button"
+      (click)="cargarAsistenciasDia()"
+    >
+      Reintentar
+    </button>
+
+  } @else {
+
+    <strong class="stat-value">
+      {{ asistenciasDia ?? '—' }}
+    </strong>
+
+  }
+
+  <p>
+    Accesos aprobados durante el día
+  </p>
+
+</article>
+
 
       <article class="stat-card">
         <div class="stat-icon">💳</div>

@@ -33,6 +33,11 @@ export class AdminDashboard implements OnInit {
   cargandoMembresias = false;
   errorMembresias = '';
 
+  // Asistencias del dia
+  asistenciasDia: number | null = null;
+  cargandoAsistencias = false;
+  errorAsistencias = '';
+
   constructor(
     private router: Router,
     private dashboardService: AdminDashboardService,
@@ -43,6 +48,7 @@ export class AdminDashboard implements OnInit {
   ngOnInit(): void {
     this.cargarTotalClientes();
     this.cargarMembresiasActivas();
+    this.cargarAsistenciasDia();
   }
 
   // TOTAL DE CLIENTES
@@ -130,6 +136,64 @@ export class AdminDashboard implements OnInit {
 
           this.changeDetector.detectChanges();
         }
+      });
+  }
+
+  // ASISTENCIAS DEL DIA
+
+  cargarAsistenciasDia(): void {
+
+    this.cargandoAsistencias = true;
+    this.errorAsistencias = '';
+    this.asistenciasDia = null;
+
+    this.dashboardService
+      .obtenerAsistenciasDia()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+
+        next: (respuesta) => {
+
+          this.asistenciasDia = respuesta.asistenciasDia;
+          this.cargandoAsistencias = false;
+
+          this.changeDetector.detectChanges();
+        },
+
+        error: (error: HttpErrorResponse) => {
+
+          this.cargandoAsistencias = false;
+
+          if (error.status === 401) {
+
+            this.errorAsistencias =
+              'Tu sesión venció. Inicia sesión nuevamente.';
+
+          } else if (error.status === 403) {
+
+            this.errorAsistencias =
+              'No tienes permisos para consultar asistencias.';
+
+          } else if (
+            error.status === 0 ||
+            error.status >= 500
+          ) {
+
+            this.errorAsistencias =
+              'No fue posible conectar con el servidor. Intenta nuevamente.';
+
+          } else {
+
+            this.errorAsistencias =
+              error.error?.mensaje ||
+              error.error?.detail ||
+              'No se pudieron consultar las asistencias del día.';
+
+          }
+
+          this.changeDetector.detectChanges();
+        }
+
       });
   }
 
