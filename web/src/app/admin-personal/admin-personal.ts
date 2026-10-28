@@ -7,6 +7,7 @@ import {
 } from '@angular/core';
 
 import { HttpErrorResponse } from '@angular/common/http';
+import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
@@ -15,23 +16,32 @@ import {
 } from '../services/admin-personal.service';
 
 import {
-  PersonalAdmin
+  PersonalAdmin,
+  PuestoPersonalAdmin,
+  EstatusPersonalAdmin
 } from '../models/admin-personal.model';
 
 @Component({
   selector: 'app-admin-personal',
   standalone: true,
-  imports: [],
+  imports: [FormsModule],
   templateUrl: './admin-personal.html',
   styleUrl: './admin-personal.css'
 })
 export class AdminPersonal implements OnInit {
+
+  // EMPLEADOS REGISTRADOS
 
   empleados: PersonalAdmin[] = [];
 
   cargando = false;
   error = '';
   consultaRealizada = false;
+
+  // FILTROS
+
+  filtroPuesto: PuestoPersonalAdmin | '' = '';
+  filtroEstatus: EstatusPersonalAdmin | '' = '';
 
   constructor(
     private router: Router,
@@ -44,7 +54,41 @@ export class AdminPersonal implements OnInit {
     this.cargarPersonal();
   }
 
-  // CONSULTAR EMPLEADOS
+  // FILTRAR EMPLEADOS SIN MODIFICAR LISTA ORIGINAL
+
+  get empleadosFiltrados(): PersonalAdmin[] {
+
+    return this.empleados.filter(empleado => {
+
+      const coincidePuesto =
+        !this.filtroPuesto ||
+        empleado.puesto === this.filtroPuesto;
+
+      const coincideEstatus =
+        !this.filtroEstatus ||
+        empleado.estatus === this.filtroEstatus;
+
+      return coincidePuesto && coincideEstatus;
+    });
+  }
+
+  get hayFiltrosActivos(): boolean {
+
+    return (
+      this.filtroPuesto !== '' ||
+      this.filtroEstatus !== ''
+    );
+  }
+
+  // RESTABLECER FILTROS
+
+  limpiarFiltros(): void {
+
+    this.filtroPuesto = '';
+    this.filtroEstatus = '';
+  }
+
+  // CONSULTAR EMPLEADOS REALES
 
   cargarPersonal(): void {
 
@@ -68,6 +112,7 @@ export class AdminPersonal implements OnInit {
           this.consultaRealizada = true;
 
           if (!Array.isArray(respuesta)) {
+
             this.error =
               'El servidor devolvió una respuesta inesperada.';
 
@@ -160,6 +205,8 @@ export class AdminPersonal implements OnInit {
 
     return `${partes[2]}/${partes[1]}/${partes[0]}`;
   }
+
+  // NAVEGACION
 
   volverInicio(): void {
     this.router.navigate(['/home']);

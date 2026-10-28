@@ -135,6 +135,72 @@
 
       </div>
 
+      
+<!-- FILTROS DEL DIRECTORIO -->
+
+<div class="personal-filtros">
+
+  <label class="personal-filtro-campo">
+
+    <span>Filtrar por puesto</span>
+
+    <select
+      name="filtroPuesto"
+      [(ngModel)]="filtroPuesto"
+    >
+      <option value="">
+        Todos los empleados
+      </option>
+
+      <option value="Entrenador">
+        Entrenadores
+      </option>
+
+      <option value="Recepcionista">
+        Recepcionistas
+      </option>
+    </select>
+
+  </label>
+
+  <label class="personal-filtro-campo">
+
+    <span>Filtrar por estatus</span>
+
+    <select
+      name="filtroEstatus"
+      [(ngModel)]="filtroEstatus"
+    >
+      <option value="">
+        Todos los estatus
+      </option>
+
+      <option value="Activo">
+        Activos
+      </option>
+
+      <option value="Inactivo">
+        Inactivos
+      </option>
+    </select>
+
+  </label>
+
+  @if (hayFiltrosActivos) {
+
+    <button
+      type="button"
+      class="personal-limpiar-button"
+      (click)="limpiarFiltros()"
+    >
+      ✕ Limpiar filtros
+    </button>
+
+  }
+
+</div>
+
+
 
 <!-- LISTADO REAL DE EMPLEADOS -->
 
@@ -175,27 +241,40 @@
 
   </div>
 
-} @else if (consultaRealizada && empleados.length === 0) {
+} @else if (consultaRealizada && empleadosFiltrados.length === 0) {
+@if (empleados.length === 0) {
 
-  <div class="directory-placeholder">
+  <h3>No hay empleados registrados</h3>
 
-    <div class="placeholder-icon">👥</div>
+  <p>
+    Actualmente no existen entrenadores
+    o recepcionistas para mostrar.
+  </p>
 
-    <h3>No hay empleados registrados</h3>
+} @else {
 
-    <p>
-      Actualmente no existen entrenadores
-      o recepcionistas para mostrar.
-    </p>
+  <h3>No encontramos coincidencias</h3>
 
-  </div>
+  <p>
+    No hay empleados que coincidan
+    con los filtros seleccionados.
+  </p>
 
-} @else if (empleados.length > 0) {
+  <button
+    type="button"
+    class="personal-limpiar-button"
+    (click)="limpiarFiltros()"
+  >
+    Mostrar todos los empleados
+  </button>
+
+}
+
+
+} @else if (empleadosFiltrados.length > 0) {
 
   <div class="personal-summary">
-    <span>
-      👥 {{ empleados.length }} empleados encontrados
-    </span>
+    👥 {{ empleadosFiltrados.length }} de {{ empleados.length }} empleados
   </div>
 
   <div class="personal-table-container">
@@ -219,11 +298,10 @@
 
       <tbody>
 
-        @for (
-          empleado of empleados;
-          track empleado.idPersonal
-        ) {
-
+       @for (
+  empleado of empleadosFiltrados;
+  track empleado.idPersonal
+) {
           <tr>
 
             <td>

@@ -525,3 +525,82 @@
     justify-content: flex-start;
   }
 }
+
+
+/* SPRINT 7 - FILTROS DE PERSONAL */
+
+.personal-filtros {
+  display: flex;
+  align-items: flex-end;
+  gap: 16px;
+  margin-bottom: 25px;
+  flex-wrap: wrap;
+}
+
+.personal-filtro-campo {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  flex: 1;
+  min-width: 190px;
+}
+
+.personal-filtro-campo span {
+  color: #756c60;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.personal-filtro-campo select {
+  width: 100%;
+  padding: 13px 15px;
+  border: 1px solid #dfcfaa;
+  border-radius: 12px;
+  background: #fffdf8;
+  color: #2f2a24;
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.personal-filtro-campo select:focus {
+  outline: none;
+  border-color: #b58a2a;
+  box-shadow: 0 0 0 3px rgba(181, 138, 42, 0.12);
+}
+
+.personal-limpiar-button {
+  padding: 13px 18px;
+  border: 1px solid #dfcfaa;
+  border-radius: 12px;
+  background: #f4ead5;
+  color: #87671d;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.personal-limpiar-button:hover {
+  background: #e9d7ae;
+}
+
+.personal-limpiar-button:focus-visible {
+  outline: 3px solid #b58a2a;
+  outline-offset: 3px;
+}
+
+.directory-placeholder .personal-limpiar-button {
+  margin-top: 20px;
+}
+
+@media (max-width: 650px) {
+  .personal-filtros {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .personal-filtro-campo {
+    width: 100%;
+    min-width: 0;
+  }
+}
