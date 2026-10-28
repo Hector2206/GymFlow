@@ -25,7 +25,8 @@ import {
 
 import {
   SalarioPersonalAdmin,
-  PagoNominaAdmin
+  PagoNominaAdmin,
+  CambiarSalarioAdminRequest
 } from '../models/admin-nomina.model';
 
 @Component({
@@ -38,7 +39,6 @@ import {
 export class AdminNomina implements OnInit {
 
   empleados: PersonalAdmin[] = [];
-
   idPersonalSeleccionado: number | null = null;
 
   salarios: SalarioPersonalAdmin[] = [];
@@ -55,6 +55,23 @@ export class AdminNomina implements OnInit {
   errorSalarios = '';
   errorPagos = '';
 
+  // CAMBIO SALARIAL
+
+  mostrarFormularioCambio = false;
+  mostrarConfirmacionFinal = false;
+
+  montoNuevo: number | null = null;
+  motivoCambio = '';
+  confirmacionLeida = false;
+
+  cambiandoSalario = false;
+  resultadoIncierto = false;
+
+  errorCambio = '';
+  mensajeCambio = '';
+
+  fechaVigencia = this.obtenerFechaOperacion();
+
   private versionConsulta = 0;
 
   constructor(
@@ -69,11 +86,22 @@ export class AdminNomina implements OnInit {
     this.cargarEmpleados();
   }
 
+  // FECHA OPERATIVA
+
+  private obtenerFechaOperacion(): string {
+
+    // Se utiliza UTC como referencia inicial.
+    // El backend valida la fecha definitiva
+    // contra CURRENT_DATE de PostgreSQL.
+
+    return new Date().toISOString().slice(0, 10);
+  }
+
   // CONSULTAR EMPLEADOS
 
   cargarEmpleados(): void {
 
-    if (this.cargandoEmpleados) {
+    if (this.cargandoEmpleados || this.cambiandoSalario) {
       return;
     }
 
@@ -112,18 +140,17 @@ export class AdminNomina implements OnInit {
 
           this.cargandoEmpleados = false;
 
-          this.errorEmpleados =
-            this.obtenerMensajeError(
-              error,
-              'No fue posible consultar empleados.'
-            );
+          this.errorEmpleados = this.obtenerMensajeError(
+            error,
+            'No fue posible consultar empleados.'
+          );
 
           this.changeDetector.detectChanges();
         }
       });
   }
 
-  // EMPLEADO ELEGIDO
+  // EMPLEADO SELECCIONADO
 
   get empleadoSeleccionado(): PersonalAdmin | null {
 
@@ -133,20 +160,28 @@ export class AdminNomina implements OnInit {
 
     return this.empleados.find(
       empleado =>
-        empleado.idPersonal ===
-        this.idPersonalSeleccionado
+        empleado.idPersonal === this.idPersonalSeleccionado
     ) || null;
   }
 
-  // CAMBIAR DE EMPLEADO
-
   cambiarEmpleado(): void {
+
+    if (this.cambiandoSalario) {
+      return;
+    }
+
+    this.cancelarFormulario();
+    this.mensajeCambio = '';
     this.cargarDetalles();
   }
 
-  // CONSULTAR SALARIOS Y PAGOS
+  // CONSULTAR HISTORIALES
 
   cargarDetalles(): void {
+
+    if (this.cambiandoSalario) {
+      return;
+    }
 
     this.versionConsulta++;
 
@@ -193,7 +228,7 @@ export class AdminNomina implements OnInit {
           if (!Array.isArray(respuesta)) {
 
             this.errorSalarios =
-              'La respuesta del historial salarial no es válida.';
+              'La respuesta salarial no es válida.';
 
           } else {
 
@@ -212,17 +247,16 @@ export class AdminNomina implements OnInit {
           this.cargandoSalarios = false;
           this.consultaSalariosRealizada = true;
 
-          this.errorSalarios =
-            this.obtenerMensajeError(
-              error,
-              'No se pudo consultar el historial salarial.'
-            );
+          this.errorSalarios = this.obtenerMensajeError(
+            error,
+            'No se pudo consultar el historial salarial.'
+          );
 
           this.changeDetector.detectChanges();
         }
       });
 
-    // HISTORIAL DE NOMINA
+    // PAGOS DE NOMINA
 
     this.nominaService
       .obtenerHistorialNomina(id)
@@ -241,7 +275,7 @@ export class AdminNomina implements OnInit {
           if (!Array.isArray(respuesta)) {
 
             this.errorPagos =
-              'La respuesta del historial de nómina no es válida.';
+              'La respuesta de nómina no es válida.';
 
           } else {
 
@@ -260,18 +294,17 @@ export class AdminNomina implements OnInit {
           this.cargandoPagos = false;
           this.consultaPagosRealizada = true;
 
-          this.errorPagos =
-            this.obtenerMensajeError(
-              error,
-              'No se pudo consultar el historial de nómina.'
-            );
+          this.errorPagos = this.obtenerMensajeError(
+            error,
+            'No se pudo consultar el historial de nómina.'
+          );
 
           this.changeDetector.detectChanges();
         }
       });
   }
 
-  // SALARIO VIGENTE EN EL HISTORIAL
+  // SALARIO VIGENTE
 
   get salarioVigente(): SalarioPersonalAdmin | null {
 
@@ -280,7 +313,253 @@ export class AdminNomina implements OnInit {
     ) || null;
   }
 
-  // FORMATO DE MONEDA
+  // CONDICIONES DEL BACKEND PARA CAMBIAR SUELDO
+
+  get puedeAbrirCambio(): boolean {
+
+    const empleado = this.empleadoSeleccionado;
+    const vigente = this.salarioVigente;
+
+    if (
+      !empleado ||
+      !vigente ||
+      empleado.estatus !== 'Activo' ||
+      this.cargandoSalarios ||
+      this.cargandoEmpleados ||
+      !!this.errorSalarios ||
+      this.cambiandoSalario ||
+      this.resultadoIncierto
+    ) {
+      return false;
+    }
+
+    if (vigente.periodicidad !== 'Mensual') {
+      return false;
+    }
+
+    if (Number(vigente.monto) !== Number(empleado.salario)) {
+      return false;
+    }
+
+    return vigente.vigenteDesde < this.obtenerFechaOperacion();
+  }
+
+  // ABRIR FORMULARIO
+
+  abrirCambioSalario(): void {
+
+    if (!this.puedeAbrirCambio) {
+      return;
+    }
+
+    this.fechaVigencia = this.obtenerFechaOperacion();
+
+    this.montoNuevo = null;
+    this.motivoCambio = '';
+    this.confirmacionLeida = false;
+
+    this.errorCambio = '';
+    this.mensajeCambio = '';
+
+    this.mostrarFormularioCambio = true;
+    this.mostrarConfirmacionFinal = false;
+  }
+
+  // CERRAR FORMULARIO
+
+  cancelarFormulario(): void {
+
+    if (this.cambiandoSalario) {
+      return;
+    }
+
+    this.mostrarFormularioCambio = false;
+    this.mostrarConfirmacionFinal = false;
+
+    this.montoNuevo = null;
+    this.motivoCambio = '';
+    this.confirmacionLeida = false;
+
+    this.errorCambio = '';
+  }
+
+  // VALIDAR MONTO
+
+  private montoValido(monto: number | null): boolean {
+
+    return (
+      typeof monto === 'number' &&
+      Number.isFinite(monto) &&
+      monto >= 0 &&
+      monto <= 99999999.99 &&
+      Math.round(monto * 100) / 100 === monto
+    );
+  }
+
+  get puedeConfirmarCambio(): boolean {
+
+    const vigente = this.salarioVigente;
+
+    if (
+      !this.mostrarFormularioCambio ||
+      !this.puedeAbrirCambio ||
+      !vigente ||
+      !this.montoValido(this.montoNuevo) ||
+      !this.confirmacionLeida ||
+      !this.motivoCambio.trim()
+    ) {
+      return false;
+    }
+
+    return (
+      this.montoNuevo !== Number(vigente.monto) &&
+      this.fechaVigencia === this.obtenerFechaOperacion()
+    );
+  }
+
+  // PREPARAR CONFIRMACION FINAL
+
+  prepararCambio(): void {
+
+    this.errorCambio = '';
+
+    if (!this.puedeConfirmarCambio) {
+
+      this.errorCambio =
+        'Verifica el sueldo, el motivo y la confirmación. ' +
+        'El nuevo monto debe ser distinto del actual.';
+
+      return;
+    }
+
+    this.mostrarConfirmacionFinal = true;
+  }
+
+  cancelarConfirmacion(): void {
+
+    if (this.cambiandoSalario) {
+      return;
+    }
+
+    this.mostrarConfirmacionFinal = false;
+  }
+
+  // REGISTRAR CAMBIO REAL EN POSTGRESQL
+
+  confirmarCambioSalario(): void {
+
+    if (
+      !this.mostrarConfirmacionFinal ||
+      !this.puedeConfirmarCambio
+    ) {
+      return;
+    }
+
+    const empleado = this.empleadoSeleccionado;
+    const monto = this.montoNuevo;
+
+    if (!empleado || monto === null) {
+      return;
+    }
+
+    const idPersonal = empleado.idPersonal;
+
+    const datos: CambiarSalarioAdminRequest = {
+      monto,
+      vigenteDesde: this.fechaVigencia,
+      motivo: this.motivoCambio.trim()
+    };
+
+    this.cambiandoSalario = true;
+    this.errorCambio = '';
+
+    this.nominaService
+      .cambiarSalario(idPersonal, datos)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+
+        next: (respuesta) => {
+
+          this.cambiandoSalario = false;
+
+          if (
+            !respuesta ||
+            respuesta.idPersonal !== idPersonal ||
+            typeof respuesta.idSalario !== 'number' ||
+            !Number.isInteger(respuesta.idSalario) ||
+            respuesta.idSalario <= 0
+          ) {
+
+            this.resultadoIncierto = true;
+
+            this.errorCambio =
+              'El servidor respondió de forma inesperada. ' +
+              'Comprueba el historial antes de intentar otro cambio.';
+
+            this.mostrarConfirmacionFinal = false;
+            this.changeDetector.detectChanges();
+            return;
+          }
+
+          this.mostrarFormularioCambio = false;
+          this.mostrarConfirmacionFinal = false;
+
+          this.montoNuevo = null;
+          this.motivoCambio = '';
+          this.confirmacionLeida = false;
+
+          this.mensajeCambio =
+            'Sueldo actualizado correctamente. ' +
+            `Registro salarial: #${respuesta.idSalario}.`;
+
+          // RECARGAR SUELDO E HISTORIALES
+
+          this.cargarEmpleados();
+          this.cargarDetalles();
+
+          this.changeDetector.detectChanges();
+        },
+
+        error: (error: HttpErrorResponse) => {
+
+          this.cambiandoSalario = false;
+          this.mostrarConfirmacionFinal = false;
+
+          const mensajeServidor = this.obtenerMensajeError(
+            error,
+            'No fue posible actualizar el sueldo.'
+          );
+
+          if (
+            error.status === 0 ||
+            error.status >= 500
+          ) {
+
+            this.resultadoIncierto = true;
+
+            this.errorCambio =
+              'No se pudo confirmar si el cambio se guardó. ' +
+              'Revisa el historial salarial antes de volver a intentarlo.';
+
+          } else if (error.status === 409) {
+
+            this.resultadoIncierto = true;
+
+            this.errorCambio =
+              mensajeServidor +
+              ' Actualiza la consulta para revisar el salario.';
+
+          } else {
+
+            this.errorCambio = mensajeServidor;
+          }
+
+          this.changeDetector.detectChanges();
+        }
+      });
+  }
+
+  // FORMATOS
 
   mostrarMonto(monto: number): string {
 
@@ -300,25 +579,23 @@ export class AdminNomina implements OnInit {
     }).format(monto);
   }
 
-  // FORMATO DE FECHA
-
   mostrarFecha(fecha: string | null): string {
 
     if (!fecha) {
       return '—';
     }
 
-    const fechaCorta = fecha.slice(0, 10);
-    const partes = fechaCorta.split('-');
+    const corta = fecha.slice(0, 10);
+    const partes = corta.split('-');
 
     if (partes.length !== 3) {
-      return fechaCorta;
+      return corta;
     }
 
     return `${partes[2]}/${partes[1]}/${partes[0]}`;
   }
 
-  // ERRORES DE CONEXION
+  // ERRORES
 
   private obtenerMensajeError(
     error: HttpErrorResponse,
@@ -330,15 +607,15 @@ export class AdminNomina implements OnInit {
     }
 
     if (error.status === 403) {
-      return 'No tienes permisos para consultar nómina.';
+      return 'No tienes permisos para consultar o modificar nómina.';
     }
 
     if (error.status === 404) {
-      return 'El expediente del empleado no fue encontrado.';
+      return 'El empleado solicitado no fue encontrado.';
     }
 
     if (error.status === 0 || error.status >= 500) {
-      return 'No fue posible conectar con el servidor. Intenta nuevamente.';
+      return 'No fue posible conectar con el servidor.';
     }
 
     if (typeof error.error?.mensaje === 'string') {
@@ -352,12 +629,12 @@ export class AdminNomina implements OnInit {
     return mensajeDefault;
   }
 
-  // VOLVER AL DIRECTORIO
-
   volverDirectorio(): void {
 
-    this.router.navigate([
-      '/admin/personal'
-    ]);
+    if (this.cambiandoSalario) {
+      return;
+    }
+
+    this.router.navigate(['/admin/personal']);
   }
 }

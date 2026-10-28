@@ -9,7 +9,9 @@ import {
 
 import {
   SalarioPersonalAdmin,
-  PagoNominaAdmin
+  PagoNominaAdmin,
+  CambiarSalarioAdminRequest,
+  CambiarSalarioAdminResponse
 } from '../models/admin-nomina.model';
 
 @Injectable({
@@ -25,7 +27,6 @@ export class AdminNominaService {
   ) {}
 
   // CONSULTAR HISTORIAL SALARIAL
-  // Incluye salario vigente y anteriores
 
   obtenerHistorialSalarial(
     idPersonal: number
@@ -36,8 +37,7 @@ export class AdminNominaService {
     );
   }
 
-  // CONSULTAR HISTORIAL DE NOMINA
-  // Incluye pagos registrados y cancelados
+  // CONSULTAR PAGOS DE NOMINA
 
   obtenerHistorialNomina(
     idPersonal: number
@@ -45,6 +45,19 @@ export class AdminNominaService {
 
     return this.http.get<PagoNominaAdmin[]>(
       `${this.apiUrl}/${idPersonal}/nomina`
+    );
+  }
+
+  // CAMBIAR SUELDO MENSUAL
+
+  cambiarSalario(
+    idPersonal: number,
+    datos: CambiarSalarioAdminRequest
+  ): Observable<CambiarSalarioAdminResponse> {
+
+    return this.http.post<CambiarSalarioAdminResponse>(
+      `${this.apiUrl}/${idPersonal}/salarios`,
+      datos
     );
   }
 }

@@ -1,8 +1,6 @@
 
 <div class="nomina-page">
 
-  <!-- ENCABEZADO -->
-
   <header class="nomina-header">
 
     <div class="header-content">
@@ -16,8 +14,8 @@
         <h1>Salarios y nómina</h1>
 
         <p>
-          Consulta los sueldos y pagos
-          registrados del personal.
+          Consulta y administra los sueldos
+          del personal de GymFlow.
         </p>
 
       </div>
@@ -26,6 +24,7 @@
         type="button"
         class="back-button"
         (click)="volverDirectorio()"
+        [disabled]="cambiandoSalario"
       >
         ← Volver al directorio
       </button>
@@ -36,7 +35,7 @@
 
   <main class="nomina-content">
 
-    <!-- SELECTOR DE EMPLEADOS -->
+    <!-- SELECCIONAR EMPLEADO -->
 
     <section class="nomina-panel">
 
@@ -50,11 +49,11 @@
             ADMINISTRACIÓN LABORAL
           </span>
 
-          <h2>Consultar expediente de nómina</h2>
+          <h2>Expediente de nómina</h2>
 
           <p>
             Selecciona un empleado para consultar
-            su salario e historial de pagos.
+            su salario y sus pagos registrados.
           </p>
 
         </div>
@@ -91,6 +90,7 @@
             name="empleadoNomina"
             [(ngModel)]="idPersonalSeleccionado"
             (ngModelChange)="cambiarEmpleado()"
+            [disabled]="cambiandoSalario || mostrarConfirmacionFinal"
           >
 
             <option [ngValue]="null">
@@ -103,9 +103,11 @@
             ) {
 
               <option [ngValue]="empleado.idPersonal">
+
                 {{ empleado.nombreCompleto }}
                 — {{ empleado.puesto }}
                 — {{ empleado.estatus }}
+
               </option>
 
             }
@@ -128,7 +130,7 @@
 
     @if (empleadoSeleccionado; as empleado) {
 
-      <!-- RESUMEN LABORAL -->
+      <!-- EXPEDIENTE -->
 
       <section class="nomina-panel">
 
@@ -164,7 +166,7 @@
             </strong>
 
             <small>
-              Dato del expediente del personal
+              Sueldo del expediente laboral
             </small>
 
           </div>
@@ -179,9 +181,7 @@
               {{ empleado.estatus }}
             </strong>
 
-            <small>
-              {{ empleado.puesto }}
-            </small>
+            <small>{{ empleado.puesto }}</small>
 
           </div>
 
@@ -193,9 +193,7 @@
               {{ mostrarFecha(empleado.fechaContratacion) }}
             </strong>
 
-            <small>
-              Fecha de ingreso
-            </small>
+            <small>Fecha de ingreso</small>
 
           </div>
 
@@ -204,15 +202,14 @@
         <div class="nomina-toolbar">
 
           <p>
-            Los datos se consultan directamente
-            desde GymFlow.
+            Información obtenida de GymFlow.
           </p>
 
           <button
             type="button"
             class="secondary-button"
             (click)="cargarDetalles()"
-            [disabled]="cargandoSalarios || cargandoPagos"
+            [disabled]="cargandoSalarios || cargandoPagos || cambiandoSalario"
           >
             ↻ Actualizar consulta
           </button>
@@ -220,6 +217,24 @@
         </div>
 
       </section>
+
+      <!-- CONFIRMACION DE CAMBIO EXITOSO -->
+
+      @if (mensajeCambio) {
+
+        <section class="nomina-panel">
+
+          <div class="nomina-destacado" role="status">
+
+            <strong>✓ Cambio salarial registrado</strong>
+
+            <small>{{ mensajeCambio }}</small>
+
+          </div>
+
+        </section>
+
+      }
 
       <!-- HISTORIAL SALARIAL -->
 
@@ -236,8 +251,8 @@
             <h2>Sueldos del empleado</h2>
 
             <p>
-              Consulta las vigencias y cambios
-              salariales registrados.
+              Consulta los cambios salariales
+              y sus fechas de vigencia.
             </p>
 
           </div>
@@ -272,8 +287,9 @@
         ) {
 
           <div class="nomina-estado">
-            Todavía no hay movimientos
-            en el historial salarial.
+
+            No hay historial salarial registrado.
+
           </div>
 
         } @else if (salarios.length > 0) {
@@ -310,6 +326,7 @@
             <table class="nomina-tabla">
 
               <thead>
+
                 <tr>
                   <th>Monto</th>
                   <th>Periodicidad</th>
@@ -318,6 +335,7 @@
                   <th>Motivo</th>
                   <th>Vigencia</th>
                 </tr>
+
               </thead>
 
               <tbody>
@@ -376,9 +394,313 @@
 
         }
 
+        <!-- CAMBIAR SALARIO -->
+
+        <div class="nomina-toolbar">
+
+          <p>
+            El cambio salarial conservará
+            el sueldo anterior en el historial.
+          </p>
+
+          <button
+            type="button"
+            class="secondary-button"
+            (click)="abrirCambioSalario()"
+            [disabled]="!puedeAbrirCambio || mostrarFormularioCambio"
+          >
+            Cambiar sueldo mensual
+          </button>
+
+        </div>
+
+        @if (
+          empleado.estatus === 'Activo' &&
+          consultaSalariosRealizada &&
+          salarioVigente &&
+          salarioVigente.vigenteDesde >= fechaVigencia
+        ) {
+
+          <p class="nomina-estado">
+            El salario vigente comenzó hoy.
+            El backend no permite iniciar otra vigencia
+            el mismo día.
+          </p>
+
+        }
+
+        @if (empleado.estatus === 'Inactivo') {
+
+          <p class="nomina-estado">
+            Los empleados dados de baja solo
+            pueden consultar su historial salarial.
+          </p>
+
+        }
+
+        @if (resultadoIncierto) {
+
+          <div class="nomina-error" role="alert">
+
+            El resultado de la operación no está confirmado.
+            Revisa el historial salarial antes de intentar
+            otro cambio. No se enviarán más solicitudes
+            durante esta sesión de la pantalla.
+
+          </div>
+
+        }
+
       </section>
 
-      <!-- PAGOS DE NOMINA -->
+      <!-- FORMULARIO DE CAMBIO SALARIAL -->
+
+      @if (mostrarFormularioCambio) {
+
+        <section class="nomina-panel">
+
+          <div class="section-heading">
+
+            <div>
+
+              <span class="section-label">
+                CAMBIO SALARIAL
+              </span>
+
+              <h2>Actualizar sueldo mensual</h2>
+
+              <p>
+                Registra el nuevo sueldo y explica
+                el motivo del ajuste.
+              </p>
+
+            </div>
+
+            <div class="section-icon">💵</div>
+
+          </div>
+
+          <div class="resumen-grid">
+
+            <div class="resumen-card">
+
+              <span>Empleado</span>
+
+              <strong>
+                {{ empleado.nombreCompleto }}
+              </strong>
+
+              <small>
+                ID: {{ empleado.idPersonal }}
+              </small>
+
+            </div>
+
+            <div class="resumen-card">
+
+              <span>Sueldo anterior</span>
+
+              <strong>
+                {{ mostrarMonto(empleado.salario) }}
+              </strong>
+
+              <small>Mensual</small>
+
+            </div>
+
+            <div class="resumen-card">
+
+              <span>Vigencia propuesta</span>
+
+              <strong>
+                {{ mostrarFecha(fechaVigencia) }}
+              </strong>
+
+              <small>
+                Fecha operativa validada por el servidor
+              </small>
+
+            </div>
+
+          </div>
+
+          <div
+            class="nomina-campo"
+            style="margin-top:25px"
+          >
+
+            <label for="nuevoSueldo">
+              Nuevo sueldo mensual (MXN) *
+            </label>
+
+            <input
+              id="nuevoSueldo"
+              type="number"
+              name="montoNuevo"
+              [(ngModel)]="montoNuevo"
+              min="0"
+              max="99999999.99"
+              step="0.01"
+              [disabled]="cambiandoSalario || resultadoIncierto || mostrarConfirmacionFinal"
+              placeholder="Ej. 9500.00"
+              style="width:100%;padding:15px;border:1px solid #dfcfaa;border-radius:12px;background:#fffdf8;color:#2f2a24;font:inherit"
+            />
+
+          </div>
+
+          <div
+            class="nomina-campo"
+            style="margin-top:22px"
+          >
+
+            <label for="motivoCambio">
+              Motivo del cambio *
+            </label>
+
+            <textarea
+              id="motivoCambio"
+              name="motivoCambio"
+              [(ngModel)]="motivoCambio"
+              rows="4"
+              maxlength="500"
+              [disabled]="cambiandoSalario || resultadoIncierto || mostrarConfirmacionFinal"
+              placeholder="Ej. Ajuste salarial autorizado"
+              style="width:100%;padding:15px;border:1px solid #dfcfaa;border-radius:12px;background:#fffdf8;color:#2f2a24;font:inherit;resize:vertical"
+            ></textarea>
+
+          </div>
+
+          <label
+            style="display:flex;gap:12px;align-items:flex-start;margin-top:24px;font-size:13px;color:#756c60;line-height:1.6"
+          >
+
+            <input
+              type="checkbox"
+              name="confirmacionSueldo"
+              [(ngModel)]="confirmacionLeida"
+              [disabled]="cambiandoSalario || resultadoIncierto || mostrarConfirmacionFinal"
+            />
+
+            <span>
+              He revisado el sueldo anterior y confirmo
+              que el nuevo monto está autorizado.
+            </span>
+
+          </label>
+
+          @if (errorCambio) {
+
+            <div
+              class="nomina-error"
+              role="alert"
+              style="margin-top:22px"
+            >
+              {{ errorCambio }}
+            </div>
+
+          }
+
+          @if (cambiandoSalario) {
+
+            <div class="nomina-estado" role="status">
+              ⏳ Registrando cambio salarial...
+            </div>
+
+          }
+
+          <div class="nomina-toolbar">
+
+            <button
+              type="button"
+              class="secondary-button"
+              (click)="cancelarFormulario()"
+              [disabled]="cambiandoSalario"
+            >
+              Cancelar
+            </button>
+
+            <button
+              type="button"
+              class="secondary-button"
+              (click)="prepararCambio()"
+              [disabled]="!puedeConfirmarCambio || mostrarConfirmacionFinal"
+              style="background:#b58a2a;color:white"
+            >
+              Revisar cambio salarial
+            </button>
+
+          </div>
+
+          <!-- CONFIRMACION DEFINITIVA -->
+
+          @if (mostrarConfirmacionFinal) {
+
+            <div
+              class="nomina-destacado"
+              style="margin-top:25px"
+            >
+
+              <strong>
+                Confirmar nuevo sueldo
+              </strong>
+
+              <span>
+                Empleado:
+                {{ empleado.nombreCompleto }}
+              </span>
+
+              <span>
+                Sueldo anterior:
+                {{ mostrarMonto(empleado.salario) }}
+              </span>
+
+              <span>
+                Nuevo sueldo:
+                {{ mostrarMonto(montoNuevo!) }}
+              </span>
+
+              <span>
+                Motivo:
+                {{ motivoCambio.trim() }}
+              </span>
+
+              <small>
+                Esta operación actualizará PostgreSQL
+                y conservará el registro salarial anterior.
+              </small>
+
+              <div class="nomina-toolbar">
+
+                <button
+                  type="button"
+                  class="secondary-button"
+                  (click)="cancelarConfirmacion()"
+                  [disabled]="cambiandoSalario"
+                >
+                  No, regresar
+                </button>
+
+                <button
+                  type="button"
+                  class="secondary-button"
+                  (click)="confirmarCambioSalario()"
+                  [disabled]="!puedeConfirmarCambio || cambiandoSalario"
+                  style="background:#b58a2a;color:white"
+                >
+                  Sí, guardar nuevo sueldo
+                </button>
+
+              </div>
+
+            </div>
+
+          }
+
+        </section>
+
+      }
+
+      <!-- HISTORIAL DE NOMINA -->
 
       <section class="nomina-panel">
 
@@ -393,8 +715,8 @@
             <h2>Pagos registrados</h2>
 
             <p>
-              Consulta los periodos, montos,
-              métodos y estados de los pagos.
+              Consulta periodos, montos,
+              métodos y estados de pago.
             </p>
 
           </div>
@@ -430,10 +752,12 @@
 
           <div class="nomina-estado">
 
-            <strong>Aún no hay pagos registrados.</strong>
+            <strong>
+              Aún no hay pagos registrados.
+            </strong>
 
             <p>
-              Cuando se registren pagos de nómina,
+              Los futuros pagos de nómina
               aparecerán en esta sección.
             </p>
 
@@ -450,6 +774,7 @@
             <table class="nomina-tabla">
 
               <thead>
+
                 <tr>
                   <th>Pago</th>
                   <th>Periodo</th>
@@ -458,6 +783,7 @@
                   <th>Método</th>
                   <th>Estado</th>
                 </tr>
+
               </thead>
 
               <tbody>
