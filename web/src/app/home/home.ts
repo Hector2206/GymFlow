@@ -1,16 +1,12 @@
+
 import {
   ChangeDetectorRef,
   Component,
   OnInit
 } from '@angular/core';
 
-import {
-  CommonModule
-} from '@angular/common';
-
-import {
-  Router
-} from '@angular/router';
+import { CommonModule } from '@angular/common';
+import { Router } from '@angular/router';
 
 import {
   UsuarioService
@@ -27,9 +23,7 @@ import {
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [
-    CommonModule
-  ],
+  imports: [CommonModule],
   templateUrl: './home.html',
   styleUrl: './home.css'
 })
@@ -38,9 +32,7 @@ export class Home implements OnInit {
   usuario: Usuario | null = null;
 
   cargando = true;
-
   error = '';
-
   mensaje = '';
 
   constructor(
@@ -51,60 +43,43 @@ export class Home implements OnInit {
   ) {}
 
   ngOnInit(): void {
-
     this.cargarUsuario();
   }
-
 
   cargarUsuario(): void {
 
     this.cargando = true;
-
     this.error = '';
 
     this.usuarioService
       .obtenerUsuarioActual()
       .subscribe({
 
-        next: (
-          usuario
-        ) => {
+        next: (usuario) => {
 
-          this.usuario =
-            usuario;
+          this.usuario = usuario;
 
           localStorage.setItem(
             'usuario',
-            JSON.stringify(
-              usuario
-            )
+            JSON.stringify(usuario)
           );
 
-          this.cargando =
-            false;
-
-          this.changeDetector
-            .detectChanges();
+          this.cargando = false;
+          this.changeDetector.detectChanges();
         },
 
-        error: (
-          error
-        ) => {
+        error: (error) => {
 
           console.error(
             'Error al obtener usuario:',
             error
           );
 
-          this.cargando =
-            false;
+          this.cargando = false;
 
-          if (
-            error.status === 401
-          ) {
+          if (error.status === 401) {
 
-            this.authService
-              .cerrarSesion();
+            this.authService.cerrarSesion();
 
             this.router.navigate([
               '/login'
@@ -116,44 +91,38 @@ export class Home implements OnInit {
           this.error =
             'No se pudieron cargar los datos del usuario.';
 
-          this.changeDetector
-            .detectChanges();
+          this.changeDetector.detectChanges();
         }
       });
   }
 
+  // ROLES
 
   esRecepcionista(): boolean {
 
     return this.usuario?.role
-      ?.toLowerCase() ===
-      'recepcionista';
+      ?.toLowerCase() === 'recepcionista';
   }
-
 
   esCliente(): boolean {
 
     return this.usuario?.role
-      ?.toLowerCase() ===
-      'cliente';
+      ?.toLowerCase() === 'cliente';
   }
-
 
   esAdministrador(): boolean {
 
     return this.usuario?.role
-      ?.toLowerCase() ===
-      'administrador';
+      ?.toLowerCase() === 'administrador';
   }
-
 
   esEntrenador(): boolean {
 
     return this.usuario?.role
-      ?.toLowerCase() ===
-      'entrenador';
+      ?.toLowerCase() === 'entrenador';
   }
 
+  // PERFIL
 
   irPerfil(): void {
 
@@ -162,7 +131,8 @@ export class Home implements OnInit {
     ]);
   }
 
-  
+  // ADMINISTRADOR
+
   irDashboardAdministrador(): void {
 
     if (!this.esAdministrador()) {
@@ -171,7 +141,6 @@ export class Home implements OnInit {
         'Esta opción está disponible únicamente para administradores.';
 
       this.changeDetector.detectChanges();
-
       return;
     }
 
@@ -180,58 +149,66 @@ export class Home implements OnInit {
     ]);
   }
 
-  
-irClientesAdministrador(): void {
+  irClientesAdministrador(): void {
 
-  if (!this.esAdministrador()) {
+    if (!this.esAdministrador()) {
 
-    this.mensaje =
-      'Esta opción está disponible únicamente para administradores.';
+      this.mensaje =
+        'Esta opción está disponible únicamente para administradores.';
 
-    this.changeDetector.detectChanges();
+      this.changeDetector.detectChanges();
+      return;
+    }
 
-    return;
+    this.router.navigate([
+      '/admin/clientes'
+    ]);
   }
 
-  this.router.navigate([
-    '/admin/clientes'
-  ]);
-}
+  irPersonalAdministrador(): void {
 
+    if (!this.esAdministrador()) {
 
+      this.mensaje =
+        'Esta opción está disponible únicamente para administradores.';
 
-irPersonalAdministrador(): void {
+      this.changeDetector.detectChanges();
+      return;
+    }
 
-  if (!this.esAdministrador()) {
-
-    this.mensaje =
-      'Esta opción está disponible únicamente para administradores.';
-
-    this.changeDetector.detectChanges();
-
-    return;
+    this.router.navigate([
+      '/admin/personal'
+    ]);
   }
 
-  this.router.navigate([
-    '/admin/personal'
-  ]);
-}
+  // NUEVO: HORARIOS Y ASISTENCIAS
 
+  irHorariosAdministrador(): void {
 
+    if (!this.esAdministrador()) {
 
+      this.mensaje =
+        'Solo los administradores pueden gestionar horarios y asistencias.';
+
+      this.changeDetector.detectChanges();
+      return;
+    }
+
+    this.router.navigate([
+      '/admin/personal/operaciones'
+    ]);
+  }
+
+  // RECEPCION
 
   irRegistrarCliente(): void {
 
-    if (
-      !this.esRecepcionista()
-    ) {
+    if (!this.esRecepcionista()) {
 
       this.mensaje =
         'No tienes permisos para registrar clientes.';
 
-      this.changeDetector
-        .detectChanges();
-
+      this.changeDetector.detectChanges();
       return;
     }
 
@@ -240,19 +217,14 @@ irPersonalAdministrador(): void {
     ]);
   }
 
-
   irControlAcceso(): void {
 
-    if (
-      !this.esRecepcionista()
-    ) {
+    if (!this.esRecepcionista()) {
 
       this.mensaje =
         'No tienes permisos para registrar asistencias.';
 
-      this.changeDetector
-        .detectChanges();
-
+      this.changeDetector.detectChanges();
       return;
     }
 
@@ -261,19 +233,14 @@ irPersonalAdministrador(): void {
     ]);
   }
 
-
   irHistorialAsistencias(): void {
 
-    if (
-      !this.esRecepcionista()
-    ) {
+    if (!this.esRecepcionista()) {
 
       this.mensaje =
         'No tienes permisos para consultar asistencias.';
 
-      this.changeDetector
-        .detectChanges();
-
+      this.changeDetector.detectChanges();
       return;
     }
 
@@ -282,19 +249,14 @@ irPersonalAdministrador(): void {
     ]);
   }
 
-
   irRegistrarPago(): void {
 
-    if (
-      !this.esRecepcionista()
-    ) {
+    if (!this.esRecepcionista()) {
 
       this.mensaje =
         'No tienes permisos para registrar pagos.';
 
-      this.changeDetector
-        .detectChanges();
-
+      this.changeDetector.detectChanges();
       return;
     }
 
@@ -303,19 +265,14 @@ irPersonalAdministrador(): void {
     ]);
   }
 
-
   irHistorialPagos(): void {
 
-    if (
-      !this.esRecepcionista()
-    ) {
+    if (!this.esRecepcionista()) {
 
       this.mensaje =
         'No tienes permisos para consultar pagos.';
 
-      this.changeDetector
-        .detectChanges();
-
+      this.changeDetector.detectChanges();
       return;
     }
 
@@ -324,19 +281,32 @@ irPersonalAdministrador(): void {
     ]);
   }
 
+  irAsignacionEntrenadores(): void {
+
+    if (!this.esRecepcionista()) {
+
+      this.mensaje =
+        'Esta opción está disponible únicamente para recepción.';
+
+      this.changeDetector.detectChanges();
+      return;
+    }
+
+    this.router.navigate([
+      '/asignacion-entrenadores'
+    ]);
+  }
+
+  // CLIENTE
 
   irMiCodigoAcceso(): void {
 
-    if (
-      !this.esCliente()
-    ) {
+    if (!this.esCliente()) {
 
       this.mensaje =
         'Esta opción está disponible únicamente para clientes.';
 
-      this.changeDetector
-        .detectChanges();
-
+      this.changeDetector.detectChanges();
       return;
     }
 
@@ -345,39 +315,14 @@ irPersonalAdministrador(): void {
     ]);
   }
 
-  irAsignacionEntrenadores(): void {
-
-  if (
-    !this.esRecepcionista()
-  ) {
-
-    this.mensaje =
-      'Esta opción está disponible únicamente para recepción.';
-
-    this.changeDetector
-      .detectChanges();
-
-    return;
-  }
-
-  this.router.navigate([
-    '/asignacion-entrenadores'
-  ]);
-}
-
-
   irMisAsistencias(): void {
 
-    if (
-      !this.esCliente()
-    ) {
+    if (!this.esCliente()) {
 
       this.mensaje =
         'Esta opción está disponible únicamente para clientes.';
 
-      this.changeDetector
-        .detectChanges();
-
+      this.changeDetector.detectChanges();
       return;
     }
 
@@ -386,19 +331,14 @@ irPersonalAdministrador(): void {
     ]);
   }
 
-
   irMisPagos(): void {
 
-    if (
-      !this.esCliente()
-    ) {
+    if (!this.esCliente()) {
 
       this.mensaje =
         'Esta opción está disponible únicamente para clientes.';
 
-      this.changeDetector
-        .detectChanges();
-
+      this.changeDetector.detectChanges();
       return;
     }
 
@@ -407,19 +347,14 @@ irPersonalAdministrador(): void {
     ]);
   }
 
-
   irRutinasCliente(): void {
 
-    if (
-      !this.esCliente()
-    ) {
+    if (!this.esCliente()) {
 
       this.mensaje =
         'Esta opción está disponible únicamente para clientes.';
 
-      this.changeDetector
-        .detectChanges();
-
+      this.changeDetector.detectChanges();
       return;
     }
 
@@ -430,37 +365,30 @@ irPersonalAdministrador(): void {
 
   irMiProgreso(): void {
 
-  if (
-    !this.esCliente()
-  ) {
+    if (!this.esCliente()) {
 
-    this.mensaje =
-      'Esta opción está disponible únicamente para clientes.';
+      this.mensaje =
+        'Esta opción está disponible únicamente para clientes.';
 
-    this.changeDetector
-      .detectChanges();
+      this.changeDetector.detectChanges();
+      return;
+    }
 
-    return;
+    this.router.navigate([
+      '/mi-progreso'
+    ]);
   }
 
-  this.router.navigate([
-    '/mi-progreso'
-  ]);
-}
-
+  // ENTRENADOR
 
   irMisClientesEntrenador(): void {
 
-    if (
-      !this.esEntrenador()
-    ) {
+    if (!this.esEntrenador()) {
 
       this.mensaje =
         'Esta opción está disponible únicamente para entrenadores.';
 
-      this.changeDetector
-        .detectChanges();
-
+      this.changeDetector.detectChanges();
       return;
     }
 
@@ -469,19 +397,14 @@ irPersonalAdministrador(): void {
     ]);
   }
 
-
   irEjerciciosEntrenador(): void {
 
-    if (
-      !this.esEntrenador()
-    ) {
+    if (!this.esEntrenador()) {
 
       this.mensaje =
         'Esta opción está disponible únicamente para entrenadores.';
 
-      this.changeDetector
-        .detectChanges();
-
+      this.changeDetector.detectChanges();
       return;
     }
 
@@ -490,19 +413,14 @@ irPersonalAdministrador(): void {
     ]);
   }
 
-
   irRutinasEntrenador(): void {
 
-    if (
-      !this.esEntrenador()
-    ) {
+    if (!this.esEntrenador()) {
 
       this.mensaje =
         'Esta opción está disponible únicamente para entrenadores.';
 
-      this.changeDetector
-        .detectChanges();
-
+      this.changeDetector.detectChanges();
       return;
     }
 
@@ -511,35 +429,28 @@ irPersonalAdministrador(): void {
     ]);
   }
 
+  // FUNCIONES PENDIENTES
 
-  proximamente(
-    opcion: string
-  ): void {
+  proximamente(opcion: string): void {
 
     this.mensaje =
       `${opcion} estará disponible próximamente.`;
 
-    this.changeDetector
-      .detectChanges();
+    this.changeDetector.detectChanges();
 
-    setTimeout(
-      () => {
+    setTimeout(() => {
 
-        this.mensaje = '';
+      this.mensaje = '';
+      this.changeDetector.detectChanges();
 
-        this.changeDetector
-          .detectChanges();
-
-      },
-      3000
-    );
+    }, 3000);
   }
 
+  // CERRAR SESION
 
   cerrarSesion(): void {
 
-    this.authService
-      .cerrarSesion();
+    this.authService.cerrarSesion();
 
     this.router.navigate([
       '/login'

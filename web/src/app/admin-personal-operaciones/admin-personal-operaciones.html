@@ -1,0 +1,739 @@
+
+<div class="laboral-page">
+
+  <!-- ENCABEZADO -->
+
+  <header class="laboral-header">
+    <div class="header-content">
+
+      <div>
+        <span class="section-label">
+          GYMFLOW / ADMINISTRACIÓN
+        </span>
+
+        <h1>Horarios y asistencias</h1>
+
+        <p>
+          Organiza las jornadas laborales y prepara
+          los registros de asistencia del personal.
+        </p>
+      </div>
+
+      <button
+        type="button"
+        class="back-button"
+        (click)="volverPersonal()"
+      >
+        ← Volver a Personal
+      </button>
+
+    </div>
+  </header>
+
+  <main class="laboral-content">
+
+    <!-- ESTADO DE INTEGRACIÓN -->
+
+    <section class="estado-integracion">
+
+      <div class="integracion-icono">🔗</div>
+
+      <div>
+        <strong>Preparado para integración</strong>
+
+        <p>
+          El listado de empleados utiliza información
+          real de GymFlow. El registro de horarios,
+          las asistencias y sus historiales requieren
+          los nuevos endpoints del backend.
+        </p>
+      </div>
+
+      <span class="integracion-etiqueta">
+        Interfaz lista
+      </span>
+
+    </section>
+
+    <!-- SELECCIÓN DE EMPLEADO -->
+
+    <section class="laboral-panel">
+
+      <div class="panel-heading">
+
+        <div class="panel-icon">👥</div>
+
+        <div>
+          <span class="section-label">
+            PERSONAL DEL GIMNASIO
+          </span>
+
+          <h2>Seleccionar empleado</h2>
+
+          <p>
+            Elige al entrenador o recepcionista
+            que deseas administrar.
+          </p>
+        </div>
+
+      </div>
+
+      @if (cargando) {
+
+        <div class="estado-vacio" role="status">
+          ⏳ Consultando empleados...
+        </div>
+
+      } @else if (errorEmpleados) {
+
+        <div class="mensaje-error" role="alert">
+          {{ errorEmpleados }}
+        </div>
+
+        <button
+          type="button"
+          class="boton-secundario"
+          (click)="cargarEmpleados()"
+        >
+          Reintentar
+        </button>
+
+      } @else {
+
+        <label class="campo">
+
+          <span>Empleado *</span>
+
+          <select
+            name="empleado"
+            [(ngModel)]="idPersonalSeleccionado"
+            (ngModelChange)="cambiarEmpleado()"
+          >
+
+            <option [ngValue]="null">
+              Seleccionar empleado
+            </option>
+
+            @for (
+              empleado of empleados;
+              track empleado.idPersonal
+            ) {
+
+              <option [ngValue]="empleado.idPersonal">
+
+                {{ empleado.nombreCompleto }}
+                — {{ empleado.puesto }}
+                — {{ empleado.estatus }}
+
+              </option>
+
+            }
+
+          </select>
+
+        </label>
+
+        @if (
+          consultaRealizada &&
+          empleados.length === 0
+        ) {
+
+          <div class="estado-vacio">
+            No hay empleados registrados.
+          </div>
+
+        }
+
+      }
+
+      @if (empleadoSeleccionado; as empleado) {
+
+        <div class="empleado-resumen">
+
+          <div class="resumen-avatar">👤</div>
+
+          <div class="resumen-datos">
+
+            <strong>
+              {{ empleado.nombreCompleto }}
+            </strong>
+
+            <span>
+              {{ empleado.puesto }}
+              · ID {{ empleado.idPersonal }}
+            </span>
+
+            <small>
+              Contratación:
+              {{ mostrarFecha(empleado.fechaContratacion) }}
+            </small>
+
+          </div>
+
+          <span
+            class="estatus-chip"
+            [class.estatus-inactivo]="empleado.estatus === 'Inactivo'"
+          >
+            {{ empleado.estatus }}
+          </span>
+
+        </div>
+
+        @if (empleado.estatus === 'Inactivo') {
+
+          <div class="mensaje-aviso">
+
+            Este empleado está dado de baja. Su historial
+            podrá consultarse cuando estén disponibles
+            los endpoints, pero no se prepararán
+            asignaciones o asistencias nuevas.
+
+          </div>
+
+        }
+
+      }
+
+    </section>
+
+    <!-- PESTAÑAS -->
+
+    <div class="laboral-tabs" role="tablist" aria-label="Módulos laborales">
+
+      <button
+        type="button"
+        role="tab"
+        [attr.aria-selected]="seccion === 'horarios'"
+        [class.tab-activa]="seccion === 'horarios'"
+        (click)="cambiarSeccion('horarios')"
+      >
+        📅 Horarios del personal
+      </button>
+
+      <button
+        type="button"
+        role="tab"
+        [attr.aria-selected]="seccion === 'asistencias'"
+        [class.tab-activa]="seccion === 'asistencias'"
+        (click)="cambiarSeccion('asistencias')"
+      >
+        ✅ Asistencias del personal
+      </button>
+
+    </div>
+
+    <!-- HORARIOS -->
+
+    @if (seccion === 'horarios') {
+
+      <section class="laboral-panel">
+
+        <div class="section-heading">
+
+          <div>
+            <span class="section-label">
+              ORGANIZACIÓN LABORAL
+            </span>
+
+            <h2>Asignación de horarios</h2>
+
+            <p>
+              Configura la jornada propuesta
+              para un empleado.
+            </p>
+          </div>
+
+          <div class="section-icon">🕒</div>
+
+        </div>
+
+        @if (empleadoSeleccionado; as empleado) {
+
+          <div class="dato-actual">
+
+            <span>
+              Horario registrado actualmente
+              en el expediente
+            </span>
+
+            <strong>
+              {{ empleado.horario || 'Sin horario especificado' }}
+            </strong>
+
+            <small>
+              Este dato procede del expediente actual.
+              No representa todavía el nuevo
+              calendario estructurado.
+            </small>
+
+          </div>
+
+          <div class="form-grid">
+
+            <label class="campo">
+
+              <span>Día de la semana *</span>
+
+              <select
+                name="diaSemana"
+                [(ngModel)]="diaSemana"
+                (ngModelChange)="reiniciarHorario()"
+                [disabled]="!empleadoActivo"
+              >
+
+                <option value="">
+                  Seleccionar día
+                </option>
+
+                @for (dia of diasSemana; track dia) {
+
+                  <option [value]="dia">
+                    {{ dia }}
+                  </option>
+
+                }
+
+              </select>
+
+            </label>
+
+            <label class="campo">
+
+              <span>Inicio de vigencia *</span>
+
+              <input
+                type="date"
+                name="fechaVigencia"
+                [(ngModel)]="fechaVigencia"
+                (ngModelChange)="reiniciarHorario()"
+                [disabled]="!empleadoActivo"
+              />
+
+            </label>
+
+            <label class="campo">
+
+              <span>Hora de entrada *</span>
+
+              <input
+                type="time"
+                name="horaEntradaHorario"
+                [(ngModel)]="horaEntradaHorario"
+                (ngModelChange)="reiniciarHorario()"
+                [disabled]="!empleadoActivo"
+              />
+
+            </label>
+
+            <label class="campo">
+
+              <span>Hora de salida *</span>
+
+              <input
+                type="time"
+                name="horaSalidaHorario"
+                [(ngModel)]="horaSalidaHorario"
+                (ngModelChange)="reiniciarHorario()"
+                [disabled]="!empleadoActivo"
+              />
+
+            </label>
+
+          </div>
+
+          <div class="form-nota">
+
+            Para esta versión preliminar se consideran
+            jornadas que comienzan y terminan el
+            mismo día. Los horarios nocturnos y
+            superpuestos se validarán con Backend.
+
+          </div>
+
+          @if (errorHorario) {
+
+            <div class="mensaje-error" role="alert">
+              {{ errorHorario }}
+            </div>
+
+          }
+
+          <div class="form-actions">
+
+            <button
+              type="button"
+              class="boton-primario"
+              (click)="revisarHorario()"
+              [disabled]="!empleadoActivo"
+            >
+              Revisar horario
+            </button>
+
+          </div>
+
+          @if (horarioRevisado) {
+
+            <div class="resultado-revision" role="status">
+
+              <div class="resultado-titulo">
+                <span>✓</span>
+                <strong>Horario validado localmente</strong>
+              </div>
+
+              <div class="resultado-grid">
+
+                <div>
+                  <small>Empleado</small>
+                  <strong>{{ empleado.nombreCompleto }}</strong>
+                </div>
+
+                <div>
+                  <small>Día</small>
+                  <strong>{{ diaSemana }}</strong>
+                </div>
+
+                <div>
+                  <small>Jornada</small>
+                  <strong>
+                    {{ horaEntradaHorario }}
+                    –
+                    {{ horaSalidaHorario }}
+                  </strong>
+                </div>
+
+                <div>
+                  <small>Vigencia</small>
+                  <strong>
+                    {{ mostrarFecha(fechaVigencia) }}
+                  </strong>
+                </div>
+
+              </div>
+
+              <p>
+                Esta es únicamente una vista previa.
+                El horario todavía no se ha guardado
+                en PostgreSQL.
+              </p>
+
+            </div>
+
+          }
+
+          <div class="guardar-pendiente">
+
+            <span>🔒 Guardar horario</span>
+
+            <strong>
+              Pendiente de conexión con Backend
+            </strong>
+
+            <p>
+              Cuando estén disponibles los endpoints
+              para asignar, consultar y editar horarios,
+              activaremos el guardado real.
+            </p>
+
+          </div>
+
+        } @else {
+
+          <div class="estado-vacio">
+
+            <div class="estado-icon">👥</div>
+
+            <h3>Selecciona un empleado</h3>
+
+            <p>
+              El formulario se habilitará cuando
+              selecciones un entrenador o recepcionista.
+            </p>
+
+          </div>
+
+        }
+
+      </section>
+
+      <section class="laboral-panel">
+
+        <div class="section-heading">
+
+          <div>
+            <span class="section-label">
+              HISTORIAL DE HORARIOS
+            </span>
+
+            <h2>Horarios asignados</h2>
+          </div>
+
+          <div class="section-icon">📋</div>
+
+        </div>
+
+        <div class="estado-vacio">
+
+          <div class="estado-icon">📅</div>
+
+          <h3>Consulta pendiente de integración</h3>
+
+          <p>
+            Aquí aparecerán los horarios reales
+            y sus vigencias cuando Backend habilite
+            la consulta correspondiente.
+          </p>
+
+        </div>
+
+      </section>
+
+    }
+
+    <!-- ASISTENCIAS -->
+
+    @if (seccion === 'asistencias') {
+
+      <section class="laboral-panel">
+
+        <div class="section-heading">
+
+          <div>
+            <span class="section-label">
+              CONTROL DE ASISTENCIA
+            </span>
+
+            <h2>Registro manual de asistencia</h2>
+
+            <p>
+              Prepara el registro de entrada o salida
+              de un empleado.
+            </p>
+          </div>
+
+          <div class="section-icon">✅</div>
+
+        </div>
+
+        @if (empleadoSeleccionado; as empleado) {
+
+          <div class="dato-actual">
+
+            <span>Empleado seleccionado</span>
+
+            <strong>{{ empleado.nombreCompleto }}</strong>
+
+            <small>
+              {{ empleado.puesto }}
+              · {{ empleado.estatus }}
+            </small>
+
+          </div>
+
+          <div class="form-grid">
+
+            <label class="campo">
+
+              <span>Tipo de movimiento *</span>
+
+              <select
+                name="tipoMovimiento"
+                [(ngModel)]="tipoMovimiento"
+                (ngModelChange)="reiniciarAsistencia()"
+                [disabled]="!empleadoActivo"
+              >
+
+                <option value="Entrada">
+                  Registrar entrada
+                </option>
+
+                <option value="Salida">
+                  Registrar salida
+                </option>
+
+              </select>
+
+            </label>
+
+            <label class="campo">
+
+              <span>Fecha de asistencia *</span>
+
+              <input
+                type="date"
+                name="fechaAsistencia"
+                [(ngModel)]="fechaAsistencia"
+                (ngModelChange)="reiniciarAsistencia()"
+                [max]="fechaActual"
+                [disabled]="!empleadoActivo"
+              />
+
+            </label>
+
+            <label class="campo">
+
+              <span>Hora del movimiento *</span>
+
+              <input
+                type="time"
+                name="horaAsistencia"
+                [(ngModel)]="horaAsistencia"
+                (ngModelChange)="reiniciarAsistencia()"
+                [disabled]="!empleadoActivo"
+              />
+
+            </label>
+
+          </div>
+
+          <div class="form-nota">
+
+            El registro definitivo deberá comprobar
+            si ya existe una entrada abierta antes
+            de permitir una salida o una nueva entrada.
+            Esa validación necesita los datos del backend.
+
+          </div>
+
+          @if (errorAsistencia) {
+
+            <div class="mensaje-error" role="alert">
+              {{ errorAsistencia }}
+            </div>
+
+          }
+
+          <div class="form-actions">
+
+            <button
+              type="button"
+              class="boton-primario"
+              (click)="revisarAsistencia()"
+              [disabled]="!empleadoActivo"
+            >
+              Revisar asistencia
+            </button>
+
+          </div>
+
+          @if (asistenciaRevisada) {
+
+            <div class="resultado-revision" role="status">
+
+              <div class="resultado-titulo">
+                <span>✓</span>
+                <strong>Datos revisados localmente</strong>
+              </div>
+
+              <div class="resultado-grid">
+
+                <div>
+                  <small>Empleado</small>
+                  <strong>{{ empleado.nombreCompleto }}</strong>
+                </div>
+
+                <div>
+                  <small>Movimiento</small>
+                  <strong>{{ tipoMovimiento }}</strong>
+                </div>
+
+                <div>
+                  <small>Fecha</small>
+                  <strong>
+                    {{ mostrarFecha(fechaAsistencia) }}
+                  </strong>
+                </div>
+
+                <div>
+                  <small>Hora</small>
+                  <strong>{{ horaAsistencia }}</strong>
+                </div>
+
+              </div>
+
+              <p>
+                Este movimiento no se ha registrado.
+                Tampoco se ha comprobado aún
+                su correspondencia con entradas
+                y salidas anteriores.
+              </p>
+
+            </div>
+
+          }
+
+          <div class="guardar-pendiente">
+
+            <span>🔒 Registrar asistencia</span>
+
+            <strong>
+              Pendiente de conexión con Backend
+            </strong>
+
+            <p>
+              Habilitaremos esta operación cuando
+              existan los endpoints y las validaciones
+              del historial de asistencias.
+            </p>
+
+          </div>
+
+        } @else {
+
+          <div class="estado-vacio">
+
+            <div class="estado-icon">👤</div>
+
+            <h3>Selecciona un empleado</h3>
+
+            <p>
+              El registro se habilitará cuando
+              selecciones un empleado.
+            </p>
+
+          </div>
+
+        }
+
+      </section>
+
+      <section class="laboral-panel">
+
+        <div class="section-heading">
+
+          <div>
+            <span class="section-label">
+              REGISTROS DE ASISTENCIA
+            </span>
+
+            <h2>Historial laboral</h2>
+          </div>
+
+          <div class="section-icon">🧾</div>
+
+        </div>
+
+        <div class="estado-vacio">
+
+          <div class="estado-icon">📋</div>
+
+          <h3>Historial pendiente de integración</h3>
+
+          <p>
+            Aquí mostraremos las entradas, salidas,
+            fechas y estados obtenidos del backend.
+            No se están mostrando registros simulados.
+          </p>
+
+        </div>
+
+      </section>
+
+    }
+
+  </main>
+
+  <footer class="laboral-footer">
+    GymFlow · Administración de personal
+  </footer>
+
+</div>
