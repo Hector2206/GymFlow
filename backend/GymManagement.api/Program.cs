@@ -5,6 +5,7 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using GymManagement.api.Services;
+using GymManagement.api.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -20,6 +21,7 @@ builder.Services.AddScoped<NotificacionService>();
 builder.Services.AddHostedService<NotificacionWorker>();
 builder.Services.AddScoped<MembresiaService>();
 builder.Services.AddScoped<AsistenciaPersonalService>();
+builder.Services.AddScoped<AdministradorService>();
 // ========================================
 // CORS
 // ========================================
@@ -1672,5 +1674,238 @@ app.MapPut("/api/admin/personal/{id:int}",
         }
     })
     .RequireAuthorization("SoloAdministrador");
+
+
+app.MapGet("/api/admin/administradores",
+    async (
+    HttpContext httpContext,
+    [Microsoft.AspNetCore.Mvc.FromServices]
+    AdministradorService administradorService) =>
+    {
+        var idTexto =
+            httpContext.User.FindFirst(
+                System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
+            ?? httpContext.User.FindFirst("sub")?.Value
+            ?? httpContext.User.FindFirst("id_usuario")?.Value;
+
+        if (!int.TryParse(idTexto, out var idAdministrador))
+        {
+            return Results.Unauthorized();
+        }
+
+        try
+        {
+            var administradores =
+                await administradorService.ObtenerAdministradores(
+                    idAdministrador);
+
+            return Results.Ok(administradores);
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return Results.Forbid();
+        }
+    })
+    .RequireAuthorization("SoloAdministrador");
+
+
+app.MapGet("/api/admin/administradores/{id:int}",
+    async (
+        int id,
+        HttpContext httpContext,
+        [Microsoft.AspNetCore.Mvc.FromServices]
+        AdministradorService administradorService) =>
+    {
+        var idTexto =
+            httpContext.User.FindFirst(
+                System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
+            ?? httpContext.User.FindFirst("sub")?.Value
+            ?? httpContext.User.FindFirst("id_usuario")?.Value;
+
+        if (!int.TryParse(idTexto, out var idAdministrador))
+            return Results.Unauthorized();
+
+        try
+        {
+            var administrador =
+                await administradorService.ObtenerAdministradorPorId(
+                    id, idAdministrador);
+
+            return administrador is null
+                ? Results.NotFound(new
+                {
+                    mensaje = "Administrador no encontrado."
+                })
+                : Results.Ok(administrador);
+        }
+        catch (ArgumentException ex)
+        {
+            return Results.BadRequest(new
+            {
+                mensaje = ex.Message
+            });
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return Results.Forbid();
+        }
+    })
+    .RequireAuthorization("SoloAdministrador");
+
+
+app.MapPost("/api/admin/administradores",
+    async (
+        CrearAdministradorRequest request,
+        HttpContext httpContext,
+        [Microsoft.AspNetCore.Mvc.FromServices]
+        AdministradorService administradorService) =>
+    {
+        var idTexto =
+            httpContext.User.FindFirst(
+                System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
+            ?? httpContext.User.FindFirst("sub")?.Value
+            ?? httpContext.User.FindFirst("id_usuario")?.Value;
+
+        if (!int.TryParse(idTexto, out var idAdministrador))
+            return Results.Unauthorized();
+
+        try
+        {
+            var idUsuario = await administradorService.CrearAdministrador(
+                request, idAdministrador);
+
+            return Results.Created(
+                $"/api/admin/administradores/{idUsuario}",
+                new
+                {
+                    mensaje = "Administrador registrado correctamente",
+                    idUsuario
+                });
+        }
+        catch (ArgumentException ex)
+        {
+            return Results.BadRequest(new
+            {
+                mensaje = ex.Message
+            });
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return Results.Forbid();
+        }
+    })
+    .RequireAuthorization("SoloAdministrador");
+
+
+app.MapPut("/api/admin/administradores/{id:int}",
+    async (
+        int id,
+        EditarAdministradorRequest request,
+        HttpContext httpContext,
+        [Microsoft.AspNetCore.Mvc.FromServices]
+        AdministradorService administradorService) =>
+    {
+        var idTexto =
+            httpContext.User.FindFirst(
+                System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
+            ?? httpContext.User.FindFirst("sub")?.Value
+            ?? httpContext.User.FindFirst("id_usuario")?.Value;
+
+        if (!int.TryParse(idTexto, out var idAdministrador))
+            return Results.Unauthorized();
+
+        try
+        {
+            var actualizado =
+                await administradorService.EditarAdministrador(
+                    id, request, idAdministrador);
+
+            if (!actualizado)
+            {
+                return Results.NotFound(new
+                {
+                    mensaje = "Administrador activo no encontrado."
+                });
+            }
+
+            return Results.Ok(new
+            {
+                mensaje = "Administrador actualizado correctamente",
+                idUsuario = id
+            });
+        }
+        catch (ArgumentException ex)
+        {
+            return Results.BadRequest(new
+            {
+                mensaje = ex.Message
+            });
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return Results.Forbid();
+        }
+    })
+    .RequireAuthorization("SoloAdministrador");
+
+
+app.MapPatch("/api/admin/administradores/{id:int}/baja",
+    async (
+        int id,
+        DarBajaAdministradorRequest request,
+        HttpContext httpContext,
+        [Microsoft.AspNetCore.Mvc.FromServices]
+        AdministradorService administradorService) =>
+    {
+        var idTexto =
+            httpContext.User.FindFirst(
+                System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
+            ?? httpContext.User.FindFirst("sub")?.Value
+            ?? httpContext.User.FindFirst("id_usuario")?.Value;
+
+        if (!int.TryParse(idTexto, out var idAdministrador))
+            return Results.Unauthorized();
+
+        try
+        {
+            var desactivado =
+                await administradorService.DarDeBajaAdministrador(
+                    id, request, idAdministrador);
+
+            if (!desactivado)
+            {
+                return Results.NotFound(new
+                {
+                    mensaje = "Administrador activo no encontrado."
+                });
+            }
+
+            return Results.Ok(new
+            {
+                mensaje = "Administrador dado de baja correctamente.",
+                idUsuario = id
+            });
+        }
+        catch (ArgumentException ex)
+        {
+            return Results.BadRequest(new
+            {
+                mensaje = ex.Message
+            });
+        }
+        catch (InvalidOperationException ex)
+        {
+            return Results.Conflict(new
+            {
+                mensaje = ex.Message
+            });
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return Results.Forbid();
+        }
+    })
+    .RequireAuthorization("SoloAdministrador");
+
 
 app.Run();
