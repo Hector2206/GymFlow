@@ -18,7 +18,7 @@ builder.Services.AddScoped<DashboardService>();
 builder.Services.AddScoped<ClienteAdminService>();
 builder.Services.AddScoped<NotificacionService>();
 builder.Services.AddHostedService<NotificacionWorker>();
-
+builder.Services.AddScoped<MembresiaService>();
 // ========================================
 // CORS
 // ========================================
@@ -1192,5 +1192,38 @@ app.MapPut("/api/admin/personal/{id:int}",
         }
     })
     .RequireAuthorization();
+
+    app.MapGet("/api/admin/membresias",
+    async (
+        MembresiaService membresiaService,
+        ClaimsPrincipal usuario
+    ) =>
+    {
+        if (!int.TryParse(
+            usuario.FindFirst("sub")?.Value,
+            out var idAdministrador))
+        {
+            return Results.Unauthorized();
+        }
+
+        try
+        {
+            var membresias =
+                await membresiaService.ObtenerMembresias(idAdministrador);
+
+            return Results.Ok(membresias);
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return Results.Forbid();
+        }
+        catch
+        {
+            return Results.Problem(
+                statusCode: 500,
+                title: "Error al consultar membresías");
+        }
+    })
+    .RequireAuthorization("SoloAdministrador");
 
 app.Run();
