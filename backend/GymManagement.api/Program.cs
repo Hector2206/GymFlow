@@ -1307,4 +1307,67 @@ app.MapPut("/api/admin/personal/{id:int}",
     })
     .RequireAuthorization("SoloAdministrador");
 
+    app.MapPut("/api/admin/membresias/{id:int}",
+    async (
+        int id,
+        GymManagement.api.Models.EditarMembresiaRequest request,
+        MembresiaService membresiaService,
+        ClaimsPrincipal usuario
+    ) =>
+    {
+        if (!int.TryParse(
+            usuario.FindFirst("sub")?.Value,
+            out var idAdministrador))
+        {
+            return Results.Unauthorized();
+        }
+
+        try
+        {
+            await membresiaService.EditarMembresia(
+                id, request, idAdministrador);
+
+            return Results.Ok(new
+            {
+                mensaje = "Membresía actualizada correctamente.",
+                idMembresia = id
+            });
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return Results.Forbid();
+        }
+        catch (ArgumentException ex)
+        {
+            return Results.BadRequest(new
+            {
+                mensaje = ex.Message
+            });
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return Results.NotFound(new
+            {
+                mensaje = ex.Message
+            });
+        }
+        catch (PostgresException ex)
+            when (ex.SqlState == PostgresErrorCodes.UniqueViolation)
+        {
+            return Results.Conflict(new
+            {
+                mensaje = "Ya existe una membresía con ese nombre."
+            });
+        }
+        catch (Exception ex)
+        {
+            app.Logger.LogError(ex, "Error al editar membresía");
+
+            return Results.Problem(
+                statusCode: 500,
+                title: "Error al editar membresía");
+        }
+    })
+    .RequireAuthorization("SoloAdministrador");
+
 app.Run();
