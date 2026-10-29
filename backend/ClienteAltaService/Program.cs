@@ -1448,12 +1448,16 @@ app.MapGet(
                     c.id_cliente,
                     c.nombre_completo,
                     c.id_entrenador,
-                    p.nombre_completo AS nombre_entrenador
-                FROM clientes c
-                INNER JOIN usuarios u
+                    p.nombre_completo AS nombre_entrenador,
+                    c.id_membresia,
+                    m.nombre_plan
+                FROM public.clientes c
+                INNER JOIN public.usuarios u
                     ON c.id_usuario = u.id_usuario
-                LEFT JOIN personal p
+                LEFT JOIN public.personal p
                     ON c.id_entrenador = p.id_personal
+                LEFT JOIN public.membresias m
+                    ON c.id_membresia = m.id_membresia
                 WHERE u.estatus = 'Activo'
                 ORDER BY c.nombre_completo;
                 """,
@@ -1463,8 +1467,7 @@ app.MapGet(
         await using var reader =
             await command.ExecuteReaderAsync();
 
-        var clientes =
-            new List<object>();
+        var clientes = new List<object>();
 
         while (await reader.ReadAsync())
         {
@@ -1484,7 +1487,17 @@ app.MapGet(
                 nombreEntrenador =
                     reader.IsDBNull(3)
                         ? null
-                        : reader.GetString(3)
+                        : reader.GetString(3),
+
+                idMembresia =
+                    reader.IsDBNull(4)
+                        ? (int?)null
+                        : reader.GetInt32(4),
+
+                nombrePlan =
+                    reader.IsDBNull(5)
+                        ? null
+                        : reader.GetString(5)
             });
         }
 
@@ -1495,6 +1508,7 @@ app.MapGet(
 {
     policy.RequireRole("Recepcionista");
 });
+
 
 // ===============================
 // HISTORIAL DE PAGOS POR CLIENTE
