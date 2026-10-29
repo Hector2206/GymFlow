@@ -6,8 +6,9 @@ import {
   OnInit
 } from '@angular/core';
 
-import { HttpErrorResponse } from '@angular/common/http';
+import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { HttpErrorResponse } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
@@ -16,450 +17,418 @@ import {
 } from '../services/admin-personal.service';
 
 import {
+  AdminAsistenciaPersonalService
+} from '../services/admin-asistencia-personal.service';
+
+import {
   PersonalAdmin
 } from '../models/admin-personal.model';
 
-type SeccionLaboral = 'horarios' | 'asistencias';
-
-type DiaSemana =
-  | 'Lunes'
-  | 'Martes'
-  | 'Miércoles'
-  | 'Jueves'
-  | 'Viernes'
-  | 'Sábado'
-  | 'Domingo';
-
-type TipoMovimiento = 'Entrada' | 'Salida';
+import {
+  AsistenciaPersonal
+} from '../models/asistencia-personal.model';
 
 @Component({
   selector: 'app-admin-personal-operaciones',
   standalone: true,
-  imports: [FormsModule],
+  imports: [CommonModule, FormsModule],
   templateUrl: './admin-personal-operaciones.html',
   styleUrl: './admin-personal-operaciones.css'
 })
 export class AdminPersonalOperaciones implements OnInit {
-
-  // EMPLEADOS REALES
-
   empleados: PersonalAdmin[] = [];
-  idPersonalSeleccionado: number | null = null;
+  asistencias: AsistenciaPersonal[] = [];
 
-  cargando = false;
-  consultaRealizada = false;
+  seccion: 'asistencias' | 'horarios' = 'asistencias';
+
+  idPersonalEntrada: number | null = null;
+  fechaEntrada = this.fechaLocal();
+  horaEntrada = this.horaLocal();
+
+  filtroIdPersonal: number | null = null;
+  fechaInicio = '';
+  fechaFin = '';
+
+  idAsistenciaSalida: number | null = null;
+  horaSalida = this.horaLocal();
+
+  cargandoEmpleados = false;
+  cargandoHistorial = false;
+  guardando = false;
+  revisionNecesaria = false;
+
   errorEmpleados = '';
-
-  // NAVEGACION ENTRE SECCIONES
-
-  seccion: SeccionLaboral = 'horarios';
-
-  // FORMULARIO DE HORARIOS
-
-  readonly diasSemana: DiaSemana[] = [
-    'Lunes',
-    'Martes',
-    'Miércoles',
-    'Jueves',
-    'Viernes',
-    'Sábado',
-    'Domingo'
-  ];
-
-  diaSemana: DiaSemana | '' = '';
-  horaEntradaHorario = '';
-  horaSalidaHorario = '';
-  fechaVigencia = this.obtenerFechaLocal();
-
-  errorHorario = '';
-  horarioRevisado = false;
-
-  // FORMULARIO DE ASISTENCIAS
-
-  tipoMovimiento: TipoMovimiento = 'Entrada';
-  fechaAsistencia = this.obtenerFechaLocal();
-  horaAsistencia = this.obtenerHoraLocal();
-
-  errorAsistencia = '';
-  asistenciaRevisada = false;
+  errorHistorial = '';
+  errorOperacion = '';
+  mensajeExito = '';
 
   constructor(
     private router: Router,
     private personalService: AdminPersonalService,
-    private changeDetector: ChangeDetectorRef,
+    private asistenciaService: AdminAsistenciaPersonalService,
+    private cd: ChangeDetectorRef,
     private destroyRef: DestroyRef
   ) {}
 
   ngOnInit(): void {
     this.cargarEmpleados();
+    this.cargarHistorial();
   }
 
-  // FECHAS LOCALES
+  private fechaLocal(): string {
+    const hoy = new Date();
+    const y = hoy.getFullYear();
+    const m = String(hoy.getMonth() + 1).padStart(2, '0');
+    const d = String(hoy.getDate()).padStart(2, '0');
 
-  private obtenerFechaLocal(): string {
-
-    const fecha = new Date();
-
-    const anio = fecha.getFullYear();
-    const mes = String(fecha.getMonth() + 1).padStart(2, '0');
-    const dia = String(fecha.getDate()).padStart(2, '0');
-
-    return `${anio}-${mes}-${dia}`;
+    return `${y}-${m}-${d}`;
   }
 
-  private obtenerHoraLocal(): string {
+  private horaLocal(): string {
+    const ahora = new Date();
 
-    const fecha = new Date();
-
-    const horas = String(fecha.getHours()).padStart(2, '0');
-    const minutos = String(fecha.getMinutes()).padStart(2, '0');
-
-    return `${horas}:${minutos}`;
+    return (
+      String(ahora.getHours()).padStart(2, '0') +
+      ':' +
+      String(ahora.getMinutes()).padStart(2, '0')
+    );
   }
 
   get fechaActual(): string {
-    return this.obtenerFechaLocal();
+    return this.fechaLocal();
   }
 
-  // CONSULTA REAL AL BACKEND EXISTENTE
+  get empleadosActivos(): PersonalAdmin[] {
+    return this.empleados.filter(
+      e => e.estatus === 'Activo' && !e.fechaBaja
+    );
+  }
+
+  get empleadoEntrada(): PersonalAdmin | undefined {
+    return this.empleadosActivos.find(
+      e => e.idPersonal === this.idPersonalEntrada
+    );
+  }
+
+  get pendientesSalida(): AsistenciaPersonal[] {
+    return this.asistencias.filter(
+      a => a.horaSalida === null
+    );
+  }
+
+  get asistenciaSalida(): AsistenciaPersonal | undefined {
+    return this.pendientesSalida.find(
+      a => a.idAsistenciaPersonal === this.idAsistenciaSalida
+    );
+  }
 
   cargarEmpleados(): void {
+    if (this.cargandoEmpleados) return;
 
-    if (this.cargando) {
-      return;
-    }
-
-    this.cargando = true;
-    this.consultaRealizada = false;
+    this.cargandoEmpleados = true;
     this.errorEmpleados = '';
 
-    this.personalService
-      .obtenerPersonal()
+    this.personalService.obtenerPersonal()
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
-
-        next: (respuesta: PersonalAdmin[]) => {
-
-          this.cargando = false;
-          this.consultaRealizada = true;
-
-          if (!Array.isArray(respuesta)) {
-
-            this.errorEmpleados =
-              'El servidor devolvió una respuesta inesperada.';
-
-            this.empleados = [];
-
-          } else {
-
-            this.empleados = [...respuesta].sort(
-              (a, b) =>
-                a.nombreCompleto.localeCompare(
+        next: datos => {
+          this.empleados = Array.isArray(datos)
+            ? [...datos].sort(
+                (a, b) => a.nombreCompleto.localeCompare(
                   b.nombreCompleto,
                   'es'
                 )
-            );
-
-            if (
-              this.idPersonalSeleccionado !== null &&
-              !this.empleados.some(
-                e => e.idPersonal === this.idPersonalSeleccionado
               )
-            ) {
-              this.idPersonalSeleccionado = null;
-              this.reiniciarFormularios();
-            }
-          }
+            : [];
 
-          this.changeDetector.detectChanges();
+          this.cargandoEmpleados = false;
+          this.cd.detectChanges();
         },
 
-        error: (error: HttpErrorResponse) => {
-
-          this.cargando = false;
-          this.consultaRealizada = true;
-          this.empleados = [];
-
-          if (error.status === 401) {
-
-            this.errorEmpleados =
-              'Tu sesión venció. Inicia sesión nuevamente.';
-
-          } else if (error.status === 403) {
-
-            this.errorEmpleados =
-              'No tienes permisos para consultar empleados.';
-
-          } else if (
-            error.status === 0 ||
-            error.status >= 500
-          ) {
-
-            this.errorEmpleados =
-              'No fue posible conectar con el servidor.';
-
-          } else {
-
-            this.errorEmpleados =
-              typeof error.error?.mensaje === 'string'
-                ? error.error.mensaje
-                : 'No fue posible obtener el personal.';
-          }
-
-          this.changeDetector.detectChanges();
+        error: (err: HttpErrorResponse) => {
+          this.cargandoEmpleados = false;
+          this.errorEmpleados = this.mensajeError(err);
+          this.cd.detectChanges();
         }
       });
   }
 
-  get empleadoSeleccionado(): PersonalAdmin | null {
+  cargarHistorial(): void {
+    if (this.cargandoHistorial || this.guardando) return;
 
-    return this.empleados.find(
-      empleado =>
-        empleado.idPersonal === this.idPersonalSeleccionado
-    ) || null;
+    this.errorHistorial = '';
+
+    if (
+      this.fechaInicio &&
+      this.fechaFin &&
+      this.fechaInicio > this.fechaFin
+    ) {
+      this.errorHistorial =
+        'La fecha inicial no puede ser posterior a la final.';
+      return;
+    }
+
+    this.cargandoHistorial = true;
+
+    this.asistenciaService.obtenerHistorial({
+      idPersonal: this.filtroIdPersonal ?? undefined,
+      fechaInicio: this.fechaInicio || undefined,
+      fechaFin: this.fechaFin || undefined
+    })
+    .pipe(takeUntilDestroyed(this.destroyRef))
+    .subscribe({
+      next: datos => {
+        this.asistencias = Array.isArray(datos) ? datos : [];
+        this.cargandoHistorial = false;
+
+        if (
+          this.idAsistenciaSalida !== null &&
+          !this.pendientesSalida.some(
+            a => a.idAsistenciaPersonal === this.idAsistenciaSalida
+          )
+        ) {
+          this.idAsistenciaSalida = null;
+        }
+
+        this.cd.detectChanges();
+      },
+
+      error: (err: HttpErrorResponse) => {
+        this.cargandoHistorial = false;
+        this.errorHistorial = this.mensajeError(err);
+        this.asistencias = [];
+        this.cd.detectChanges();
+      }
+    });
   }
 
-  get empleadoActivo(): boolean {
-
-    return this.empleadoSeleccionado?.estatus === 'Activo';
+  limpiarFiltros(): void {
+    this.filtroIdPersonal = null;
+    this.fechaInicio = '';
+    this.fechaFin = '';
+    this.idAsistenciaSalida = null;
+    this.cargarHistorial();
   }
 
-  // CAMBIAR EMPLEADO Y PESTAÑA
-
-  cambiarEmpleado(): void {
-    this.reiniciarFormularios();
-  }
-
-  cambiarSeccion(seccion: SeccionLaboral): void {
-
-    this.seccion = seccion;
-  }
-
-  private reiniciarFormularios(): void {
-
-    this.diaSemana = '';
-    this.horaEntradaHorario = '';
-    this.horaSalidaHorario = '';
-    this.fechaVigencia = this.obtenerFechaLocal();
-
-    this.tipoMovimiento = 'Entrada';
-    this.fechaAsistencia = this.obtenerFechaLocal();
-    this.horaAsistencia = this.obtenerHoraLocal();
-
-    this.reiniciarHorario();
-    this.reiniciarAsistencia();
-  }
-
-  // VALIDACIONES GENERALES
-
-  private fechaValida(valor: string): boolean {
-
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(valor)) {
+  private fechaValida(fecha: string): boolean {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(fecha)) {
       return false;
     }
 
-    const fecha = new Date(`${valor}T00:00:00Z`);
+    const valor = new Date(`${fecha}T00:00:00Z`);
 
     return (
-      !Number.isNaN(fecha.getTime()) &&
-      fecha.toISOString().slice(0, 10) === valor
+      !Number.isNaN(valor.getTime()) &&
+      valor.toISOString().slice(0, 10) === fecha
     );
   }
 
-  private horaValida(valor: string): boolean {
-
-    return /^([01]\d|2[0-3]):[0-5]\d$/.test(valor);
+  private horaValida(hora: string): boolean {
+    return /^([01]\d|2[0-3]):[0-5]\d$/.test(hora);
   }
 
-  // HORARIOS
+  registrarEntrada(): void {
+    if (
+      this.guardando ||
+      this.revisionNecesaria ||
+      this.cargandoEmpleados
+    ) {
+      return;
+    }
 
-  reiniciarHorario(): void {
+    this.errorOperacion = '';
+    this.mensajeExito = '';
 
-    this.errorHorario = '';
-    this.horarioRevisado = false;
-  }
-
-  revisarHorario(): void {
-
-    this.reiniciarHorario();
-
-    const empleado = this.empleadoSeleccionado;
+    const empleado = this.empleadoEntrada;
 
     if (!empleado) {
-
-      this.errorHorario =
-        'Selecciona un empleado.';
-
-      return;
-    }
-
-    if (empleado.estatus !== 'Activo') {
-
-      this.errorHorario =
-        'No se pueden asignar horarios nuevos a empleados inactivos.';
-
-      return;
-    }
-
-    if (!this.diaSemana) {
-
-      this.errorHorario =
-        'Selecciona un día de la semana.';
-
+      this.errorOperacion = 'Selecciona un empleado activo.';
       return;
     }
 
     if (
-      !this.horaValida(this.horaEntradaHorario) ||
-      !this.horaValida(this.horaSalidaHorario)
+      !this.fechaValida(this.fechaEntrada) ||
+      this.fechaEntrada > this.fechaLocal()
     ) {
-
-      this.errorHorario =
-        'Ingresa horas de entrada y salida válidas.';
-
+      this.errorOperacion =
+        'Selecciona una fecha válida que no sea futura.';
       return;
     }
 
-    if (
-      this.horaSalidaHorario <= this.horaEntradaHorario
-    ) {
-
-      this.errorHorario =
-        'La hora de salida debe ser posterior a la entrada. ' +
-        'Los turnos nocturnos se definirán con Backend.';
-
+    if (!this.horaValida(this.horaEntrada)) {
+      this.errorOperacion = 'Selecciona una hora de entrada válida.';
       return;
     }
 
-    if (!this.fechaValida(this.fechaVigencia)) {
+    const confirmado = window.confirm(
+      `¿Registrar entrada laboral?\n\n` +
+      `Empleado: ${empleado.nombreCompleto}\n` +
+      `Fecha: ${this.fechaEntrada}\n` +
+      `Hora: ${this.horaEntrada}\n\n` +
+      'Esta operación se guardará en PostgreSQL.'
+    );
 
-      this.errorHorario =
-        'Selecciona una fecha de vigencia válida.';
+    if (!confirmado) return;
 
-      return;
-    }
+    this.guardando = true;
 
-    // Validación local: no se llama a ningún endpoint.
-    this.horarioRevisado = true;
+    this.asistenciaService.registrarEntrada({
+      idPersonal: empleado.idPersonal,
+      fecha: this.fechaEntrada,
+      horaEntrada: `${this.horaEntrada}:00`
+    })
+    .pipe(takeUntilDestroyed(this.destroyRef))
+    .subscribe({
+      next: respuesta => {
+        this.guardando = false;
+        this.mensajeExito =
+          `Entrada registrada. Folio #${respuesta.idAsistenciaPersonal}.`;
+
+        this.cargarHistorial();
+        this.cd.detectChanges();
+      },
+
+      error: (err: HttpErrorResponse) => {
+        this.guardando = false;
+        this.errorOperacion = this.mensajeError(err);
+
+        if (err.status === 0 || err.status >= 500) {
+          this.revisionNecesaria = true;
+          this.errorOperacion +=
+            ' El registro pudo haberse guardado. ' +
+            'Revisa el historial antes de repetir la operación.';
+        }
+
+        if (err.status === 409) {
+          this.cargarHistorial();
+        }
+
+        this.cd.detectChanges();
+      }
+    });
   }
 
-  // ASISTENCIAS
+  seleccionarSalida(asistencia: AsistenciaPersonal): void {
+    if (asistencia.horaSalida !== null) return;
 
-  reiniciarAsistencia(): void {
-
-    this.errorAsistencia = '';
-    this.asistenciaRevisada = false;
+    this.idAsistenciaSalida = asistencia.idAsistenciaPersonal;
+    this.horaSalida = this.horaLocal();
+    this.errorOperacion = '';
   }
 
-  revisarAsistencia(): void {
+  registrarSalida(): void {
+    if (this.guardando || this.revisionNecesaria) return;
 
-    this.reiniciarAsistencia();
+    this.errorOperacion = '';
+    this.mensajeExito = '';
 
-    const empleado = this.empleadoSeleccionado;
+    const asistencia = this.asistenciaSalida;
 
-    if (!empleado) {
-
-      this.errorAsistencia =
-        'Selecciona un empleado.';
-
+    if (!asistencia) {
+      this.errorOperacion =
+        'Selecciona una asistencia pendiente de salida.';
       return;
     }
 
-    if (empleado.estatus !== 'Activo') {
-
-      this.errorAsistencia =
-        'No se pueden registrar asistencias nuevas ' +
-        'de empleados inactivos.';
-
+    if (!this.horaValida(this.horaSalida)) {
+      this.errorOperacion = 'Ingresa una hora de salida válida.';
       return;
     }
 
     if (
-      this.tipoMovimiento !== 'Entrada' &&
-      this.tipoMovimiento !== 'Salida'
+      this.horaSalida <
+      asistencia.horaEntrada.slice(0, 5)
     ) {
-
-      this.errorAsistencia =
-        'Selecciona entrada o salida.';
-
+      this.errorOperacion =
+        'La salida no puede ser anterior a la entrada.';
       return;
     }
 
-    if (!this.fechaValida(this.fechaAsistencia)) {
+    const confirmado = window.confirm(
+      `¿Registrar salida laboral?\n\n` +
+      `Empleado: ${asistencia.nombreCompleto}\n` +
+      `Fecha: ${asistencia.fecha}\n` +
+      `Hora de salida: ${this.horaSalida}\n\n` +
+      'La salida no podrá sobrescribirse después.'
+    );
 
-      this.errorAsistencia =
-        'Selecciona una fecha válida.';
+    if (!confirmado) return;
 
-      return;
-    }
+    this.guardando = true;
 
-    const hoy = this.obtenerFechaLocal();
+    this.asistenciaService.registrarSalida(
+      asistencia.idAsistenciaPersonal,
+      `${this.horaSalida}:00`
+    )
+    .pipe(takeUntilDestroyed(this.destroyRef))
+    .subscribe({
+      next: respuesta => {
+        this.guardando = false;
+        this.idAsistenciaSalida = null;
+        this.mensajeExito =
+          `Salida registrada. Folio #${respuesta.idAsistenciaPersonal}.`;
 
-    if (this.fechaAsistencia > hoy) {
+        this.cargarHistorial();
+        this.cd.detectChanges();
+      },
 
-      this.errorAsistencia =
-        'La fecha de asistencia no puede ser futura.';
+      error: (err: HttpErrorResponse) => {
+        this.guardando = false;
+        this.errorOperacion = this.mensajeError(err);
 
-      return;
-    }
+        if (err.status === 0 || err.status >= 500) {
+          this.revisionNecesaria = true;
+          this.errorOperacion +=
+            ' La salida podría estar registrada. ' +
+            'Comprueba el historial antes de volver a intentar.';
+        }
 
-    if (!this.horaValida(this.horaAsistencia)) {
+        if (err.status === 409) {
+          this.cargarHistorial();
+        }
 
-      this.errorAsistencia =
-        'Selecciona una hora válida.';
-
-      return;
-    }
-
-    if (
-      this.fechaAsistencia === hoy &&
-      this.horaAsistencia > this.obtenerHoraLocal()
-    ) {
-
-      this.errorAsistencia =
-        'La hora de asistencia no puede ser futura.';
-
-      return;
-    }
-
-    if (
-      this.fechaAsistencia <
-      empleado.fechaContratacion.slice(0, 10)
-    ) {
-
-      this.errorAsistencia =
-        'No puedes registrar asistencias anteriores ' +
-        'a la contratación.';
-
-      return;
-    }
-
-    // No se afirma que exista entrada previa.
-    // Esa comprobación corresponderá al backend.
-    this.asistenciaRevisada = true;
+        this.cd.detectChanges();
+      }
+    });
   }
 
-  // FORMATO DE FECHA
+  private mensajeError(err: HttpErrorResponse): string {
+    if (err.status === 401) {
+      return 'Tu sesión expiró. Inicia sesión nuevamente.';
+    }
+
+    if (err.status === 403) {
+      return 'Solo un Administrador autorizado puede realizar esta acción.';
+    }
+
+    const mensaje = err.error?.mensaje;
+
+    if (typeof mensaje === 'string' && mensaje.trim()) {
+      return mensaje;
+    }
+
+    if (err.status === 409) {
+      return 'Existe un conflicto. Revisa el historial actualizado.';
+    }
+
+    if (err.status === 0) {
+      return 'No se pudo confirmar la respuesta de Backend.';
+    }
+
+    return `No fue posible completar la operación (HTTP ${err.status}).`;
+  }
 
   mostrarFecha(fecha: string | null): string {
+    if (!fecha) return '—';
 
-    if (!fecha) {
-      return '—';
-    }
+    const partes = /^(\d{4})-(\d{2})-(\d{2})/.exec(fecha);
 
-    const partes = fecha.slice(0, 10).split('-');
-
-    return partes.length === 3
-      ? `${partes[2]}/${partes[1]}/${partes[0]}`
+    return partes
+      ? `${partes[3]}/${partes[2]}/${partes[1]}`
       : fecha;
   }
 
-  // REGRESAR AL MODULO DE PERSONAL
-
   volverPersonal(): void {
-
-    this.router.navigate([
-      '/admin/personal'
-    ]);
+    this.router.navigate(['/admin/personal']);
   }
 }
