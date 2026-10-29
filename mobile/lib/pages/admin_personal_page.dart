@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../models/admin_personal.dart';
 import '../services/admin_personal_service.dart';
-
+import 'admin_registrar_personal_page.dart';
 // GYMFLOW - SPRINT 7
 // PANTALLA ADMINISTRATIVA DE PERSONAL
 
@@ -86,6 +86,33 @@ class _AdminPersonalPageState extends State<AdminPersonalPage> {
 
         _cargando = false;
       });
+    }
+  }
+
+  // ====================================
+  // ABRIR FORMULARIO DE REGISTRO
+  // ====================================
+
+  Future<void> _abrirRegistro() async {
+    final idPersonal = await Navigator.of(context).push<int>(
+      MaterialPageRoute(builder: (_) => const AdminRegistrarPersonalPage()),
+    );
+
+    if (!mounted) return;
+
+    if (idPersonal != null && idPersonal > 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Empleado registrado correctamente. '
+            'ID de personal: $idPersonal.',
+          ),
+          backgroundColor: const Color(0xFF287447),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+
+      await _cargarPersonal();
     }
   }
 
@@ -719,6 +746,28 @@ class _AdminPersonalPageState extends State<AdminPersonalPage> {
                       color: _textoSecundario,
                       fontSize: 13,
                       height: 1.4,
+                    ),
+                  ),
+
+                  const SizedBox(height: 23),
+
+                  const SizedBox(height: 23),
+
+                  // REGISTRAR NUEVO EMPLEADO
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton.icon(
+                      onPressed: _abrirRegistro,
+                      icon: const Icon(Icons.person_add_alt_1),
+                      label: const Text('Registrar empleado'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: _doradoOscuro,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.all(16),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
                     ),
                   ),
 
