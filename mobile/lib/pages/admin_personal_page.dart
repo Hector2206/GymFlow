@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import '../models/admin_personal.dart';
 import '../services/admin_personal_service.dart';
 import 'admin_registrar_personal_page.dart';
+import 'admin_editar_personal_page.dart';
+
 // GYMFLOW - SPRINT 7
 // PANTALLA ADMINISTRATIVA DE PERSONAL
 
@@ -106,6 +108,40 @@ class _AdminPersonalPageState extends State<AdminPersonalPage> {
           content: Text(
             'Empleado registrado correctamente. '
             'ID de personal: $idPersonal.',
+          ),
+          backgroundColor: const Color(0xFF287447),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+
+      await _cargarPersonal();
+    }
+  }
+
+  // ====================================
+  // ABRIR EDICION DE EMPLEADO
+  // ====================================
+
+  Future<void> _abrirEdicion(AdminPersonal empleado) async {
+    if (!empleado.estaActivo) {
+      return;
+    }
+
+    final idEditado = await Navigator.of(context).push<int>(
+      MaterialPageRoute(
+        builder: (_) =>
+            AdminEditarPersonalPage(idPersonal: empleado.idPersonal),
+      ),
+    );
+
+    if (!mounted) return;
+
+    if (idEditado != null && idEditado > 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Empleado #$idEditado actualizado '
+            'correctamente.',
           ),
           backgroundColor: const Color(0xFF287447),
           behavior: SnackBarBehavior.floating,
@@ -537,6 +573,30 @@ class _AdminPersonalPageState extends State<AdminPersonalPage> {
             etiqueta: 'Fecha de baja',
             valor: _mostrarFecha(empleado.fechaBaja),
           ),
+
+          // EDITAR SOLO EMPLEADOS ACTIVOS
+          if (empleado.estaActivo) ...[
+            const SizedBox(height: 10),
+
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                onPressed: () {
+                  _abrirEdicion(empleado);
+                },
+                icon: const Icon(Icons.edit_outlined),
+                label: const Text('Editar información'),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: _doradoOscuro,
+                  padding: const EdgeInsets.all(13),
+                  side: const BorderSide(color: Color(0xFFD8C8A5)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+              ),
+            ),
+          ],
         ],
       ),
     );
