@@ -37,6 +37,14 @@ CREATE TABLE IF NOT EXISTS
         DEFAULT CURRENT_TIMESTAMP,
     id_usuario_app INTEGER NULL,
     origen VARCHAR(30) NOT NULL,
+    CONSTRAINT membresias_precios_historial_origen_check
+    CHECK (
+        origen IN (
+            'CapturaInicial',
+            'Creacion',
+            'CambioPrecio'
+        )
+    ),
 
     CONSTRAINT fk_historial_membresia
         FOREIGN KEY (id_membresia)
