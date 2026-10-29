@@ -1244,7 +1244,7 @@ app.MapPut("/api/admin/personal/{id:int}",
         }
     })
     .RequireAuthorization(policy =>
-        policy.RequireRole("Recepción", "Administrador"));
+        policy.RequireRole("Recepcionista", "Administrador"));
 
 
     app.MapPost("/api/admin/membresias",
