@@ -33,6 +33,30 @@ public class AsistenciaPersonalService
 
         await using var transaction =
             await connection.BeginTransactionAsync();
+        // Verificar que el administrador siga activo.
+        await using (var validarAdmin = new NpgsqlCommand(
+            """
+            SELECT u.id_usuario
+            FROM public.usuarios u
+            INNER JOIN public.roles r
+                ON r.id_rol = u.id_rol
+            WHERE u.id_usuario = @admin
+            AND u.estatus = 'Activo'
+            AND r.nombre = 'Administrador'
+            FOR SHARE OF u;
+            """,
+            connection,
+            transaction))
+        {
+            validarAdmin.Parameters.AddWithValue(
+                "admin", idAdministrador);
+
+            if (await validarAdmin.ExecuteScalarAsync() is null)
+            {
+                throw new UnauthorizedAccessException(
+                    "Administrador no autorizado.");
+            }
+        }
 
         // Validar que el empleado exista y esté activo.
         await using (var validar = new NpgsqlCommand(
@@ -101,57 +125,94 @@ public class AsistenciaPersonalService
     }
 
 
-        public async Task<bool> RegistrarSalida(
-            long idAsistencia,
-            RegistrarSalidaPersonalRequest request,
-            int idAdministrador)
+
+public async Task<bool> RegistrarSalida(
+    long idAsistencia,
+    RegistrarSalidaPersonalRequest request,
+    int idAdministrador)
+    {
+        if (idAsistencia <= 0)
+            throw new ArgumentException("La asistencia no es válida.");
+
+        if (idAdministrador <= 0)
+            throw new UnauthorizedAccessException();
+
+        await using var connection =
+            new NpgsqlConnection(_connectionString);
+
+        await connection.OpenAsync();
+
+        await using var transaction =
+            await connection.BeginTransactionAsync();
+
+        // Verificar que el administrador siga activo.
+        await using (var validarAdmin = new NpgsqlCommand(
+            """
+            SELECT u.id_usuario
+            FROM public.usuarios u
+            INNER JOIN public.roles r
+                ON r.id_rol = u.id_rol
+            WHERE u.id_usuario = @admin
+            AND u.estatus = 'Activo'
+            AND r.nombre = 'Administrador'
+            FOR SHARE OF u;
+            """,
+            connection,
+            transaction))
         {
-            if (idAsistencia <= 0)
-                throw new ArgumentException("La asistencia no es válida.");
+            validarAdmin.Parameters.AddWithValue(
+                "admin", idAdministrador);
 
-            if (idAdministrador <= 0)
-                throw new UnauthorizedAccessException();
-
-            await using var connection =
-                new NpgsqlConnection(_connectionString);
-
-            await connection.OpenAsync();
-
-            await using var command = new NpgsqlCommand(
-                """
-                UPDATE public.personal_asistencias
-                SET
-                    hora_salida = @hora_salida,
-                    salida_registrada_por = @id_administrador,
-                    fecha_registro_salida = CURRENT_TIMESTAMP
-                WHERE id_asistencia_personal = @id_asistencia
-                AND hora_salida IS NULL
-                AND @hora_salida >= hora_entrada
-                RETURNING id_asistencia_personal;
-                """,
-                connection
-            );
-
-            command.Parameters.AddWithValue(
-                "hora_salida",
-                NpgsqlDbType.Time,
-                request.HoraSalida
-            );
-
-            command.Parameters.AddWithValue(
-                "id_administrador",
-                idAdministrador
-            );
-
-            command.Parameters.AddWithValue(
-                "id_asistencia",
-                idAsistencia
-            );
-
-            var resultado = await command.ExecuteScalarAsync();
-
-            return resultado != null;
+            if (await validarAdmin.ExecuteScalarAsync() is null)
+            {
+                throw new UnauthorizedAccessException(
+                    "Administrador no autorizado.");
+            }
         }
+
+        // Registrar la salida sin sobrescribir una salida anterior.
+        await using var command = new NpgsqlCommand(
+            """
+            UPDATE public.personal_asistencias
+            SET
+                hora_salida = @hora_salida,
+                salida_registrada_por = @id_administrador,
+                fecha_registro_salida = CURRENT_TIMESTAMP
+            WHERE id_asistencia_personal = @id_asistencia
+            AND hora_salida IS NULL
+            AND @hora_salida >= hora_entrada
+            RETURNING id_asistencia_personal;
+            """,
+            connection,
+            transaction
+        );
+
+        command.Parameters.AddWithValue(
+            "hora_salida",
+            NpgsqlDbType.Time,
+            request.HoraSalida
+        );
+
+        command.Parameters.AddWithValue(
+            "id_administrador",
+            idAdministrador
+        );
+
+        command.Parameters.AddWithValue(
+            "id_asistencia",
+            idAsistencia
+        );
+
+        var resultado = await command.ExecuteScalarAsync();
+
+        if (resultado is null)
+            return false;
+
+        await transaction.CommitAsync();
+
+        return true;
+    }
+
 
 
 public async Task<List<object>> ObtenerHistorial(
