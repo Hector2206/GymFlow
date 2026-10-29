@@ -1,10 +1,13 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../models/admin_cliente.dart';
 import '../services/admin_cliente_service.dart';
 
 // GYMFLOW - SPRINT 7
-// PANTALLA DE ADMINISTRACIÓN DE CLIENTES
+// ADMINISTRAR CLIENTES CON FILTROS
 
 class AdminClientesPage extends StatefulWidget {
   const AdminClientesPage({super.key});
@@ -16,7 +19,7 @@ class AdminClientesPage extends StatefulWidget {
 class _AdminClientesPageState extends State<AdminClientesPage> {
   final AdminClienteService _servicio = AdminClienteService();
 
-  // COLORES OFICIALES
+  // COLORES GYMFLOW
 
   static const Color _fondo = Color(0xFFF8F5EF);
   static const Color _superficie = Color(0xFFFFFDF8);
@@ -26,14 +29,26 @@ class _AdminClientesPageState extends State<AdminClientesPage> {
   static const Color _textoSecundario = Color(0xFF777067);
   static const Color _borde = Color(0xFFE5DDCF);
 
-  // ESTADO DE LA CONSULTA
+  // CONTROLADORES DE BÚSQUEDA
+
+  final TextEditingController _nombreController = TextEditingController();
+
+  final TextEditingController _correoController = TextEditingController();
+
+  final TextEditingController _membresiaController = TextEditingController();
+
+  String _estatus = '';
+  String _vigencia = '';
+
+  Timer? _temporizadorBusqueda;
+  int _numeroConsulta = 0;
+
+  // RESULTADOS
 
   List<AdminCliente> _clientes = [];
 
   bool _cargando = true;
   String? _error;
-
-  int _numeroConsulta = 0;
 
   @override
   void initState() {
@@ -41,9 +56,83 @@ class _AdminClientesPageState extends State<AdminClientesPage> {
     _cargarClientes();
   }
 
-  // CONSULTAR CLIENTES REALES
+  @override
+  void dispose() {
+    _temporizadorBusqueda?.cancel();
+
+    _nombreController.dispose();
+    _correoController.dispose();
+    _membresiaController.dispose();
+
+    super.dispose();
+  }
+
+  // COMPROBAR SI HAY FILTROS ACTIVOS
+
+  bool get _hayFiltros {
+    return _nombreController.text.trim().isNotEmpty ||
+        _correoController.text.trim().isNotEmpty ||
+        _membresiaController.text.trim().isNotEmpty ||
+        _estatus.isNotEmpty ||
+        _vigencia.isNotEmpty;
+  }
+
+  // CONSTRUIR LOS FILTROS
+
+  AdminClienteFiltros _obtenerFiltros() {
+    final nombre = _nombreController.text.trim();
+    final correo = _correoController.text.trim();
+    final membresiaTexto = _membresiaController.text.trim();
+
+    int? idMembresia;
+
+    if (membresiaTexto.isNotEmpty) {
+      idMembresia = int.tryParse(membresiaTexto);
+
+      if (idMembresia == null || idMembresia <= 0) {
+        throw Exception(
+          'El ID de membresía debe ser '
+          'un número entero mayor que cero.',
+        );
+      }
+    }
+
+    return AdminClienteFiltros(
+      nombre: nombre.isEmpty ? null : nombre,
+      correo: correo.isEmpty ? null : correo,
+      estatus: _estatus.isEmpty ? null : _estatus,
+      vigencia: _vigencia.isEmpty ? null : _vigencia,
+      idMembresia: idMembresia,
+    );
+  }
+
+  // BÚSQUEDA AUTOMÁTICA
+  // Esperar 400 ms antes de consultar.
+
+  void _programarBusqueda() {
+    _temporizadorBusqueda?.cancel();
+
+    // Invalidar cualquier consulta anterior.
+    _numeroConsulta++;
+
+    setState(() {
+      _clientes = [];
+      _error = null;
+      _cargando = true;
+    });
+
+    _temporizadorBusqueda = Timer(const Duration(milliseconds: 400), () {
+      if (mounted) {
+        _cargarClientes();
+      }
+    });
+  }
+
+  // CONSULTAR CLIENTES EN BACKEND
 
   Future<void> _cargarClientes() async {
+    _temporizadorBusqueda?.cancel();
+
     final consultaActual = ++_numeroConsulta;
 
     setState(() {
@@ -53,7 +142,9 @@ class _AdminClientesPageState extends State<AdminClientesPage> {
     });
 
     try {
-      final resultado = await _servicio.obtenerTodos();
+      final filtros = _obtenerFiltros();
+
+      final resultado = await _servicio.buscarClientes(filtros: filtros);
 
       if (!mounted || consultaActual != _numeroConsulta) {
         return;
@@ -76,7 +167,245 @@ class _AdminClientesPageState extends State<AdminClientesPage> {
     }
   }
 
-  // MOSTRAR FECHA SIN MODIFICAR EL DÍA
+  // LIMPIAR LOS CINCO FILTROS
+
+  void _limpiarFiltros() {
+    _nombreController.clear();
+    _correoController.clear();
+    _membresiaController.clear();
+
+    setState(() {
+      _estatus = '';
+      _vigencia = '';
+    });
+
+    _programarBusqueda();
+  }
+
+  // CAMPO DE TEXTO
+
+  Widget _campoBusqueda({
+    required TextEditingController controller,
+    required String etiqueta,
+    required String sugerencia,
+    required IconData icono,
+    TextInputType teclado = TextInputType.text,
+    List<TextInputFormatter>? formato,
+    int maximo = 150,
+  }) {
+    return TextField(
+      controller: controller,
+      maxLength: maximo,
+      keyboardType: teclado,
+      inputFormatters: formato,
+      onChanged: (_) => _programarBusqueda(),
+      onSubmitted: (_) => _cargarClientes(),
+      decoration: InputDecoration(
+        labelText: etiqueta,
+        hintText: sugerencia,
+        counterText: '',
+        prefixIcon: Icon(icono, color: _doradoOscuro),
+        filled: true,
+        fillColor: _superficie,
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: _borde),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: _dorado, width: 1.5),
+        ),
+      ),
+    );
+  }
+
+  // SELECTOR DE ESTATUS O VIGENCIA
+
+  Widget _selectorFiltro({
+    required String etiqueta,
+    required String valor,
+    required IconData icono,
+    required List<DropdownMenuItem<String>> opciones,
+    required ValueChanged<String> alCambiar,
+  }) {
+    return InputDecorator(
+      decoration: InputDecoration(
+        labelText: etiqueta,
+        prefixIcon: Icon(icono, color: _doradoOscuro),
+        filled: true,
+        fillColor: _superficie,
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: _borde),
+        ),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 12,
+          vertical: 13,
+        ),
+      ),
+      child: DropdownButtonHideUnderline(
+        child: DropdownButton<String>(
+          value: valor,
+          isExpanded: true,
+          isDense: true,
+          items: opciones,
+          onChanged: (nuevo) {
+            if (nuevo == null) return;
+
+            alCambiar(nuevo);
+            _programarBusqueda();
+          },
+        ),
+      ),
+    );
+  }
+
+  // PANEL DE FILTROS
+
+  Widget _panelFiltros() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: _superficie,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: _borde),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Row(
+            children: [
+              Icon(
+                Icons.manage_search_outlined,
+                color: _doradoOscuro,
+                size: 27,
+              ),
+              SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  'Buscar clientes',
+                  style: TextStyle(
+                    color: _texto,
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+            ],
+          ),
+
+          const SizedBox(height: 8),
+
+          const Text(
+            'Puedes combinar varios filtros. '
+            'Los resultados se actualizan '
+            'automáticamente.',
+            style: TextStyle(
+              color: _textoSecundario,
+              fontSize: 12,
+              height: 1.4,
+            ),
+          ),
+
+          const SizedBox(height: 18),
+
+          // NOMBRE
+          _campoBusqueda(
+            controller: _nombreController,
+            etiqueta: 'Nombre del cliente',
+            sugerencia: 'Ej. Juan Pérez',
+            icono: Icons.person_search_outlined,
+          ),
+
+          const SizedBox(height: 14),
+
+          // CORREO
+          _campoBusqueda(
+            controller: _correoController,
+            etiqueta: 'Correo electrónico',
+            sugerencia: 'Ej. cliente@correo.com',
+            icono: Icons.email_outlined,
+            teclado: TextInputType.emailAddress,
+          ),
+
+          const SizedBox(height: 14),
+
+          // ESTATUS
+          _selectorFiltro(
+            etiqueta: 'Estatus del cliente',
+            valor: _estatus,
+            icono: Icons.verified_user_outlined,
+            opciones: const [
+              DropdownMenuItem(value: '', child: Text('Todos los estatus')),
+              DropdownMenuItem(value: 'Activo', child: Text('Activo')),
+              DropdownMenuItem(value: 'Inactivo', child: Text('Inactivo')),
+            ],
+            alCambiar: (valor) {
+              setState(() {
+                _estatus = valor;
+              });
+            },
+          ),
+
+          const SizedBox(height: 14),
+
+          // VIGENCIA
+          _selectorFiltro(
+            etiqueta: 'Vigencia de membresía',
+            valor: _vigencia,
+            icono: Icons.card_membership_outlined,
+            opciones: const [
+              DropdownMenuItem(value: '', child: Text('Todas las vigencias')),
+              DropdownMenuItem(value: 'Vigente', child: Text('Vigente')),
+              DropdownMenuItem(value: 'Vencida', child: Text('Vencida')),
+              DropdownMenuItem(value: 'SinPagos', child: Text('Sin pagos')),
+            ],
+            alCambiar: (valor) {
+              setState(() {
+                _vigencia = valor;
+              });
+            },
+          ),
+
+          const SizedBox(height: 14),
+
+          // ID DE MEMBRESÍA
+          _campoBusqueda(
+            controller: _membresiaController,
+            etiqueta: 'ID de membresía',
+            sugerencia: 'Ej. 1',
+            icono: Icons.numbers_outlined,
+            teclado: TextInputType.number,
+            formato: [FilteringTextInputFormatter.digitsOnly],
+            maximo: 12,
+          ),
+
+          if (_hayFiltros) ...[
+            const SizedBox(height: 18),
+
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                onPressed: _limpiarFiltros,
+                icon: const Icon(Icons.close),
+                label: const Text('Limpiar filtros'),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: _doradoOscuro,
+                  padding: const EdgeInsets.symmetric(vertical: 13),
+                  side: const BorderSide(color: Color(0xFFD8C8A5)),
+                ),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  // MOSTRAR FECHA SIN CAMBIAR DE DÍA
 
   String _mostrarFecha(String? fecha) {
     if (fecha == null || fecha.trim().isEmpty) {
@@ -95,24 +424,22 @@ class _AdminClientesPageState extends State<AdminClientesPage> {
   // ETIQUETAS DE ESTATUS Y VIGENCIA
 
   Widget _etiqueta({required String texto, required bool positivo}) {
-    final colorFondo = positivo
-        ? const Color(0xFFE7F3E8)
-        : const Color(0xFFFCE9E6);
+    final fondo = positivo ? const Color(0xFFE7F3E8) : const Color(0xFFFCE9E6);
 
-    final colorTexto = positivo
+    final textoColor = positivo
         ? const Color(0xFF287447)
         : const Color(0xFFA03930);
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
       decoration: BoxDecoration(
-        color: colorFondo,
+        color: fondo,
         borderRadius: BorderRadius.circular(20),
       ),
       child: Text(
         texto,
         style: TextStyle(
-          color: colorTexto,
+          color: textoColor,
           fontSize: 12,
           fontWeight: FontWeight.w700,
         ),
@@ -120,16 +447,14 @@ class _AdminClientesPageState extends State<AdminClientesPage> {
     );
   }
 
-  // INFORMACIÓN DE CONTACTO
+  // FILA DE INFORMACIÓN
 
   Widget _filaInformacion({required IconData icono, required String texto}) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Icon(icono, size: 17, color: _doradoOscuro),
-
         const SizedBox(width: 10),
-
         Expanded(
           child: Text(
             texto,
@@ -144,7 +469,7 @@ class _AdminClientesPageState extends State<AdminClientesPage> {
     );
   }
 
-  // TARJETA INDIVIDUAL DE CLIENTE
+  // TARJETA DE CLIENTE
 
   Widget _tarjetaCliente(AdminCliente cliente) {
     final nombrePlan = cliente.nombrePlan.trim().isEmpty
@@ -178,7 +503,6 @@ class _AdminClientesPageState extends State<AdminClientesPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // NOMBRE DEL CLIENTE
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -228,7 +552,6 @@ class _AdminClientesPageState extends State<AdminClientesPage> {
 
           const SizedBox(height: 18),
 
-          // CONTACTO
           _filaInformacion(icono: Icons.email_outlined, texto: cliente.correo),
 
           const SizedBox(height: 9),
@@ -241,7 +564,6 @@ class _AdminClientesPageState extends State<AdminClientesPage> {
 
           const SizedBox(height: 16),
 
-          // MEMBRESÍA
           const Text(
             'MEMBRESÍA',
             style: TextStyle(
@@ -272,13 +594,11 @@ class _AdminClientesPageState extends State<AdminClientesPage> {
 
           const SizedBox(height: 17),
 
-          // ESTATUS Y VIGENCIA
           Wrap(
             spacing: 9,
             runSpacing: 9,
             children: [
               _etiqueta(texto: cliente.estatus, positivo: cliente.estaActivo),
-
               _etiqueta(
                 texto: vigenciaTexto,
                 positivo: cliente.membresiaVigente,
@@ -308,9 +628,7 @@ class _AdminClientesPageState extends State<AdminClientesPage> {
         child: Column(
           children: [
             CircularProgressIndicator(color: _dorado),
-
             SizedBox(height: 18),
-
             Text(
               'Cargando clientes...',
               style: TextStyle(color: _textoSecundario, fontSize: 14),
@@ -338,8 +656,8 @@ class _AdminClientesPageState extends State<AdminClientesPage> {
               textAlign: TextAlign.center,
               style: TextStyle(
                 color: _texto,
-                fontWeight: FontWeight.w700,
                 fontSize: 16,
+                fontWeight: FontWeight.w700,
               ),
             ),
 
@@ -365,40 +683,62 @@ class _AdminClientesPageState extends State<AdminClientesPage> {
     );
   }
 
-  // SIN CLIENTES REGISTRADOS
+  // SIN RESULTADOS
 
   Widget _vistaVacia() {
-    return const Padding(
-      padding: EdgeInsets.symmetric(vertical: 65),
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 55),
       child: Center(
         child: Column(
           children: [
-            Icon(Icons.groups_outlined, color: _doradoOscuro, size: 50),
+            const Icon(
+              Icons.search_off_outlined,
+              color: _doradoOscuro,
+              size: 50,
+            ),
 
-            SizedBox(height: 16),
+            const SizedBox(height: 16),
 
             Text(
-              'No hay clientes registrados',
-              style: TextStyle(
+              _hayFiltros
+                  ? 'No encontramos coincidencias'
+                  : 'No hay clientes registrados',
+              textAlign: TextAlign.center,
+              style: const TextStyle(
                 color: _texto,
                 fontSize: 16,
                 fontWeight: FontWeight.w700,
               ),
             ),
 
-            SizedBox(height: 8),
+            const SizedBox(height: 8),
 
             Text(
-              'Cuando existan clientes, '
-              'aparecerán en esta sección.',
+              _hayFiltros
+                  ? 'Prueba con otros criterios '
+                        'o limpia los filtros.'
+                  : 'Cuando existan clientes, '
+                        'aparecerán en esta sección.',
               textAlign: TextAlign.center,
-              style: TextStyle(color: _textoSecundario, fontSize: 13),
+              style: const TextStyle(color: _textoSecundario, fontSize: 13),
             ),
+
+            if (_hayFiltros) ...[
+              const SizedBox(height: 18),
+
+              OutlinedButton.icon(
+                onPressed: _limpiarFiltros,
+                icon: const Icon(Icons.close),
+                label: const Text('Limpiar filtros'),
+              ),
+            ],
           ],
         ),
       ),
     );
   }
+
+  // PANTALLA PRINCIPAL
 
   @override
   Widget build(BuildContext context) {
@@ -435,16 +775,12 @@ class _AdminClientesPageState extends State<AdminClientesPage> {
 
         child: SingleChildScrollView(
           physics: const AlwaysScrollableScrollPhysics(),
-
           padding: const EdgeInsets.fromLTRB(18, 24, 18, 36),
-
           child: Center(
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 760),
-
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-
                 children: [
                   const Text(
                     'GYMFLOW / ADMINISTRACIÓN',
@@ -478,6 +814,11 @@ class _AdminClientesPageState extends State<AdminClientesPage> {
                       height: 1.4,
                     ),
                   ),
+
+                  const SizedBox(height: 23),
+
+                  // PANEL DE BÚSQUEDA
+                  _panelFiltros(),
 
                   const SizedBox(height: 23),
 
