@@ -19,6 +19,7 @@ builder.Services.AddScoped<ClienteAdminService>();
 builder.Services.AddScoped<NotificacionService>();
 builder.Services.AddHostedService<NotificacionWorker>();
 builder.Services.AddScoped<MembresiaService>();
+builder.Services.AddScoped<AsistenciaPersonalService>();
 // ========================================
 // CORS
 // ========================================
@@ -311,6 +312,79 @@ app.MapPost("/api/admin/personal",
     .RequireAuthorization("SoloAdministrador");
 
 
+ // ========================================
+ // REGISTRAR ENTRADA LABORAL
+ // ========================================
+
+app.MapPost("/api/admin/personal/asistencias",
+    async (
+        GymManagement.api.Models.RegistrarAsistenciaPersonalRequest request,
+        GymManagement.api.Services.AsistenciaPersonalService asistenciaService,
+        System.Security.Claims.ClaimsPrincipal usuario
+    ) =>
+    {
+        var idClaim = usuario.FindFirst("sub")?.Value
+            ?? usuario.FindFirst(
+                System.Security.Claims.ClaimTypes.NameIdentifier
+            )?.Value;
+
+        if (!int.TryParse(idClaim, out var idAdministrador)
+            || idAdministrador <= 0)
+        {
+            return Results.Unauthorized();
+        }
+
+        try
+        {
+            var idAsistencia = await asistenciaService.RegistrarEntrada(
+                request,
+                idAdministrador
+            );
+
+            return Results.Created(
+                $"/api/admin/personal/asistencias/{idAsistencia}",
+                new
+                {
+                    mensaje = "Entrada laboral registrada correctamente",
+                    idAsistenciaPersonal = idAsistencia,
+                    idPersonal = request.IdPersonal,
+                    fecha = request.Fecha,
+                    horaEntrada = request.HoraEntrada
+                }
+            );
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return Results.Forbid();
+        }
+        catch (ArgumentException ex)
+        {
+            return Results.BadRequest(new
+            {
+                mensaje = ex.Message
+            });
+        }
+        catch (InvalidOperationException ex)
+            when (ex.InnerException is Npgsql.PostgresException postgres
+                && postgres.SqlState == "23505")
+        {
+            return Results.Conflict(new
+            {
+                mensaje = "El empleado ya tiene una asistencia registrada para esa fecha."
+            });
+        }
+        catch (Exception)
+        {
+            return Results.Problem(
+                statusCode: 500,
+                title: "Error al registrar asistencia laboral"
+            );
+        }
+    })
+    .RequireAuthorization("SoloAdministrador");
+
+
+
 app.MapGet("/api/admin/personal",
     async (
         GymManagement.api.Services.PersonalService personalService
@@ -333,6 +407,124 @@ app.MapGet("/api/admin/personal",
         }
     })
     .RequireAuthorization("SoloAdministrador");
+
+
+ // ========================================
+ // REGISTRAR SALIDA LABORAL
+ // ========================================
+
+app.MapPatch("/api/admin/personal/asistencias/{id:long}/salida",
+    async (
+        long id,
+        GymManagement.api.Models.RegistrarSalidaPersonalRequest request,
+        GymManagement.api.Services.AsistenciaPersonalService asistenciaService,
+        System.Security.Claims.ClaimsPrincipal usuario
+    ) =>
+    {
+        var idClaim = usuario.FindFirst("sub")?.Value
+            ?? usuario.FindFirst(
+                System.Security.Claims.ClaimTypes.NameIdentifier
+            )?.Value;
+
+        if (!int.TryParse(idClaim, out var idAdministrador)
+            || idAdministrador <= 0)
+        {
+            return Results.Unauthorized();
+        }
+
+        if (id <= 0)
+        {
+            return Results.BadRequest(new
+            {
+                mensaje = "El identificador de asistencia no es válido."
+            });
+        }
+
+        try
+        {
+            var actualizado = await asistenciaService.RegistrarSalida(
+                id,
+                request,
+                idAdministrador
+            );
+
+            if (!actualizado)
+            {
+                return Results.Conflict(new
+                {
+                    mensaje = "No se pudo registrar la salida. La asistencia no existe, ya tiene salida o la hora es anterior a la entrada."
+                });
+            }
+
+            return Results.Ok(new
+            {
+                mensaje = "Salida laboral registrada correctamente",
+                idAsistenciaPersonal = id,
+                horaSalida = request.HoraSalida
+            });
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return Results.Forbid();
+        }
+        catch (ArgumentException ex)
+        {
+            return Results.BadRequest(new
+            {
+                mensaje = ex.Message
+            });
+        }
+        catch (Exception)
+        {
+            return Results.Problem(
+                statusCode: 500,
+                title: "Error al registrar salida laboral"
+            );
+        }
+    })
+    .RequireAuthorization("SoloAdministrador");
+
+
+ // ========================================
+ // CONSULTAR HISTORIAL DE ASISTENCIAS LABORALES
+ // ========================================
+
+app.MapGet("/api/admin/personal/asistencias",
+    async (
+        int? idPersonal,
+        DateOnly? fechaInicio,
+        DateOnly? fechaFin,
+        GymManagement.api.Services.AsistenciaPersonalService asistenciaService
+    ) =>
+    {
+        try
+        {
+            var historial = await asistenciaService.ObtenerHistorial(
+                idPersonal,
+                fechaInicio,
+                fechaFin
+            );
+
+            return Results.Ok(historial);
+        }
+        catch (ArgumentException ex)
+        {
+            return Results.BadRequest(new
+            {
+                mensaje = ex.Message
+            });
+        }
+        catch (Exception)
+        {
+           return Results.Problem(
+                statusCode: 500,
+                title: "Error al consultar historial de asistencias"
+            );
+        }
+    })
+    .RequireAuthorization("SoloAdministrador");
+
+
 
 
 app.MapGet("/api/admin/personal/{id:int}",
