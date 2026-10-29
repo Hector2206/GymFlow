@@ -5,6 +5,7 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using GymManagement.api.Services;
+using GymManagement.api.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -1750,6 +1751,51 @@ app.MapGet("/api/admin/administradores/{id:int}",
         }
     })
     .RequireAuthorization("SoloAdministrador");
+
+
+app.MapPost("/api/admin/administradores",
+    async (
+        CrearAdministradorRequest request,
+        HttpContext httpContext,
+        [Microsoft.AspNetCore.Mvc.FromServices]
+        AdministradorService administradorService) =>
+    {
+        var idTexto =
+            httpContext.User.FindFirst(
+                System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
+            ?? httpContext.User.FindFirst("sub")?.Value
+            ?? httpContext.User.FindFirst("id_usuario")?.Value;
+
+        if (!int.TryParse(idTexto, out var idAdministrador))
+            return Results.Unauthorized();
+
+        try
+        {
+            var idUsuario = await administradorService.CrearAdministrador(
+                request, idAdministrador);
+
+            return Results.Created(
+                $"/api/admin/administradores/{idUsuario}",
+                new
+                {
+                    mensaje = "Administrador registrado correctamente",
+                    idUsuario
+                });
+        }
+        catch (ArgumentException ex)
+        {
+            return Results.BadRequest(new
+            {
+                mensaje = ex.Message
+            });
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return Results.Forbid();
+        }
+    })
+    .RequireAuthorization("SoloAdministrador");
+
 
 
 
