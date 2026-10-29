@@ -1226,4 +1226,24 @@ app.MapPut("/api/admin/personal/{id:int}",
     })
     .RequireAuthorization("SoloAdministrador");
 
+    app.MapGet("/api/membresias/activas",
+    async (MembresiaService membresiaService) =>
+    {
+        try
+        {
+            var membresias =
+                await membresiaService.ObtenerMembresiasActivas();
+
+            return Results.Ok(membresias);
+        }
+        catch (Exception)
+        {
+            return Results.Problem(
+                statusCode: 500,
+                title: "Error al consultar membresías activas");
+        }
+    })
+    .RequireAuthorization(policy =>
+        policy.RequireRole("Recepción", "Administrador"));
+
 app.Run();
