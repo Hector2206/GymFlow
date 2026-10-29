@@ -641,8 +641,10 @@ public async Task<bool> DarDeBajaAdministrador(
             SELECT COUNT(*)
             FROM public.usuarios u
             JOIN public.roles r ON r.id_rol = u.id_rol
+            JOIN public.personal p ON p.id_usuario = u.id_usuario
             WHERE r.nombre = 'Administrador'
-            AND u.estatus = 'Activo';
+            AND u.estatus = 'Activo'
+            AND p.fecha_baja IS NULL;
             """, connection, transaction))
         {
             var activos = Convert.ToInt64(
