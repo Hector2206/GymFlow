@@ -55,12 +55,11 @@ class ResultadoRegistroPago {
   final bool pagoRegistrado;
   final bool pagoRepetido;
   final int idPago;
-  final bool esRenovacion;
+  final bool? esRenovacion;
   final int idCliente;
   final double monto;
   final String tipoPago;
   final String fechaVencimiento;
-  final bool membresiaActiva;
   final String mensaje;
 
   const ResultadoRegistroPago({
@@ -72,15 +71,20 @@ class ResultadoRegistroPago {
     required this.monto,
     required this.tipoPago,
     required this.fechaVencimiento,
-    required this.membresiaActiva,
     required this.mensaje,
   });
 
   factory ResultadoRegistroPago.fromJson(Map<String, dynamic> json) {
     final idPago = int.tryParse(json['idPago']?.toString() ?? '');
+
     final idCliente = int.tryParse(json['idCliente']?.toString() ?? '');
+
     final monto = double.tryParse(json['monto']?.toString() ?? '');
+
     final tipo = json['tipoPago']?.toString() ?? '';
+
+    final esRenovacion = json['esRenovacion'];
+
     if (json['pagoRegistrado'] != true ||
         idPago == null ||
         idPago <= 0 ||
@@ -89,19 +93,20 @@ class ResultadoRegistroPago {
         monto == null ||
         !monto.isFinite ||
         monto <= 0 ||
-        (tipo != 'Mensualidad' && tipo != 'Anualidad')) {
+        (tipo != 'Mensualidad' && tipo != 'Anualidad') ||
+        (esRenovacion != null && esRenovacion is! bool)) {
       throw const FormatException('La confirmación del pago no es válida.');
     }
+
     return ResultadoRegistroPago(
       pagoRegistrado: true,
       pagoRepetido: json['pagoRepetido'] == true,
       idPago: idPago,
-      esRenovacion: json['esRenovacion'] == true,
+      esRenovacion: esRenovacion as bool?,
       idCliente: idCliente,
       monto: monto,
       tipoPago: tipo,
       fechaVencimiento: json['fechaVencimiento']?.toString() ?? '',
-      membresiaActiva: json['membresiaActiva'] == true,
       mensaje: json['mensaje']?.toString() ?? '',
     );
   }
