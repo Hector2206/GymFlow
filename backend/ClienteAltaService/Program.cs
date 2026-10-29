@@ -1317,6 +1317,100 @@ app.MapGet(
     policy.RequireRole("Cliente");
 });
 
+// ===============================
+// MI MEMBRESIA DEL CLIENTE
+// ===============================
+
+app.MapGet(
+    "/api/clientes/mi-membresia",
+    async (
+        ClaimsPrincipal usuario,
+        IConfiguration configuration
+    ) =>
+    {
+        var idUsuarioTexto =
+            usuario.FindFirst("sub")?.Value
+            ?? usuario.FindFirst(
+                ClaimTypes.NameIdentifier
+            )?.Value;
+
+        if (!int.TryParse(idUsuarioTexto, out var idUsuario)
+            || idUsuario <= 0)
+        {
+            return Results.Unauthorized();
+        }
+
+        var connectionString =
+            configuration.GetConnectionString("PostgreSQL");
+
+        if (string.IsNullOrWhiteSpace(connectionString))
+        {
+            return Results.Problem(
+                title: "Configuración faltante",
+                statusCode: 500
+            );
+        }
+
+        await using var connection =
+            new NpgsqlConnection(connectionString);
+
+        await connection.OpenAsync();
+
+        await using var command = new NpgsqlCommand(
+            """
+            SELECT
+                c.id_cliente,
+                c.id_membresia,
+                m.nombre_plan,
+                m.costo_mensual,
+                m.costo_anualidad,
+                v.fecha_vencimiento,
+                v.vigencia
+            FROM clientes c
+            INNER JOIN membresias m
+                ON m.id_membresia = c.id_membresia
+            INNER JOIN vw_admin_clientes v
+                ON v.id_cliente = c.id_cliente
+            WHERE c.id_usuario = @id_usuario
+            LIMIT 1;
+            """,
+            connection
+        );
+
+        command.Parameters.AddWithValue(
+            "id_usuario",
+            idUsuario
+        );
+
+        await using var reader =
+            await command.ExecuteReaderAsync();
+
+        if (!await reader.ReadAsync())
+        {
+            return Results.NotFound(new
+            {
+                mensaje = "No se encontró una membresía asociada al cliente."
+            });
+        }
+
+        return Results.Ok(new
+        {
+            idCliente = reader.GetInt32(0),
+            idMembresia = reader.GetInt32(1),
+            nombrePlan = reader.GetString(2),
+            costoMensual = reader.GetDecimal(3),
+            costoAnualidad = reader.GetDecimal(4),
+            fechaVencimiento = reader.IsDBNull(5)
+                ? (DateTime?)null
+                : reader.GetDateTime(5),
+            estado = reader.GetString(6)
+        });
+    }
+)
+.RequireAuthorization(policy =>
+{
+    policy.RequireRole("Cliente");
+});
  // ===============================
  // LISTAR CLIENTES PARA RECEPCION
  // ===============================
