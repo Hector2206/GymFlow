@@ -2,14 +2,20 @@
 class ClienteResumen {
   final int idCliente;
   final String nombreCompleto;
+
   final int? idEntrenador;
   final String? nombreEntrenador;
+
+  final int? idMembresia;
+  final String? nombrePlan;
 
   const ClienteResumen({
     required this.idCliente,
     required this.nombreCompleto,
     this.idEntrenador,
     this.nombreEntrenador,
+    this.idMembresia,
+    this.nombrePlan,
   });
 
   factory ClienteResumen.fromJson(
@@ -22,14 +28,13 @@ class ClienteResumen {
     }
 
     return ClienteResumen(
-      idCliente:
-          convertirId(json['idCliente']) ?? 0,
+      idCliente: convertirId(json['idCliente']) ?? 0,
       nombreCompleto:
           json['nombreCompleto']?.toString() ?? '',
-      idEntrenador:
-          convertirId(json['idEntrenador']),
-      nombreEntrenador:
-          json['nombreEntrenador']?.toString(),
+      idEntrenador: convertirId(json['idEntrenador']),
+      nombreEntrenador: json['nombreEntrenador']?.toString(),
+      idMembresia: convertirId(json['idMembresia']),
+      nombrePlan: json['nombrePlan']?.toString(),
     );
   }
 }

@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 
 import '../models/admin_cliente.dart';
 import '../services/admin_cliente_service.dart';
+import '../widgets/cambiar_membresia_button.dart';
 
 // GYMFLOW - SPRINT 7
 // ADMINISTRAR CLIENTES CON FILTROS
@@ -614,6 +615,17 @@ class _AdminClientesPageState extends State<AdminClientesPage> {
                 'Vencimiento: '
                 '${_mostrarFecha(cliente.fechaVencimiento)}',
           ),
+
+          const SizedBox(height: 16),
+
+CambiarMembresiaButton(
+  idCliente: cliente.idCliente,
+  nombreCliente: cliente.nombreCompleto,
+  idMembresiaActual: cliente.idMembresia,
+  nombreMembresiaActual: cliente.nombrePlan,
+  alActualizar: _cargarClientes,
+),
+
         ],
       ),
     );
