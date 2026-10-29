@@ -22,6 +22,7 @@ import 'asignacion_entrenadores_page.dart';
 import 'admin_dashboard_page.dart';
 import 'admin_clientes_page.dart';
 import 'admin_personal_page.dart';
+import 'notificaciones_page.dart';
 
 class HomePage extends StatelessWidget {
   final Usuario usuario;
@@ -194,6 +195,20 @@ class HomePage extends StatelessWidget {
         ),
 
         actions: [
+          IconButton(
+            tooltip: 'Mis notificaciones',
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const NotificacionesPage()),
+              );
+            },
+            icon: const Icon(
+              Icons.notifications_none_outlined,
+              color: goldDark,
+              size: 26,
+            ),
+          ),
+
           Padding(
             padding: const EdgeInsets.only(right: 14),
 
