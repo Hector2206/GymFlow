@@ -1797,6 +1797,55 @@ app.MapPost("/api/admin/administradores",
     .RequireAuthorization("SoloAdministrador");
 
 
+app.MapPut("/api/admin/administradores/{id:int}",
+    async (
+        int id,
+        EditarAdministradorRequest request,
+        HttpContext httpContext,
+        [Microsoft.AspNetCore.Mvc.FromServices]
+        AdministradorService administradorService) =>
+    {
+        var idTexto =
+            httpContext.User.FindFirst(
+                System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
+            ?? httpContext.User.FindFirst("sub")?.Value
+            ?? httpContext.User.FindFirst("id_usuario")?.Value;
 
+        if (!int.TryParse(idTexto, out var idAdministrador))
+            return Results.Unauthorized();
+
+        try
+        {
+            var actualizado =
+                await administradorService.EditarAdministrador(
+                    id, request, idAdministrador);
+
+            if (!actualizado)
+            {
+                return Results.NotFound(new
+                {
+                    mensaje = "Administrador activo no encontrado."
+                });
+            }
+
+            return Results.Ok(new
+            {
+                mensaje = "Administrador actualizado correctamente",
+                idUsuario = id
+            });
+        }
+        catch (ArgumentException ex)
+        {
+            return Results.BadRequest(new
+            {
+                mensaje = ex.Message
+            });
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return Results.Forbid();
+        }
+    })
+    .RequireAuthorization("SoloAdministrador");
 
 app.Run();

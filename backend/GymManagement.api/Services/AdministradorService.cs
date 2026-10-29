@@ -403,4 +403,147 @@ public async Task<int> CrearAdministrador(
     }
 
 
+public async Task<bool> EditarAdministrador(
+    int idUsuario,
+    EditarAdministradorRequest request,
+    int idAdministrador)
+    {
+        if (idUsuario <= 0)
+            throw new ArgumentException("ID de administrador inválido.");
+
+        if (idAdministrador <= 0)
+            throw new UnauthorizedAccessException(
+                "Administrador no autorizado.");
+
+        var nombre = request.NombreCompleto?.Trim();
+        var correo = request.Correo?.Trim().ToLowerInvariant();
+        var telefono = request.Telefono?.Trim();
+        var horario = request.Horario?.Trim();
+
+        if (string.IsNullOrWhiteSpace(nombre) ||
+            string.IsNullOrWhiteSpace(correo) ||
+            string.IsNullOrWhiteSpace(telefono) ||
+            string.IsNullOrWhiteSpace(horario))
+            throw new ArgumentException(
+                "Nombre, correo, teléfono y horario son obligatorios.");
+
+        if (nombre.Length > 200 ||
+            correo.Length > 200 ||
+            telefono.Length > 30 ||
+            horario.Length > 100)
+            throw new ArgumentException(
+                "Uno de los campos supera la longitud permitida.");
+
+        await using var connection =
+            new NpgsqlConnection(_connectionString);
+
+        await connection.OpenAsync();
+
+        await using var transaction =
+            await connection.BeginTransactionAsync();
+
+        // Verificar que quien edita sea administrador activo.
+        await using (var validar = new NpgsqlCommand(
+            """
+            SELECT u.id_usuario
+            FROM public.usuarios u
+            JOIN public.roles r ON r.id_rol = u.id_rol
+            WHERE u.id_usuario = @admin
+            AND u.estatus = 'Activo'
+            AND r.nombre = 'Administrador'
+            FOR SHARE OF u;
+            """, connection, transaction))
+        {
+            validar.Parameters.AddWithValue("admin", idAdministrador);
+
+            if (await validar.ExecuteScalarAsync() is null)
+                throw new UnauthorizedAccessException(
+                    "Administrador no autorizado.");
+        }
+
+        // Registrar responsable de la operación para auditoría.
+        await using (var audit = new NpgsqlCommand(
+            "SELECT set_config('gymflow.usuario_actual', @admin, true);",
+            connection, transaction))
+        {
+            audit.Parameters.AddWithValue(
+                "admin", idAdministrador.ToString());
+
+            await audit.ExecuteScalarAsync();
+        }
+
+        // Bloquear el expediente para evitar modificaciones concurrentes.
+        int idPersonal;
+
+        await using (var buscar = new NpgsqlCommand(
+            """
+            SELECT p.id_personal
+            FROM public.usuarios u
+            JOIN public.roles r ON r.id_rol = u.id_rol
+            JOIN public.personal p ON p.id_usuario = u.id_usuario
+            WHERE u.id_usuario = @id
+            AND r.nombre = 'Administrador'
+            AND u.estatus = 'Activo'
+            AND p.fecha_baja IS NULL
+            FOR UPDATE OF p, u;
+            """, connection, transaction))
+        {
+            buscar.Parameters.AddWithValue("id", idUsuario);
+
+            var resultado = await buscar.ExecuteScalarAsync();
+
+            if (resultado is null)
+                return false;
+
+            idPersonal = Convert.ToInt32(resultado);
+        }
+
+        // Actualizar el correo de acceso.
+        await using (var usuario = new NpgsqlCommand(
+            """
+            UPDATE public.usuarios
+            SET correo = @correo
+            WHERE id_usuario = @id;
+            """, connection, transaction))
+        {
+            usuario.Parameters.AddWithValue("correo", correo!);
+            usuario.Parameters.AddWithValue("id", idUsuario);
+
+            try
+            {
+                await usuario.ExecuteNonQueryAsync();
+            }
+            catch (PostgresException ex)
+                when (ex.SqlState == PostgresErrorCodes.UniqueViolation)
+            {
+                throw new ArgumentException(
+                    "Ya existe una cuenta registrada con ese correo.");
+            }
+        }
+
+        // Actualizar datos personales sin modificar salario ni contraseña.
+        await using (var personal = new NpgsqlCommand(
+            """
+            UPDATE public.personal
+            SET nombre_completo = @nombre,
+                telefono = @telefono,
+                horario = @horario
+            WHERE id_personal = @idPersonal;
+            """, connection, transaction))
+        {
+            personal.Parameters.AddWithValue("nombre", nombre!);
+            personal.Parameters.AddWithValue("telefono", telefono!);
+            personal.Parameters.AddWithValue("horario", horario!);
+            personal.Parameters.AddWithValue("idPersonal", idPersonal);
+
+            await personal.ExecuteNonQueryAsync();
+        }
+
+        await transaction.CommitAsync();
+
+        return true;
+    }
+
+
+
 }
