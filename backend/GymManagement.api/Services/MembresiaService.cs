@@ -317,4 +317,84 @@ public class MembresiaService
 
         await transaction.CommitAsync();
     }
+
+    public async Task CambiarEstadoMembresia(
+    int idMembresia,
+    bool? activo,
+    int idAdministrador)
+    {
+        if (idMembresia <= 0)
+            throw new ArgumentException("ID de membresía inválido.");
+
+        if (!activo.HasValue)
+            throw new ArgumentException(
+                "El estado activo es obligatorio.");
+
+        var connectionString =
+            _configuration.GetConnectionString("PostgreSQL");
+
+        if (string.IsNullOrWhiteSpace(connectionString))
+            throw new InvalidOperationException(
+                "Falta la conexión PostgreSQL.");
+
+        await using var connection =
+            new NpgsqlConnection(connectionString);
+
+        await connection.OpenAsync();
+
+        await using var transaction =
+            await connection.BeginTransactionAsync();
+
+        // Validar administrador activo.
+        await using (var admin = new NpgsqlCommand("""
+            SELECT u.id_usuario
+            FROM public.usuarios u
+            JOIN public.roles r ON r.id_rol = u.id_rol
+            WHERE u.id_usuario = @admin
+            AND u.estatus = 'Activo'
+            AND r.nombre = 'Administrador'
+            FOR SHARE OF u;
+            """, connection, transaction))
+        {
+            admin.Parameters.AddWithValue("admin", idAdministrador);
+
+            if (await admin.ExecuteScalarAsync() is null)
+                throw new UnauthorizedAccessException(
+                    "Administrador no autorizado.");
+        }
+
+        // Identificar al administrador en la transacción.
+        await using (var audit = new NpgsqlCommand("""
+            SELECT set_config(
+                'gymflow.usuario_actual',
+                @admin,
+                true
+            );
+            """, connection, transaction))
+        {
+            audit.Parameters.AddWithValue(
+                "admin", idAdministrador.ToString());
+
+            await audit.ExecuteScalarAsync();
+        }
+
+        // Desactivar o activar sin eliminar el plan.
+        await using (var command = new NpgsqlCommand("""
+            UPDATE public.membresias
+            SET activo = @activo
+            WHERE id_membresia = @id;
+            """, connection, transaction))
+        {
+            command.Parameters.AddWithValue("id", idMembresia);
+            command.Parameters.AddWithValue("activo", activo.Value);
+
+            var filas = await command.ExecuteNonQueryAsync();
+
+            if (filas == 0)
+                throw new KeyNotFoundException(
+                    "La membresía no existe.");
+        }
+
+        await transaction.CommitAsync();
+    }
 }

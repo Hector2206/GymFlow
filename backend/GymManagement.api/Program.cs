@@ -1370,4 +1370,63 @@ app.MapPut("/api/admin/personal/{id:int}",
     })
     .RequireAuthorization("SoloAdministrador");
 
+    app.MapPatch("/api/admin/membresias/{id:int}/estado",
+    async (
+        int id,
+        GymManagement.api.Models.CambiarEstadoMembresiaRequest request,
+        MembresiaService membresiaService,
+        ClaimsPrincipal usuario
+    ) =>
+    {
+        if (!int.TryParse(
+            usuario.FindFirst("sub")?.Value,
+            out var idAdministrador))
+        {
+            return Results.Unauthorized();
+        }
+
+        try
+        {
+            await membresiaService.CambiarEstadoMembresia(
+                id,
+                request.Activo,
+                idAdministrador);
+
+            return Results.Ok(new
+            {
+                mensaje = "Estado de membresía actualizado correctamente.",
+                idMembresia = id,
+                activo = request.Activo
+            });
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return Results.Forbid();
+        }
+        catch (ArgumentException ex)
+        {
+            return Results.BadRequest(new
+            {
+                mensaje = ex.Message
+            });
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return Results.NotFound(new
+            {
+                mensaje = ex.Message
+            });
+        }
+        catch (Exception ex)
+        {
+            app.Logger.LogError(
+                ex, "Error al cambiar estado de membresía");
+
+            return Results.Problem(
+                statusCode: 500,
+                title: "Error al cambiar estado de membresía");
+        }
+    })
+    .RequireAuthorization("SoloAdministrador");
+
 app.Run();
