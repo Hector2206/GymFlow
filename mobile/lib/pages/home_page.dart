@@ -19,6 +19,7 @@ import 'mi_rutina_page.dart';
 import 'mi_progreso_page.dart';
 import 'ejercicios_page.dart';
 import 'asignacion_entrenadores_page.dart';
+import 'admin_dashboard_page.dart';
 
 class HomePage extends StatelessWidget {
   final Usuario usuario;
@@ -651,7 +652,9 @@ class HomePage extends StatelessWidget {
             'Consulta estadísticas, membresías, '
             'asistencias e ingresos del gimnasio',
         onTap: () {
-          proximamente(context, 'Dashboard Administrativo');
+          Navigator.of(
+            context,
+          ).push(MaterialPageRoute(builder: (_) => const AdminDashboardPage()));
         },
       ),
 
