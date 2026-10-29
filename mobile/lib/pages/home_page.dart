@@ -629,6 +629,8 @@ class HomePage extends StatelessWidget {
     ];
   }
 
+  // SPRINT 7 - PANEL ADMINISTRADOR
+
   List<Widget> _tarjetasAdministrador(BuildContext context) {
     return [
       _buildCard(
@@ -643,11 +645,26 @@ class HomePage extends StatelessWidget {
       _espacio(),
 
       _buildCard(
+        icon: Icons.dashboard_outlined,
+        titulo: 'Dashboard Administrativo',
+        subtitulo:
+            'Consulta estadísticas, membresías, '
+            'asistencias e ingresos del gimnasio',
+        onTap: () {
+          proximamente(context, 'Dashboard Administrativo');
+        },
+      ),
+
+      _espacio(),
+
+      _buildCard(
         icon: Icons.groups_outlined,
         titulo: 'Administrar Clientes',
-        subtitulo: 'Consultar y administrar clientes',
+        subtitulo:
+            'Consultar información, estatus '
+            'y vigencia de membresías',
         onTap: () {
-          proximamente(context, 'Administrar clientes');
+          proximamente(context, 'Administrar Clientes');
         },
       ),
 
@@ -655,21 +672,38 @@ class HomePage extends StatelessWidget {
 
       _buildCard(
         icon: Icons.badge_outlined,
-        titulo: 'Administrar Recepcionistas',
-        subtitulo: 'Consultar y administrar recepcionistas',
+        titulo: 'Administrar Personal',
+        subtitulo:
+            'Gestionar entrenadores, recepcionistas, '
+            'salarios y nómina',
         onTap: () {
-          proximamente(context, 'Administrar recepcionistas');
+          proximamente(context, 'Administrar Personal');
         },
       ),
 
       _espacio(),
 
       _buildCard(
-        icon: Icons.fitness_center,
-        titulo: 'Administrar Entrenadores',
-        subtitulo: 'Consultar y administrar entrenadores',
+        icon: Icons.calendar_month_outlined,
+        titulo: 'Horarios y Asistencias',
+        subtitulo:
+            'Organizar horarios y controlar '
+            'la asistencia laboral del personal',
         onTap: () {
-          proximamente(context, 'Administrar entrenadores');
+          proximamente(context, 'Horarios y Asistencias');
+        },
+      ),
+
+      _espacio(),
+
+      _buildCard(
+        icon: Icons.card_membership_outlined,
+        titulo: 'Administrar Membresías',
+        subtitulo:
+            'Gestionar BasicFlow, precios '
+            'y nuevos planes',
+        onTap: () {
+          proximamente(context, 'Administrar Membresías');
         },
       ),
 
@@ -677,10 +711,12 @@ class HomePage extends StatelessWidget {
 
       _buildCard(
         icon: Icons.admin_panel_settings_outlined,
-        titulo: 'Ver Administradores',
-        subtitulo: 'Consulta los administradores registrados',
+        titulo: 'Administrar Administradores',
+        subtitulo:
+            'Consultar cuentas y preparar '
+            'el registro de administradores',
         onTap: () {
-          proximamente(context, 'Ver administradores');
+          proximamente(context, 'Administrar Administradores');
         },
       ),
     ];
