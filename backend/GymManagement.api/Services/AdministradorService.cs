@@ -545,5 +545,156 @@ public async Task<bool> EditarAdministrador(
     }
 
 
+public async Task<bool> DarDeBajaAdministrador(
+    int idUsuario,
+    DarBajaAdministradorRequest request,
+    int idAdministrador)
+    {
+        if (idUsuario <= 0)
+            throw new ArgumentException("ID de administrador inválido.");
+
+        if (idAdministrador <= 0)
+            throw new UnauthorizedAccessException(
+                "Administrador no autorizado.");
+
+        if (idUsuario == idAdministrador)
+            throw new ArgumentException(
+                "No puedes dar de baja tu propia cuenta.");
+
+        var motivo = request.MotivoBaja?.Trim();
+
+        if (string.IsNullOrWhiteSpace(motivo))
+            throw new ArgumentException(
+                "El motivo de baja es obligatorio.");
+
+        if (request.FechaBaja == default ||
+            request.FechaBaja > DateOnly.FromDateTime(DateTime.Today))
+            throw new ArgumentException(
+                "La fecha de baja no es válida.");
+
+        await using var connection =
+            new NpgsqlConnection(_connectionString);
+
+        await connection.OpenAsync();
+
+        await using var transaction =
+            await connection.BeginTransactionAsync();
+
+        // Serializar las bajas de administradores para impedir
+        // que operaciones simultáneas desactiven al último.
+        await using (var bloqueo = new NpgsqlCommand(
+            """
+            SELECT pg_advisory_xact_lock(724031, 1);
+            """, connection, transaction))
+        {
+            await bloqueo.ExecuteNonQueryAsync();
+        }
+
+        // Verificar que el administrador responsable siga activo.
+        await using (var validar = new NpgsqlCommand(
+            """
+            SELECT u.id_usuario
+            FROM public.usuarios u
+            JOIN public.roles r ON r.id_rol = u.id_rol
+            WHERE u.id_usuario = @admin
+            AND u.estatus = 'Activo'
+            AND r.nombre = 'Administrador'
+            FOR SHARE OF u;
+            """, connection, transaction))
+        {
+            validar.Parameters.AddWithValue("admin", idAdministrador);
+
+            if (await validar.ExecuteScalarAsync() is null)
+                throw new UnauthorizedAccessException(
+                    "Administrador no autorizado.");
+        }
+
+        // Bloquear la cuenta que se pretende desactivar.
+        int idPersonal;
+
+        await using (var buscar = new NpgsqlCommand(
+            """
+            SELECT p.id_personal
+            FROM public.usuarios u
+            JOIN public.roles r ON r.id_rol = u.id_rol
+            JOIN public.personal p ON p.id_usuario = u.id_usuario
+            WHERE u.id_usuario = @id
+            AND r.nombre = 'Administrador'
+            AND u.estatus = 'Activo'
+            AND p.fecha_baja IS NULL
+            FOR UPDATE OF u, p;
+            """, connection, transaction))
+        {
+            buscar.Parameters.AddWithValue("id", idUsuario);
+
+            var resultado = await buscar.ExecuteScalarAsync();
+
+            if (resultado is null)
+                return false;
+
+            idPersonal = Convert.ToInt32(resultado);
+        }
+
+        // Comprobar que existen al menos dos administradores activos.
+        await using (var contar = new NpgsqlCommand(
+            """
+            SELECT COUNT(*)
+            FROM public.usuarios u
+            JOIN public.roles r ON r.id_rol = u.id_rol
+            WHERE r.nombre = 'Administrador'
+            AND u.estatus = 'Activo';
+            """, connection, transaction))
+        {
+            var activos = Convert.ToInt64(
+                await contar.ExecuteScalarAsync());
+
+            if (activos <= 1)
+                throw new InvalidOperationException(
+                    "No se puede desactivar al último administrador activo.");
+        }
+
+        // Registrar el responsable en la auditoría.
+        await using (var audit = new NpgsqlCommand(
+            "SELECT set_config('gymflow.usuario_actual', @admin, true);",
+            connection, transaction))
+        {
+            audit.Parameters.AddWithValue(
+                "admin", idAdministrador.ToString());
+
+            await audit.ExecuteScalarAsync();
+        }
+
+        // Desactivar el acceso sin eliminar al usuario.
+        await using (var usuario = new NpgsqlCommand(
+            """
+            UPDATE public.usuarios
+            SET estatus = 'Inactivo'
+            WHERE id_usuario = @id;
+            """, connection, transaction))
+        {
+            usuario.Parameters.AddWithValue("id", idUsuario);
+            await usuario.ExecuteNonQueryAsync();
+        }
+
+        // Registrar la baja en su expediente laboral.
+        await using (var personal = new NpgsqlCommand(
+            """
+            UPDATE public.personal
+            SET fecha_baja = @fecha,
+                motivo_baja = @motivo
+            WHERE id_personal = @personal;
+            """, connection, transaction))
+        {
+            personal.Parameters.AddWithValue("fecha", request.FechaBaja);
+            personal.Parameters.AddWithValue("motivo", motivo!);
+            personal.Parameters.AddWithValue("personal", idPersonal);
+
+            await personal.ExecuteNonQueryAsync();
+        }
+
+        await transaction.CommitAsync();
+
+        return true;
+    }
 
 }

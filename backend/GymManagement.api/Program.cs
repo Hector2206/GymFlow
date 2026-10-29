@@ -1848,4 +1848,64 @@ app.MapPut("/api/admin/administradores/{id:int}",
     })
     .RequireAuthorization("SoloAdministrador");
 
+
+app.MapPatch("/api/admin/administradores/{id:int}/baja",
+    async (
+        int id,
+        DarBajaAdministradorRequest request,
+        HttpContext httpContext,
+        [Microsoft.AspNetCore.Mvc.FromServices]
+        AdministradorService administradorService) =>
+    {
+        var idTexto =
+            httpContext.User.FindFirst(
+                System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
+            ?? httpContext.User.FindFirst("sub")?.Value
+            ?? httpContext.User.FindFirst("id_usuario")?.Value;
+
+        if (!int.TryParse(idTexto, out var idAdministrador))
+            return Results.Unauthorized();
+
+        try
+        {
+            var desactivado =
+                await administradorService.DarDeBajaAdministrador(
+                    id, request, idAdministrador);
+
+            if (!desactivado)
+            {
+                return Results.NotFound(new
+                {
+                    mensaje = "Administrador activo no encontrado."
+                });
+            }
+
+            return Results.Ok(new
+            {
+                mensaje = "Administrador dado de baja correctamente.",
+                idUsuario = id
+            });
+        }
+        catch (ArgumentException ex)
+        {
+            return Results.BadRequest(new
+            {
+                mensaje = ex.Message
+            });
+        }
+        catch (InvalidOperationException ex)
+        {
+            return Results.Conflict(new
+            {
+                mensaje = ex.Message
+            });
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return Results.Forbid();
+        }
+    })
+    .RequireAuthorization("SoloAdministrador");
+
+
 app.Run();
