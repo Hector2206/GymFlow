@@ -5,8 +5,10 @@ using ClienteAltaService.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Npgsql;
+using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
+
 
 // ===============================
 // OPENAPI
@@ -849,14 +851,6 @@ app.MapPost(
             });
         }
 
-        if (request.Monto <= 0)
-        {
-            return Results.BadRequest(new
-            {
-                mensaje = "El monto debe ser mayor a cero."
-            });
-        }
-
         if (
             !request.TipoPago.Equals(
                 "Mensualidad",
@@ -1037,12 +1031,51 @@ app.MapPost(
                 Convert.ToInt32(idRecepcionistaObj);
 
             var tipoPagoNormalizado =
-                request.TipoPago.Equals(
-                    "Mensualidad",
-                    StringComparison.OrdinalIgnoreCase
-                )
-                    ? "Mensualidad"
-                    : "Anualidad";
+    request.TipoPago.Equals(
+        "Mensualidad",
+        StringComparison.OrdinalIgnoreCase
+    )
+        ? "Mensualidad"
+        : "Anualidad";
+
+        // OBTENER PRECIO OFICIAL DESDE POSTGRESQL
+        decimal montoOficial;
+
+        await using (var tarifaCommand = new NpgsqlCommand("""
+            SELECT
+                CASE
+                    WHEN @tipo = 'Mensualidad'
+                        THEN m.costo_mensual
+                    ELSE m.costo_anualidad
+                END
+            FROM public.clientes c
+            INNER JOIN public.membresias m
+                ON m.id_membresia = c.id_membresia
+            WHERE c.id_cliente = @id_cliente
+            AND m.activo = TRUE
+            FOR SHARE OF m;
+            """, connection, transaction))
+        {
+            tarifaCommand.Parameters.AddWithValue(
+                "id_cliente", request.IdCliente);
+
+            tarifaCommand.Parameters.AddWithValue(
+                "tipo", tipoPagoNormalizado);
+
+            var resultado = await tarifaCommand.ExecuteScalarAsync();
+
+            if (resultado is null)
+            {
+                await transaction.RollbackAsync();
+
+                return Results.BadRequest(new
+                {
+                    mensaje = "La membresía no existe o está inactiva."
+                });
+            }
+
+            montoOficial = Convert.ToDecimal(resultado);
+        }
 
             // REGISTRAR PAGO Y RENOVACION
             await using var pagoCommand =
@@ -1069,9 +1102,9 @@ app.MapPost(
                 idRecepcionista
             );
 
-            pagoCommand.Parameters.AddWithValue(
+           pagoCommand.Parameters.AddWithValue(
                 "p_monto",
-                request.Monto
+                montoOficial
             );
 
             pagoCommand.Parameters.AddWithValue(
@@ -1151,7 +1184,7 @@ app.MapPost(
                 pagoRegistrado = true,
                 esRenovacion,
                 idCliente = request.IdCliente,
-                monto = request.Monto,
+                monto = montoOficial,
                 tipoPago = tipoPagoNormalizado,
                 fechaVencimiento,
                 membresiaActiva = true,
