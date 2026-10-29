@@ -4,6 +4,7 @@ import '../models/admin_personal.dart';
 import '../services/admin_personal_service.dart';
 import 'admin_registrar_personal_page.dart';
 import 'admin_editar_personal_page.dart';
+import 'admin_baja_personal_page.dart';
 
 // GYMFLOW - SPRINT 7
 // PANTALLA ADMINISTRATIVA DE PERSONAL
@@ -150,6 +151,45 @@ class _AdminPersonalPageState extends State<AdminPersonalPage> {
 
       await _cargarPersonal();
     }
+  }
+
+  // ====================================
+  // ABRIR BAJA LOGICA DE PERSONAL
+  // ====================================
+
+  Future<void> _abrirBaja(AdminPersonal empleado) async {
+    if (!empleado.estaActivo) return;
+
+    final resultado = await Navigator.of(context).push<BajaPersonalResponse>(
+      MaterialPageRoute(
+        builder: (_) => AdminBajaPersonalPage(idPersonal: empleado.idPersonal),
+      ),
+    );
+
+    if (!mounted) return;
+
+    if (resultado != null) {
+      final detalleClientes = empleado.esEntrenador
+          ? ' Clientes desasignados: '
+                '${resultado.clientesDesasignados}.'
+          : '';
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Empleado #${resultado.idPersonal} '
+            'dado de baja correctamente.'
+            '$detalleClientes',
+          ),
+          backgroundColor: const Color(0xFF287447),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
+
+    // Actualizar incluso si la operación
+    // terminó sin confirmación.
+    await _cargarPersonal();
   }
 
   // ====================================
@@ -578,6 +618,7 @@ class _AdminPersonalPageState extends State<AdminPersonalPage> {
           if (empleado.estaActivo) ...[
             const SizedBox(height: 10),
 
+            // EDITAR EMPLEADO
             SizedBox(
               width: double.infinity,
               child: OutlinedButton.icon(
@@ -590,6 +631,28 @@ class _AdminPersonalPageState extends State<AdminPersonalPage> {
                   foregroundColor: _doradoOscuro,
                   padding: const EdgeInsets.all(13),
                   side: const BorderSide(color: Color(0xFFD8C8A5)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 10),
+
+            // DAR DE BAJA
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                onPressed: () {
+                  _abrirBaja(empleado);
+                },
+                icon: const Icon(Icons.person_off_outlined),
+                label: const Text('Dar de baja'),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: const Color(0xFFA03930),
+                  padding: const EdgeInsets.all(13),
+                  side: const BorderSide(color: Color(0xFFE8BAB4)),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
