@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../models/admin_personal.dart';
 import '../models/admin_salario.dart';
 import '../services/admin_salarios_service.dart';
+import 'admin_cambiar_salario_page.dart';
 
 // GYMFLOW - SPRINT 7
 // HISTORIAL SALARIAL DEL PERSONAL
@@ -235,6 +236,36 @@ class _AdminSalariosPageState extends State<AdminSalariosPage> {
     );
   }
 
+  // ABRIR FORMULARIO DE CAMBIO SALARIAL
+
+  Future<void> _abrirCambioSalario() async {
+    final idSalario = await Navigator.of(context).push<int>(
+      MaterialPageRoute(
+        builder: (_) =>
+            AdminCambiarSalarioPage(idPersonal: widget.empleado.idPersonal),
+      ),
+    );
+
+    if (!mounted) return;
+
+    if (idSalario != null && idSalario > 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Sueldo actualizado correctamente. '
+            'Registro salarial #$idSalario.',
+          ),
+          backgroundColor: const Color(0xFF287447),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
+
+    // Actualizar incluso si la operación
+    // terminó con un resultado incierto.
+    await _cargarHistorial();
+  }
+
   Widget _vistaError() {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 35),
@@ -348,6 +379,30 @@ class _AdminSalariosPageState extends State<AdminSalariosPage> {
                   ),
 
                   const SizedBox(height: 24),
+
+                  // CAMBIAR SUELDO
+                  // Solo empleados activos con historial vigente.
+                  if (widget.empleado.estaActivo &&
+                      !_cargando &&
+                      _error == null &&
+                      _historial.any(
+                        (salario) => salario.vigenteHasta == null,
+                      )) ...[
+                    SizedBox(
+                      width: double.infinity,
+                      child: FilledButton.icon(
+                        onPressed: _abrirCambioSalario,
+                        icon: const Icon(Icons.edit_note_outlined),
+                        label: const Text('Actualizar sueldo'),
+                        style: FilledButton.styleFrom(
+                          backgroundColor: _doradoOscuro,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.all(15),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 22),
+                  ],
 
                   if (_cargando)
                     const Center(

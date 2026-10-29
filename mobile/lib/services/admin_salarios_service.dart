@@ -131,4 +131,141 @@ class AdminSalariosService {
 
     throw Exception(mensaje);
   }
+
+  // ==========================================
+  // ACTUALIZAR SUELDO DEL EMPLEADO
+  //
+  // POST /api/admin/personal/{id}/salarios
+  // ==========================================
+
+  Future<int> cambiarSalario({
+    required int idPersonal,
+    required String montoTexto,
+    required String vigenteDesde,
+    required String motivo,
+  }) async {
+    if (idPersonal <= 0) {
+      throw Exception('El ID del empleado no es válido.');
+    }
+
+    final montoLimpio = montoTexto.trim();
+    final motivoLimpio = motivo.trim();
+
+    if (!RegExp(r'^\d{1,8}(\.\d{1,2})?$').hasMatch(montoLimpio)) {
+      throw Exception(
+        'El monto debe estar entre 0 y '
+        '99999999.99, con máximo dos decimales.',
+      );
+    }
+
+    if (motivoLimpio.isEmpty) {
+      throw Exception('Escribe el motivo del cambio salarial.');
+    }
+
+    if (!RegExp(r'^\d{4}-\d{2}-\d{2}$').hasMatch(vigenteDesde)) {
+      throw Exception('La fecha de vigencia no es válida.');
+    }
+
+    final token = await _authService.obtenerToken();
+
+    if (token == null || token.trim().isEmpty) {
+      throw Exception(
+        'Tu sesión no es válida. '
+        'Inicia sesión nuevamente.',
+      );
+    }
+
+    final uri = Uri.parse(
+      '${ApiConfig.adminPersonalUrl}'
+      '/$idPersonal/salarios',
+    );
+
+    late http.Response respuesta;
+
+    try {
+      respuesta = await http
+          .post(
+            uri,
+            headers: {
+              'Accept': 'application/json',
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer $token',
+            },
+            body: jsonEncode({
+              'monto': double.parse(montoLimpio),
+              'vigenteDesde': vigenteDesde,
+              'motivo': motivoLimpio,
+            }),
+          )
+          .timeout(_tiempoEspera);
+    } on TimeoutException {
+      throw Exception(
+        'El servidor tardó demasiado en responder. '
+        'Verifica el historial antes de reintentar.',
+      );
+    } on http.ClientException {
+      throw Exception(
+        'No fue posible confirmar la conexión. '
+        'Verifica el historial antes de reintentar.',
+      );
+    }
+
+    if (respuesta.statusCode != 201) {
+      String mensaje =
+          'No fue posible actualizar el sueldo '
+          '(código ${respuesta.statusCode}).';
+
+      if (respuesta.statusCode == 401) {
+        mensaje = 'Tu sesión ha expirado.';
+      } else if (respuesta.statusCode == 403) {
+        mensaje = 'No tienes permisos para cambiar sueldos.';
+      }
+
+      try {
+        final datos = jsonDecode(respuesta.body);
+
+        if (datos is Map<String, dynamic>) {
+          mensaje =
+              datos['mensaje']?.toString() ??
+              datos['detail']?.toString() ??
+              datos['title']?.toString() ??
+              mensaje;
+        }
+      } catch (_) {
+        // Conservar mensaje predeterminado.
+      }
+
+      throw Exception(mensaje);
+    }
+
+    try {
+      final datos = jsonDecode(respuesta.body);
+
+      if (datos is! Map<String, dynamic>) {
+        throw const FormatException();
+      }
+
+      final idRespuesta = datos['idPersonal'];
+      final idSalarioRespuesta = datos['idSalario'];
+
+      final idDevuelto = idRespuesta is num
+          ? idRespuesta.toInt()
+          : int.parse(idRespuesta.toString());
+
+      final idSalario = idSalarioRespuesta is num
+          ? idSalarioRespuesta.toInt()
+          : int.parse(idSalarioRespuesta.toString());
+
+      if (idDevuelto != idPersonal || idSalario <= 0) {
+        throw const FormatException();
+      }
+
+      return idSalario;
+    } on FormatException {
+      throw Exception(
+        'El servidor respondió de forma inesperada. '
+        'Consulta el historial antes de reintentar.',
+      );
+    }
+  }
 }
