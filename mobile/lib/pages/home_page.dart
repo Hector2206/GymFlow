@@ -20,6 +20,7 @@ import 'mi_progreso_page.dart';
 import 'ejercicios_page.dart';
 import 'asignacion_entrenadores_page.dart';
 import 'admin_dashboard_page.dart';
+import 'admin_clientes_page.dart';
 
 class HomePage extends StatelessWidget {
   final Usuario usuario;
@@ -667,7 +668,9 @@ class HomePage extends StatelessWidget {
             'Consultar información, estatus '
             'y vigencia de membresías',
         onTap: () {
-          proximamente(context, 'Administrar Clientes');
+          Navigator.of(
+            context,
+          ).push(MaterialPageRoute(builder: (_) => const AdminClientesPage()));
         },
       ),
 
