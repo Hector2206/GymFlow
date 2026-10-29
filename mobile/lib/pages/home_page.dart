@@ -21,6 +21,7 @@ import 'ejercicios_page.dart';
 import 'asignacion_entrenadores_page.dart';
 import 'admin_dashboard_page.dart';
 import 'admin_clientes_page.dart';
+import 'admin_personal_page.dart';
 
 class HomePage extends StatelessWidget {
   final Usuario usuario;
@@ -683,7 +684,9 @@ class HomePage extends StatelessWidget {
             'Gestionar entrenadores, recepcionistas, '
             'salarios y nómina',
         onTap: () {
-          proximamente(context, 'Administrar Personal');
+          Navigator.of(
+            context,
+          ).push(MaterialPageRoute(builder: (_) => const AdminPersonalPage()));
         },
       ),
 
