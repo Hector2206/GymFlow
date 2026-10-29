@@ -467,8 +467,9 @@ class _AdminNominaGestionPageState extends State<AdminNominaGestionPage> {
 
           const Text(
             'Registra únicamente pagos ya realizados. '
-            'La cancelación de pagos estará disponible '
-            'en el siguiente módulo.',
+            'Para cancelar un registro, entra en '
+            '"Ver todos los pagos" y selecciona '
+            '"Cancelar pago".',
             style: TextStyle(color: _secundario, fontSize: 11),
             textAlign: TextAlign.center,
           ),

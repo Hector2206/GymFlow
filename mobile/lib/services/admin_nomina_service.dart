@@ -318,6 +318,106 @@ class AdminNominaService {
       );
     }
   }
+
+  // ==========================================
+  // CANCELAR PAGO DE NOMINA
+  //
+  // PATCH /api/admin/personal/{id}/nomina/{idPago}/cancelacion
+  // ==========================================
+
+  Future<int> cancelarPagoNomina({
+    required int idPersonal,
+    required int idPago,
+    required String motivo,
+  }) async {
+    if (idPersonal <= 0 || idPago <= 0) {
+      throw Exception('El empleado o el pago no es válido.');
+    }
+
+    final motivoLimpio = motivo.trim();
+
+    if (motivoLimpio.isEmpty) {
+      throw Exception('El motivo de cancelación es obligatorio.');
+    }
+
+    final token = await _authService.obtenerToken();
+
+    if (token == null || token.trim().isEmpty) {
+      throw Exception(
+        'Tu sesión no es válida. '
+        'Inicia sesión nuevamente.',
+      );
+    }
+
+    final uri = Uri.parse(
+      '${ApiConfig.adminPersonalUrl}'
+      '/$idPersonal/nomina/$idPago/cancelacion',
+    );
+
+    late http.Response respuesta;
+
+    try {
+      respuesta = await http
+          .patch(
+            uri,
+            headers: {
+              'Accept': 'application/json',
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer $token',
+            },
+            body: jsonEncode({'motivo': motivoLimpio}),
+          )
+          .timeout(_tiempoEspera);
+    } on TimeoutException {
+      throw const PagoNominaResultadoIncierto(
+        'El servidor tardó demasiado en responder. '
+        'Revisa el historial antes de intentar '
+        'cancelar nuevamente.',
+      );
+    } on http.ClientException {
+      throw const PagoNominaResultadoIncierto(
+        'Se perdió la conexión con el servidor. '
+        'No es posible confirmar la cancelación. '
+        'Revisa el historial.',
+      );
+    }
+
+    if (respuesta.statusCode >= 500) {
+      throw const PagoNominaResultadoIncierto(
+        'El servidor no pudo confirmar el resultado. '
+        'Actualiza el historial antes de '
+        'intentar otra operación.',
+      );
+    }
+
+    if (respuesta.statusCode != 200) {
+      _procesarError(respuesta);
+    }
+
+    try {
+      final datos = jsonDecode(respuesta.body);
+
+      if (datos is! Map<String, dynamic>) {
+        throw const FormatException();
+      }
+
+      final personalRespuesta = int.parse(datos['idPersonal'].toString());
+
+      final pagoRespuesta = int.parse(datos['idPago'].toString());
+
+      if (personalRespuesta != idPersonal || pagoRespuesta != idPago) {
+        throw const FormatException();
+      }
+
+      return pagoRespuesta;
+    } catch (_) {
+      throw const PagoNominaResultadoIncierto(
+        'El servidor respondió de forma inesperada. '
+        'Consulta el historial para comprobar '
+        'si el pago ya fue cancelado.',
+      );
+    }
+  }
 }
 
 class PagoNominaResultadoIncierto implements Exception {

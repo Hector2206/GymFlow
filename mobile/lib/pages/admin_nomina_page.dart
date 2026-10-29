@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../models/admin_pago_nomina.dart';
 import '../models/admin_personal.dart';
 import '../services/admin_nomina_service.dart';
+import 'admin_cancelar_pago_nomina_page.dart';
 
 // GYMFLOW - SPRINT 7
 // HISTORIAL DE PAGOS DE NOMINA
@@ -171,6 +172,38 @@ class _AdminNominaPageState extends State<AdminNominaPage> {
         ],
       ),
     );
+  }
+
+  // ABRIR CANCELACION DE UN PAGO
+
+  Future<void> _abrirCancelacion(AdminPagoNomina pago) async {
+    if (pago.estado != 'Pagado') return;
+
+    final idCancelado = await Navigator.of(context).push<int>(
+      MaterialPageRoute(
+        builder: (_) =>
+            AdminCancelarPagoNominaPage(empleado: widget.empleado, pago: pago),
+      ),
+    );
+
+    if (!mounted) return;
+
+    if (idCancelado != null && idCancelado > 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Pago #$idCancelado cancelado '
+            'correctamente.',
+          ),
+          backgroundColor: const Color(0xFF287447),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
+
+    // Actualizar también si una operación
+    // terminó con resultado incierto.
+    await _cargarPagos();
   }
 
   // TARJETA DE PAGO
@@ -351,6 +384,31 @@ class _AdminNominaPageState extends State<AdminNominaPage> {
                   ? 'Sin registrar'
                   : 'Usuario #${pago.canceladoPor}',
               icono: Icons.person_off_outlined,
+            ),
+          ],
+
+          // SOLO LOS PAGOS EN ESTADO PAGADO
+          // PUEDEN CANCELARSE.
+          if (pago.estado == 'Pagado') ...[
+            const SizedBox(height: 15),
+
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                onPressed: () {
+                  _abrirCancelacion(pago);
+                },
+                icon: const Icon(Icons.cancel_outlined),
+                label: const Text('Cancelar pago'),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: const Color(0xFFA03930),
+                  padding: const EdgeInsets.all(14),
+                  side: const BorderSide(color: Color(0xFFE8BAB4)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+              ),
             ),
           ],
         ],
