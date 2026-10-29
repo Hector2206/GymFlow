@@ -397,4 +397,95 @@ public class MembresiaService
 
         await transaction.CommitAsync();
     }
+    public async Task<List<object>> ObtenerHistorialPrecios(
+    int idMembresia,
+    int idAdministrador)
+    {
+        if (idMembresia <= 0)
+            throw new ArgumentException("ID de membresía inválido.");
+
+        var connectionString =
+            _configuration.GetConnectionString("PostgreSQL");
+
+        if (string.IsNullOrWhiteSpace(connectionString))
+            throw new InvalidOperationException(
+                "Falta la conexión PostgreSQL.");
+
+        await using var connection = new NpgsqlConnection(connectionString);
+        await connection.OpenAsync();
+
+        await using var transaction =
+            await connection.BeginTransactionAsync();
+
+        await using (var admin = new NpgsqlCommand("""
+            SELECT u.id_usuario
+            FROM public.usuarios u
+            JOIN public.roles r ON r.id_rol = u.id_rol
+            WHERE u.id_usuario = @admin
+            AND u.estatus = 'Activo'
+            AND r.nombre = 'Administrador'
+            FOR SHARE OF u;
+            """, connection, transaction))
+        {
+            admin.Parameters.AddWithValue("admin", idAdministrador);
+
+            if (await admin.ExecuteScalarAsync() is null)
+                throw new UnauthorizedAccessException(
+                    "Administrador no autorizado.");
+        }
+
+        await using (var existe = new NpgsqlCommand("""
+            SELECT 1
+            FROM public.membresias
+            WHERE id_membresia = @id;
+            """, connection, transaction))
+        {
+            existe.Parameters.AddWithValue("id", idMembresia);
+
+            if (await existe.ExecuteScalarAsync() is null)
+                throw new KeyNotFoundException(
+                    "La membresía no existe.");
+        }
+
+        var historial = new List<object>();
+
+        await using (var command = new NpgsqlCommand("""
+            SELECT
+                id_historial,
+                id_membresia,
+                costo_mensual,
+                costo_anualidad,
+                registrado_en,
+                id_usuario_app,
+                origen
+            FROM public.membresias_precios_historial
+            WHERE id_membresia = @id
+            ORDER BY registrado_en DESC, id_historial DESC;
+            """, connection, transaction))
+        {
+            command.Parameters.AddWithValue("id", idMembresia);
+
+            await using var reader = await command.ExecuteReaderAsync();
+
+            while (await reader.ReadAsync())
+            {
+                historial.Add(new
+                {
+                    idHistorial = reader.GetInt64(0),
+                    idMembresia = reader.GetInt32(1),
+                    costoMensual = reader.GetDecimal(2),
+                    costoAnualidad = reader.GetDecimal(3),
+                    registradoEn = reader.GetDateTime(4),
+                    idUsuarioApp = reader.IsDBNull(5)
+                        ? (int?)null
+                        : reader.GetInt32(5),
+                    origen = reader.GetString(6)
+                });
+            }
+        }
+
+        await transaction.CommitAsync();
+
+        return historial;
+    }
 }

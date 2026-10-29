@@ -1429,4 +1429,56 @@ app.MapPut("/api/admin/personal/{id:int}",
     })
     .RequireAuthorization("SoloAdministrador");
 
+    app.MapGet("/api/admin/membresias/{id:int}/historial-precios",
+    async (
+        int id,
+        MembresiaService membresiaService,
+        ClaimsPrincipal usuario
+    ) =>
+    {
+        if (!int.TryParse(
+            usuario.FindFirst("sub")?.Value,
+            out var idAdministrador))
+        {
+            return Results.Unauthorized();
+        }
+
+        try
+        {
+            var historial =
+                await membresiaService.ObtenerHistorialPrecios(
+                    id, idAdministrador);
+
+            return Results.Ok(historial);
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return Results.Forbid();
+        }
+        catch (ArgumentException ex)
+        {
+            return Results.BadRequest(new
+            {
+                mensaje = ex.Message
+            });
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return Results.NotFound(new
+            {
+                mensaje = ex.Message
+            });
+        }
+        catch (Exception ex)
+        {
+            app.Logger.LogError(
+                ex, "Error al consultar historial de membresía");
+
+            return Results.Problem(
+                statusCode: 500,
+                title: "Error al consultar historial de precios");
+        }
+    })
+    .RequireAuthorization("SoloAdministrador");
+
 app.Run();
