@@ -19,6 +19,7 @@ builder.Services.AddScoped<ClienteAdminService>();
 builder.Services.AddScoped<NotificacionService>();
 builder.Services.AddHostedService<NotificacionWorker>();
 builder.Services.AddScoped<MembresiaService>();
+builder.Services.AddScoped<AsistenciaPersonalService>();
 // ========================================
 // CORS
 // ========================================
@@ -309,6 +310,79 @@ app.MapPost("/api/admin/personal",
         }
     })
     .RequireAuthorization("SoloAdministrador");
+
+
+ // ========================================
+ // REGISTRAR ENTRADA LABORAL
+ // ========================================
+
+app.MapPost("/api/admin/personal/asistencias",
+    async (
+        GymManagement.api.Models.RegistrarAsistenciaPersonalRequest request,
+        GymManagement.api.Services.AsistenciaPersonalService asistenciaService,
+        System.Security.Claims.ClaimsPrincipal usuario
+    ) =>
+    {
+        var idClaim = usuario.FindFirst("sub")?.Value
+            ?? usuario.FindFirst(
+                System.Security.Claims.ClaimTypes.NameIdentifier
+            )?.Value;
+
+        if (!int.TryParse(idClaim, out var idAdministrador)
+            || idAdministrador <= 0)
+        {
+            return Results.Unauthorized();
+        }
+
+        try
+        {
+            var idAsistencia = await asistenciaService.RegistrarEntrada(
+                request,
+                idAdministrador
+            );
+
+            return Results.Created(
+                $"/api/admin/personal/asistencias/{idAsistencia}",
+                new
+                {
+                    mensaje = "Entrada laboral registrada correctamente",
+                    idAsistenciaPersonal = idAsistencia,
+                    idPersonal = request.IdPersonal,
+                    fecha = request.Fecha,
+                    horaEntrada = request.HoraEntrada
+                }
+            );
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return Results.Forbid();
+        }
+        catch (ArgumentException ex)
+        {
+            return Results.BadRequest(new
+            {
+                mensaje = ex.Message
+            });
+        }
+        catch (InvalidOperationException ex)
+            when (ex.InnerException is Npgsql.PostgresException postgres
+                && postgres.SqlState == "23505")
+        {
+            return Results.Conflict(new
+            {
+                mensaje = "El empleado ya tiene una asistencia registrada para esa fecha."
+            });
+        }
+        catch (Exception)
+        {
+            return Results.Problem(
+                statusCode: 500,
+                title: "Error al registrar asistencia laboral"
+            );
+        }
+    })
+    .RequireAuthorization("SoloAdministrador");
+
 
 
 app.MapGet("/api/admin/personal",
