@@ -485,6 +485,47 @@ app.MapPatch("/api/admin/personal/asistencias/{id:long}/salida",
     .RequireAuthorization("SoloAdministrador");
 
 
+ // ========================================
+ // CONSULTAR HISTORIAL DE ASISTENCIAS LABORALES
+ // ========================================
+
+app.MapGet("/api/admin/personal/asistencias",
+    async (
+        int? idPersonal,
+        DateOnly? fechaInicio,
+        DateOnly? fechaFin,
+        GymManagement.api.Services.AsistenciaPersonalService asistenciaService
+    ) =>
+    {
+        try
+        {
+            var historial = await asistenciaService.ObtenerHistorial(
+                idPersonal,
+                fechaInicio,
+                fechaFin
+            );
+
+            return Results.Ok(historial);
+        }
+        catch (ArgumentException ex)
+        {
+            return Results.BadRequest(new
+            {
+                mensaje = ex.Message
+            });
+        }
+        catch (Exception)
+        {
+           return Results.Problem(
+                statusCode: 500,
+                title: "Error al consultar historial de asistencias"
+            );
+        }
+    })
+    .RequireAuthorization("SoloAdministrador");
+
+
+
 
 app.MapGet("/api/admin/personal/{id:int}",
     async (

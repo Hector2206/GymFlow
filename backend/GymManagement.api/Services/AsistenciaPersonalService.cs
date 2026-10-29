@@ -153,4 +153,95 @@ public class AsistenciaPersonalService
             return resultado != null;
         }
 
+
+public async Task<List<object>> ObtenerHistorial(
+    int? idPersonal,
+    DateOnly? fechaInicio,
+    DateOnly? fechaFin)
+    {
+        if (idPersonal.HasValue && idPersonal.Value <= 0)
+            throw new ArgumentException("El empleado no es válido.");
+
+        if (fechaInicio.HasValue && fechaFin.HasValue &&
+            fechaInicio.Value > fechaFin.Value)
+            throw new ArgumentException(
+                "La fecha inicial no puede ser posterior a la final.");
+
+        await using var connection =
+            new NpgsqlConnection(_connectionString);
+
+        await connection.OpenAsync();
+
+        await using var command = new NpgsqlCommand(
+            """
+            SELECT
+                a.id_asistencia_personal,
+                a.id_personal,
+                p.nombre_completo,
+                a.fecha,
+                a.hora_entrada,
+                a.hora_salida,
+                a.registrado_por,
+                a.salida_registrada_por,
+                a.fecha_registro,
+                a.fecha_registro_salida
+            FROM public.personal_asistencias a
+            INNER JOIN public.personal p
+                ON p.id_personal = a.id_personal
+            WHERE (@id_personal IS NULL
+                OR a.id_personal = @id_personal)
+            AND (@fecha_inicio IS NULL
+                OR a.fecha >= @fecha_inicio)
+            AND (@fecha_fin IS NULL
+                OR a.fecha <= @fecha_fin)
+            ORDER BY a.fecha DESC, a.hora_entrada DESC
+            LIMIT 500;
+            """,
+            connection
+        );
+
+        command.Parameters.Add(
+            "id_personal", NpgsqlDbType.Integer
+        ).Value = (object?)idPersonal ?? DBNull.Value;
+
+        command.Parameters.Add(
+            "fecha_inicio", NpgsqlDbType.Date
+        ).Value = (object?)fechaInicio ?? DBNull.Value;
+
+        command.Parameters.Add(
+            "fecha_fin", NpgsqlDbType.Date
+        ).Value = (object?)fechaFin ?? DBNull.Value;
+
+        await using var reader =
+            await command.ExecuteReaderAsync();
+
+        var historial = new List<object>();
+
+        while (await reader.ReadAsync())
+        {
+            historial.Add(new
+            {
+                idAsistenciaPersonal = reader.GetInt64(0),
+                idPersonal = reader.GetInt32(1),
+                nombreCompleto = reader.GetString(2),
+                fecha = reader.GetDateTime(3).ToString("yyyy-MM-dd"),
+                horaEntrada = reader.GetTimeSpan(4).ToString(@"hh\:mm\:ss"),
+                horaSalida = reader.IsDBNull(5)
+                    ? null
+                    : reader.GetTimeSpan(5).ToString(@"hh\:mm\:ss"),
+                registradoPor = reader.GetInt32(6),
+                salidaRegistradaPor = reader.IsDBNull(7)
+                    ? (int?)null
+                    : reader.GetInt32(7),
+                fechaRegistro = reader.GetDateTime(8),
+                fechaRegistroSalida = reader.IsDBNull(9)
+                    ? (DateTime?)null
+                    : reader.GetDateTime(9)
+            });
+        }
+
+        return historial;
+    }
+        
+
 }
