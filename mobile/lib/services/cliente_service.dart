@@ -6,6 +6,8 @@ import 'package:http/http.dart' as http;
 import '../config/api_config.dart';
 import 'auth_service.dart';
 
+// GYMFLOW - REGISTRO DE CLIENTES CON PRECIOS OFICIALES
+// Contrato: POST /api/clientes no recibe costos. Solo recibe IdMembresia.
 class ClienteService {
   final AuthService _authService = AuthService();
 
@@ -15,131 +17,49 @@ class ClienteService {
     required String nombreCompleto,
     required String telefono,
     required int idMembresia,
-    required double costoMensual,
-    required double costoAnual,
   }) async {
     final nombre = nombreCompleto.trim();
-    final email = correo.trim();
+    final email = correo.trim().toLowerCase();
     final telefonoLimpio = telefono.trim();
 
-    if (nombre.isEmpty) {
+    if (nombre.length < 3 ||
+        nombre.length > 100 ||
+        RegExp(r'\d').hasMatch(nombre)) {
+      return {'ok': false, 'mensaje': 'Ingresa un nombre completo valido.'};
+    }
+    if (email.length > 150 ||
+        !RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(email)) {
+      return {'ok': false, 'mensaje': 'Ingresa un correo electronico valido.'};
+    }
+    if (password.trim().isEmpty ||
+        password.length < 6 ||
+        password.length > 72) {
       return {
         'ok': false,
-        'mensaje': 'El nombre completo es obligatorio.',
+        'mensaje': 'La contrasena debe tener entre 6 y 72 caracteres.',
       };
     }
-
-    if (RegExp(r'\d').hasMatch(nombre)) {
-      return {
-        'ok': false,
-        'mensaje': 'El nombre no puede contener números.',
-      };
+    if (telefonoLimpio.isNotEmpty &&
+        !RegExp(r'^\d{10}$').hasMatch(telefonoLimpio)) {
+      return {'ok': false, 'mensaje': 'El telefono debe tener 10 digitos.'};
     }
-
-    if (nombre.length < 3) {
-      return {
-        'ok': false,
-        'mensaje': 'El nombre debe tener al menos 3 caracteres.',
-      };
-    }
-
-    if (email.isEmpty) {
-      return {
-        'ok': false,
-        'mensaje': 'El correo es obligatorio.',
-      };
-    }
-
-    if (!RegExp(
-      r'^[^@\s]+@[^@\s]+\.[^@\s]+$',
-    ).hasMatch(email)) {
-      return {
-        'ok': false,
-        'mensaje': 'Ingresa un correo electrónico válido.',
-      };
-    }
-
-    if (password.trim().isEmpty) {
-      return {
-        'ok': false,
-        'mensaje': 'La contraseña es obligatoria.',
-      };
-    }
-
-    if (password.length < 6) {
-      return {
-        'ok': false,
-        'mensaje': 'La contraseña debe tener al menos 6 caracteres.',
-      };
-    }
-
-    if (password.length > 72) {
-      return {
-        'ok': false,
-        'mensaje': 'La contraseña es demasiado larga.',
-      };
-    }
-
-    if (telefonoLimpio.isNotEmpty) {
-      if (!RegExp(r'^\d{10}$').hasMatch(telefonoLimpio)) {
-        return {
-          'ok': false,
-          'mensaje': 'El teléfono debe contener exactamente 10 dígitos.',
-        };
-      }
-    }
-
     if (idMembresia <= 0) {
+      return {'ok': false, 'mensaje': 'Selecciona una membresia activa.'};
+    }
+
+    final token = await _authService.obtenerToken();
+    if (token == null || token.trim().isEmpty) {
       return {
         'ok': false,
-        'mensaje': 'Selecciona una membresía válida.',
+        'mensaje': 'Tu sesion no es valida. Inicia sesion nuevamente.',
       };
     }
 
-    if (!costoMensual.isFinite ||
-        costoMensual <= 0) {
-      return {
-        'ok': false,
-        'mensaje': 'El costo mensual debe ser mayor a \$0.',
-      };
-    }
-
-    if (!costoAnual.isFinite ||
-        costoAnual <= 0) {
-      return {
-        'ok': false,
-        'mensaje': 'El costo anual debe ser mayor a \$0.',
-      };
-    }
-
-    if (costoMensual > 100000 ||
-        costoAnual > 1000000) {
-      return {
-        'ok': false,
-        'mensaje': 'Verifica los costos ingresados.',
-      };
-    }
-
-    final token =
-        await _authService.obtenerToken();
-
-    if (token == null ||
-        token.trim().isEmpty) {
-      return {
-        'ok': false,
-        'mensaje':
-            'Tu sesión no es válida. Inicia sesión nuevamente.',
-      };
-    }
-
-    late http.Response response;
-
+    late http.Response respuesta;
     try {
-      response = await http
+      respuesta = await http
           .post(
-            Uri.parse(
-              '${ApiConfig.clienteAltaUrl}/api/clientes',
-            ),
+            Uri.parse('${ApiConfig.clienteAltaUrl}/api/clientes'),
             headers: {
               'Accept': 'application/json',
               'Content-Type': 'application/json',
@@ -149,103 +69,87 @@ class ClienteService {
               'Correo': email,
               'Password': password,
               'NombreCompleto': nombre,
-              'Telefono': telefonoLimpio.isEmpty
-                  ? null
-                  : telefonoLimpio,
+              'Telefono': telefonoLimpio.isEmpty ? null : telefonoLimpio,
               'IdMembresia': idMembresia,
-              'CostoMensual': costoMensual,
-              'CostoAnual': costoAnual,
             }),
           )
-          .timeout(
-            const Duration(seconds: 25),
-          );
+          .timeout(const Duration(seconds: 30));
     } on TimeoutException {
       return {
         'ok': false,
         'mensaje':
-            'El servidor tardó demasiado en responder.',
+            'No se confirmo el registro. Verifica el directorio antes de reintentar.',
+        'resultadoIncierto': true,
       };
     } on http.ClientException {
       return {
         'ok': false,
         'mensaje':
-            'No fue posible conectar con el servidor.',
+            'Se interrumpio la conexion. Verifica si el cliente fue registrado antes de reintentar.',
+        'resultadoIncierto': true,
       };
     } catch (_) {
       return {
         'ok': false,
         'mensaje':
-            'Ocurrió un error al intentar registrar el cliente.',
+            'No fue posible confirmar el registro. Revisa el directorio.',
+        'resultadoIncierto': true,
       };
     }
 
-    if (response.statusCode >= 200 &&
-        response.statusCode < 300) {
-      String mensaje =
-          'Cliente registrado correctamente.';
-
+    if (respuesta.statusCode >= 200 && respuesta.statusCode < 300) {
       try {
-        final data =
-            jsonDecode(response.body);
-
-        if (data is Map<String, dynamic>) {
-          mensaje =
-              data['mensaje']?.toString() ??
-                  mensaje;
-        }
-
+        final data = jsonDecode(respuesta.body);
         return {
           'ok': true,
-          'mensaje': mensaje,
-          'data': data,
+          'mensaje': data is Map<String, dynamic>
+              ? data['mensaje']?.toString() ??
+                    'Cliente registrado correctamente.'
+              : 'Cliente registrado correctamente.',
         };
       } catch (_) {
-        return {
-          'ok': true,
-          'mensaje': mensaje,
-        };
+        return {'ok': true, 'mensaje': 'Cliente registrado correctamente.'};
       }
     }
 
-    if (response.statusCode == 401) {
+    if (respuesta.statusCode == 401) {
+      return {
+        'ok': false,
+        'mensaje': 'Tu sesion no es valida. Inicia sesion nuevamente.',
+      };
+    }
+    if (respuesta.statusCode == 403) {
+      return {
+        'ok': false,
+        'mensaje': 'No tienes permiso para registrar clientes.',
+      };
+    }
+    if (respuesta.statusCode >= 500) {
       return {
         'ok': false,
         'mensaje':
-            'Tu sesión no es válida. Inicia sesión nuevamente.',
-        'statusCode': 401,
+            'El servidor no confirmo el resultado. Revisa si el cliente ya existe antes de repetir el registro.',
+        'resultadoIncierto': true,
       };
     }
 
-    if (response.statusCode == 403) {
-      return {
-        'ok': false,
-        'mensaje':
-            'No tienes permiso para registrar clientes.',
-        'statusCode': 403,
-      };
-    }
-
-    String mensaje =
-        'No se pudo registrar el cliente.';
-
+    String mensaje = 'No fue posible registrar el cliente.';
     try {
-      final data =
-          jsonDecode(response.body);
-
-      if (data is Map<String, dynamic>) {
+      final datos = jsonDecode(respuesta.body);
+      if (datos is Map<String, dynamic>) {
         mensaje =
-            data['mensaje']?.toString() ??
-                data['message']?.toString() ??
-                data['error']?.toString() ??
-                mensaje;
+            datos['mensaje']?.toString() ??
+            datos['message']?.toString() ??
+            datos['error']?.toString() ??
+            mensaje;
       }
-    } catch (_) {}
-
+    } catch (_) {
+      // Se conserva mensaje predeterminado.
+    }
     return {
       'ok': false,
       'mensaje': mensaje,
-      'statusCode': response.statusCode,
+      'statusCode': respuesta.statusCode,
     };
   }
 }

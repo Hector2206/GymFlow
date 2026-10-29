@@ -1,1329 +1,262 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../models/membresia_activa.dart';
 import '../services/cliente_service.dart';
+import '../services/membresia_service.dart';
 
-class RegistrarClientePage
-    extends StatefulWidget {
-  const RegistrarClientePage({
-    super.key,
-  });
+// GYMFLOW - REGISTRO DE CLIENTE (SPRINT 7)
+// Los precios se consultan y muestran de solo lectura.
+// Al registrar se envia IdMembresia, nunca precios.
+class RegistrarClientePage extends StatefulWidget {
+  const RegistrarClientePage({super.key});
 
   @override
-  State<RegistrarClientePage>
-      createState() =>
-          _RegistrarClientePageState();
+  State<RegistrarClientePage> createState() => _RegistrarClientePageState();
 }
 
-class _RegistrarClientePageState
-    extends State<RegistrarClientePage> {
-  final _formKey =
-      GlobalKey<FormState>();
+class _RegistrarClientePageState extends State<RegistrarClientePage> {
+  final _formKey = GlobalKey<FormState>();
+  final _clienteService = ClienteService();
+  final _membresiaService = MembresiaService();
 
-  final ClienteService clienteService =
-      ClienteService();
+  final _nombre = TextEditingController();
+  final _correo = TextEditingController();
+  final _telefono = TextEditingController();
+  final _password = TextEditingController();
+  final _costoMensual = TextEditingController();
+  final _costoAnual = TextEditingController();
 
-  final nombreController =
-      TextEditingController();
+  static const _fondo = Color(0xFFF8F5EF);
+  static const _superficie = Color(0xFFFFFDF8);
+  static const _dorado = Color(0xFFB58A2A);
+  static const _doradoOscuro = Color(0xFF8A6814);
+  static const _texto = Color(0xFF2F2A24);
+  static const _secundario = Color(0xFF777067);
+  static const _borde = Color(0xFFE5DDCF);
+  static const _rojo = Color(0xFFA03930);
 
-  final correoController =
-      TextEditingController();
+  List<MembresiaActiva> _membresias = [];
+  int? _idMembresia;
+  bool _cargandoMembresias = true;
+  bool _registrando = false;
+  bool _ocultarPassword = true;
+  bool _registroIncierto = false;
+  String _errorMembresias = '';
 
-  final telefonoController =
-      TextEditingController();
-
-  final passwordController =
-      TextEditingController();
-
-  final costoMensualController =
-      TextEditingController();
-
-  final costoAnualController =
-      TextEditingController();
-
-  int? idMembresia;
-
-  bool cargando = false;
-  bool ocultarPassword = true;
+  @override
+  void initState() {
+    super.initState();
+    _cargarMembresias();
+  }
 
   @override
   void dispose() {
-    nombreController.dispose();
-    correoController.dispose();
-    telefonoController.dispose();
-    passwordController.dispose();
-    costoMensualController.dispose();
-    costoAnualController.dispose();
-
+    _nombre.dispose();
+    _correo.dispose();
+    _telefono.dispose();
+    _password.dispose();
+    _costoMensual.dispose();
+    _costoAnual.dispose();
     super.dispose();
   }
 
-  String? validarNombre(
-    String? value,
-  ) {
-    final nombre =
-        value?.trim() ?? '';
-
-    if (nombre.isEmpty) {
-      return 'El nombre completo es obligatorio.';
-    }
-
-    if (RegExp(r'\d')
-        .hasMatch(nombre)) {
-      return 'El nombre no puede contener números.';
-    }
-
-    if (!RegExp(
-      r'[A-Za-zÁÉÍÓÚÜÑáéíóúüñ]',
-    ).hasMatch(nombre)) {
-      return 'Ingresa un nombre válido.';
-    }
-
-    if (nombre.length < 3) {
-      return 'El nombre debe tener al menos 3 caracteres.';
-    }
-
-    if (nombre.length > 100) {
-      return 'El nombre es demasiado largo.';
-    }
-
-    return null;
-  }
-
-  String? validarCorreo(
-    String? value,
-  ) {
-    final correo =
-        value?.trim() ?? '';
-
-    if (correo.isEmpty) {
-      return 'El correo es obligatorio.';
-    }
-
-    if (correo.length > 150) {
-      return 'El correo es demasiado largo.';
-    }
-
-    if (!RegExp(
-      r'^[^@\s]+@[^@\s]+\.[^@\s]+$',
-    ).hasMatch(correo)) {
-      return 'Ingresa un correo electrónico válido.';
-    }
-
-    return null;
-  }
-
-  String? validarTelefono(
-    String? value,
-  ) {
-    final telefono =
-        value?.trim() ?? '';
-
-    if (telefono.isEmpty) {
-      return null;
-    }
-
-    if (!RegExp(
-      r'^\d+$',
-    ).hasMatch(telefono)) {
-      return 'El teléfono solo puede contener números.';
-    }
-
-    if (telefono.length != 10) {
-      return 'El teléfono debe contener 10 dígitos.';
-    }
-
-    return null;
-  }
-
-  String? validarPassword(
-    String? value,
-  ) {
-    final password =
-        value ?? '';
-
-    if (password.trim().isEmpty) {
-      return 'La contraseña es obligatoria.';
-    }
-
-    if (password.length < 6) {
-      return 'La contraseña debe tener al menos 6 caracteres.';
-    }
-
-    if (password.length > 72) {
-      return 'La contraseña es demasiado larga.';
-    }
-
-    return null;
-  }
-
-  String? validarCosto(
-    String? value,
-  ) {
-    final texto =
-        value?.trim() ?? '';
-
-    if (texto.isEmpty) {
-      return 'Ingresa el costo.';
-    }
-
-    final numero =
-        double.tryParse(texto);
-
-    if (numero == null ||
-        !numero.isFinite) {
-      return 'Ingresa un número válido.';
-    }
-
-    if (numero <= 0) {
-      return 'El costo debe ser mayor a \$0.';
-    }
-
-    if (numero > 1000000) {
-      return 'Verifica el costo ingresado.';
-    }
-
-    return null;
-  }
-
-  Future<void> registrarCliente() async {
-    FocusScope.of(context).unfocus();
-
-    if (cargando) {
-      return;
-    }
-
-    if (!(_formKey.currentState
-            ?.validate() ??
-        false)) {
-      return;
-    }
-
-    if (idMembresia == null ||
-        idMembresia! <= 0) {
-      mostrarMensaje(
-        'Selecciona una membresía válida.',
-        false,
-      );
-
-      return;
-    }
-
-    final costoMensual =
-        double.tryParse(
-      costoMensualController.text.trim(),
-    );
-
-    final costoAnual =
-        double.tryParse(
-      costoAnualController.text.trim(),
-    );
-
-    if (costoMensual == null ||
-        costoAnual == null) {
-      mostrarMensaje(
-        'Los costos no son válidos.',
-        false,
-      );
-
-      return;
-    }
-
+  Future<void> _cargarMembresias() async {
+    if (_registrando || _registroIncierto) return;
     setState(() {
-      cargando = true;
+      _cargandoMembresias = true;
+      _errorMembresias = '';
+      _membresias = [];
+      _idMembresia = null;
+      _costoMensual.clear();
+      _costoAnual.clear();
     });
 
     try {
-      final resultado =
-          await clienteService
-              .registrarCliente(
-        correo:
-            correoController.text.trim(),
-        password:
-            passwordController.text,
-        nombreCompleto:
-            nombreController.text.trim(),
-        telefono:
-            telefonoController.text.trim(),
-        idMembresia:
-            idMembresia!,
-        costoMensual:
-            costoMensual,
-        costoAnual:
-            costoAnual,
-      );
-
-      if (!mounted) {
-        return;
-      }
-
-      final ok =
-          resultado['ok'] == true;
-
-      mostrarMensaje(
-        resultado['mensaje']?.toString() ??
-            'Ocurrió un problema.',
-        ok,
-      );
-
-      if (ok) {
-        limpiarFormulario();
-      }
-    } catch (_) {
-      if (!mounted) {
-        return;
-      }
-
-      mostrarMensaje(
-        'No fue posible completar el registro.',
-        false,
-      );
-    } finally {
-      if (mounted) {
-        setState(() {
-          cargando = false;
-        });
-      }
+      final lista = await _membresiaService.obtenerMembresiasActivas();
+      if (!mounted) return;
+      setState(() {
+        _membresias = lista;
+        _cargandoMembresias = false;
+      });
+    } catch (error) {
+      if (!mounted) return;
+      setState(() {
+        _errorMembresias = error
+            .toString()
+            .replaceFirst('Exception: ', '')
+            .trim();
+        _cargandoMembresias = false;
+      });
     }
   }
 
-  void mostrarMensaje(
-    String mensaje,
-    bool exito,
-  ) {
-    ScaffoldMessenger.of(
-      context,
-    ).hideCurrentSnackBar();
-
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(
-      SnackBar(
-        behavior:
-            SnackBarBehavior.floating,
-
-        margin:
-            const EdgeInsets.all(
-          18,
-        ),
-
-        elevation:
-            3,
-
-        backgroundColor:
-            exito
-                ? const Color(
-                    0xFFF1F8F2,
-                  )
-                : const Color(
-                    0xFFFFF6F6,
-                  ),
-
-        shape:
-            RoundedRectangleBorder(
-          borderRadius:
-              BorderRadius.circular(
-            14,
-          ),
-
-          side:
-              BorderSide(
-            color:
-                exito
-                    ? const Color(
-                        0xFFBBD8BF,
-                      )
-                    : const Color(
-                        0xFFEDB9BF,
-                      ),
-          ),
-        ),
-
-        content: Row(
-          children: [
-            Container(
-              width:
-                  30,
-              height:
-                  30,
-
-              decoration:
-                  BoxDecoration(
-                color:
-                    exito
-                        ? const Color(
-                            0xFF2E7D32,
-                          )
-                        : const Color(
-                            0xFFC21B2E,
-                          ),
-
-                shape:
-                    BoxShape.circle,
-              ),
-
-              child: Icon(
-                exito
-                    ? Icons
-                        .check_rounded
-                    : Icons
-                        .priority_high_rounded,
-
-                color:
-                    Colors.white,
-
-                size:
-                    18,
-              ),
-            ),
-
-            const SizedBox(
-              width:
-                  12,
-            ),
-
-            Expanded(
-              child: Text(
-                mensaje,
-
-                style:
-                    TextStyle(
-                  color:
-                      exito
-                          ? const Color(
-                              0xFF285E2D,
-                            )
-                          : const Color(
-                              0xFF8F2030,
-                            ),
-
-                  fontSize:
-                      13,
-
-                  fontWeight:
-                      FontWeight.w600,
-
-                  height:
-                      1.4,
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  void limpiarFormulario() {
-    nombreController.clear();
-    correoController.clear();
-    telefonoController.clear();
-    passwordController.clear();
-    costoMensualController.clear();
-    costoAnualController.clear();
-
+  void _seleccionarMembresia(int? id) {
+    if (_registrando) return;
     setState(() {
-      idMembresia = null;
+      _idMembresia = id;
+      _costoMensual.clear();
+      _costoAnual.clear();
+      for (final membresia in _membresias) {
+        if (membresia.idMembresia == id) {
+          _costoMensual.text = membresia.costoMensual.toStringAsFixed(2);
+          _costoAnual.text = membresia.costoAnualidad.toStringAsFixed(2);
+          break;
+        }
+      }
     });
+  }
 
+  String? _validarNombre(String? valor) {
+    final nombre = valor?.trim() ?? '';
+    if (nombre.length < 3 || nombre.length > 100) {
+      return 'El nombre debe contener entre 3 y 100 caracteres.';
+    }
+    if (RegExp(r'\d').hasMatch(nombre) ||
+        !RegExp(r'[A-Za-zÁÉÍÓÚÜÑáéíóúüñ]').hasMatch(nombre)) {
+      return 'Ingresa un nombre valido, sin numeros.';
+    }
+    return null;
+  }
+
+  String? _validarCorreo(String? valor) {
+    final correo = valor?.trim() ?? '';
+    if (correo.length > 150 ||
+        !RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(correo)) {
+      return 'Ingresa un correo electronico valido.';
+    }
+    return null;
+  }
+
+  String? _validarTelefono(String? valor) {
+    final tel = valor?.trim() ?? '';
+    if (tel.isNotEmpty && !RegExp(r'^\d{10}$').hasMatch(tel)) {
+      return 'El telefono debe tener 10 digitos.';
+    }
+    return null;
+  }
+
+  String? _validarPassword(String? valor) {
+    final pass = valor ?? '';
+    if (pass.trim().isEmpty || pass.length < 6 || pass.length > 72) {
+      return 'La contrasena debe tener entre 6 y 72 caracteres.';
+    }
+    return null;
+  }
+
+  void _mensaje(String texto, {required bool exito}) {
+    ScaffoldMessenger.of(context).hideCurrentSnackBar();
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(texto),
+        backgroundColor: exito ? const Color(0xFF287447) : _rojo,
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+  }
+
+  void _limpiarFormulario() {
     _formKey.currentState?.reset();
+    _nombre.clear();
+    _correo.clear();
+    _telefono.clear();
+    _password.clear();
+    _seleccionarMembresia(null);
   }
 
-  @override
-  Widget build(
-    BuildContext context,
-  ) {
-    const background =
-        Color(
-      0xFFF8F5EF,
-    );
+  Future<void> _registrarCliente() async {
+    if (_registrando || _cargandoMembresias || _registroIncierto) return;
+    FocusScope.of(context).unfocus();
+    if (!(_formKey.currentState?.validate() ?? false)) return;
 
-    const surface =
-        Color(
-      0xFFFFFDF8,
-    );
+    final id = _idMembresia;
+    if (id == null || !_membresias.any((m) => m.idMembresia == id)) {
+      _mensaje('Selecciona una membresia activa del servidor.', exito: false);
+      return;
+    }
 
-    const gold =
-        Color(
-      0xFFB58A2A,
-    );
+    setState(() => _registrando = true);
+    try {
+      final respuesta = await _clienteService.registrarCliente(
+        correo: _correo.text,
+        password: _password.text,
+        nombreCompleto: _nombre.text,
+        telefono: _telefono.text,
+        idMembresia: id,
+      );
+      if (!mounted) return;
 
-    const goldDark =
-        Color(
-      0xFF8A6814,
-    );
+      final exito = respuesta['ok'] == true;
+      _mensaje(
+        respuesta['mensaje']?.toString() ?? 'No se pudo completar el registro.',
+        exito: exito,
+      );
+      if (exito) {
+        _limpiarFormulario();
+      } else if (respuesta['resultadoIncierto'] == true) {
+        // Evitar volver a enviar una alta que quiza ya se realizo.
+        setState(() => _registroIncierto = true);
+      }
+    } catch (_) {
+      if (!mounted) return;
+      _mensaje('No fue posible completar el registro.', exito: false);
+    } finally {
+      if (mounted) setState(() => _registrando = false);
+    }
+  }
 
-    const textPrimary =
-        Color(
-      0xFF2F2A24,
-    );
-
-    const textSecondary =
-        Color(
-      0xFF777067,
-    );
-
-    return Scaffold(
-      backgroundColor:
-          background,
-
-      appBar: AppBar(
-        backgroundColor:
-            surface,
-
-        surfaceTintColor:
-            Colors.transparent,
-
-        elevation:
-            0,
-
-        leading: Padding(
-          padding:
-              const EdgeInsets.all(
-            8,
-          ),
-
-          child: Container(
-            decoration:
-                BoxDecoration(
-              color:
-                  surface,
-
-              borderRadius:
-                  BorderRadius.circular(
-                12,
-              ),
-
-              border:
-                  Border.all(
-                color:
-                    const Color(
-                  0xFFD8C8A5,
-                ),
-              ),
-            ),
-
-            child: IconButton(
-              padding:
-                  EdgeInsets.zero,
-
-              tooltip:
-                  'Regresar',
-
-              onPressed: () {
-                Navigator.of(
-                  context,
-                ).pop();
-              },
-
-              icon:
-                  const Icon(
-                Icons
-                    .arrow_back_rounded,
-
-                color:
-                    goldDark,
-
-                size:
-                    21,
-              ),
-            ),
-          ),
-        ),
-
-        title: Image.asset(
-          'assets/Logo_GymFlow.png',
-
-          height:
-              48,
-
-          fit:
-              BoxFit.contain,
-        ),
-
-        bottom:
-            const PreferredSize(
-          preferredSize:
-              Size.fromHeight(
-            1,
-          ),
-
-          child: Divider(
-            height:
-                1,
-
-            color:
-                Color(
-              0xFFE7DFD2,
-            ),
-          ),
-        ),
+  InputDecoration _decoracion(String etiqueta, IconData icono, {String? hint}) {
+    return InputDecoration(
+      labelText: etiqueta,
+      hintText: hint,
+      prefixIcon: Icon(icono, color: _doradoOscuro),
+      filled: true,
+      fillColor: const Color(0xFFF8F4EC),
+      enabledBorder: OutlineInputBorder(
+        borderSide: const BorderSide(color: _borde),
+        borderRadius: BorderRadius.circular(13),
       ),
-
-      body: Container(
-        width:
-            double.infinity,
-
-        decoration:
-            const BoxDecoration(
-          gradient:
-              LinearGradient(
-            begin:
-                Alignment.topCenter,
-
-            end:
-                Alignment.bottomCenter,
-
-            colors: [
-              Color(
-                0xFFF8F5EF,
-              ),
-
-              Color(
-                0xFFF2EDE4,
-              ),
-            ],
-          ),
-        ),
-
-        child:
-            SingleChildScrollView(
-          padding:
-              const EdgeInsets.fromLTRB(
-            20,
-            28,
-            20,
-            45,
-          ),
-
-          child: Center(
-            child:
-                ConstrainedBox(
-              constraints:
-                  const BoxConstraints(
-                maxWidth:
-                    650,
-              ),
-
-              child: Form(
-                key:
-                    _formKey,
-
-                autovalidateMode:
-                    AutovalidateMode
-                        .onUserInteraction,
-
-                child: Column(
-                  crossAxisAlignment:
-                      CrossAxisAlignment
-                          .start,
-
-                  children: [
-                    Container(
-                      width:
-                          double.infinity,
-
-                      padding:
-                          const EdgeInsets.all(
-                        22,
-                      ),
-
-                      decoration:
-                          BoxDecoration(
-                        color:
-                            surface,
-
-                        borderRadius:
-                            BorderRadius.circular(
-                          20,
-                        ),
-
-                        border:
-                            Border.all(
-                          color:
-                              const Color(
-                            0xFFE5DDCF,
-                          ),
-                        ),
-
-                        boxShadow: [
-                          BoxShadow(
-                            color:
-                                const Color(
-                              0xFF4C3E24,
-                            ).withValues(
-                              alpha:
-                                  0.05,
-                            ),
-
-                            blurRadius:
-                                20,
-
-                            offset:
-                                const Offset(
-                              0,
-                              7,
-                            ),
-                          ),
-                        ],
-                      ),
-
-                      child:
-                          const Column(
-                        crossAxisAlignment:
-                            CrossAxisAlignment
-                                .start,
-
-                        children: [
-                          Text(
-                            'RECEPCIÓN',
-
-                            style:
-                                TextStyle(
-                              color:
-                                  goldDark,
-
-                              fontSize:
-                                  11,
-
-                              fontWeight:
-                                  FontWeight
-                                      .w700,
-
-                              letterSpacing:
-                                  2,
-                            ),
-                          ),
-
-                          SizedBox(
-                            height:
-                                7,
-                          ),
-
-                          Text(
-                            'Registrar Cliente',
-
-                            style:
-                                TextStyle(
-                              color:
-                                  textPrimary,
-
-                              fontSize:
-                                  29,
-
-                              fontWeight:
-                                  FontWeight
-                                      .w700,
-
-                              letterSpacing:
-                                  -0.5,
-                            ),
-                          ),
-
-                          SizedBox(
-                            height:
-                                7,
-                          ),
-
-                          Text(
-                            'Captura la información del nuevo cliente para crear su acceso a GymFlow.',
-
-                            style:
-                                TextStyle(
-                              color:
-                                  textSecondary,
-
-                              fontSize:
-                                  13,
-
-                              height:
-                                  1.4,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-
-                    const SizedBox(
-                      height:
-                          22,
-                    ),
-
-                    _section(
-                      'Datos personales',
-                      Icons.person_outline_rounded,
-                      [
-                        _campo(
-                          controller:
-                              nombreController,
-
-                          label:
-                              'Nombre completo *',
-
-                          hint:
-                              'Nombre completo',
-
-                          validator:
-                              validarNombre,
-
-                          keyboardType:
-                              TextInputType.name,
-
-                          maxLength:
-                              100,
-
-                          icon:
-                              Icons
-                                  .person_outline_rounded,
-                        ),
-
-                        _campo(
-                          controller:
-                              correoController,
-
-                          label:
-                              'Correo electrónico *',
-
-                          hint:
-                              'cliente@gymflow.com',
-
-                          validator:
-                              validarCorreo,
-
-                          keyboardType:
-                              TextInputType
-                                  .emailAddress,
-
-                          maxLength:
-                              150,
-
-                          icon:
-                              Icons
-                                  .email_outlined,
-                        ),
-
-                        _campo(
-                          controller:
-                              telefonoController,
-
-                          label:
-                              'Teléfono',
-
-                          hint:
-                              '4421234567',
-
-                          validator:
-                              validarTelefono,
-
-                          keyboardType:
-                              TextInputType.phone,
-
-                          maxLength:
-                              10,
-
-                          inputFormatters: [
-                            FilteringTextInputFormatter
-                                .digitsOnly,
-                          ],
-
-                          icon:
-                              Icons
-                                  .phone_outlined,
-                        ),
-                      ],
-                    ),
-
-                    const SizedBox(
-                      height:
-                          18,
-                    ),
-
-                    _section(
-                      'Acceso',
-                      Icons.lock_outline_rounded,
-                      [
-                        TextFormField(
-                          controller:
-                              passwordController,
-
-                          enabled:
-                              !cargando,
-
-                          obscureText:
-                              ocultarPassword,
-
-                          validator:
-                              validarPassword,
-
-                          maxLength:
-                              72,
-
-                          style:
-                              const TextStyle(
-                            color:
-                                textPrimary,
-
-                            fontSize:
-                                14,
-                          ),
-
-                          decoration:
-                              _decoracion(
-                            'Contraseña *',
-                            'Mínimo 6 caracteres',
-                            Icons
-                                .lock_outline_rounded,
-                          ).copyWith(
-                            counterText:
-                                '',
-
-                            suffixIcon:
-                                IconButton(
-                              tooltip:
-                                  ocultarPassword
-                                      ? 'Mostrar contraseña'
-                                      : 'Ocultar contraseña',
-
-                              onPressed: () {
-                                setState(
-                                  () {
-                                    ocultarPassword =
-                                        !ocultarPassword;
-                                  },
-                                );
-                              },
-
-                              icon: Icon(
-                                ocultarPassword
-                                    ? Icons
-                                        .visibility_outlined
-                                    : Icons
-                                        .visibility_off_outlined,
-
-                                color:
-                                    goldDark,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-
-                    const SizedBox(
-                      height:
-                          18,
-                    ),
-
-                    _section(
-                      'Membresía y asistencia',
-                      Icons
-                          .card_membership_outlined,
-                      [
-                        DropdownButtonFormField<int>(
-                          initialValue:
-                              idMembresia,
-
-                          dropdownColor:
-                              surface,
-
-                          style:
-                              const TextStyle(
-                            color:
-                                textPrimary,
-
-                            fontSize:
-                                14,
-                          ),
-
-                          icon:
-                              const Icon(
-                            Icons
-                                .keyboard_arrow_down_rounded,
-
-                            color:
-                                goldDark,
-                          ),
-
-                          decoration:
-                              _decoracion(
-                            'Membresía *',
-                            'Selecciona una opción',
-                            Icons
-                                .card_membership_outlined,
-                          ),
-
-                          items:
-                              const [
-                            DropdownMenuItem(
-                              value:
-                                  1,
-
-                              child:
-                                  Text(
-                                'BasicFlow',
-                              ),
-                            ),
-                          ],
-
-                          validator:
-                              (value) {
-                            if (value ==
-                                    null ||
-                                value <=
-                                    0) {
-                              return 'Selecciona una membresía válida.';
-                            }
-
-                            return null;
-                          },
-
-                          onChanged:
-                              cargando
-                                  ? null
-                                  : (value) {
-                                      setState(
-                                        () {
-                                          idMembresia =
-                                              value;
-                                        },
-                                      );
-                                    },
-                        ),
-
-                        _campo(
-                          controller:
-                              costoMensualController,
-
-                          label:
-                              'Costo mensual *',
-
-                          hint:
-                              '500.00',
-
-                          validator:
-                              validarCosto,
-
-                          keyboardType:
-                              const TextInputType
-                                  .numberWithOptions(
-                            decimal:
-                                true,
-                          ),
-
-                          inputFormatters:
-                              _formatoDecimal(),
-
-                          icon:
-                              Icons
-                                  .payments_outlined,
-                        ),
-
-                        _campo(
-                          controller:
-                              costoAnualController,
-
-                          label:
-                              'Costo anual *',
-
-                          hint:
-                              '5000.00',
-
-                          validator:
-                              validarCosto,
-
-                          keyboardType:
-                              const TextInputType
-                                  .numberWithOptions(
-                            decimal:
-                                true,
-                          ),
-
-                          inputFormatters:
-                              _formatoDecimal(),
-
-                          icon:
-                              Icons
-                                  .account_balance_wallet_outlined,
-                        ),
-                      ],
-                    ),
-
-                    const SizedBox(
-                      height:
-                          26,
-                    ),
-
-                    SizedBox(
-                      width:
-                          double.infinity,
-
-                      height:
-                          54,
-
-                      child:
-                          FilledButton.icon(
-                        onPressed:
-                            cargando
-                                ? null
-                                : registrarCliente,
-
-                        icon:
-                            cargando
-                                ? const SizedBox(
-                                    width:
-                                        20,
-
-                                    height:
-                                        20,
-
-                                    child:
-                                        CircularProgressIndicator(
-                                      strokeWidth:
-                                          2,
-
-                                      color:
-                                          Colors.white,
-                                    ),
-                                  )
-                                : const Icon(
-                                    Icons
-                                        .person_add_alt_1_rounded,
-
-                                    size:
-                                        21,
-                                  ),
-
-                        label: Text(
-                          cargando
-                              ? 'Registrando...'
-                              : 'Registrar cliente',
-                        ),
-
-                        style:
-                            FilledButton.styleFrom(
-                          backgroundColor:
-                              gold,
-
-                          foregroundColor:
-                              Colors.white,
-
-                          disabledBackgroundColor:
-                              const Color(
-                            0xFFD8C89F,
-                          ),
-
-                          disabledForegroundColor:
-                              Colors.white,
-
-                          elevation:
-                              0,
-
-                          shape:
-                              RoundedRectangleBorder(
-                            borderRadius:
-                                BorderRadius.circular(
-                              13,
-                            ),
-                          ),
-
-                          textStyle:
-                              const TextStyle(
-                            fontSize:
-                                14,
-
-                            fontWeight:
-                                FontWeight.w700,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ),
+      focusedBorder: OutlineInputBorder(
+        borderSide: const BorderSide(color: _dorado, width: 1.5),
+        borderRadius: BorderRadius.circular(13),
       ),
+      border: OutlineInputBorder(borderRadius: BorderRadius.circular(13)),
     );
   }
 
-  List<TextInputFormatter>
-      _formatoDecimal() {
-    return [
-      TextInputFormatter.withFunction(
-        (oldValue, newValue) {
-          if (RegExp(
-            r'^\d{0,7}(\.\d{0,2})?$',
-          ).hasMatch(
-            newValue.text,
-          )) {
-            return newValue;
-          }
-
-          return oldValue;
-        },
-      ),
-    ];
-  }
-
-  Widget _section(
-    String titulo,
-    IconData icon,
-    List<Widget> children,
-  ) {
-    const surface =
-        Color(
-      0xFFFFFDF8,
-    );
-
-    const goldDark =
-        Color(
-      0xFF8A6814,
-    );
-
-    const textPrimary =
-        Color(
-      0xFF2F2A24,
-    );
-
+  Widget _seccion(String titulo, IconData icono, List<Widget> campos) {
     return Container(
-      width:
-          double.infinity,
-
-      padding:
-          const EdgeInsets.all(
-        20,
+      width: double.infinity,
+      margin: const EdgeInsets.only(bottom: 18),
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: _superficie,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: _borde),
       ),
-
-      decoration:
-          BoxDecoration(
-        color:
-            surface,
-
-        borderRadius:
-            BorderRadius.circular(
-          18,
-        ),
-
-        border:
-            Border.all(
-          color:
-              const Color(
-            0xFFE5DDCF,
-          ),
-        ),
-
-        boxShadow: [
-          BoxShadow(
-            color:
-                const Color(
-              0xFF4C3E24,
-            ).withValues(
-              alpha:
-                  0.04,
-            ),
-
-            blurRadius:
-                16,
-
-            offset:
-                const Offset(
-              0,
-              5,
-            ),
-          ),
-        ],
-      ),
-
       child: Column(
-        crossAxisAlignment:
-            CrossAxisAlignment.start,
-
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Container(
-                width:
-                    38,
-
-                height:
-                    38,
-
-                decoration:
-                    BoxDecoration(
-                  color:
-                      const Color(
-                    0xFFF3EAD8,
-                  ),
-
-                  borderRadius:
-                      BorderRadius.circular(
-                    11,
-                  ),
-
-                  border:
-                      Border.all(
-                    color:
-                        const Color(
-                      0xFFE4D2AA,
-                    ),
-                  ),
-                ),
-
-                child: Icon(
-                  icon,
-
-                  color:
-                      goldDark,
-
-                  size:
-                      20,
-                ),
-              ),
-
-              const SizedBox(
-                width:
-                    12,
-              ),
-
+              Icon(icono, color: _doradoOscuro),
+              const SizedBox(width: 10),
               Expanded(
                 child: Text(
                   titulo,
-
-                  style:
-                      const TextStyle(
-                    color:
-                        textPrimary,
-
-                    fontSize:
-                        17,
-
-                    fontWeight:
-                        FontWeight.w700,
+                  style: const TextStyle(
+                    color: _texto,
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700,
                   ),
                 ),
               ),
             ],
           ),
-
-          const SizedBox(
-            height:
-                20,
-          ),
-
-          for (
-            int i = 0;
-            i < children.length;
-            i++
-          ) ...[
-            children[i],
-
-            if (i <
-                children.length - 1)
-              const SizedBox(
-                height:
-                    16,
-              ),
+          const SizedBox(height: 20),
+          for (var i = 0; i < campos.length; i++) ...[
+            campos[i],
+            if (i < campos.length - 1) const SizedBox(height: 16),
           ],
         ],
       ),
@@ -1331,217 +264,281 @@ class _RegistrarClientePageState
   }
 
   Widget _campo({
-    required TextEditingController
-        controller,
-    required String label,
-    required String hint,
-    required String? Function(String?)
-        validator,
-    required IconData icon,
-    TextInputType keyboardType =
-        TextInputType.text,
-    List<TextInputFormatter>?
-        inputFormatters,
-    int? maxLength,
+    required TextEditingController controller,
+    required String etiqueta,
+    required IconData icono,
+    String? Function(String?)? validator,
+    TextInputType? teclado,
+    List<TextInputFormatter>? formateadores,
+    int? longitudMaxima,
   }) {
     return TextFormField(
-      controller:
-          controller,
-
-      enabled:
-          !cargando,
-
-      validator:
-          validator,
-
-      keyboardType:
-          keyboardType,
-
-      inputFormatters:
-          inputFormatters,
-
-      maxLength:
-          maxLength,
-
-      style:
-          const TextStyle(
-        color:
-            Color(
-          0xFF2F2A24,
-        ),
-
-        fontSize:
-            14,
-      ),
-
-      decoration:
-          _decoracion(
-        label,
-        hint,
-        icon,
-      ).copyWith(
-        counterText:
-            '',
-      ),
+      controller: controller,
+      enabled: !_registrando && !_registroIncierto,
+      validator: validator,
+      keyboardType: teclado,
+      inputFormatters: formateadores,
+      maxLength: longitudMaxima,
+      decoration: _decoracion(etiqueta, icono).copyWith(counterText: ''),
     );
   }
 
-  InputDecoration _decoracion(
-    String label,
-    String hint,
-    IconData icon,
-  ) {
-    const gold =
-        Color(
-      0xFFB58A2A,
+  Widget _contenidoMembresias() {
+    if (_cargandoMembresias) {
+      return const Padding(
+        padding: EdgeInsets.all(15),
+        child: Center(child: CircularProgressIndicator(color: _dorado)),
+      );
+    }
+    if (_errorMembresias.isNotEmpty) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(_errorMembresias, style: const TextStyle(color: _rojo)),
+          const SizedBox(height: 10),
+          OutlinedButton.icon(
+            onPressed: _cargarMembresias,
+            icon: const Icon(Icons.refresh),
+            label: const Text('Reintentar consulta'),
+          ),
+        ],
+      );
+    }
+    if (_membresias.isEmpty) {
+      return const Text(
+        'El servidor no tiene membresias activas.',
+        style: TextStyle(color: _secundario),
+      );
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        DropdownButtonFormField<int>(
+          key: ValueKey(_idMembresia),
+          initialValue: _idMembresia,
+          isExpanded: true,
+          decoration: _decoracion(
+            'Membresia *',
+            Icons.card_membership_outlined,
+            hint: 'Selecciona un plan activo',
+          ),
+          items: _membresias.map((m) {
+            return DropdownMenuItem<int>(
+              value: m.idMembresia,
+              child: Text(m.nombrePlan, overflow: TextOverflow.ellipsis),
+            );
+          }).toList(),
+          validator: (id) =>
+              id == null || !_membresias.any((m) => m.idMembresia == id)
+              ? 'Selecciona una membresia activa.'
+              : null,
+          onChanged: _registrando || _registroIncierto
+              ? null
+              : _seleccionarMembresia,
+        ),
+        const SizedBox(height: 16),
+        TextFormField(
+          controller: _costoMensual,
+          readOnly: true,
+          canRequestFocus: false,
+          enableInteractiveSelection: false,
+          decoration: _decoracion(
+            'Precio mensual oficial',
+            Icons.payments_outlined,
+          ).copyWith(suffixText: 'MXN'),
+        ),
+        const SizedBox(height: 16),
+        TextFormField(
+          controller: _costoAnual,
+          readOnly: true,
+          canRequestFocus: false,
+          enableInteractiveSelection: false,
+          decoration: _decoracion(
+            'Precio anual oficial',
+            Icons.account_balance_wallet_outlined,
+          ).copyWith(suffixText: 'MXN'),
+        ),
+        const SizedBox(height: 12),
+        const Text(
+          'Precios oficiales obtenidos de PostgreSQL. '
+          'Recepcion no puede editarlos ni enviarlos en el registro.',
+          style: TextStyle(color: _secundario, fontSize: 12),
+        ),
+      ],
     );
+  }
 
-    const goldDark =
-        Color(
-      0xFF8A6814,
-    );
-
-    return InputDecoration(
-      labelText:
-          label,
-
-      hintText:
-          hint,
-
-      filled:
-          true,
-
-      fillColor:
-          const Color(
-        0xFFF8F4EC,
-      ),
-
-      prefixIcon:
-          Icon(
-        icon,
-
-        color:
-            goldDark,
-
-        size:
-            21,
-      ),
-
-      labelStyle:
-          const TextStyle(
-        color:
-            Color(
-          0xFF777067,
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: _fondo,
+      appBar: AppBar(
+        backgroundColor: _superficie,
+        surfaceTintColor: Colors.transparent,
+        iconTheme: const IconThemeData(color: _doradoOscuro),
+        title: Image.asset(
+          'assets/Logo_GymFlow.png',
+          height: 48,
+          fit: BoxFit.contain,
         ),
-
-        fontSize:
-            13,
       ),
-
-      hintStyle:
-          const TextStyle(
-        color:
-            Color(
-          0xFFA39A8D,
-        ),
-
-        fontSize:
-            13,
-      ),
-
-      border:
-          OutlineInputBorder(
-        borderRadius:
-            BorderRadius.circular(
-          13,
-        ),
-
-        borderSide:
-            const BorderSide(
-          color:
-              Color(
-            0xFFE5DDCF,
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.fromLTRB(18, 26, 18, 40),
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 650),
+            child: Form(
+              key: _formKey,
+              autovalidateMode: AutovalidateMode.onUserInteraction,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(22),
+                    margin: const EdgeInsets.only(bottom: 22),
+                    decoration: BoxDecoration(
+                      color: _superficie,
+                      border: Border.all(color: _borde),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: const Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'RECEPCION / GYMFLOW',
+                          style: TextStyle(
+                            color: _doradoOscuro,
+                            letterSpacing: 2,
+                            fontWeight: FontWeight.w700,
+                            fontSize: 11,
+                          ),
+                        ),
+                        SizedBox(height: 9),
+                        Text(
+                          'Registrar Cliente',
+                          style: TextStyle(
+                            color: _texto,
+                            fontSize: 27,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                        SizedBox(height: 7),
+                        Text(
+                          'Registra al cliente y asigna una membresia '
+                          'con precios oficiales del gimnasio.',
+                          style: TextStyle(color: _secundario, fontSize: 13),
+                        ),
+                      ],
+                    ),
+                  ),
+                  _seccion('Datos personales', Icons.person_outline, [
+                    _campo(
+                      controller: _nombre,
+                      etiqueta: 'Nombre completo *',
+                      icono: Icons.person_outline,
+                      validator: _validarNombre,
+                      teclado: TextInputType.name,
+                      longitudMaxima: 100,
+                    ),
+                    _campo(
+                      controller: _correo,
+                      etiqueta: 'Correo electronico *',
+                      icono: Icons.email_outlined,
+                      validator: _validarCorreo,
+                      teclado: TextInputType.emailAddress,
+                      longitudMaxima: 150,
+                    ),
+                    _campo(
+                      controller: _telefono,
+                      etiqueta: 'Telefono (opcional)',
+                      icono: Icons.phone_outlined,
+                      validator: _validarTelefono,
+                      teclado: TextInputType.phone,
+                      formateadores: [FilteringTextInputFormatter.digitsOnly],
+                      longitudMaxima: 10,
+                    ),
+                  ]),
+                  _seccion('Acceso', Icons.lock_outline, [
+                    TextFormField(
+                      controller: _password,
+                      enabled: !_registrando && !_registroIncierto,
+                      obscureText: _ocultarPassword,
+                      validator: _validarPassword,
+                      maxLength: 72,
+                      decoration:
+                          _decoracion(
+                            'Contrasena *',
+                            Icons.lock_outline,
+                          ).copyWith(
+                            counterText: '',
+                            suffixIcon: IconButton(
+                              tooltip: _ocultarPassword ? 'Mostrar' : 'Ocultar',
+                              onPressed: () => setState(
+                                () => _ocultarPassword = !_ocultarPassword,
+                              ),
+                              icon: Icon(
+                                _ocultarPassword
+                                    ? Icons.visibility_outlined
+                                    : Icons.visibility_off_outlined,
+                              ),
+                            ),
+                          ),
+                    ),
+                  ]),
+                  _seccion(
+                    'Membresia y asistencia',
+                    Icons.card_membership_outlined,
+                    [_contenidoMembresias()],
+                  ),
+                  if (_registroIncierto) ...[
+                    const Text(
+                      'No intentes registrar al mismo cliente nuevamente '
+                      'hasta verificar si el alta ya se realizo.',
+                      style: TextStyle(color: _rojo),
+                    ),
+                    const SizedBox(height: 14),
+                  ],
+                  SizedBox(
+                    width: double.infinity,
+                    height: 52,
+                    child: FilledButton.icon(
+                      onPressed:
+                          _registrando ||
+                              _cargandoMembresias ||
+                              _registroIncierto ||
+                              _errorMembresias.isNotEmpty ||
+                              _membresias.isEmpty
+                          ? null
+                          : _registrarCliente,
+                      icon: _registrando
+                          ? const SizedBox(
+                              height: 18,
+                              width: 18,
+                              child: CircularProgressIndicator(
+                                color: Colors.white,
+                                strokeWidth: 2,
+                              ),
+                            )
+                          : const Icon(Icons.person_add_alt_1_rounded),
+                      label: Text(
+                        _registrando ? 'Registrando...' : 'Registrar cliente',
+                      ),
+                      style: FilledButton.styleFrom(
+                        backgroundColor: _dorado,
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(13),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ),
         ),
-      ),
-
-      enabledBorder:
-          OutlineInputBorder(
-        borderRadius:
-            BorderRadius.circular(
-          13,
-        ),
-
-        borderSide:
-            const BorderSide(
-          color:
-              Color(
-            0xFFE5DDCF,
-          ),
-        ),
-      ),
-
-      focusedBorder:
-          OutlineInputBorder(
-        borderRadius:
-            BorderRadius.circular(
-          13,
-        ),
-
-        borderSide:
-            const BorderSide(
-          color:
-              gold,
-
-          width:
-              1.5,
-        ),
-      ),
-
-      errorBorder:
-          OutlineInputBorder(
-        borderRadius:
-            BorderRadius.circular(
-          13,
-        ),
-
-        borderSide:
-            const BorderSide(
-          color:
-              Color(
-            0xFFC21B2E,
-          ),
-        ),
-      ),
-
-      focusedErrorBorder:
-          OutlineInputBorder(
-        borderRadius:
-            BorderRadius.circular(
-          13,
-        ),
-
-        borderSide:
-            const BorderSide(
-          color:
-              Color(
-            0xFFC21B2E,
-          ),
-
-          width:
-              1.5,
-        ),
-      ),
-
-      errorStyle:
-          const TextStyle(
-        color:
-            Color(
-          0xFFC21B2E,
-        ),
-
-        fontSize:
-            11,
       ),
     );
   }
