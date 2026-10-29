@@ -339,6 +339,19 @@ export class Home implements OnInit {
     this.router.navigate(['/mis-asistencias']);
   }
 
+  
+irMiMembresia(): void {
+  if (!this.esCliente()) {
+    this.mensaje =
+      'Solo los clientes pueden consultar su membresía.';
+    this.changeDetector.detectChanges();
+    return;
+  }
+
+  this.router.navigate(['/mi-membresia']);
+}
+
+
   irMisPagos(): void {
 
     if (!this.esCliente()) {

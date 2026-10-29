@@ -116,6 +116,9 @@ import {
 
 import { authGuard } from './auth-guard';
 
+import { MiMembresia } from './mi-membresia/mi-membresia';
+
+
 import {
   recepcionistaGuard,
   entrenadorGuard,
@@ -274,6 +277,14 @@ export const routes: Routes = [
     component: MisAsistencias,
     canActivate: [authGuard, clienteGuard]
   },
+
+  
+{
+  path: 'mi-membresia',
+  component: MiMembresia,
+  canActivate: [authGuard, clienteGuard]
+},
+
 
   {
     path: 'mis-pagos',
