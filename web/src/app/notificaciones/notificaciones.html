@@ -1,0 +1,211 @@
+
+<div class="notificaciones-page">
+
+  <header class="topbar">
+    <div class="header-left">
+      <button
+        type="button"
+        class="back-button"
+        (click)="volverInicio()"
+        aria-label="Volver al inicio"
+      >
+        ←
+      </button>
+
+      <img
+        src="/Logo_GymFlow.png"
+        alt="GymFlow"
+        class="logo"
+      />
+    </div>
+
+    <button
+      type="button"
+      class="refresh-button"
+      (click)="cargarNotificaciones()"
+      [disabled]="cargando || procesandoId !== null"
+    >
+      ↻ Actualizar
+    </button>
+  </header>
+
+  <main class="content">
+
+    <section class="page-header">
+      <p class="section-label">
+        GYMFLOW / AVISOS
+      </p>
+
+      <h1>Centro de notificaciones</h1>
+
+      <p class="subtitle">
+        Consulta los avisos de tu cuenta y revisa
+        tus notificaciones pendientes.
+      </p>
+    </section>
+
+    <div
+      class="message error-message"
+      *ngIf="error"
+      role="alert"
+    >
+      {{ error }}
+    </div>
+
+    <div
+      class="message error-message"
+      *ngIf="errorAccion"
+      role="alert"
+    >
+      {{ errorAccion }}
+    </div>
+
+    <div
+      class="message success-message"
+      *ngIf="mensajeExito"
+    >
+      ✓ {{ mensajeExito }}
+    </div>
+
+    <ng-container *ngIf="!cargando && !error">
+
+      <section class="stats">
+        <div class="stat">
+          <span>Total de avisos</span>
+          <strong>{{ notificaciones.length }}</strong>
+        </div>
+
+        <div class="stat">
+          <span>Sin leer</span>
+          <strong>{{ totalNoLeidas }}</strong>
+        </div>
+      </section>
+
+      <div class="filters">
+        <button
+          type="button"
+          [class.active]="!soloNoLeidas"
+          (click)="mostrarTodas()"
+        >
+          Todas
+        </button>
+
+        <button
+          type="button"
+          [class.active]="soloNoLeidas"
+          (click)="mostrarNoLeidas()"
+        >
+          No leídas
+        </button>
+      </div>
+
+      <div
+        class="empty"
+        *ngIf="notificacionesVisibles.length === 0"
+      >
+        <div class="empty-icon">🔔</div>
+
+        <h2>
+          {{
+            soloNoLeidas
+              ? 'No tienes avisos pendientes'
+              : 'No tienes notificaciones'
+          }}
+        </h2>
+
+        <p>
+          Los avisos aparecerán aquí cuando
+          el sistema los genere.
+        </p>
+      </div>
+
+      <article
+        *ngFor="
+          let notificacion of notificacionesVisibles;
+          trackBy: trackNotificacion
+        "
+        class="notification-card"
+        [class.unread]="!notificacion.leida"
+      >
+        <div class="notification-head">
+          <div class="notification-icon">
+            🔔
+          </div>
+
+          <div class="notification-heading">
+            <h2>{{ notificacion.titulo }}</h2>
+            <p>{{ notificacion.tipo }}</p>
+          </div>
+
+          <span
+            class="status"
+            [class.read]="notificacion.leida"
+          >
+            {{
+              notificacion.leida
+                ? 'Leída'
+                : 'No leída'
+            }}
+          </span>
+        </div>
+
+        <p class="notification-message">
+          {{ notificacion.mensaje }}
+        </p>
+
+        <div class="notification-details">
+          <p>
+            <strong>Vencimiento:</strong>
+            {{
+              formatearFecha(
+                notificacion.fechaVencimiento
+              )
+            }}
+          </p>
+
+          <p>
+            <strong>Recibida:</strong>
+            {{ formatearFecha(notificacion.creadoEn) }}
+          </p>
+
+          <p
+            *ngIf="
+              notificacion.leida &&
+              notificacion.fechaLectura
+            "
+          >
+            <strong>Leída:</strong>
+            {{
+              formatearFecha(
+                notificacion.fechaLectura
+              )
+            }}
+          </p>
+        </div>
+
+        <button
+          *ngIf="!notificacion.leida"
+          type="button"
+          class="read-button"
+          [disabled]="procesandoId !== null || cargando"
+          (click)="marcarComoLeida(notificacion)"
+        >
+          {{
+            procesandoId === notificacion.idNotificacion
+              ? 'Actualizando...'
+              : '✓ Marcar como leída'
+          }}
+        </button>
+      </article>
+
+    </ng-container>
+
+    <div
+      *ngIf="cargando"
+      class="loading"
+    >
+      Consultando notificaciones...
+    </div>
+
+  </main>
+</div>

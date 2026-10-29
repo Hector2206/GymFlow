@@ -20,6 +20,10 @@ import {
   Usuario
 } from '../models/usuario.model';
 
+
+import { NotificacionesService } from '../services/notificaciones.service';
+
+
 @Component({
   selector: 'app-home',
   standalone: true,
@@ -34,13 +38,47 @@ export class Home implements OnInit {
   cargando = true;
   error = '';
   mensaje = '';
+  noLeidas: number | null = null;
+  cargandoNotificaciones = false;
+
 
   constructor(
     private usuarioService: UsuarioService,
     private authService: AuthService,
     private router: Router,
-    private changeDetector: ChangeDetectorRef
+    private changeDetector: ChangeDetectorRef,
+    private notificacionesService: NotificacionesService
+
   ) {}
+
+  
+cargarContadorNotificaciones(): void {
+  if (this.cargandoNotificaciones) {
+    return;
+  }
+
+  this.cargandoNotificaciones = true;
+  this.noLeidas = null;
+
+  this.notificacionesService.obtenerNoLeidas().subscribe({
+    next: cantidad => {
+      this.noLeidas = cantidad;
+      this.cargandoNotificaciones = false;
+      this.changeDetector.detectChanges();
+    },
+
+    error: () => {
+      this.noLeidas = null;
+      this.cargandoNotificaciones = false;
+      this.changeDetector.detectChanges();
+    }
+  });
+}
+
+irNotificaciones(): void {
+  this.router.navigate(['/notificaciones']);
+}
+
 
   ngOnInit(): void {
     this.cargarUsuario();
@@ -58,6 +96,8 @@ export class Home implements OnInit {
         next: (usuario) => {
 
           this.usuario = usuario;
+          this.cargarContadorNotificaciones();
+
 
           localStorage.setItem(
             'usuario',

@@ -30,6 +30,29 @@
 
       </div>
 
+      
+<button
+  type="button"
+  class="notification-bell"
+  (click)="irNotificaciones()"
+  [attr.aria-label]="
+    noLeidas !== null && noLeidas > 0
+      ? noLeidas + ' notificaciones sin leer'
+      : 'Consultar notificaciones'
+  "
+  title="Mis notificaciones"
+>
+  <span class="bell-icon">🔔</span>
+
+  <span
+    *ngIf="noLeidas !== null && noLeidas > 0"
+    class="bell-count"
+  >
+    {{ noLeidas > 99 ? '99+' : noLeidas }}
+  </span>
+</button>
+
+
       <button
         class="logout-button"
         (click)="cerrarSesion()"

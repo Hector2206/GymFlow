@@ -121,6 +121,7 @@ import { MiMembresia } from './mi-membresia/mi-membresia';
 
 import { RecepcionClientes } from './recepcion-clientes/recepcion-clientes';
 
+import { Notificaciones } from './notificaciones/notificaciones';
 
 
 import {
@@ -153,6 +154,14 @@ export const routes: Routes = [
     component: Perfil,
     canActivate: [authGuard]
   },
+
+  
+{
+  path: 'notificaciones',
+  component: Notificaciones,
+  canActivate: [authGuard]
+},
+
 
   // ADMINISTRADOR
 
