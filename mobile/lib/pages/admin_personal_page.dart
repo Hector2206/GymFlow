@@ -5,6 +5,7 @@ import '../services/admin_personal_service.dart';
 import 'admin_registrar_personal_page.dart';
 import 'admin_editar_personal_page.dart';
 import 'admin_baja_personal_page.dart';
+import 'admin_salarios_page.dart';
 
 // GYMFLOW - SPRINT 7
 // PANTALLA ADMINISTRATIVA DE PERSONAL
@@ -190,6 +191,16 @@ class _AdminPersonalPageState extends State<AdminPersonalPage> {
     // Actualizar incluso si la operación
     // terminó sin confirmación.
     await _cargarPersonal();
+  }
+
+  // ====================================
+  // ABRIR HISTORIAL SALARIAL
+  // ====================================
+
+  Future<void> _abrirHistorialSalarios(AdminPersonal empleado) async {
+    await Navigator.of(context).push<void>(
+      MaterialPageRoute(builder: (_) => AdminSalariosPage(empleado: empleado)),
+    );
   }
 
   // ====================================
@@ -612,6 +623,29 @@ class _AdminPersonalPageState extends State<AdminPersonalPage> {
             icono: Icons.event_busy_outlined,
             etiqueta: 'Fecha de baja',
             valor: _mostrarFecha(empleado.fechaBaja),
+          ),
+
+          // HISTORIAL SALARIAL
+          // Disponible también para empleados inactivos.
+          const SizedBox(height: 10),
+
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              onPressed: () {
+                _abrirHistorialSalarios(empleado);
+              },
+              icon: const Icon(Icons.history_outlined),
+              label: const Text('Ver historial salarial'),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: _doradoOscuro,
+                padding: const EdgeInsets.all(13),
+                side: const BorderSide(color: Color(0xFFD8C8A5)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+            ),
           ),
 
           // EDITAR SOLO EMPLEADOS ACTIVOS
