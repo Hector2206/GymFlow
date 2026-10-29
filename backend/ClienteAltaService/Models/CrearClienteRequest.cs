@@ -7,6 +7,4 @@ public class CrearClienteRequest
     public string NombreCompleto { get; set; } = "";
     public string? Telefono { get; set; }
     public int IdMembresia { get; set; }
-    public decimal CostoMensual { get; set; }
-    public decimal CostoAnual { get; set; }
 }

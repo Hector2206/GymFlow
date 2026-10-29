@@ -5,6 +5,7 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using GymManagement.api.Services;
+using GymManagement.api.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -18,7 +19,9 @@ builder.Services.AddScoped<DashboardService>();
 builder.Services.AddScoped<ClienteAdminService>();
 builder.Services.AddScoped<NotificacionService>();
 builder.Services.AddHostedService<NotificacionWorker>();
-
+builder.Services.AddScoped<MembresiaService>();
+builder.Services.AddScoped<AsistenciaPersonalService>();
+builder.Services.AddScoped<AdministradorService>();
 // ========================================
 // CORS
 // ========================================
@@ -311,6 +314,79 @@ app.MapPost("/api/admin/personal",
     .RequireAuthorization("SoloAdministrador");
 
 
+ // ========================================
+ // REGISTRAR ENTRADA LABORAL
+ // ========================================
+
+app.MapPost("/api/admin/personal/asistencias",
+    async (
+        GymManagement.api.Models.RegistrarAsistenciaPersonalRequest request,
+        GymManagement.api.Services.AsistenciaPersonalService asistenciaService,
+        System.Security.Claims.ClaimsPrincipal usuario
+    ) =>
+    {
+        var idClaim = usuario.FindFirst("sub")?.Value
+            ?? usuario.FindFirst(
+                System.Security.Claims.ClaimTypes.NameIdentifier
+            )?.Value;
+
+        if (!int.TryParse(idClaim, out var idAdministrador)
+            || idAdministrador <= 0)
+        {
+            return Results.Unauthorized();
+        }
+
+        try
+        {
+            var idAsistencia = await asistenciaService.RegistrarEntrada(
+                request,
+                idAdministrador
+            );
+
+            return Results.Created(
+                $"/api/admin/personal/asistencias/{idAsistencia}",
+                new
+                {
+                    mensaje = "Entrada laboral registrada correctamente",
+                    idAsistenciaPersonal = idAsistencia,
+                    idPersonal = request.IdPersonal,
+                    fecha = request.Fecha,
+                    horaEntrada = request.HoraEntrada
+                }
+            );
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return Results.Forbid();
+        }
+        catch (ArgumentException ex)
+        {
+            return Results.BadRequest(new
+            {
+                mensaje = ex.Message
+            });
+        }
+        catch (InvalidOperationException ex)
+            when (ex.InnerException is Npgsql.PostgresException postgres
+                && postgres.SqlState == "23505")
+        {
+            return Results.Conflict(new
+            {
+                mensaje = "El empleado ya tiene una asistencia registrada para esa fecha."
+            });
+        }
+        catch (Exception)
+        {
+            return Results.Problem(
+                statusCode: 500,
+                title: "Error al registrar asistencia laboral"
+            );
+        }
+    })
+    .RequireAuthorization("SoloAdministrador");
+
+
+
 app.MapGet("/api/admin/personal",
     async (
         GymManagement.api.Services.PersonalService personalService
@@ -333,6 +409,124 @@ app.MapGet("/api/admin/personal",
         }
     })
     .RequireAuthorization("SoloAdministrador");
+
+
+ // ========================================
+ // REGISTRAR SALIDA LABORAL
+ // ========================================
+
+app.MapPatch("/api/admin/personal/asistencias/{id:long}/salida",
+    async (
+        long id,
+        GymManagement.api.Models.RegistrarSalidaPersonalRequest request,
+        GymManagement.api.Services.AsistenciaPersonalService asistenciaService,
+        System.Security.Claims.ClaimsPrincipal usuario
+    ) =>
+    {
+        var idClaim = usuario.FindFirst("sub")?.Value
+            ?? usuario.FindFirst(
+                System.Security.Claims.ClaimTypes.NameIdentifier
+            )?.Value;
+
+        if (!int.TryParse(idClaim, out var idAdministrador)
+            || idAdministrador <= 0)
+        {
+            return Results.Unauthorized();
+        }
+
+        if (id <= 0)
+        {
+            return Results.BadRequest(new
+            {
+                mensaje = "El identificador de asistencia no es válido."
+            });
+        }
+
+        try
+        {
+            var actualizado = await asistenciaService.RegistrarSalida(
+                id,
+                request,
+                idAdministrador
+            );
+
+            if (!actualizado)
+            {
+                return Results.Conflict(new
+                {
+                    mensaje = "No se pudo registrar la salida. La asistencia no existe, ya tiene salida o la hora es anterior a la entrada."
+                });
+            }
+
+            return Results.Ok(new
+            {
+                mensaje = "Salida laboral registrada correctamente",
+                idAsistenciaPersonal = id,
+                horaSalida = request.HoraSalida
+            });
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return Results.Forbid();
+        }
+        catch (ArgumentException ex)
+        {
+            return Results.BadRequest(new
+            {
+                mensaje = ex.Message
+            });
+        }
+        catch (Exception)
+        {
+            return Results.Problem(
+                statusCode: 500,
+                title: "Error al registrar salida laboral"
+            );
+        }
+    })
+    .RequireAuthorization("SoloAdministrador");
+
+
+ // ========================================
+ // CONSULTAR HISTORIAL DE ASISTENCIAS LABORALES
+ // ========================================
+
+app.MapGet("/api/admin/personal/asistencias",
+    async (
+        int? idPersonal,
+        DateOnly? fechaInicio,
+        DateOnly? fechaFin,
+        GymManagement.api.Services.AsistenciaPersonalService asistenciaService
+    ) =>
+    {
+        try
+        {
+            var historial = await asistenciaService.ObtenerHistorial(
+                idPersonal,
+                fechaInicio,
+                fechaFin
+            );
+
+            return Results.Ok(historial);
+        }
+        catch (ArgumentException ex)
+        {
+            return Results.BadRequest(new
+            {
+                mensaje = ex.Message
+            });
+        }
+        catch (Exception)
+        {
+           return Results.Problem(
+                statusCode: 500,
+                title: "Error al consultar historial de asistencias"
+            );
+        }
+    })
+    .RequireAuthorization("SoloAdministrador");
+
+
 
 
 app.MapGet("/api/admin/personal/{id:int}",
@@ -1192,5 +1386,526 @@ app.MapPut("/api/admin/personal/{id:int}",
         }
     })
     .RequireAuthorization();
+
+    app.MapGet("/api/admin/membresias",
+    async (
+        MembresiaService membresiaService,
+        ClaimsPrincipal usuario
+    ) =>
+    {
+        if (!int.TryParse(
+            usuario.FindFirst("sub")?.Value,
+            out var idAdministrador))
+        {
+            return Results.Unauthorized();
+        }
+
+        try
+        {
+            var membresias =
+                await membresiaService.ObtenerMembresias(idAdministrador);
+
+            return Results.Ok(membresias);
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return Results.Forbid();
+        }
+        catch
+        {
+            return Results.Problem(
+                statusCode: 500,
+                title: "Error al consultar membresías");
+        }
+    })
+    .RequireAuthorization("SoloAdministrador");
+
+    app.MapGet("/api/membresias/activas",
+    async (MembresiaService membresiaService) =>
+    {
+        try
+        {
+            var membresias =
+                await membresiaService.ObtenerMembresiasActivas();
+
+            return Results.Ok(membresias);
+        }
+        catch (Exception)
+        {
+            return Results.Problem(
+                statusCode: 500,
+                title: "Error al consultar membresías activas");
+        }
+    })
+    .RequireAuthorization(policy =>
+        policy.RequireRole("Recepcionista", "Administrador"));
+
+
+    app.MapPost("/api/admin/membresias",
+    async (
+        GymManagement.api.Models.CrearMembresiaRequest request,
+        MembresiaService membresiaService,
+        ClaimsPrincipal usuario
+    ) =>
+    {
+        if (!int.TryParse(
+            usuario.FindFirst("sub")?.Value,
+            out var idAdministrador))
+        {
+            return Results.Unauthorized();
+        }
+
+        try
+        {
+            var idMembresia =
+                await membresiaService.CrearMembresia(
+                    request, idAdministrador);
+
+            return Results.Created(
+                $"/api/admin/membresias/{idMembresia}",
+                new
+                {
+                    mensaje = "Membresía creada correctamente.",
+                    idMembresia
+                });
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return Results.Forbid();
+        }
+        catch (ArgumentException ex)
+        {
+            return Results.BadRequest(new
+            {
+                mensaje = ex.Message
+            });
+        }
+        catch (PostgresException ex)
+            when (ex.SqlState ==
+                  PostgresErrorCodes.UniqueViolation)
+        {
+            return Results.Conflict(new
+            {
+                mensaje = "Ya existe una membresía con ese nombre."
+            });
+        }
+        catch (Exception ex)
+        {
+            app.Logger.LogError(
+                ex, "Error al crear membresía");
+
+            return Results.Problem(
+                statusCode: 500,
+                title: "Error al crear membresía");
+            }
+    })
+    .RequireAuthorization("SoloAdministrador");
+
+    app.MapPut("/api/admin/membresias/{id:int}",
+    async (
+        int id,
+        GymManagement.api.Models.EditarMembresiaRequest request,
+        MembresiaService membresiaService,
+        ClaimsPrincipal usuario
+    ) =>
+    {
+        if (!int.TryParse(
+            usuario.FindFirst("sub")?.Value,
+            out var idAdministrador))
+        {
+            return Results.Unauthorized();
+        }
+
+        try
+        {
+            await membresiaService.EditarMembresia(
+                id, request, idAdministrador);
+
+            return Results.Ok(new
+            {
+                mensaje = "Membresía actualizada correctamente.",
+                idMembresia = id
+            });
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return Results.Forbid();
+        }
+        catch (ArgumentException ex)
+        {
+            return Results.BadRequest(new
+            {
+                mensaje = ex.Message
+            });
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return Results.NotFound(new
+            {
+                mensaje = ex.Message
+            });
+        }
+        catch (PostgresException ex)
+            when (ex.SqlState == PostgresErrorCodes.UniqueViolation)
+        {
+            return Results.Conflict(new
+            {
+                mensaje = "Ya existe una membresía con ese nombre."
+            });
+        }
+        catch (Exception ex)
+        {
+            app.Logger.LogError(ex, "Error al editar membresía");
+
+            return Results.Problem(
+                statusCode: 500,
+                title: "Error al editar membresía");
+        }
+    })
+    .RequireAuthorization("SoloAdministrador");
+
+    app.MapPatch("/api/admin/membresias/{id:int}/estado",
+    async (
+        int id,
+        GymManagement.api.Models.CambiarEstadoMembresiaRequest request,
+        MembresiaService membresiaService,
+        ClaimsPrincipal usuario
+    ) =>
+    {
+        if (!int.TryParse(
+            usuario.FindFirst("sub")?.Value,
+            out var idAdministrador))
+        {
+            return Results.Unauthorized();
+        }
+
+        try
+        {
+            await membresiaService.CambiarEstadoMembresia(
+                id,
+                request.Activo,
+                idAdministrador);
+
+            return Results.Ok(new
+            {
+                mensaje = "Estado de membresía actualizado correctamente.",
+                idMembresia = id,
+                activo = request.Activo
+            });
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return Results.Forbid();
+        }
+        catch (ArgumentException ex)
+        {
+            return Results.BadRequest(new
+            {
+                mensaje = ex.Message
+            });
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return Results.NotFound(new
+            {
+                mensaje = ex.Message
+            });
+        }
+        catch (Exception ex)
+        {
+            app.Logger.LogError(
+                ex, "Error al cambiar estado de membresía");
+
+            return Results.Problem(
+                statusCode: 500,
+                title: "Error al cambiar estado de membresía");
+        }
+    })
+    .RequireAuthorization("SoloAdministrador");
+
+    app.MapGet("/api/admin/membresias/{id:int}/historial-precios",
+    async (
+        int id,
+        MembresiaService membresiaService,
+        ClaimsPrincipal usuario
+    ) =>
+    {
+        if (!int.TryParse(
+            usuario.FindFirst("sub")?.Value,
+            out var idAdministrador))
+        {
+            return Results.Unauthorized();
+        }
+
+        try
+        {
+            var historial =
+                await membresiaService.ObtenerHistorialPrecios(
+                    id, idAdministrador);
+
+            return Results.Ok(historial);
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return Results.Forbid();
+        }
+        catch (ArgumentException ex)
+        {
+            return Results.BadRequest(new
+            {
+                mensaje = ex.Message
+            });
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return Results.NotFound(new
+            {
+                mensaje = ex.Message
+            });
+        }
+        catch (Exception ex)
+        {
+            app.Logger.LogError(
+                ex, "Error al consultar historial de membresía");
+
+            return Results.Problem(
+                statusCode: 500,
+                title: "Error al consultar historial de precios");
+        }
+    })
+    .RequireAuthorization("SoloAdministrador");
+
+
+app.MapGet("/api/admin/administradores",
+    async (
+    HttpContext httpContext,
+    [Microsoft.AspNetCore.Mvc.FromServices]
+    AdministradorService administradorService) =>
+    {
+        var idTexto =
+            httpContext.User.FindFirst(
+                System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
+            ?? httpContext.User.FindFirst("sub")?.Value
+            ?? httpContext.User.FindFirst("id_usuario")?.Value;
+
+        if (!int.TryParse(idTexto, out var idAdministrador))
+        {
+            return Results.Unauthorized();
+        }
+
+        try
+        {
+            var administradores =
+                await administradorService.ObtenerAdministradores(
+                    idAdministrador);
+
+            return Results.Ok(administradores);
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return Results.Forbid();
+        }
+    })
+    .RequireAuthorization("SoloAdministrador");
+
+
+app.MapGet("/api/admin/administradores/{id:int}",
+    async (
+        int id,
+        HttpContext httpContext,
+        [Microsoft.AspNetCore.Mvc.FromServices]
+        AdministradorService administradorService) =>
+    {
+        var idTexto =
+            httpContext.User.FindFirst(
+                System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
+            ?? httpContext.User.FindFirst("sub")?.Value
+            ?? httpContext.User.FindFirst("id_usuario")?.Value;
+
+        if (!int.TryParse(idTexto, out var idAdministrador))
+            return Results.Unauthorized();
+
+        try
+        {
+            var administrador =
+                await administradorService.ObtenerAdministradorPorId(
+                    id, idAdministrador);
+
+            return administrador is null
+                ? Results.NotFound(new
+                {
+                    mensaje = "Administrador no encontrado."
+                })
+                : Results.Ok(administrador);
+        }
+        catch (ArgumentException ex)
+        {
+            return Results.BadRequest(new
+            {
+                mensaje = ex.Message
+            });
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return Results.Forbid();
+        }
+    })
+    .RequireAuthorization("SoloAdministrador");
+
+
+app.MapPost("/api/admin/administradores",
+    async (
+        CrearAdministradorRequest request,
+        HttpContext httpContext,
+        [Microsoft.AspNetCore.Mvc.FromServices]
+        AdministradorService administradorService) =>
+    {
+        var idTexto =
+            httpContext.User.FindFirst(
+                System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
+            ?? httpContext.User.FindFirst("sub")?.Value
+            ?? httpContext.User.FindFirst("id_usuario")?.Value;
+
+        if (!int.TryParse(idTexto, out var idAdministrador))
+            return Results.Unauthorized();
+
+        try
+        {
+            var idUsuario = await administradorService.CrearAdministrador(
+                request, idAdministrador);
+
+            return Results.Created(
+                $"/api/admin/administradores/{idUsuario}",
+                new
+                {
+                    mensaje = "Administrador registrado correctamente",
+                    idUsuario
+                });
+        }
+        catch (ArgumentException ex)
+        {
+            return Results.BadRequest(new
+            {
+                mensaje = ex.Message
+            });
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return Results.Forbid();
+        }
+    })
+    .RequireAuthorization("SoloAdministrador");
+
+
+app.MapPut("/api/admin/administradores/{id:int}",
+    async (
+        int id,
+        EditarAdministradorRequest request,
+        HttpContext httpContext,
+        [Microsoft.AspNetCore.Mvc.FromServices]
+        AdministradorService administradorService) =>
+    {
+        var idTexto =
+            httpContext.User.FindFirst(
+                System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
+            ?? httpContext.User.FindFirst("sub")?.Value
+            ?? httpContext.User.FindFirst("id_usuario")?.Value;
+
+        if (!int.TryParse(idTexto, out var idAdministrador))
+            return Results.Unauthorized();
+
+        try
+        {
+            var actualizado =
+                await administradorService.EditarAdministrador(
+                    id, request, idAdministrador);
+
+            if (!actualizado)
+            {
+                return Results.NotFound(new
+                {
+                    mensaje = "Administrador activo no encontrado."
+                });
+            }
+
+            return Results.Ok(new
+            {
+                mensaje = "Administrador actualizado correctamente",
+                idUsuario = id
+            });
+        }
+        catch (ArgumentException ex)
+        {
+            return Results.BadRequest(new
+            {
+                mensaje = ex.Message
+            });
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return Results.Forbid();
+        }
+    })
+    .RequireAuthorization("SoloAdministrador");
+
+
+app.MapPatch("/api/admin/administradores/{id:int}/baja",
+    async (
+        int id,
+        DarBajaAdministradorRequest request,
+        HttpContext httpContext,
+        [Microsoft.AspNetCore.Mvc.FromServices]
+        AdministradorService administradorService) =>
+    {
+        var idTexto =
+            httpContext.User.FindFirst(
+                System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
+            ?? httpContext.User.FindFirst("sub")?.Value
+            ?? httpContext.User.FindFirst("id_usuario")?.Value;
+
+        if (!int.TryParse(idTexto, out var idAdministrador))
+            return Results.Unauthorized();
+
+        try
+        {
+            var desactivado =
+                await administradorService.DarDeBajaAdministrador(
+                    id, request, idAdministrador);
+
+            if (!desactivado)
+            {
+                return Results.NotFound(new
+                {
+                    mensaje = "Administrador activo no encontrado."
+                });
+            }
+
+            return Results.Ok(new
+            {
+                mensaje = "Administrador dado de baja correctamente.",
+                idUsuario = id
+            });
+        }
+        catch (ArgumentException ex)
+        {
+            return Results.BadRequest(new
+            {
+                mensaje = ex.Message
+            });
+        }
+        catch (InvalidOperationException ex)
+        {
+            return Results.Conflict(new
+            {
+                mensaje = ex.Message
+            });
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return Results.Forbid();
+        }
+    })
+    .RequireAuthorization("SoloAdministrador");
+
 
 app.Run();
