@@ -288,24 +288,6 @@ app.MapPost(
             });
         }
 
-        if (request.CostoMensual < 0)
-        {
-            return Results.BadRequest(new
-            {
-                mensaje =
-                    "El costo mensual no puede ser negativo"
-            });
-        }
-
-        if (request.CostoAnual < 0)
-        {
-            return Results.BadRequest(new
-            {
-                mensaje =
-                    "El costo anual no puede ser negativo"
-            });
-        }
-
 
         // ===========================
         // REGISTRAR CLIENTE

@@ -148,12 +148,12 @@ public class ClienteService
 
                 command.Parameters.AddWithValue(
                     "p_costo_mensual",
-                    request.CostoMensual
+                    DBNull.Value
                 );
 
                 command.Parameters.AddWithValue(
                     "p_costo_anual",
-                    request.CostoAnual
+                    DBNull.Value
                 );
 
                 await command.ExecuteNonQueryAsync();
