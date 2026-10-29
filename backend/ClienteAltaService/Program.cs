@@ -5,8 +5,10 @@ using ClienteAltaService.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Npgsql;
+using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
+
 
 // ===============================
 // OPENAPI
@@ -55,9 +57,10 @@ builder.Services.AddCors(options =>
                 "OPTIONS"
             )
             .WithHeaders(
-                "Content-Type",
-                "Authorization"
-            );
+            "Content-Type",
+            "Authorization",
+            "Idempotency-Key"
+        );
     });
 });
 
@@ -285,24 +288,6 @@ app.MapPost(
             {
                 mensaje =
                     "La membresía no es válida"
-            });
-        }
-
-        if (request.CostoMensual < 0)
-        {
-            return Results.BadRequest(new
-            {
-                mensaje =
-                    "El costo mensual no puede ser negativo"
-            });
-        }
-
-        if (request.CostoAnual < 0)
-        {
-            return Results.BadRequest(new
-            {
-                mensaje =
-                    "El costo anual no puede ser negativo"
             });
         }
 
@@ -856,22 +841,27 @@ app.MapPost(
     async (
         RegistrarPagoRequest request,
         ClaimsPrincipal usuario,
-        IConfiguration configuration
+        IConfiguration configuration,
+        HttpContext context
     ) =>
-    {
+
+   {
+                if (!context.Request.Headers.TryGetValue(
+                "Idempotency-Key", out var claves)
+            || claves.Count != 1
+            || !Guid.TryParse(claves[0], out var claveIdempotencia)
+            || claveIdempotencia == Guid.Empty)
+        {
+            return Results.BadRequest(new
+            {
+                mensaje = "Se requiere una Idempotency-Key UUID válida."
+            });
+        }
         if (request.IdCliente <= 0)
         {
             return Results.BadRequest(new
             {
                 mensaje = "El cliente no es válido."
-            });
-        }
-
-        if (request.Monto <= 0)
-        {
-            return Results.BadRequest(new
-            {
-                mensaje = "El monto debe ser mayor a cero."
             });
         }
 
@@ -1055,49 +1045,80 @@ app.MapPost(
                 Convert.ToInt32(idRecepcionistaObj);
 
             var tipoPagoNormalizado =
-                request.TipoPago.Equals(
-                    "Mensualidad",
-                    StringComparison.OrdinalIgnoreCase
-                )
-                    ? "Mensualidad"
-                    : "Anualidad";
+    request.TipoPago.Equals(
+        "Mensualidad",
+        StringComparison.OrdinalIgnoreCase
+    )
+        ? "Mensualidad"
+        : "Anualidad";
 
-            // REGISTRAR PAGO Y RENOVACION
-            await using var pagoCommand =
-                new NpgsqlCommand(
-                    """
-                    CALL sp_registrar_pago(
-                        @p_id_cliente,
-                        @p_id_recepcionista,
-                        @p_monto,
-                        @p_tipo
-                    );
-                    """,
-                    connection,
-                    transaction
-                );
+        // REGISTRAR PAGO CON IDEMPOTENCIA
+
+        int idPago;
+        bool pagoRepetido;
+
+        await using (var pagoCommand = new NpgsqlCommand("""
+            CALL public.sp_registrar_pago_idempotente(
+                @p_clave,
+                @p_id_cliente,
+                @p_id_recepcionista,
+                @p_tipo,
+                NULL::integer,
+                NULL::boolean
+            );
+            """, connection, transaction))
+        {
+            pagoCommand.Parameters.AddWithValue(
+                "p_clave", claveIdempotencia);
 
             pagoCommand.Parameters.AddWithValue(
-                "p_id_cliente",
-                request.IdCliente
-            );
+                "p_id_cliente", request.IdCliente);
 
             pagoCommand.Parameters.AddWithValue(
-                "p_id_recepcionista",
-                idRecepcionista
-            );
+                "p_id_recepcionista", idRecepcionista);
 
             pagoCommand.Parameters.AddWithValue(
-                "p_monto",
-                request.Monto
-            );
+                "p_tipo", tipoPagoNormalizado);
 
-            pagoCommand.Parameters.AddWithValue(
-                "p_tipo",
-                tipoPagoNormalizado
-            );
+            await using var reader =
+                await pagoCommand.ExecuteReaderAsync();
 
-            await pagoCommand.ExecuteNonQueryAsync();
+            if (!await reader.ReadAsync())
+            {
+                throw new InvalidOperationException(
+                    "El procedimiento no devolvió el resultado del pago.");
+            }
+
+            idPago = reader.GetInt32(0);
+            pagoRepetido = reader.GetBoolean(1);
+        }
+
+        // CONSULTAR EL MONTO REAL DEL PAGO
+        decimal montoOficial;
+
+        await using (var montoCommand = new NpgsqlCommand("""
+            SELECT monto_pagado
+            FROM public.historial_pagos
+            WHERE id_pago = @id_pago
+            AND id_cliente = @id_cliente;
+            """, connection, transaction))
+        {
+            montoCommand.Parameters.AddWithValue(
+                "id_pago", idPago);
+
+            montoCommand.Parameters.AddWithValue(
+                "id_cliente", request.IdCliente);
+
+            var resultado = await montoCommand.ExecuteScalarAsync();
+
+            if (resultado is null)
+            {
+                throw new InvalidOperationException(
+                    "No se encontró el pago registrado.");
+            }
+
+            montoOficial = Convert.ToDecimal(resultado);
+        }
             
 
             // OBTENER NUEVA VIGENCIA
@@ -1167,15 +1188,20 @@ app.MapPost(
             return Results.Ok(new
             {
                 pagoRegistrado = true,
-                esRenovacion,
+                pagoRepetido,
+                idPago,
+                esRenovacion = pagoRepetido
+                    ? (bool?)null
+                    : esRenovacion,
                 idCliente = request.IdCliente,
-                monto = request.Monto,
+                monto = montoOficial,
                 tipoPago = tipoPagoNormalizado,
                 fechaVencimiento,
-                membresiaActiva = true,
-                mensaje = esRenovacion
-                    ? "Renovación registrada correctamente."
-                    : "Pago registrado correctamente."
+                mensaje = pagoRepetido
+                    ? "Este pago ya había sido procesado. No se generó otro cobro."
+                    : esRenovacion
+                        ? "Renovación registrada correctamente."
+                        : "Pago registrado correctamente."
             });
         }
         catch (Exception ex)

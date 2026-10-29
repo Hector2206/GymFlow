@@ -18,7 +18,7 @@ builder.Services.AddScoped<DashboardService>();
 builder.Services.AddScoped<ClienteAdminService>();
 builder.Services.AddScoped<NotificacionService>();
 builder.Services.AddHostedService<NotificacionWorker>();
-
+builder.Services.AddScoped<MembresiaService>();
 // ========================================
 // CORS
 // ========================================
@@ -1192,5 +1192,293 @@ app.MapPut("/api/admin/personal/{id:int}",
         }
     })
     .RequireAuthorization();
+
+    app.MapGet("/api/admin/membresias",
+    async (
+        MembresiaService membresiaService,
+        ClaimsPrincipal usuario
+    ) =>
+    {
+        if (!int.TryParse(
+            usuario.FindFirst("sub")?.Value,
+            out var idAdministrador))
+        {
+            return Results.Unauthorized();
+        }
+
+        try
+        {
+            var membresias =
+                await membresiaService.ObtenerMembresias(idAdministrador);
+
+            return Results.Ok(membresias);
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return Results.Forbid();
+        }
+        catch
+        {
+            return Results.Problem(
+                statusCode: 500,
+                title: "Error al consultar membresías");
+        }
+    })
+    .RequireAuthorization("SoloAdministrador");
+
+    app.MapGet("/api/membresias/activas",
+    async (MembresiaService membresiaService) =>
+    {
+        try
+        {
+            var membresias =
+                await membresiaService.ObtenerMembresiasActivas();
+
+            return Results.Ok(membresias);
+        }
+        catch (Exception)
+        {
+            return Results.Problem(
+                statusCode: 500,
+                title: "Error al consultar membresías activas");
+        }
+    })
+    .RequireAuthorization(policy =>
+        policy.RequireRole("Recepcionista", "Administrador"));
+
+
+    app.MapPost("/api/admin/membresias",
+    async (
+        GymManagement.api.Models.CrearMembresiaRequest request,
+        MembresiaService membresiaService,
+        ClaimsPrincipal usuario
+    ) =>
+    {
+        if (!int.TryParse(
+            usuario.FindFirst("sub")?.Value,
+            out var idAdministrador))
+        {
+            return Results.Unauthorized();
+        }
+
+        try
+        {
+            var idMembresia =
+                await membresiaService.CrearMembresia(
+                    request, idAdministrador);
+
+            return Results.Created(
+                $"/api/admin/membresias/{idMembresia}",
+                new
+                {
+                    mensaje = "Membresía creada correctamente.",
+                    idMembresia
+                });
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return Results.Forbid();
+        }
+        catch (ArgumentException ex)
+        {
+            return Results.BadRequest(new
+            {
+                mensaje = ex.Message
+            });
+        }
+        catch (PostgresException ex)
+            when (ex.SqlState ==
+                  PostgresErrorCodes.UniqueViolation)
+        {
+            return Results.Conflict(new
+            {
+                mensaje = "Ya existe una membresía con ese nombre."
+            });
+        }
+        catch (Exception ex)
+        {
+            app.Logger.LogError(
+                ex, "Error al crear membresía");
+
+            return Results.Problem(
+                statusCode: 500,
+                title: "Error al crear membresía");
+            }
+    })
+    .RequireAuthorization("SoloAdministrador");
+
+    app.MapPut("/api/admin/membresias/{id:int}",
+    async (
+        int id,
+        GymManagement.api.Models.EditarMembresiaRequest request,
+        MembresiaService membresiaService,
+        ClaimsPrincipal usuario
+    ) =>
+    {
+        if (!int.TryParse(
+            usuario.FindFirst("sub")?.Value,
+            out var idAdministrador))
+        {
+            return Results.Unauthorized();
+        }
+
+        try
+        {
+            await membresiaService.EditarMembresia(
+                id, request, idAdministrador);
+
+            return Results.Ok(new
+            {
+                mensaje = "Membresía actualizada correctamente.",
+                idMembresia = id
+            });
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return Results.Forbid();
+        }
+        catch (ArgumentException ex)
+        {
+            return Results.BadRequest(new
+            {
+                mensaje = ex.Message
+            });
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return Results.NotFound(new
+            {
+                mensaje = ex.Message
+            });
+        }
+        catch (PostgresException ex)
+            when (ex.SqlState == PostgresErrorCodes.UniqueViolation)
+        {
+            return Results.Conflict(new
+            {
+                mensaje = "Ya existe una membresía con ese nombre."
+            });
+        }
+        catch (Exception ex)
+        {
+            app.Logger.LogError(ex, "Error al editar membresía");
+
+            return Results.Problem(
+                statusCode: 500,
+                title: "Error al editar membresía");
+        }
+    })
+    .RequireAuthorization("SoloAdministrador");
+
+    app.MapPatch("/api/admin/membresias/{id:int}/estado",
+    async (
+        int id,
+        GymManagement.api.Models.CambiarEstadoMembresiaRequest request,
+        MembresiaService membresiaService,
+        ClaimsPrincipal usuario
+    ) =>
+    {
+        if (!int.TryParse(
+            usuario.FindFirst("sub")?.Value,
+            out var idAdministrador))
+        {
+            return Results.Unauthorized();
+        }
+
+        try
+        {
+            await membresiaService.CambiarEstadoMembresia(
+                id,
+                request.Activo,
+                idAdministrador);
+
+            return Results.Ok(new
+            {
+                mensaje = "Estado de membresía actualizado correctamente.",
+                idMembresia = id,
+                activo = request.Activo
+            });
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return Results.Forbid();
+        }
+        catch (ArgumentException ex)
+        {
+            return Results.BadRequest(new
+            {
+                mensaje = ex.Message
+            });
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return Results.NotFound(new
+            {
+                mensaje = ex.Message
+            });
+        }
+        catch (Exception ex)
+        {
+            app.Logger.LogError(
+                ex, "Error al cambiar estado de membresía");
+
+            return Results.Problem(
+                statusCode: 500,
+                title: "Error al cambiar estado de membresía");
+        }
+    })
+    .RequireAuthorization("SoloAdministrador");
+
+    app.MapGet("/api/admin/membresias/{id:int}/historial-precios",
+    async (
+        int id,
+        MembresiaService membresiaService,
+        ClaimsPrincipal usuario
+    ) =>
+    {
+        if (!int.TryParse(
+            usuario.FindFirst("sub")?.Value,
+            out var idAdministrador))
+        {
+            return Results.Unauthorized();
+        }
+
+        try
+        {
+            var historial =
+                await membresiaService.ObtenerHistorialPrecios(
+                    id, idAdministrador);
+
+            return Results.Ok(historial);
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return Results.Forbid();
+        }
+        catch (ArgumentException ex)
+        {
+            return Results.BadRequest(new
+            {
+                mensaje = ex.Message
+            });
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return Results.NotFound(new
+            {
+                mensaje = ex.Message
+            });
+        }
+        catch (Exception ex)
+        {
+            app.Logger.LogError(
+                ex, "Error al consultar historial de membresía");
+
+            return Results.Problem(
+                statusCode: 500,
+                title: "Error al consultar historial de precios");
+        }
+    })
+    .RequireAuthorization("SoloAdministrador");
 
 app.Run();
