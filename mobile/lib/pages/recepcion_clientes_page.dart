@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../models/cliente_resumen.dart';
 import '../services/cliente_consulta_service.dart';
+import '../widgets/cambiar_membresia_button.dart';
 import 'asignacion_entrenadores_page.dart';
 
 class RecepcionClientesPage extends StatefulWidget {
@@ -41,6 +42,10 @@ class _RecepcionClientesPageState extends State<RecepcionClientesPage> {
     super.dispose();
   }
 
+  // ===================================
+  // CONSULTAR CLIENTES DESDE BACKEND
+  // ===================================
+
   Future<void> cargarClientes() async {
     final version = ++versionConsulta;
 
@@ -72,6 +77,10 @@ class _RecepcionClientesPageState extends State<RecepcionClientesPage> {
     }
   }
 
+  // ===================================
+  // BUSQUEDA DE CLIENTES
+  // ===================================
+
   List<ClienteResumen> get clientesFiltrados {
     final buscar = _busqueda.text.trim().toLowerCase();
 
@@ -81,11 +90,25 @@ class _RecepcionClientesPageState extends State<RecepcionClientesPage> {
 
     return clientes.where((cliente) {
       return cliente.nombreCompleto.toLowerCase().contains(buscar) ||
-          cliente.idCliente.toString().contains(buscar);
+          cliente.idCliente.toString().contains(buscar) ||
+          (cliente.nombreEntrenador ?? '').toLowerCase().contains(buscar) ||
+          (cliente.nombrePlan ?? '').toLowerCase().contains(buscar);
     }).toList();
   }
 
+  // ===================================
+  // TARJETA DE CLIENTE
+  // ===================================
+
   Widget tarjetaCliente(ClienteResumen cliente) {
+    final nombrePlan = cliente.nombrePlan?.trim();
+
+    final membresiaActual = nombrePlan != null && nombrePlan.isNotEmpty
+        ? nombrePlan
+        : cliente.idMembresia != null
+        ? 'Plan #${cliente.idMembresia}'
+        : 'No disponible';
+
     return Card(
       color: superficie,
       elevation: 0,
@@ -96,24 +119,64 @@ class _RecepcionClientesPageState extends State<RecepcionClientesPage> {
       ),
       child: ListTile(
         contentPadding: const EdgeInsets.all(14),
+
         leading: const CircleAvatar(
           backgroundColor: Color(0xFFF3EAD8),
           child: Icon(Icons.person_outline, color: doradoOscuro),
         ),
+
         title: Text(
           cliente.nombreCompleto,
           style: const TextStyle(color: texto, fontWeight: FontWeight.w700),
         ),
+
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const SizedBox(height: 5),
+
             Text('Cliente #${cliente.idCliente}'),
+
             const SizedBox(height: 5),
+
             Text(
               cliente.nombreEntrenador?.isNotEmpty == true
                   ? 'Entrenador: ${cliente.nombreEntrenador}'
                   : 'Sin entrenador asignado',
+            ),
+
+            const SizedBox(height: 8),
+
+            // MEMBRESIA ACTUAL DEL CLIENTE
+            Row(
+              children: [
+                const Icon(
+                  Icons.card_membership_outlined,
+                  size: 17,
+                  color: doradoOscuro,
+                ),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: Text(
+                    'Membresía: $membresiaActual',
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w600,
+                      color: texto,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 14),
+
+            // UN SOLO BOTON PARA CAMBIAR MEMBRESIA
+            CambiarMembresiaButton(
+              idCliente: cliente.idCliente,
+              nombreCliente: cliente.nombreCompleto,
+              idMembresiaActual: cliente.idMembresia,
+              nombreMembresiaActual: cliente.nombrePlan,
+              alActualizar: cargarClientes,
             ),
           ],
         ),
@@ -121,12 +184,17 @@ class _RecepcionClientesPageState extends State<RecepcionClientesPage> {
     );
   }
 
+  // ===================================
+  // PANTALLA PRINCIPAL
+  // ===================================
+
   @override
   Widget build(BuildContext context) {
     final visibles = clientesFiltrados;
 
     return Scaffold(
       backgroundColor: fondo,
+
       appBar: AppBar(
         title: const Text('Administrar Clientes'),
         backgroundColor: superficie,
@@ -138,6 +206,7 @@ class _RecepcionClientesPageState extends State<RecepcionClientesPage> {
           ),
         ],
       ),
+
       body: RefreshIndicator(
         color: dorado,
         onRefresh: cargarClientes,
@@ -153,7 +222,9 @@ class _RecepcionClientesPageState extends State<RecepcionClientesPage> {
                 fontWeight: FontWeight.w700,
               ),
             ),
+
             const SizedBox(height: 10),
+
             const Text(
               'Directorio de clientes',
               style: TextStyle(
@@ -162,22 +233,28 @@ class _RecepcionClientesPageState extends State<RecepcionClientesPage> {
                 fontWeight: FontWeight.w800,
               ),
             ),
+
             const SizedBox(height: 8),
+
             const Text(
-              'Consulta clientes registrados '
-              'y sus entrenadores asignados.',
+              'Consulta clientes, visualiza sus membresías '
+              'actuales y administra sus planes.',
               style: TextStyle(color: secundario),
             ),
+
             const SizedBox(height: 20),
+
             TextField(
               controller: _busqueda,
               onChanged: (_) => setState(() {}),
               decoration: const InputDecoration(
-                labelText: 'Buscar por nombre o ID',
+                labelText: 'Buscar por nombre, ID o membresía',
                 prefixIcon: Icon(Icons.search),
               ),
             ),
+
             const SizedBox(height: 18),
+
             if (cargando)
               const Center(
                 child: Padding(
@@ -199,7 +276,9 @@ class _RecepcionClientesPageState extends State<RecepcionClientesPage> {
               )
             else
               ...visibles.map(tarjetaCliente),
+
             const SizedBox(height: 20),
+
             OutlinedButton.icon(
               onPressed: () {
                 Navigator.of(context).push(
@@ -211,11 +290,14 @@ class _RecepcionClientesPageState extends State<RecepcionClientesPage> {
               icon: const Icon(Icons.fitness_center),
               label: const Text('Ir a asignación de entrenadores'),
             ),
+
             const SizedBox(height: 12),
+
             const Text(
-              'La edición y baja de clientes '
-              'requiere endpoints adicionales. '
-              'Esta pantalla no modifica registros.',
+              'Los cambios de membresía se aplican '
+              'sin generar nuevos pagos. '
+              'La asignación de entrenadores se realiza '
+              'desde su módulo correspondiente.',
               style: TextStyle(color: secundario, fontSize: 12),
             ),
           ],
