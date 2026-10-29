@@ -23,6 +23,11 @@ import 'admin_dashboard_page.dart';
 import 'admin_clientes_page.dart';
 import 'admin_personal_page.dart';
 import 'campana_notificaciones.dart';
+import 'admin_horarios_asistencias_page.dart';
+import 'admin_membresias_page.dart';
+import 'admin_administradores_page.dart';
+import 'recepcion_clientes_page.dart';
+import 'mi_membresia_page.dart';
 
 class HomePage extends StatelessWidget {
   final Usuario usuario;
@@ -509,7 +514,9 @@ class HomePage extends StatelessWidget {
         titulo: 'Administrar Clientes',
         subtitulo: 'Consultar y administrar clientes',
         onTap: () {
-          proximamente(context, 'Administrar clientes');
+          Navigator.of(context).push(
+            MaterialPageRoute(builder: (_) => const RecepcionClientesPage()),
+          );
         },
       ),
 
@@ -583,7 +590,9 @@ class HomePage extends StatelessWidget {
         titulo: 'Membresía',
         subtitulo: 'Consulta tu membresía actual',
         onTap: () {
-          proximamente(context, 'Membresía');
+          Navigator.of(
+            context,
+          ).push(MaterialPageRoute(builder: (_) => const MiMembresiaPage()));
         },
       ),
 
@@ -684,7 +693,11 @@ class HomePage extends StatelessWidget {
             'Organizar horarios y controlar '
             'la asistencia laboral del personal',
         onTap: () {
-          proximamente(context, 'Horarios y Asistencias');
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (_) => const AdminHorariosAsistenciasPage(),
+            ),
+          );
         },
       ),
 
@@ -696,8 +709,11 @@ class HomePage extends StatelessWidget {
         subtitulo:
             'Gestionar BasicFlow, precios '
             'y nuevos planes',
+
         onTap: () {
-          proximamente(context, 'Administrar Membresías');
+          Navigator.of(context).push(
+            MaterialPageRoute(builder: (_) => const AdminMembresiasPage()),
+          );
         },
       ),
 
@@ -710,7 +726,9 @@ class HomePage extends StatelessWidget {
             'Consultar cuentas y preparar '
             'el registro de administradores',
         onTap: () {
-          proximamente(context, 'Administrar Administradores');
+          Navigator.of(context).push(
+            MaterialPageRoute(builder: (_) => const AdminAdministradoresPage()),
+          );
         },
       ),
     ];
