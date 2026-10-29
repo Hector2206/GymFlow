@@ -24,8 +24,6 @@ import 'admin_clientes_page.dart';
 import 'admin_personal_page.dart';
 import 'campana_notificaciones.dart';
 
-
-
 class HomePage extends StatelessWidget {
   final Usuario usuario;
 
@@ -531,15 +529,6 @@ class HomePage extends StatelessWidget {
       ),
 
       _espacio(),
-
-      _buildCard(
-        icon: Icons.campaign_outlined,
-        titulo: 'Anuncios',
-        subtitulo: 'Administrar anuncios del gimnasio',
-        onTap: () {
-          proximamente(context, 'Anuncios');
-        },
-      ),
     ];
   }
 
@@ -625,15 +614,6 @@ class HomePage extends StatelessWidget {
       ),
 
       _espacio(),
-
-      _buildCard(
-        icon: Icons.campaign_outlined,
-        titulo: 'Anuncios',
-        subtitulo: 'Consulta anuncios y promociones',
-        onTap: () {
-          proximamente(context, 'Anuncios');
-        },
-      ),
     ];
   }
 
