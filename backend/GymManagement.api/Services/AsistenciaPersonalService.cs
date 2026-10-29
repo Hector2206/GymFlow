@@ -242,6 +242,6 @@ public async Task<List<object>> ObtenerHistorial(
 
         return historial;
     }
-        
+
 
 }
