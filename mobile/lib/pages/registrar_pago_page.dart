@@ -1,1033 +1,598 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 
 import '../models/cliente_resumen.dart';
 import '../services/cliente_consulta_service.dart';
 import '../services/pago_service.dart';
+import 'historial_pagos_page.dart';
 
+// GYMFLOW - RECEPCION / SPRINT 7
+// El monto NO se captura ni se envía al servidor.
 class RegistrarPagoPage extends StatefulWidget {
-  const RegistrarPagoPage({
-    super.key,
-  });
+  const RegistrarPagoPage({super.key});
 
   @override
-  State<RegistrarPagoPage> createState() =>
-      _RegistrarPagoPageState();
+  State<RegistrarPagoPage> createState() => _RegistrarPagoPageState();
 }
 
-class _RegistrarPagoPageState
-    extends State<RegistrarPagoPage> {
-  final _formKey =
-      GlobalKey<FormState>();
+class _RegistrarPagoPageState extends State<RegistrarPagoPage> {
+  final _formKey = GlobalKey<FormState>();
+  final _clienteService = ClienteConsultaService();
+  final _pagoService = PagoService();
 
-  final clienteConsultaService =
-      ClienteConsultaService();
+  static const _fondo = Color(0xFFF8F5EF);
+  static const _superficie = Color(0xFFFFFDF8);
+  static const _dorado = Color(0xFFB58A2A);
+  static const _doradoOscuro = Color(0xFF8A6814);
+  static const _texto = Color(0xFF2F2A24);
+  static const _secundario = Color(0xFF777067);
+  static const _borde = Color(0xFFE5DDCF);
+  static const _rojo = Color(0xFFA03930);
+  static const _verde = Color(0xFF287447);
 
-  final pagoService =
-      PagoService();
+  List<ClienteResumen> _clientes = [];
+  PagoPendiente? _pendiente;
+  ResultadoRegistroPago? _resultado;
 
-  final montoController =
-      TextEditingController();
-
-  List<ClienteResumen> clientes = [];
-
-  int? idCliente;
-  String? tipoPago;
-
-  bool cargandoClientes = true;
-  bool procesandoPago = false;
-
-  String errorClientes = '';
-  String errorFormulario = '';
-
-  ResultadoRegistroPago? resultado;
+  int? _idCliente;
+  String? _tipoPago;
+  bool _cargandoClientes = true;
+  bool _cargandoPendiente = true;
+  bool _procesando = false;
+  bool _operacionTerminada = false;
+  String _errorClientes = '';
+  String _errorFormulario = '';
+  String _errorPendiente = '';
 
   @override
   void initState() {
     super.initState();
-
-    cargarClientes();
+    _cargarClientes();
+    _cargarPendiente();
   }
 
-  @override
-  void dispose() {
-    montoController.dispose();
+  String _limpiarError(Object error) =>
+      error.toString().replaceFirst('Exception: ', '').trim();
 
-    super.dispose();
-  }
-
-  String limpiarException(
-    Object error,
-  ) {
-    return error
-        .toString()
-        .replaceFirst(
-          'Exception:',
-          '',
-        )
-        .trim();
-  }
-
-  Future<void> cargarClientes() async {
-    if (!mounted) {
-      return;
-    }
-
+  Future<void> _cargarClientes() async {
+    if (!mounted) return;
     setState(() {
-      cargandoClientes = true;
-      errorClientes = '';
+      _cargandoClientes = true;
+      _errorClientes = '';
     });
-
     try {
-      final lista =
-          await clienteConsultaService
-              .obtenerClientes();
-
-      if (!mounted) {
-        return;
-      }
-
+      final lista = await _clienteService.obtenerClientes();
+      if (!mounted) return;
       setState(() {
-        clientes = lista;
+        _clientes = lista;
+        _cargandoClientes = false;
       });
-    } catch (e) {
-      if (!mounted) {
-        return;
-      }
-
+    } catch (error) {
+      if (!mounted) return;
       setState(() {
-        errorClientes =
-            limpiarException(e);
+        _errorClientes = _limpiarError(error);
+        _cargandoClientes = false;
       });
-    } finally {
-      if (mounted) {
-        setState(() {
-          cargandoClientes = false;
-        });
-      }
     }
   }
 
-  String? validarMonto(
-    String? value,
-  ) {
-    final texto =
-        value?.trim() ?? '';
-
-    if (texto.isEmpty) {
-      return 'Ingresa el monto del pago.';
-    }
-
-    final monto =
-        double.tryParse(texto);
-
-    if (monto == null ||
-        !monto.isFinite) {
-      return 'Ingresa un monto válido.';
-    }
-
-    if (monto <= 0) {
-      return 'El monto debe ser mayor a \$0.';
-    }
-
-    if (monto > 100000) {
-      return 'Verifica el monto ingresado.';
-    }
-
-    return null;
-  }
-
-  Future<void> registrarPago() async {
-    FocusScope.of(context).unfocus();
-
-    if (procesandoPago) {
-      return;
-    }
-
+  Future<void> _cargarPendiente() async {
+    if (!mounted) return;
     setState(() {
-      errorFormulario = '';
-      resultado = null;
+      _cargandoPendiente = true;
+      _errorPendiente = '';
     });
-
-    if (!(_formKey.currentState
-            ?.validate() ??
-        false)) {
-      return;
-    }
-
-    final monto =
-        double.tryParse(
-      montoController.text.trim(),
-    );
-
-    if (idCliente == null ||
-        idCliente! <= 0 ||
-        monto == null ||
-        tipoPago == null) {
-      return;
-    }
-
-    setState(() {
-      procesandoPago = true;
-    });
-
     try {
-      final respuesta =
-          await pagoService
-              .registrarPago(
-        idCliente: idCliente!,
-        monto: monto,
-        tipoPago: tipoPago!,
-      );
-
-      if (!mounted) {
-        return;
-      }
-
+      final pendiente = await _pagoService.obtenerPagoPendiente();
+      if (!mounted) return;
       setState(() {
-        resultado = respuesta;
+        _pendiente = pendiente;
+        if (pendiente != null) {
+          _idCliente = pendiente.idCliente;
+          _tipoPago = pendiente.tipoPago;
+        }
+        _cargandoPendiente = false;
       });
-    } catch (e) {
-      if (!mounted) {
-        return;
-      }
-
+    } catch (error) {
+      if (!mounted) return;
       setState(() {
-        errorFormulario =
-            limpiarException(e);
+        _errorPendiente = _limpiarError(error);
+        _cargandoPendiente = false;
       });
-    } finally {
-      if (mounted) {
-        setState(() {
-          procesandoPago = false;
-        });
-      }
     }
   }
 
-  @override
-  Widget build(
-    BuildContext context,
-  ) {
-    const background =
-        Color(0xFFF8F5EF);
+  String _nombreCliente(int id) {
+    for (final cliente in _clientes) {
+      if (cliente.idCliente == id) return cliente.nombreCompleto;
+    }
+    return 'Cliente #$id';
+  }
 
-    const surface =
-        Color(0xFFFFFDF8);
+  Future<void> _abrirHistorial() async {
+    await Navigator.of(
+      context,
+    ).push<void>(MaterialPageRoute(builder: (_) => const HistorialPagosPage()));
+  }
 
-    const gold =
-        Color(0xFFB58A2A);
-
-    const goldDark =
-        Color(0xFF8A6814);
-
-    const textPrimary =
-        Color(0xFF2F2A24);
-
-    const textSecondary =
-        Color(0xFF777067);
-
-    return Scaffold(
-      backgroundColor:
-          background,
-
-      appBar: AppBar(
-        backgroundColor:
-            surface,
-
-        surfaceTintColor:
-            Colors.transparent,
-
-        elevation: 0,
-
-        leading: Padding(
-          padding:
-              const EdgeInsets.all(
-            8,
-          ),
-
-          child: Container(
-            decoration:
-                BoxDecoration(
-              color:
-                  surface,
-
-              borderRadius:
-                  BorderRadius.circular(
-                12,
+  Future<bool> _confirmar() async {
+    final cliente = _nombreCliente(_idCliente!);
+    final tipo = _tipoPago!;
+    return await showDialog<bool>(
+          context: context,
+          barrierDismissible: false,
+          builder: (ctx) => AlertDialog(
+            title: Text(
+              _pendiente == null ? 'Confirmar pago' : 'Reintentar pago',
+            ),
+            content: Text(
+              'Cliente: $cliente\n'
+              'Concepto: $tipo\n\n'
+              'El monto se calculará con el precio oficial en PostgreSQL.\n\n'
+              '${_pendiente == null ? 'Registra únicamente dinero ya recibido.' : 'Se reutilizará el mismo identificador del intento anterior. No se creará un cobro duplicado.'}',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx, false),
+                child: const Text('Volver'),
               ),
-
-              border:
-                  Border.all(
-                color:
-                    const Color(
-                  0xFFD8C8A5,
+              FilledButton(
+                style: FilledButton.styleFrom(backgroundColor: _doradoOscuro),
+                onPressed: () => Navigator.pop(ctx, true),
+                child: Text(
+                  _pendiente == null
+                      ? 'Confirmar registro'
+                      : 'Reintentar el mismo pago',
                 ),
-              ),
-            ),
-
-            child: IconButton(
-              padding:
-                  EdgeInsets.zero,
-
-              tooltip:
-                  'Regresar',
-
-              onPressed: () {
-                Navigator.of(
-                  context,
-                ).pop();
-              },
-
-              icon:
-                  const Icon(
-                Icons
-                    .arrow_back_rounded,
-
-                color:
-                    goldDark,
-
-                size: 21,
-              ),
-            ),
-          ),
-        ),
-
-        title: Image.asset(
-          'assets/Logo_GymFlow.png',
-
-          height: 48,
-
-          fit:
-              BoxFit.contain,
-        ),
-
-        bottom:
-            const PreferredSize(
-          preferredSize:
-              Size.fromHeight(
-            1,
-          ),
-
-          child: Divider(
-            height: 1,
-
-            color:
-                Color(
-              0xFFE7DFD2,
-            ),
-          ),
-        ),
-      ),
-
-      body: Container(
-        width:
-            double.infinity,
-
-        decoration:
-            const BoxDecoration(
-          gradient:
-              LinearGradient(
-            begin:
-                Alignment.topCenter,
-
-            end:
-                Alignment.bottomCenter,
-
-            colors: [
-              Color(
-                0xFFF8F5EF,
-              ),
-
-              Color(
-                0xFFF2EDE4,
               ),
             ],
           ),
+        ) ??
+        false;
+  }
+
+  Future<void> _registrarPago() async {
+    if (_procesando ||
+        _cargandoPendiente ||
+        _operacionTerminada ||
+        _errorPendiente.isNotEmpty) {
+      return;
+    }
+    FocusScope.of(context).unfocus();
+    if (!(_formKey.currentState?.validate() ?? false)) return;
+    if (_idCliente == null || _tipoPago == null) return;
+    if (_pendiente == null &&
+        (_cargandoClientes || _errorClientes.isNotEmpty)) {
+      return;
+    }
+
+    if (!await _confirmar() || !mounted) return;
+    final id = _idCliente!;
+    final tipo = _tipoPago!;
+    setState(() {
+      _procesando = true;
+      _errorFormulario = '';
+      _resultado = null;
+    });
+    try {
+      final resultado = await _pagoService.registrarPago(
+        idCliente: id,
+        tipoPago: tipo,
+      );
+      if (!mounted) return;
+      setState(() {
+        _resultado = resultado;
+        _pendiente = null;
+        _operacionTerminada = true;
+      });
+    } catch (error) {
+      if (!mounted) return;
+      setState(() {
+        _errorFormulario = _limpiarError(error);
+      });
+      // Aunque haya fallado la conexión, la clave queda guardada.
+      await _cargarPendiente();
+    } finally {
+      if (mounted) {
+        setState(() {
+          _procesando = false;
+        });
+      }
+    }
+  }
+
+  void _nuevaOperacion() {
+    if (_procesando || _pendiente != null) return;
+    setState(() {
+      _operacionTerminada = false;
+      _resultado = null;
+      _errorFormulario = '';
+      _idCliente = null;
+      _tipoPago = null;
+    });
+    _formKey.currentState?.reset();
+  }
+
+  InputDecoration _decoracion(String label, IconData icon, {String? hint}) {
+    return InputDecoration(
+      labelText: label,
+      hintText: hint,
+      prefixIcon: Icon(icon, color: _doradoOscuro),
+      filled: true,
+      fillColor: const Color(0xFFF8F4EC),
+      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: _borde),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: _dorado, width: 1.5),
+      ),
+    );
+  }
+
+  Widget _aviso(String texto, {bool error = false, IconData? icono}) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(15),
+      decoration: BoxDecoration(
+        color: error ? const Color(0xFFFFEEEE) : const Color(0xFFF3EAD8),
+        borderRadius: BorderRadius.circular(13),
+        border: Border.all(
+          color: error ? const Color(0xFFE8B7B3) : const Color(0xFFE5D2A5),
         ),
-
-        child:
-            SingleChildScrollView(
-          padding:
-              const EdgeInsets.fromLTRB(
-            20,
-            28,
-            20,
-            45,
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(
+            icono ?? (error ? Icons.error_outline : Icons.info_outline),
+            color: error ? _rojo : _doradoOscuro,
           ),
+          const SizedBox(width: 11),
+          Expanded(
+            child: Text(
+              texto,
+              style: TextStyle(color: error ? _rojo : _texto, height: 1.4),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 
-          child: Center(
-            child:
-                ConstrainedBox(
-              constraints:
-                  const BoxConstraints(
-                maxWidth: 650,
+  Widget _tarjetaPagoConfirmado(ResultadoRegistroPago p) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF1F8F2),
+        border: Border.all(color: const Color(0xFFB7D7BC)),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Row(
+            children: [
+              Icon(Icons.check_circle_outline, color: _verde, size: 27),
+              SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  'Pago confirmado',
+                  style: TextStyle(
+                    color: _verde,
+                    fontSize: 18,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
               ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Text(
+            p.mensaje.isEmpty ? 'El servidor confirmó el pago.' : p.mensaje,
+            style: const TextStyle(color: _texto),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            '\$${p.monto.toStringAsFixed(2)} MXN · ${p.tipoPago}',
+            style: const TextStyle(
+              color: _verde,
+              fontSize: 18,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text('Folio: #${p.idPago}', style: const TextStyle(color: _texto)),
+          if (p.fechaVencimiento.isNotEmpty)
+            Text(
+              'Vencimiento: ${p.fechaVencimiento}',
+              style: const TextStyle(color: _secundario),
+            ),
+          if (p.pagoRepetido) ...[
+            const SizedBox(height: 8),
+            const Text(
+              'El servidor reconoció el UUID original. No generó otro pago.',
+              style: TextStyle(color: _verde, fontWeight: FontWeight.w600),
+            ),
+          ],
+          const SizedBox(height: 17),
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              onPressed: _nuevaOperacion,
+              icon: const Icon(Icons.add_circle_outline),
+              label: const Text('Registrar un pago nuevo'),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 
-              child: Form(
-                key:
-                    _formKey,
+  @override
+  Widget build(BuildContext context) {
+    final bloqueado =
+        _procesando ||
+        _cargandoPendiente ||
+        _operacionTerminada ||
+        _errorPendiente.isNotEmpty;
+    final hayPendiente = _pendiente != null;
 
-                autovalidateMode:
-                    AutovalidateMode
-                        .onUserInteraction,
-
+    return PopScope(
+      canPop: !_procesando,
+      child: Scaffold(
+        backgroundColor: _fondo,
+        appBar: AppBar(
+          backgroundColor: _superficie,
+          surfaceTintColor: Colors.transparent,
+          iconTheme: const IconThemeData(color: _doradoOscuro),
+          title: Image.asset('assets/Logo_GymFlow.png', height: 48),
+        ),
+        body: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [_fondo, Color(0xFFF2EDE4)],
+            ),
+          ),
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.fromLTRB(18, 24, 18, 36),
+            child: Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 650),
                 child: Column(
-                  crossAxisAlignment:
-                      CrossAxisAlignment
-                          .start,
-
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Container(
-                      width:
-                          double.infinity,
-
-                      padding:
-                          const EdgeInsets.all(
-                        22,
-                      ),
-
-                      decoration:
-                          BoxDecoration(
-                        color:
-                            surface,
-
-                        borderRadius:
-                            BorderRadius.circular(
-                          20,
-                        ),
-
-                        border:
-                            Border.all(
-                          color:
-                              const Color(
-                            0xFFE5DDCF,
-                          ),
-                        ),
-
-                        boxShadow: [
-                          BoxShadow(
-                            color:
-                                const Color(
-                              0xFF4C3E24,
-                            ).withValues(
-                              alpha:
-                                  0.05,
-                            ),
-
-                            blurRadius:
-                                20,
-
-                            offset:
-                                const Offset(
-                              0,
-                              7,
-                            ),
-                          ),
-                        ],
-                      ),
-
-                      child:
-                          const Column(
-                        crossAxisAlignment:
-                            CrossAxisAlignment
-                                .start,
-
-                        children: [
-                          Text(
-                            'RECEPCIÓN',
-
-                            style:
-                                TextStyle(
-                              color:
-                                  goldDark,
-
-                              fontSize:
-                                  11,
-
-                              fontWeight:
-                                  FontWeight
-                                      .w700,
-
-                              letterSpacing:
-                                  2,
-                            ),
-                          ),
-
-                          SizedBox(
-                            height: 7,
-                          ),
-
-                          Text(
-                            'Registrar Pago',
-
-                            style:
-                                TextStyle(
-                              color:
-                                  textPrimary,
-
-                              fontSize:
-                                  29,
-
-                              fontWeight:
-                                  FontWeight
-                                      .w700,
-
-                              letterSpacing:
-                                  -0.5,
-                            ),
-                          ),
-
-                          SizedBox(
-                            height: 7,
-                          ),
-
-                          Text(
-                            'Selecciona un cliente y registra el pago de su membresía.',
-
-                            style:
-                                TextStyle(
-                              color:
-                                  textSecondary,
-
-                              fontSize:
-                                  13,
-
-                              height:
-                                  1.4,
-                            ),
-                          ),
-                        ],
+                    const Text(
+                      'RECEPCIÓN / GYMFLOW',
+                      style: TextStyle(
+                        color: _doradoOscuro,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 1.2,
                       ),
                     ),
-
-                    const SizedBox(
-                      height: 22,
+                    const SizedBox(height: 8),
+                    const Text(
+                      'Registrar pago',
+                      style: TextStyle(
+                        color: _texto,
+                        fontSize: 29,
+                        fontWeight: FontWeight.w800,
+                      ),
                     ),
-
+                    const SizedBox(height: 8),
+                    const Text(
+                      'El precio oficial se calcula automáticamente en PostgreSQL.',
+                      style: TextStyle(color: _secundario, fontSize: 13),
+                    ),
+                    const SizedBox(height: 22),
+                    if (_cargandoPendiente)
+                      const Center(
+                        child: Padding(
+                          padding: EdgeInsets.all(15),
+                          child: CircularProgressIndicator(color: _dorado),
+                        ),
+                      ),
+                    if (_errorPendiente.isNotEmpty) ...[
+                      _aviso(_errorPendiente, error: true),
+                      const SizedBox(height: 14),
+                    ],
+                    if (hayPendiente) ...[
+                      _aviso(
+                        'Hay un cobro por confirmar: '
+                        '${_nombreCliente(_pendiente!.idCliente)} · ${_pendiente!.tipoPago}. '
+                        'El reintento utiliza la misma Idempotency-Key. '
+                        'No registres una operación diferente sin resolver esta.',
+                        icono: Icons.shield_outlined,
+                      ),
+                      const SizedBox(height: 12),
+                    ],
                     Container(
-                      width:
-                          double.infinity,
-
-                      padding:
-                          const EdgeInsets.all(
-                        20,
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(19),
+                      decoration: BoxDecoration(
+                        color: _superficie,
+                        borderRadius: BorderRadius.circular(18),
+                        border: Border.all(color: _borde),
                       ),
-
-                      decoration:
-                          BoxDecoration(
-                        color:
-                            surface,
-
-                        borderRadius:
-                            BorderRadius.circular(
-                          18,
-                        ),
-
-                        border:
-                            Border.all(
-                          color:
-                              const Color(
-                            0xFFE5DDCF,
-                          ),
-                        ),
-
-                        boxShadow: [
-                          BoxShadow(
-                            color:
-                                const Color(
-                              0xFF4C3E24,
-                            ).withValues(
-                              alpha:
-                                  0.04,
+                      child: Form(
+                        key: _formKey,
+                        autovalidateMode: AutovalidateMode.onUserInteraction,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              'Datos del pago',
+                              style: TextStyle(
+                                color: _texto,
+                                fontSize: 17,
+                                fontWeight: FontWeight.w700,
+                              ),
                             ),
-
-                            blurRadius:
-                                16,
-
-                            offset:
-                                const Offset(
-                              0,
-                              5,
-                            ),
-                          ),
-                        ],
-                      ),
-
-                      child: Column(
-                        crossAxisAlignment:
-                            CrossAxisAlignment
-                                .start,
-
-                        children: [
-                          Row(
-                            children: [
-                              Container(
-                                width: 40,
-                                height: 40,
-
-                                decoration:
-                                    BoxDecoration(
-                                  color:
-                                      const Color(
-                                    0xFFF3EAD8,
+                            const SizedBox(height: 17),
+                            if (hayPendiente) ...[
+                              Text(
+                                'Cliente: ${_nombreCliente(_pendiente!.idCliente)}',
+                                style: const TextStyle(
+                                  color: _texto,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              const SizedBox(height: 9),
+                              Text(
+                                'Concepto: ${_pendiente!.tipoPago}',
+                                style: const TextStyle(
+                                  color: _texto,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ] else ...[
+                              if (_cargandoClientes)
+                                const Center(
+                                  child: CircularProgressIndicator(
+                                    color: _dorado,
                                   ),
-
-                                  borderRadius:
-                                      BorderRadius.circular(
-                                    11,
+                                )
+                              else if (_errorClientes.isNotEmpty) ...[
+                                _aviso(_errorClientes, error: true),
+                                TextButton.icon(
+                                  onPressed: _cargarClientes,
+                                  icon: const Icon(Icons.refresh),
+                                  label: const Text('Reintentar'),
+                                ),
+                              ] else if (_clientes.isEmpty)
+                                _aviso(
+                                  'No hay clientes disponibles para registrar pagos.',
+                                  error: true,
+                                )
+                              else ...[
+                                DropdownButtonFormField<int>(
+                                  key: ValueKey('cliente-$_idCliente'),
+                                  initialValue: _idCliente,
+                                  isExpanded: true,
+                                  decoration: _decoracion(
+                                    'Cliente *',
+                                    Icons.person_outline,
                                   ),
-
-                                  border:
-                                      Border.all(
-                                    color:
-                                        const Color(
-                                      0xFFE4D2AA,
-                                    ),
-                                  ),
-                                ),
-
-                                child:
-                                    const Icon(
-                                  Icons
-                                      .payments_outlined,
-
-                                  color:
-                                      goldDark,
-
-                                  size: 21,
-                                ),
-                              ),
-
-                              const SizedBox(
-                                width: 12,
-                              ),
-
-                              const Expanded(
-                                child:
-                                    Text(
-                                  'Datos del pago',
-
-                                  style:
-                                      TextStyle(
-                                    color:
-                                        textPrimary,
-
-                                    fontSize:
-                                        17,
-
-                                    fontWeight:
-                                        FontWeight.w700,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-
-                          const SizedBox(
-                            height: 20,
-                          ),
-
-                          if (cargandoClientes)
-                            const Center(
-                              child: Padding(
-                                padding:
-                                    EdgeInsets.all(
-                                  24,
-                                ),
-
-                                child:
-                                    CircularProgressIndicator(
-                                  color:
-                                      gold,
-                                ),
-                              ),
-                            )
-                          else if (errorClientes
-                              .isNotEmpty)
-                            _error(
-                              errorClientes,
-                              botonReintentar:
-                                  true,
-                            )
-                          else if (clientes
-                              .isEmpty)
-                            _error(
-                              'No hay clientes disponibles para registrar pagos.',
-                            )
-                          else ...[
-                            DropdownButtonFormField<
-                                int>(
-                              initialValue:
-                                  idCliente,
-
-                              isExpanded:
-                                  true,
-
-                              dropdownColor:
-                                  surface,
-
-                              style:
-                                  const TextStyle(
-                                color:
-                                    textPrimary,
-
-                                fontSize:
-                                    14,
-
-                                fontWeight:
-                                    FontWeight.w500,
-                              ),
-
-                              icon:
-                                  const Icon(
-                                Icons
-                                    .keyboard_arrow_down_rounded,
-
-                                color:
-                                    goldDark,
-                              ),
-
-                              decoration:
-                                  _decoracion(
-                                'Cliente',
-                                icon:
-                                    Icons
-                                        .person_outline_rounded,
-                              ),
-
-                              items:
-                                  clientes
+                                  items: _clientes
                                       .map(
-                                        (
-                                          cliente,
-                                        ) =>
-                                            DropdownMenuItem<
-                                                int>(
-                                          value:
-                                              cliente.idCliente,
-
-                                          child:
-                                              Text(
-                                            '${cliente.nombreCompleto} · ID ${cliente.idCliente}',
-
-                                            overflow:
-                                                TextOverflow.ellipsis,
-
-                                            style:
-                                                const TextStyle(
-                                              color:
-                                                  textPrimary,
-
-                                              fontSize:
-                                                  14,
-                                            ),
+                                        (cliente) => DropdownMenuItem<int>(
+                                          value: cliente.idCliente,
+                                          child: Text(
+                                            cliente.nombreCompleto,
+                                            overflow: TextOverflow.ellipsis,
                                           ),
                                         ),
                                       )
                                       .toList(),
-
-                              validator:
-                                  (value) {
-                                if (value ==
-                                        null ||
-                                    value <=
-                                        0) {
-                                  return 'Selecciona un cliente.';
-                                }
-
-                                return null;
-                              },
-
-                              onChanged:
-                                  procesandoPago
+                                  validator: (valor) => valor == null
+                                      ? 'Selecciona un cliente.'
+                                      : null,
+                                  onChanged: bloqueado
                                       ? null
-                                      : (value) {
-                                          setState(
-                                            () {
-                                              idCliente =
-                                                  value;
-                                            },
-                                          );
+                                      : (valor) {
+                                          setState(() {
+                                            _idCliente = valor;
+                                            _errorFormulario = '';
+                                          });
                                         },
-                            ),
-
-                            const SizedBox(
-                              height: 16,
-                            ),
-
-                            TextFormField(
-                              controller:
-                                  montoController,
-
-                              enabled:
-                                  !procesandoPago,
-
-                              validator:
-                                  validarMonto,
-
-                              keyboardType:
-                                  const TextInputType
-                                      .numberWithOptions(
-                                decimal:
-                                    true,
-                              ),
-
-                              inputFormatters: [
-                                TextInputFormatter
-                                    .withFunction(
-                                  (
-                                    oldValue,
-                                    newValue,
-                                  ) {
-                                    if (RegExp(
-                                      r'^\d{0,6}(\.\d{0,2})?$',
-                                    ).hasMatch(
-                                      newValue.text,
-                                    )) {
-                                      return newValue;
-                                    }
-
-                                    return oldValue;
-                                  },
+                                ),
+                                const SizedBox(height: 16),
+                                DropdownButtonFormField<String>(
+                                  key: ValueKey('tipo-$_tipoPago'),
+                                  initialValue: _tipoPago,
+                                  decoration: _decoracion(
+                                    'Concepto del pago *',
+                                    Icons.receipt_long_outlined,
+                                  ),
+                                  items: const [
+                                    DropdownMenuItem(
+                                      value: 'Mensualidad',
+                                      child: Text('Mensualidad'),
+                                    ),
+                                    DropdownMenuItem(
+                                      value: 'Anualidad',
+                                      child: Text('Anualidad'),
+                                    ),
+                                  ],
+                                  validator: (valor) => valor == null
+                                      ? 'Selecciona el concepto del pago.'
+                                      : null,
+                                  onChanged: bloqueado
+                                      ? null
+                                      : (valor) {
+                                          setState(() {
+                                            _tipoPago = valor;
+                                            _errorFormulario = '';
+                                          });
+                                        },
                                 ),
                               ],
-
-                              style:
-                                  const TextStyle(
-                                color:
-                                    textPrimary,
-
-                                fontSize:
-                                    14,
-
-                                fontWeight:
-                                    FontWeight.w600,
-                              ),
-
-                              decoration:
-                                  _decoracion(
-                                'Monto',
-                                hint:
-                                    '500.00',
-                                icon:
-                                    Icons
-                                        .attach_money_rounded,
-                              ),
+                            ],
+                            const SizedBox(height: 18),
+                            _aviso(
+                              'No se captura ni envía ningún monto. '
+                              'El servidor registra el precio oficial de la membresía.',
                             ),
-
-                            const SizedBox(
-                              height: 16,
-                            ),
-
-                            DropdownButtonFormField<
-                                String>(
-                              initialValue:
-                                  tipoPago,
-
-                              dropdownColor:
-                                  surface,
-
-                              style:
-                                  const TextStyle(
-                                color:
-                                    textPrimary,
-
-                                fontSize:
-                                    14,
-
-                                fontWeight:
-                                    FontWeight.w500,
-                              ),
-
-                              icon:
-                                  const Icon(
-                                Icons
-                                    .keyboard_arrow_down_rounded,
-
-                                color:
-                                    goldDark,
-                              ),
-
-                              decoration:
-                                  _decoracion(
-                                'Concepto del pago',
-                                icon:
-                                    Icons
-                                        .receipt_long_outlined,
-                              ),
-
-                              items:
-                                  const [
-                                DropdownMenuItem(
-                                  value:
-                                      'Mensualidad',
-
-                                  child:
-                                      Text(
-                                    'Mensualidad',
-
-                                    style:
-                                        TextStyle(
-                                      color:
-                                          textPrimary,
-                                    ),
-                                  ),
-                                ),
-
-                                DropdownMenuItem(
-                                  value:
-                                      'Anualidad',
-
-                                  child:
-                                      Text(
-                                    'Anualidad',
-
-                                    style:
-                                        TextStyle(
-                                      color:
-                                          textPrimary,
-                                    ),
-                                  ),
-                                ),
-                              ],
-
-                              validator:
-                                  (value) {
-                                if (value !=
-                                        'Mensualidad' &&
-                                    value !=
-                                        'Anualidad') {
-                                  return 'Selecciona el concepto del pago.';
-                                }
-
-                                return null;
-                              },
-
-                              onChanged:
-                                  procesandoPago
-                                      ? null
-                                      : (value) {
-                                          setState(
-                                            () {
-                                              tipoPago =
-                                                  value;
-                                            },
-                                          );
-                                        },
-                            ),
-
-                            const SizedBox(
-                              height: 22,
-                            ),
-
+                            const SizedBox(height: 18),
                             SizedBox(
-                              width:
-                                  double.infinity,
-
-                              height: 52,
-
-                              child:
-                                  FilledButton.icon(
+                              width: double.infinity,
+                              child: FilledButton.icon(
                                 onPressed:
-                                    procesandoPago
-                                        ? null
-                                        : registrarPago,
-
-                                icon:
-                                    procesandoPago
-                                        ? const SizedBox(
-                                            width:
-                                                20,
-
-                                            height:
-                                                20,
-
-                                            child:
-                                                CircularProgressIndicator(
-                                              strokeWidth:
-                                                  2,
-
-                                              color:
-                                                  Colors.white,
-                                            ),
-                                          )
-                                        : const Icon(
-                                            Icons
-                                                .payments_outlined,
-
-                                            size:
-                                                21,
-                                          ),
-
+                                    bloqueado ||
+                                        (!hayPendiente &&
+                                            (_cargandoClientes ||
+                                                _errorClientes.isNotEmpty ||
+                                                _clientes.isEmpty))
+                                    ? null
+                                    : _registrarPago,
+                                icon: _procesando
+                                    ? const SizedBox(
+                                        width: 18,
+                                        height: 18,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                          color: Colors.white,
+                                        ),
+                                      )
+                                    : const Icon(Icons.payments_outlined),
                                 label: Text(
-                                  procesandoPago
-                                      ? 'Registrando...'
-                                      : 'Registrar pago',
+                                  _procesando
+                                      ? 'Confirmando...'
+                                      : hayPendiente
+                                      ? 'Reintentar el mismo pago'
+                                      : 'Revisar y registrar pago',
                                 ),
-
-                                style:
-                                    FilledButton.styleFrom(
-                                  backgroundColor:
-                                      gold,
-
-                                  foregroundColor:
-                                      Colors.white,
-
-                                  disabledBackgroundColor:
-                                      const Color(
-                                    0xFFD8C89F,
-                                  ),
-
-                                  disabledForegroundColor:
-                                      Colors.white,
-
-                                  elevation:
-                                      0,
-
-                                  shape:
-                                      RoundedRectangleBorder(
-                                    borderRadius:
-                                        BorderRadius.circular(
-                                      13,
-                                    ),
-                                  ),
-
-                                  textStyle:
-                                      const TextStyle(
-                                    fontSize:
-                                        14,
-
-                                    fontWeight:
-                                        FontWeight.w700,
-                                  ),
+                                style: FilledButton.styleFrom(
+                                  backgroundColor: _doradoOscuro,
+                                  foregroundColor: Colors.white,
+                                  padding: const EdgeInsets.all(15),
                                 ),
                               ),
                             ),
                           ],
-                        ],
+                        ),
                       ),
                     ),
-
-                    if (errorFormulario
-                        .isNotEmpty) ...[
-                      const SizedBox(
-                        height: 20,
-                      ),
-
-                      _error(
-                        errorFormulario,
+                    if (_errorFormulario.isNotEmpty) ...[
+                      const SizedBox(height: 15),
+                      _aviso(_errorFormulario, error: true),
+                    ],
+                    if (hayPendiente || _operacionTerminada) ...[
+                      const SizedBox(height: 10),
+                      TextButton.icon(
+                        onPressed: _procesando ? null : _abrirHistorial,
+                        icon: const Icon(Icons.history),
+                        label: const Text('Consultar historial de pagos'),
                       ),
                     ],
-
-                    if (resultado != null) ...[
-                      const SizedBox(
-                        height: 20,
-                      ),
-
-                      _resultado(
-                        resultado!,
-                      ),
+                    if (_resultado != null) ...[
+                      const SizedBox(height: 17),
+                      _tarjetaPagoConfirmado(_resultado!),
                     ],
                   ],
                 ),
@@ -1035,469 +600,6 @@ class _RegistrarPagoPageState
             ),
           ),
         ),
-      ),
-    );
-  }
-
-  InputDecoration _decoracion(
-    String label, {
-    String? hint,
-    IconData? icon,
-  }) {
-    const gold =
-        Color(0xFFB58A2A);
-
-    const goldDark =
-        Color(0xFF8A6814);
-
-    return InputDecoration(
-      labelText:
-          label,
-
-      hintText:
-          hint,
-
-      filled:
-          true,
-
-      fillColor:
-          const Color(
-        0xFFF8F4EC,
-      ),
-
-      prefixIcon:
-          icon == null
-              ? null
-              : Icon(
-                  icon,
-
-                  color:
-                      goldDark,
-
-                  size: 21,
-                ),
-
-      labelStyle:
-          const TextStyle(
-        color:
-            Color(
-          0xFF777067,
-        ),
-
-        fontSize: 13,
-      ),
-
-      hintStyle:
-          const TextStyle(
-        color:
-            Color(
-          0xFFA39A8D,
-        ),
-
-        fontSize: 13,
-      ),
-
-      border:
-          OutlineInputBorder(
-        borderRadius:
-            BorderRadius.circular(
-          13,
-        ),
-
-        borderSide:
-            const BorderSide(
-          color:
-              Color(
-            0xFFE5DDCF,
-          ),
-        ),
-      ),
-
-      enabledBorder:
-          OutlineInputBorder(
-        borderRadius:
-            BorderRadius.circular(
-          13,
-        ),
-
-        borderSide:
-            const BorderSide(
-          color:
-              Color(
-            0xFFE5DDCF,
-          ),
-        ),
-      ),
-
-      focusedBorder:
-          OutlineInputBorder(
-        borderRadius:
-            BorderRadius.circular(
-          13,
-        ),
-
-        borderSide:
-            const BorderSide(
-          color:
-              gold,
-
-          width: 1.5,
-        ),
-      ),
-
-      errorBorder:
-          OutlineInputBorder(
-        borderRadius:
-            BorderRadius.circular(
-          13,
-        ),
-
-        borderSide:
-            const BorderSide(
-          color:
-              Color(
-            0xFFC21B2E,
-          ),
-        ),
-      ),
-
-      focusedErrorBorder:
-          OutlineInputBorder(
-        borderRadius:
-            BorderRadius.circular(
-          13,
-        ),
-
-        borderSide:
-            const BorderSide(
-          color:
-              Color(
-            0xFFC21B2E,
-          ),
-
-          width: 1.5,
-        ),
-      ),
-
-      errorStyle:
-          const TextStyle(
-        color:
-            Color(
-          0xFFC21B2E,
-        ),
-
-        fontSize: 11,
-      ),
-    );
-  }
-
-  Widget _error(
-    String mensaje, {
-    bool botonReintentar = false,
-  }) {
-    return Container(
-      width:
-          double.infinity,
-
-      padding:
-          const EdgeInsets.all(
-        18,
-      ),
-
-      decoration:
-          BoxDecoration(
-        color:
-            const Color(
-          0xFFFFF5F5,
-        ),
-
-        borderRadius:
-            BorderRadius.circular(
-          14,
-        ),
-
-        border:
-            Border.all(
-          color:
-              const Color(
-            0xFFEDB9BF,
-          ),
-        ),
-      ),
-
-      child: Column(
-        children: [
-          Container(
-            width: 44,
-            height: 44,
-
-            decoration:
-                const BoxDecoration(
-              color:
-                  Color(
-                0xFFF8DDDF,
-              ),
-
-              shape:
-                  BoxShape.circle,
-            ),
-
-            child:
-                const Icon(
-              Icons
-                  .error_outline_rounded,
-
-              color:
-                  Color(
-                0xFFC21B2E,
-              ),
-
-              size: 26,
-            ),
-          ),
-
-          const SizedBox(
-            height: 10,
-          ),
-
-          Text(
-            mensaje,
-
-            textAlign:
-                TextAlign.center,
-
-            style:
-                const TextStyle(
-              color:
-                  Color(
-                0xFF8F2030,
-              ),
-
-              fontSize: 13,
-
-              fontWeight:
-                  FontWeight.w600,
-
-              height: 1.4,
-            ),
-          ),
-
-          if (botonReintentar) ...[
-            const SizedBox(
-              height: 14,
-            ),
-
-            OutlinedButton.icon(
-              onPressed:
-                  cargarClientes,
-
-              icon:
-                  const Icon(
-                Icons
-                    .refresh_rounded,
-
-                size: 19,
-              ),
-
-              label:
-                  const Text(
-                'Reintentar',
-              ),
-
-              style:
-                  OutlinedButton.styleFrom(
-                foregroundColor:
-                    const Color(
-                  0xFF8F2030,
-                ),
-
-                backgroundColor:
-                    Colors.white,
-
-                side:
-                    const BorderSide(
-                  color:
-                      Color(
-                    0xFFE4B8B8,
-                  ),
-                ),
-
-                shape:
-                    RoundedRectangleBorder(
-                  borderRadius:
-                      BorderRadius.circular(
-                    12,
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-
-  Widget _resultado(
-    ResultadoRegistroPago pago,
-  ) {
-    return Container(
-      width:
-          double.infinity,
-
-      padding:
-          const EdgeInsets.all(
-        22,
-      ),
-
-      decoration:
-          BoxDecoration(
-        color:
-            const Color(
-          0xFFF2F8F2,
-        ),
-
-        borderRadius:
-            BorderRadius.circular(
-          16,
-        ),
-
-        border:
-            Border.all(
-          color:
-              const Color(
-            0xFFB7D7BC,
-          ),
-        ),
-      ),
-
-      child: Column(
-        children: [
-          Container(
-            width: 58,
-            height: 58,
-
-            decoration:
-                const BoxDecoration(
-              color:
-                  Color(
-                0xFFDCEEDF,
-              ),
-
-              shape:
-                  BoxShape.circle,
-            ),
-
-            child:
-                const Icon(
-              Icons
-                  .check_circle_rounded,
-
-              color:
-                  Color(
-                0xFF2E7D32,
-              ),
-
-              size: 38,
-            ),
-          ),
-
-          const SizedBox(
-            height: 13,
-          ),
-
-          const Text(
-            'PAGO REGISTRADO',
-
-            style:
-                TextStyle(
-              color:
-                  Color(
-                0xFF2E7D32,
-              ),
-
-              fontWeight:
-                  FontWeight.w800,
-
-              fontSize: 17,
-
-              letterSpacing:
-                  0.4,
-            ),
-          ),
-
-          const SizedBox(
-            height: 10,
-          ),
-
-          Text(
-            pago.mensaje.isEmpty
-                ? 'Pago registrado correctamente.'
-                : pago.mensaje,
-
-            textAlign:
-                TextAlign.center,
-
-            style:
-                const TextStyle(
-              color:
-                  Color(
-                0xFF2F2A24,
-              ),
-
-              fontSize: 14,
-
-              fontWeight:
-                  FontWeight.w700,
-
-              height: 1.4,
-            ),
-          ),
-
-          const SizedBox(
-            height: 12,
-          ),
-
-          Container(
-            padding:
-                const EdgeInsets.symmetric(
-              horizontal: 14,
-              vertical: 9,
-            ),
-
-            decoration:
-                BoxDecoration(
-              color:
-                  const Color(
-                0xFFE4F1E6,
-              ),
-
-              borderRadius:
-                  BorderRadius.circular(
-                30,
-              ),
-            ),
-
-            child: Text(
-              '\$${pago.monto.toStringAsFixed(2)} MXN · ${pago.tipoPago}',
-
-              textAlign:
-                  TextAlign.center,
-
-              style:
-                  const TextStyle(
-                color:
-                    Color(
-                  0xFF285E2D,
-                ),
-
-                fontSize: 13,
-
-                fontWeight:
-                    FontWeight.w700,
-              ),
-            ),
-          ),
-        ],
       ),
     );
   }
