@@ -5,14 +5,26 @@ import { Observable } from 'rxjs';
 
 import { environment } from '../../environments/environment';
 
+// ==========================================
+// MODELO DE CLIENTE PARA RECEPCIÓN
+// ==========================================
+
 export interface ClienteResumen {
   idCliente: number;
   nombreCompleto: string;
 
-  // Opcionales para mantener compatibilidad con Backend actual.
+  // Entrenador asignado
   idEntrenador?: number | null;
   nombreEntrenador?: string | null;
+
+  // Membresía actual del cliente
+  idMembresia?: number | null;
+  nombrePlan?: string | null;
 }
+
+// ==========================================
+// SERVICIO DE CONSULTA DE CLIENTES
+// ==========================================
 
 @Injectable({
   providedIn: 'root'
@@ -23,7 +35,7 @@ export class ClienteConsultaService {
     `${environment.clienteAltaUrl}/api/clientes`;
 
   constructor(
-    private http: HttpClient
+    private readonly http: HttpClient
   ) {}
 
   obtenerClientes(): Observable<ClienteResumen[]> {
