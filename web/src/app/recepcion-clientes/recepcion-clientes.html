@@ -1,21 +1,9 @@
-
 <div class="clientes-page">
   <header class="topbar">
     <div class="header-left">
-      <button
-        class="back-button"
-        type="button"
-        (click)="volverInicio()"
-        aria-label="Regresar"
-      >
-        ←
-      </button>
-
-      <img
-        src="/Logo_GymFlow.png"
-        alt="GymFlow"
-        class="logo"
-      />
+      <button class="back-button" type="button"
+        (click)="volverInicio()" aria-label="Regresar al inicio">←</button>
+      <img src="/Logo_GymFlow.png" alt="GymFlow" class="logo" />
     </div>
   </header>
 
@@ -23,10 +11,8 @@
     <section class="page-header">
       <p class="section-label">GYMFLOW / RECEPCIÓN</p>
       <h1>Administrar Clientes</h1>
-
       <p class="subtitle">
-        Consulta los clientes registrados y sus
-        entrenadores asignados.
+        Consulta clientes, administra membresías y consulta los entrenadores asignados.
       </p>
     </section>
 
@@ -34,106 +20,126 @@
       <div class="panel-header">
         <div>
           <h2>Directorio de clientes</h2>
-          <p>Información actualizada desde Backend.</p>
+          <p>Información actualizada desde GymFlow.</p>
         </div>
-
-        <button
-          type="button"
-          class="secondary-button"
-          [disabled]="cargando"
-          (click)="cargarClientes()"
-        >
-          ↻ Actualizar
-        </button>
+        <button type="button" class="secondary-button" [disabled]="cargando"
+          (click)="cargarClientes()">↻ Actualizar</button>
       </div>
 
-      <p *ngIf="cargando" class="loading">
-        Cargando clientes...
-      </p>
-
-      <div
-        *ngIf="error"
-        class="error-message"
-        role="alert"
-      >
-        {{ error }}
-      </div>
-
-      <ng-container *ngIf="!cargando && !error">
+      @if (mensajeExito) {
+        <div class="success-message" role="status">{{ mensajeExito }}</div>
+      }
+      @if (error) {
+        <div class="error-message" role="alert">{{ error }}</div>
+      }
+      @if (cargando) {
+        <div class="loading" role="status">⏳ Cargando clientes...</div>
+      } @else if (!error) {
         <div class="stats">
           <div class="stat">
             <span>Clientes registrados</span>
             <strong>{{ clientes.length }}</strong>
           </div>
-
           <div class="stat">
             <span>Con entrenador</span>
             <strong>{{ cantidadConEntrenador }}</strong>
           </div>
         </div>
 
-        <label for="buscarCliente" class="search-label">
-          Buscar cliente
-        </label>
+        <label for="buscarCliente" class="search-label">Buscar cliente</label>
+        <input id="buscarCliente" name="buscarCliente" type="search"
+          class="search-input" [(ngModel)]="busqueda"
+          placeholder="Nombre, ID, entrenador o membresía" />
 
-        <input
-          id="buscarCliente"
-          name="buscarCliente"
-          type="search"
-          class="search-input"
-          [(ngModel)]="busqueda"
-          placeholder="Nombre, ID o entrenador"
-        />
+        <p class="result-count">{{ clientesFiltrados.length }} resultado(s)</p>
 
-        <p class="result-count">
-          {{ clientesFiltrados.length }}
-          resultado(s)
-        </p>
-
-        <div
-          *ngFor="let cliente of clientesFiltrados"
-          class="cliente-card"
-        >
-          <div class="cliente-avatar">👤</div>
-
-          <div class="cliente-info">
-            <h3>{{ cliente.nombreCompleto }}</h3>
-
-            <p>Cliente #{{ cliente.idCliente }}</p>
-
-            <p>
-              Entrenador:
-              <strong>
-                {{
-                  cliente.nombreEntrenador ||
-                  'Sin entrenador asignado'
-                }}
-              </strong>
-            </p>
-          </div>
+        <div class="clientes-lista">
+          @for (cliente of clientesFiltrados; track cliente.idCliente) {
+            <article class="cliente-card">
+              <div class="cliente-avatar" aria-hidden="true">👤</div>
+              <div class="cliente-info">
+                <h3>{{ cliente.nombreCompleto }}</h3>
+                <p>Cliente #{{ cliente.idCliente }}</p>
+                <p>Entrenador:
+                  <strong>{{ cliente.nombreEntrenador || 'Sin entrenador asignado' }}</strong>
+                </p>
+                <div class="dato-membresia">
+                  <span>Membresía:</span>
+                  <strong>{{ nombrePlanVisible(cliente) }}</strong>
+                  <small>{{ origenPlan(cliente) }}</small>
+                </div>
+              </div>
+              <div class="acciones-cliente">
+                <button type="button" class="cambio-button"
+                  (click)="abrirCambioMembresia(cliente)">
+                  🎫 Cambiar membresía
+                </button>
+              </div>
+            </article>
+          } @empty {
+            <div class="empty">No se encontraron clientes.</div>
+          }
         </div>
+      }
 
-        <div
-          class="empty"
-          *ngIf="clientesFiltrados.length === 0"
-        >
-          No se encontraron clientes.
-        </div>
-      </ng-container>
-
-      <button
-        type="button"
-        class="primary-button"
-        (click)="irAsignacion()"
-      >
+      <button type="button" class="primary-button" (click)="irAsignacion()">
         Ir a Asignación de Entrenadores
       </button>
-
       <p class="footer-note">
-        Este directorio permite consultar clientes.
-        La asignación de entrenadores se realiza
-        desde su módulo correspondiente.
+        El cambio de membresía se aplica inmediatamente y no genera un cobro nuevo.
+        Para asignar entrenadores utiliza el módulo correspondiente.
       </p>
     </section>
   </main>
+
+  @if (clienteCambio; as cliente) {
+    <div class="modal-overlay">
+      <section class="modal-panel" role="dialog" aria-modal="true"
+        aria-labelledby="tituloCambioMembresia">
+        <span class="section-label">GYMFLOW / RECEPCIÓN</span>
+        <h2 id="tituloCambioMembresia">Cambiar membresía</h2>
+        <p class="modal-cliente">{{ cliente.nombreCompleto }} · Cliente #{{ cliente.idCliente }}</p>
+        <div class="membresia-actual">
+          <small>MEMBRESÍA ACTUAL</small>
+          <strong>{{ nombrePlanVisible(cliente) }}</strong>
+          <span>{{ origenPlan(cliente) }}</span>
+        </div>
+
+        @if (cargandoMembresias) {
+          <p class="loading" role="status">Cargando membresías activas...</p>
+        } @else {
+          <label class="campo-modal" for="selectorMembresia">Nuevo plan *</label>
+          <select id="selectorMembresia" name="selectorMembresia"
+            [(ngModel)]="idNuevaMembresia" [disabled]="guardandoMembresia">
+            <option [ngValue]="null">Selecciona una membresía</option>
+            @for (plan of membresiasActivas; track plan.idMembresia) {
+              <option [ngValue]="plan.idMembresia">
+                {{ plan.nombrePlan }} — ${{ plan.costoMensual }} mensual
+              </option>
+            }
+          </select>
+          @if (membresiasActivas.length === 0 && !errorMembresia) {
+            <p class="modal-nota">No hay membresías activas disponibles.</p>
+          }
+        }
+        <p class="modal-nota">
+          Esta operación no modifica pagos anteriores ni las fechas de pago existentes.
+        </p>
+        @if (errorMembresia) {
+          <div class="error-message" role="alert">{{ errorMembresia }}</div>
+        }
+        <div class="modal-acciones">
+          <button type="button" class="secondary-button"
+            [disabled]="guardandoMembresia" (click)="cerrarCambioMembresia()">
+            Cancelar
+          </button>
+          <button type="button" class="cambio-button"
+            [disabled]="guardandoMembresia || cargandoMembresias || membresiasActivas.length === 0"
+            (click)="confirmarCambioMembresia()">
+            {{ guardandoMembresia ? 'Guardando...' : 'Confirmar cambio' }}
+          </button>
+        </div>
+      </section>
+    </div>
+  }
 </div>
