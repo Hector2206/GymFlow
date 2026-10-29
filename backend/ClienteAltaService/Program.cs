@@ -844,7 +844,7 @@ app.MapPost(
         IConfiguration configuration,
         HttpContext context
     ) =>
-        
+
    {
                 if (!context.Request.Headers.TryGetValue(
                 "Idempotency-Key", out var claves)
@@ -856,7 +856,7 @@ app.MapPost(
             {
                 mensaje = "Se requiere una Idempotency-Key UUID válida."
             });
-        }  
+        }
         if (request.IdCliente <= 0)
         {
             return Results.BadRequest(new
