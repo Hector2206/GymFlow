@@ -2085,5 +2085,157 @@ app.MapDelete(
 });
 
 
+app.MapPut(
+    "/api/clientes/{idCliente:int}/membresia",
+    async (
+        int idCliente,
+        CambiarMembresiaClienteRequest request,
+        ClaimsPrincipal usuario,
+        IConfiguration configuration) =>
+    {
+        if (idCliente <= 0 || request.IdMembresia <= 0)
+            return Results.BadRequest(new
+            {
+                mensaje = "El cliente y la membresía deben ser válidos."
+            });
+
+        if (!int.TryParse(
+            usuario.FindFirst("sub")?.Value,
+            out var idUsuario))
+            return Results.Unauthorized();
+
+        var connectionString =
+            configuration.GetConnectionString("PostgreSQL");
+
+        if (string.IsNullOrWhiteSpace(connectionString))
+            throw new InvalidOperationException(
+                "No existe la conexión PostgreSQL.");
+
+        await using var connection =
+            new NpgsqlConnection(connectionString);
+
+        await connection.OpenAsync();
+
+        await using var transaction =
+            await connection.BeginTransactionAsync();
+
+        // Comprobar que el usuario responsable continúa activo
+        // y tiene permisos para realizar el cambio.
+        await using (var validar = new NpgsqlCommand(
+            """
+            SELECT u.id_usuario
+            FROM public.usuarios u
+            JOIN public.roles r ON r.id_rol = u.id_rol
+            WHERE u.id_usuario = @usuario
+              AND u.estatus = 'Activo'
+              AND r.nombre IN ('Administrador', 'Recepcionista')
+            FOR SHARE OF u;
+            """, connection, transaction))
+        {
+            validar.Parameters.AddWithValue("usuario", idUsuario);
+
+            if (await validar.ExecuteScalarAsync() is null)
+                return Results.Forbid();
+        }
+
+        // Comprobar que la nueva membresía esté activa.
+        await using (var membresia = new NpgsqlCommand(
+            """
+            SELECT id_membresia
+            FROM public.membresias
+            WHERE id_membresia = @membresia
+              AND activo = TRUE
+            FOR SHARE;
+            """, connection, transaction))
+        {
+            membresia.Parameters.AddWithValue(
+                "membresia", request.IdMembresia);
+
+            if (await membresia.ExecuteScalarAsync() is null)
+                return Results.BadRequest(new
+                {
+                    mensaje = "La membresía no existe o está inactiva."
+                });
+        }
+
+        // Bloquear al cliente y obtener su membresía actual.
+        int idMembresiaAnterior;
+
+        await using (var cliente = new NpgsqlCommand(
+            """
+            SELECT id_membresia
+            FROM public.clientes
+            WHERE id_cliente = @cliente
+            FOR UPDATE;
+            """, connection, transaction))
+        {
+            cliente.Parameters.AddWithValue("cliente", idCliente);
+
+            var resultado = await cliente.ExecuteScalarAsync();
+
+            if (resultado is null)
+                return Results.NotFound(new
+                {
+                    mensaje = "Cliente no encontrado."
+                });
+
+            idMembresiaAnterior = Convert.ToInt32(resultado);
+        }
+
+        if (idMembresiaAnterior == request.IdMembresia)
+            return Results.Conflict(new
+            {
+                mensaje = "El cliente ya tiene esa membresía."
+            });
+
+        // Configurar la auditoría dentro de la transacción.
+        await using (var auditoria = new NpgsqlCommand(
+            """
+            SELECT set_config(
+                'gymflow.usuario_actual',
+                @usuario,
+                true
+            );
+            """, connection, transaction))
+        {
+            auditoria.Parameters.AddWithValue(
+                "usuario", idUsuario.ToString());
+
+            await auditoria.ExecuteScalarAsync();
+        }
+
+        // Actualizar solo la membresía.
+        // Se conservan los pagos y las fechas existentes.
+        await using (var actualizar = new NpgsqlCommand(
+            """
+            UPDATE public.clientes
+            SET id_membresia = @membresia
+            WHERE id_cliente = @cliente;
+            """, connection, transaction))
+        {
+            actualizar.Parameters.AddWithValue(
+                "membresia", request.IdMembresia);
+            actualizar.Parameters.AddWithValue(
+                "cliente", idCliente);
+
+            await actualizar.ExecuteNonQueryAsync();
+        }
+
+        await transaction.CommitAsync();
+
+        return Results.Ok(new
+        {
+            mensaje = "Membresía del cliente actualizada correctamente.",
+            idCliente,
+            idMembresiaAnterior,
+            idMembresiaNueva = request.IdMembresia
+        });
+    })
+    .RequireAuthorization(policy =>
+    {
+        policy.RequireRole("Administrador", "Recepcionista");
+    });
+
+
 
 app.Run();
