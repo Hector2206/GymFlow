@@ -1246,4 +1246,65 @@ app.MapPut("/api/admin/personal/{id:int}",
     .RequireAuthorization(policy =>
         policy.RequireRole("Recepción", "Administrador"));
 
+
+    app.MapPost("/api/admin/membresias",
+    async (
+        GymManagement.api.Models.CrearMembresiaRequest request,
+        MembresiaService membresiaService,
+        ClaimsPrincipal usuario
+    ) =>
+    {
+        if (!int.TryParse(
+            usuario.FindFirst("sub")?.Value,
+            out var idAdministrador))
+        {
+            return Results.Unauthorized();
+        }
+
+        try
+        {
+            var idMembresia =
+                await membresiaService.CrearMembresia(
+                    request, idAdministrador);
+
+            return Results.Created(
+                $"/api/admin/membresias/{idMembresia}",
+                new
+                {
+                    mensaje = "Membresía creada correctamente.",
+                    idMembresia
+                });
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return Results.Forbid();
+        }
+        catch (ArgumentException ex)
+        {
+            return Results.BadRequest(new
+            {
+                mensaje = ex.Message
+            });
+        }
+        catch (PostgresException ex)
+            when (ex.SqlState ==
+                  PostgresErrorCodes.UniqueViolation)
+        {
+            return Results.Conflict(new
+            {
+                mensaje = "Ya existe una membresía con ese nombre."
+            });
+        }
+        catch (Exception ex)
+        {
+            app.Logger.LogError(
+                ex, "Error al crear membresía");
+
+            return Results.Problem(
+                statusCode: 500,
+                title: "Error al crear membresía");
+            }
+    })
+    .RequireAuthorization("SoloAdministrador");
+
 app.Run();
