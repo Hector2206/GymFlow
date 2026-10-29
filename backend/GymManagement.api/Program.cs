@@ -1708,4 +1708,49 @@ app.MapGet("/api/admin/administradores",
     .RequireAuthorization("SoloAdministrador");
 
 
+app.MapGet("/api/admin/administradores/{id:int}",
+    async (
+        int id,
+        HttpContext httpContext,
+        [Microsoft.AspNetCore.Mvc.FromServices]
+        AdministradorService administradorService) =>
+    {
+        var idTexto =
+            httpContext.User.FindFirst(
+                System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
+            ?? httpContext.User.FindFirst("sub")?.Value
+            ?? httpContext.User.FindFirst("id_usuario")?.Value;
+
+        if (!int.TryParse(idTexto, out var idAdministrador))
+            return Results.Unauthorized();
+
+        try
+        {
+            var administrador =
+                await administradorService.ObtenerAdministradorPorId(
+                    id, idAdministrador);
+
+            return administrador is null
+                ? Results.NotFound(new
+                {
+                    mensaje = "Administrador no encontrado."
+                })
+                : Results.Ok(administrador);
+        }
+        catch (ArgumentException ex)
+        {
+            return Results.BadRequest(new
+            {
+                mensaje = ex.Message
+            });
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return Results.Forbid();
+        }
+    })
+    .RequireAuthorization("SoloAdministrador");
+
+
+
 app.Run();
