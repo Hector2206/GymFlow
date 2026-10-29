@@ -9,6 +9,7 @@ import '../services/admin_salarios_service.dart';
 import 'admin_cambiar_salario_page.dart';
 import 'admin_nomina_page.dart';
 import 'admin_salarios_page.dart';
+import 'admin_registrar_pago_nomina_page.dart';
 
 // GYMFLOW - SPRINT 7
 // VISTA CENTRAL DE SALARIOS Y NOMINA, COMO EN WEB
@@ -358,6 +359,41 @@ class _AdminNominaGestionPageState extends State<AdminNominaGestionPage> {
     );
   }
 
+  // ====================================
+  // REGISTRAR PAGO DE NOMINA
+  // ====================================
+
+  Future<void> _registrarPagoNomina() async {
+    final empleado = _empleado;
+    if (empleado == null) return;
+
+    final idPago = await Navigator.of(context).push<int>(
+      MaterialPageRoute(
+        builder: (_) =>
+            AdminRegistrarPagoNominaPage(idPersonal: empleado.idPersonal),
+      ),
+    );
+
+    if (!mounted) return;
+
+    if (idPago != null && idPago > 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Pago de nómina registrado correctamente. '
+            'Folio #$idPago.',
+          ),
+          backgroundColor: const Color(0xFF287447),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
+
+    // Refrescar también si la operación
+    // pudo haber quedado sin confirmación.
+    await _actualizar();
+  }
+
   Widget _historialPagos() {
     return _panel(
       icono: Icons.receipt_long_outlined,
@@ -413,10 +449,26 @@ class _AdminNominaGestionPageState extends State<AdminNominaGestionPage> {
             Icons.receipt_long_outlined,
             _abrirPagos,
           ),
+
           const SizedBox(height: 10),
+
+          if (_salarios.any(
+            (salario) => salario.periodicidad == 'Mensual',
+          )) ...[
+            _boton(
+              'Registrar pago de nómina',
+              Icons.add_circle_outline,
+              _registrarPagoNomina,
+              principal: true,
+            ),
+
+            const SizedBox(height: 12),
+          ],
+
           const Text(
-            'El registro y la cancelación de pagos se integrarán '
-            'en los siguientes cambios. Esta vista no modifica pagos.',
+            'Registra únicamente pagos ya realizados. '
+            'La cancelación de pagos estará disponible '
+            'en el siguiente módulo.',
             style: TextStyle(color: _secundario, fontSize: 11),
             textAlign: TextAlign.center,
           ),
