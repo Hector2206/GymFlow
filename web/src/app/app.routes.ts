@@ -119,6 +119,10 @@ import { authGuard } from './auth-guard';
 import { MiMembresia } from './mi-membresia/mi-membresia';
 
 
+import { RecepcionClientes } from './recepcion-clientes/recepcion-clientes';
+
+
+
 import {
   recepcionistaGuard,
   entrenadorGuard,
@@ -239,6 +243,14 @@ export const routes: Routes = [
     component: ControlAcceso,
     canActivate: [authGuard, recepcionistaGuard]
   },
+
+  
+{
+  path: 'recepcion/clientes',
+  component: RecepcionClientes,
+  canActivate: [authGuard, recepcionistaGuard]
+},
+
 
   {
     path: 'historial-asistencias',

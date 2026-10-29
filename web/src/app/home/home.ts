@@ -251,6 +251,19 @@ export class Home implements OnInit {
     this.router.navigate(['/control-acceso']);
   }
 
+  
+irClientesRecepcion(): void {
+  if (!this.esRecepcionista()) {
+    this.mensaje =
+      'Solo Recepción puede consultar este directorio.';
+    this.changeDetector.detectChanges();
+    return;
+  }
+
+  this.router.navigate(['/recepcion/clientes']);
+}
+
+
   irHistorialAsistencias(): void {
 
     if (!this.esRecepcionista()) {

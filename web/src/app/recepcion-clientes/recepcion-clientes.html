@@ -1,0 +1,139 @@
+
+<div class="clientes-page">
+  <header class="topbar">
+    <div class="header-left">
+      <button
+        class="back-button"
+        type="button"
+        (click)="volverInicio()"
+        aria-label="Regresar"
+      >
+        ←
+      </button>
+
+      <img
+        src="/Logo_GymFlow.png"
+        alt="GymFlow"
+        class="logo"
+      />
+    </div>
+  </header>
+
+  <main class="content">
+    <section class="page-header">
+      <p class="section-label">GYMFLOW / RECEPCIÓN</p>
+      <h1>Administrar Clientes</h1>
+
+      <p class="subtitle">
+        Consulta los clientes registrados y sus
+        entrenadores asignados.
+      </p>
+    </section>
+
+    <section class="panel">
+      <div class="panel-header">
+        <div>
+          <h2>Directorio de clientes</h2>
+          <p>Información actualizada desde Backend.</p>
+        </div>
+
+        <button
+          type="button"
+          class="secondary-button"
+          [disabled]="cargando"
+          (click)="cargarClientes()"
+        >
+          ↻ Actualizar
+        </button>
+      </div>
+
+      <p *ngIf="cargando" class="loading">
+        Cargando clientes...
+      </p>
+
+      <div
+        *ngIf="error"
+        class="error-message"
+        role="alert"
+      >
+        {{ error }}
+      </div>
+
+      <ng-container *ngIf="!cargando && !error">
+        <div class="stats">
+          <div class="stat">
+            <span>Clientes registrados</span>
+            <strong>{{ clientes.length }}</strong>
+          </div>
+
+          <div class="stat">
+            <span>Con entrenador</span>
+            <strong>{{ cantidadConEntrenador }}</strong>
+          </div>
+        </div>
+
+        <label for="buscarCliente" class="search-label">
+          Buscar cliente
+        </label>
+
+        <input
+          id="buscarCliente"
+          name="buscarCliente"
+          type="search"
+          class="search-input"
+          [(ngModel)]="busqueda"
+          placeholder="Nombre, ID o entrenador"
+        />
+
+        <p class="result-count">
+          {{ clientesFiltrados.length }}
+          resultado(s)
+        </p>
+
+        <div
+          *ngFor="let cliente of clientesFiltrados"
+          class="cliente-card"
+        >
+          <div class="cliente-avatar">👤</div>
+
+          <div class="cliente-info">
+            <h3>{{ cliente.nombreCompleto }}</h3>
+
+            <p>Cliente #{{ cliente.idCliente }}</p>
+
+            <p>
+              Entrenador:
+              <strong>
+                {{
+                  cliente.nombreEntrenador ||
+                  'Sin entrenador asignado'
+                }}
+              </strong>
+            </p>
+          </div>
+        </div>
+
+        <div
+          class="empty"
+          *ngIf="clientesFiltrados.length === 0"
+        >
+          No se encontraron clientes.
+        </div>
+      </ng-container>
+
+      <button
+        type="button"
+        class="primary-button"
+        (click)="irAsignacion()"
+      >
+        Ir a Asignación de Entrenadores
+      </button>
+
+      <p class="footer-note">
+        Este directorio permite consultar clientes.
+        La asignación de entrenadores se realiza
+        desde su módulo correspondiente.
+      </p>
+    </section>
+  </main>
+</div>
