@@ -99,4 +99,58 @@ public class AsistenciaPersonalService
                 ex);
         }
     }
+
+
+        public async Task<bool> RegistrarSalida(
+            long idAsistencia,
+            RegistrarSalidaPersonalRequest request,
+            int idAdministrador)
+        {
+            if (idAsistencia <= 0)
+                throw new ArgumentException("La asistencia no es válida.");
+
+            if (idAdministrador <= 0)
+                throw new UnauthorizedAccessException();
+
+            await using var connection =
+                new NpgsqlConnection(_connectionString);
+
+            await connection.OpenAsync();
+
+            await using var command = new NpgsqlCommand(
+                """
+                UPDATE public.personal_asistencias
+                SET
+                    hora_salida = @hora_salida,
+                    salida_registrada_por = @id_administrador,
+                    fecha_registro_salida = CURRENT_TIMESTAMP
+                WHERE id_asistencia_personal = @id_asistencia
+                AND hora_salida IS NULL
+                AND @hora_salida >= hora_entrada
+                RETURNING id_asistencia_personal;
+                """,
+                connection
+            );
+
+            command.Parameters.AddWithValue(
+                "hora_salida",
+                NpgsqlDbType.Time,
+                request.HoraSalida
+            );
+
+            command.Parameters.AddWithValue(
+                "id_administrador",
+                idAdministrador
+            );
+
+            command.Parameters.AddWithValue(
+                "id_asistencia",
+                idAsistencia
+            );
+
+            var resultado = await command.ExecuteScalarAsync();
+
+            return resultado != null;
+        }
+
 }

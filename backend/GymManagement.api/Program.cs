@@ -409,6 +409,83 @@ app.MapGet("/api/admin/personal",
     .RequireAuthorization("SoloAdministrador");
 
 
+ // ========================================
+ // REGISTRAR SALIDA LABORAL
+ // ========================================
+
+app.MapPatch("/api/admin/personal/asistencias/{id:long}/salida",
+    async (
+        long id,
+        GymManagement.api.Models.RegistrarSalidaPersonalRequest request,
+        GymManagement.api.Services.AsistenciaPersonalService asistenciaService,
+        System.Security.Claims.ClaimsPrincipal usuario
+    ) =>
+    {
+        var idClaim = usuario.FindFirst("sub")?.Value
+            ?? usuario.FindFirst(
+                System.Security.Claims.ClaimTypes.NameIdentifier
+            )?.Value;
+
+        if (!int.TryParse(idClaim, out var idAdministrador)
+            || idAdministrador <= 0)
+        {
+            return Results.Unauthorized();
+        }
+
+        if (id <= 0)
+        {
+            return Results.BadRequest(new
+            {
+                mensaje = "El identificador de asistencia no es válido."
+            });
+        }
+
+        try
+        {
+            var actualizado = await asistenciaService.RegistrarSalida(
+                id,
+                request,
+                idAdministrador
+            );
+
+            if (!actualizado)
+            {
+                return Results.Conflict(new
+                {
+                    mensaje = "No se pudo registrar la salida. La asistencia no existe, ya tiene salida o la hora es anterior a la entrada."
+                });
+            }
+
+            return Results.Ok(new
+            {
+                mensaje = "Salida laboral registrada correctamente",
+                idAsistenciaPersonal = id,
+                horaSalida = request.HoraSalida
+            });
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return Results.Forbid();
+        }
+        catch (ArgumentException ex)
+        {
+            return Results.BadRequest(new
+            {
+                mensaje = ex.Message
+            });
+        }
+        catch (Exception)
+        {
+            return Results.Problem(
+                statusCode: 500,
+                title: "Error al registrar salida laboral"
+            );
+        }
+    })
+    .RequireAuthorization("SoloAdministrador");
+
+
+
 app.MapGet("/api/admin/personal/{id:int}",
     async (
         int id,
