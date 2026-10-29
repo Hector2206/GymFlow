@@ -1,0 +1,271 @@
+
+<div class="clientes-page">
+  <header class="clientes-header">
+    <div class="header-content">
+      <div class="header-info">
+        <span class="header-label">GYMFLOW / ADMINISTRACIÓN</span>
+        <h1>Administrar Clientes</h1>
+        <p>Consulta clientes, membresías y el estado de sus cuentas.</p>
+      </div>
+      <button type="button" class="back-button" (click)="volverInicio()">
+        ← Volver al inicio
+      </button>
+    </div>
+  </header>
+
+  <main class="clientes-content">
+    <section class="welcome-section">
+      <span class="section-label">GESTIÓN DE CLIENTES</span>
+      <h2>Directorio de clientes</h2>
+      <p>Consulta la información de clientes y administra su membresía actual.</p>
+    </section>
+
+    <section class="filters-panel">
+      <div class="panel-heading">
+        <div class="heading-icon">🔎</div>
+        <div>
+          <h3>Búsqueda de clientes</h3>
+          <p>Filtra por nombre, correo, estatus y vigencia.</p>
+        </div>
+      </div>
+
+      <div class="busqueda-form">
+        <label class="busqueda-campo">
+          <span>Nombre del cliente</span>
+          <input type="text" name="nombreBusqueda" maxlength="150"
+            [(ngModel)]="nombreBusqueda" (ngModelChange)="alCambiarBusqueda()"
+            placeholder="Ej. Juan Pérez" autocomplete="off" />
+        </label>
+
+        <label class="busqueda-campo">
+          <span>Correo electrónico</span>
+          <input type="text" name="correoBusqueda" maxlength="150"
+            [(ngModel)]="correoBusqueda" (ngModelChange)="alCambiarBusqueda()"
+            placeholder="Ej. cliente@correo.com" autocomplete="off" />
+        </label>
+
+        <label class="busqueda-campo">
+          <span>Estatus del cliente</span>
+          <select name="estatusBusqueda" [(ngModel)]="estatusBusqueda"
+            (ngModelChange)="alCambiarBusqueda()">
+            <option value="">Todos los estatus</option>
+            <option value="Activo">Activo</option>
+            <option value="Inactivo">Inactivo</option>
+          </select>
+        </label>
+
+        <label class="busqueda-campo">
+          <span>Vigencia de membresía</span>
+          <select name="vigenciaBusqueda" [(ngModel)]="vigenciaBusqueda"
+            (ngModelChange)="alCambiarBusqueda()">
+            <option value="">Todas las vigencias</option>
+            <option value="Vigente">Vigente</option>
+            <option value="Vencida">Vencida</option>
+            <option value="SinPagos">Sin pagos</option>
+          </select>
+        </label>
+
+        <label class="busqueda-campo">
+          <span>ID de membresía</span>
+          <input type="number" name="idMembresiaBusqueda" min="1" step="1"
+            [(ngModel)]="idMembresiaBusqueda"
+            (ngModelChange)="alCambiarBusqueda()"
+            placeholder="Ej. 1" />
+        </label>
+      </div>
+
+      <div class="filtros-acciones">
+        <p class="busqueda-ayuda">
+          🔎 Puedes combinar filtros; los resultados se actualizan automáticamente.
+        </p>
+        @if (hayFiltrosActivos) {
+          <button type="button" class="limpiar-button"
+            (click)="limpiarFiltros()">✕ Limpiar filtros</button>
+        }
+      </div>
+    </section>
+
+    @if (exitoMembresia) {
+      <section class="results-panel" role="status">
+        <span class="section-label">CAMBIO REALIZADO</span>
+        <p style="color: #247a45; font-weight: 700">✅ {{ exitoMembresia }}</p>
+      </section>
+    }
+
+    @if (clienteCambio; as cliente) {
+      <section class="results-panel" role="region" aria-label="Cambiar membresía">
+        <div class="results-heading">
+          <div>
+            <span class="section-label">CAMBIO DE MEMBRESÍA</span>
+            <h3>{{ cliente.nombreCompleto }}</h3>
+            <p>Cliente #{{ cliente.idCliente }}</p>
+          </div>
+          <button type="button" class="limpiar-button" [disabled]="guardandoMembresia"
+            (click)="cerrarCambioMembresia()">✕ Cerrar</button>
+        </div>
+
+        <p class="busqueda-ayuda">
+          Membresía actual: <strong>{{ cliente.nombrePlan }}</strong>
+          (plan #{{ cliente.idMembresia }})
+        </p>
+
+        @if (cargandoMembresias) {
+          <div class="results-placeholder" role="status">⏳ Cargando planes activos...</div>
+        } @else {
+          <div class="busqueda-form">
+            <label class="busqueda-campo">
+              <span>Nueva membresía *</span>
+              <select name="membresiaNueva" [(ngModel)]="idNuevaMembresia">
+                <option [ngValue]="null">Seleccionar una membresía</option>
+                @for (plan of membresiasActivas; track plan.idMembresia) {
+                  <option [ngValue]="plan.idMembresia">
+                    {{ plan.nombrePlan }} — ${{ plan.costoMensual }} mensual
+                  </option>
+                }
+              </select>
+            </label>
+          </div>
+          @if (membresiasActivas.length === 0 && !errorMembresia) {
+            <p class="busqueda-ayuda">No hay membresías activas disponibles.</p>
+          }
+          @if (idNuevaMembresia === cliente.idMembresia) {
+            <p class="busqueda-ayuda">Selecciona un plan distinto al actual.</p>
+          }
+        }
+
+        <p class="busqueda-ayuda">
+          El cambio se aplica inmediatamente, sin generar cobros automáticos
+          ni modificar los pagos anteriores.
+        </p>
+
+        @if (errorMembresia) {
+          <div class="results-placeholder" role="alert">
+            <h3>⚠️ No se pudo cambiar la membresía</h3>
+            <p>{{ errorMembresia }}</p>
+          </div>
+        }
+
+        <div class="filtros-acciones">
+          <button type="button" class="limpiar-button" [disabled]="guardandoMembresia"
+            (click)="cerrarCambioMembresia()">Cancelar</button>
+          <button type="button" class="retry-button"
+            [disabled]="guardandoMembresia || cargandoMembresias ||
+              idNuevaMembresia === null ||
+              idNuevaMembresia === cliente.idMembresia ||
+              membresiasActivas.length === 0"
+            (click)="confirmarCambioMembresia()">
+            {{ guardandoMembresia ? 'Guardando...' : 'Confirmar cambio de membresía' }}
+          </button>
+        </div>
+      </section>
+    }
+
+    <section class="results-panel">
+      <div class="results-heading">
+        <div>
+          <span class="section-label">RESULTADOS</span>
+          <h3>Clientes registrados</h3>
+          <p>Información obtenida del Backend GymFlow.</p>
+        </div>
+        @if (consultaRealizada && !error) {
+          <div class="total-resultados">{{ clientes.length }} clientes encontrados</div>
+        }
+      </div>
+
+      @if (cargando) {
+        <div class="results-placeholder" role="status">
+          <div class="placeholder-icon">⏳</div>
+          <h3>Cargando clientes...</h3>
+          <p>Consultando información del servidor.</p>
+        </div>
+      } @else if (error) {
+        <div class="results-placeholder">
+          <div class="placeholder-icon">⚠️</div>
+          <h3>No fue posible cargar los clientes</h3>
+          <p role="alert">{{ error }}</p>
+          <button type="button" class="retry-button"
+            (click)="cargarClientes()">Reintentar</button>
+        </div>
+      } @else if (consultaRealizada && clientes.length === 0) {
+        <div class="results-placeholder">
+          <div class="placeholder-icon">🔎</div>
+          @if (hayFiltrosActivos) {
+            <h3>No encontramos coincidencias</h3>
+            <p>Prueba con otros filtros.</p>
+            <button type="button" class="limpiar-button limpiar-centrado"
+              (click)="limpiarFiltros()">Limpiar filtros</button>
+          } @else {
+            <h3>No hay clientes registrados</h3>
+          }
+        </div>
+      } @else if (clientes.length > 0) {
+        <div class="table-container">
+          <table class="clientes-table">
+            <thead>
+              <tr>
+                <th>Cliente</th>
+                <th>Contacto</th>
+                <th>Membresía</th>
+                <th>Estatus</th>
+                <th>Vigencia</th>
+                <th>Vencimiento</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (cliente of clientes; track cliente.idCliente) {
+                <tr>
+                  <td>
+                    <div class="cliente-info">
+                      <div class="cliente-avatar">👤</div>
+                      <div>
+                        <strong>{{ cliente.nombreCompleto }}</strong>
+                        <span class="cliente-id">ID: {{ cliente.idCliente }}</span>
+                      </div>
+                    </div>
+                  </td>
+                  <td>
+                    <div class="contacto-info">
+                      <span>{{ cliente.correo }}</span>
+                      <small>{{ cliente.telefono || 'Sin teléfono' }}</small>
+                    </div>
+                  </td>
+                  <td>
+                    <div class="membresia-info">
+                      <strong>{{ cliente.nombrePlan }}</strong>
+                      <small>Plan #{{ cliente.idMembresia }}</small>
+                    </div>
+                  </td>
+                  <td>
+                    <span class="estado-badge"
+                      [class.estado-activo]="cliente.estatus === 'Activo'"
+                      [class.estado-inactivo]="cliente.estatus === 'Inactivo'">
+                      {{ cliente.estatus }}
+                    </span>
+                  </td>
+                  <td>
+                    <span class="vigencia-badge"
+                      [class.vigente]="cliente.vigencia === 'Vigente'"
+                      [class.vencida]="cliente.vigencia === 'Vencida'"
+                      [class.sin-pagos]="cliente.vigencia === 'SinPagos'">
+                      {{ cliente.vigencia === 'SinPagos' ? 'Sin pagos' : cliente.vigencia }}
+                    </span>
+                  </td>
+                  <td class="fecha-cell">{{ mostrarFecha(cliente.fechaVencimiento) }}</td>
+                  <td>
+                    <button type="button" class="limpiar-button"
+                      (click)="abrirCambioMembresia(cliente)">
+                      Cambiar membresía
+                    </button>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </section>
+  </main>
+
+  <footer class="clientes-footer">GymFlow · Gestión inteligente para gimnasios</footer>
+</div>

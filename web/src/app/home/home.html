@@ -1,3 +1,4 @@
+
 <div class="home-page">
 
   <header class="topbar">
@@ -29,6 +30,29 @@
 
       </div>
 
+      
+<button
+  type="button"
+  class="notification-bell"
+  (click)="irNotificaciones()"
+  [attr.aria-label]="
+    noLeidas !== null && noLeidas > 0
+      ? noLeidas + ' notificaciones sin leer'
+      : 'Consultar notificaciones'
+  "
+  title="Mis notificaciones"
+>
+  <span class="bell-icon">🔔</span>
+
+  <span
+    *ngIf="noLeidas !== null && noLeidas > 0"
+    class="bell-count"
+  >
+    {{ noLeidas > 99 ? '99+' : noLeidas }}
+  </span>
+</button>
+
+
       <button
         class="logout-button"
         (click)="cerrarSesion()"
@@ -40,7 +64,6 @@
 
   </header>
 
-
   <main class="content">
 
     <div
@@ -50,14 +73,12 @@
       Cargando...
     </div>
 
-
     <div
       *ngIf="error"
       class="error-message"
     >
       {{ error }}
     </div>
-
 
     <ng-container
       *ngIf="!cargando && usuario"
@@ -79,7 +100,6 @@
 
       </section>
 
-
       <div
         *ngIf="mensaje"
         class="notification"
@@ -87,8 +107,7 @@
         {{ mensaje }}
       </div>
 
-
-      <!-- RECEPCIONISTA -->
+      <!-- RECEPCIÓN -->
 
       <section
         class="dashboard"
@@ -99,147 +118,123 @@
           class="dashboard-card"
           (click)="irPerfil()"
         >
+
           <div class="card-icon">👤</div>
 
-          <h2>
-            Mi Perfil
-          </h2>
+          <h2>Mi Perfil</h2>
 
           <p>
             Consulta tu información de usuario
           </p>
-        </button>
 
+        </button>
 
         <button
           class="dashboard-card"
           (click)="irRegistrarCliente()"
         >
+
           <div class="card-icon">➕</div>
 
-          <h2>
-            Registrar Cliente
-          </h2>
+          <h2>Registrar Cliente</h2>
 
           <p>
             Dar de alta un nuevo cliente
           </p>
-        </button>
 
+        </button>
 
         <button
           class="dashboard-card"
           (click)="irControlAcceso()"
         >
+
           <div class="card-icon">✅</div>
 
-          <h2>
-            Registrar Asistencia
-          </h2>
+          <h2>Registrar Asistencia</h2>
 
           <p>
             Registrar la asistencia de un cliente
           </p>
-        </button>
 
+        </button>
 
         <button
           class="dashboard-card"
           (click)="irHistorialAsistencias()"
         >
+
           <div class="card-icon">📅</div>
 
-          <h2>
-            Historial de Asistencias
-          </h2>
+          <h2>Historial de Asistencias</h2>
 
           <p>
             Consultar registros de entrada de clientes
           </p>
-        </button>
 
+        </button>
 
         <button
           class="dashboard-card"
           (click)="irRegistrarPago()"
         >
+
           <div class="card-icon">💳</div>
 
-          <h2>
-            Registrar Pago
-          </h2>
+          <h2>Registrar Pago</h2>
 
           <p>
             Registrar pagos y renovaciones de clientes
           </p>
-        </button>
 
+        </button>
 
         <button
           class="dashboard-card"
           (click)="irHistorialPagos()"
         >
+
           <div class="card-icon">🧾</div>
 
-          <h2>
-            Historial de Pagos
-          </h2>
+          <h2>Historial de Pagos</h2>
 
           <p>
             Consultar los pagos registrados de clientes
           </p>
-        </button>
 
+        </button>
 
         <button
           class="dashboard-card"
-          (click)="proximamente('Administrar clientes')"
+          (click)="irClientesRecepcion()"
         >
+
           <div class="card-icon">👥</div>
 
-          <h2>
-            Administrar Clientes
-          </h2>
+          <h2>Administrar Clientes</h2>
 
           <p>
             Consultar y administrar clientes
           </p>
-        </button>
 
+        </button>
 
         <button
           class="dashboard-card"
           (click)="irAsignacionEntrenadores()"
         >
+
           <div class="card-icon">🏋️</div>
 
-          <h2>
-            Asignación de Entrenadores
-          </h2>
+          <h2>Asignación de Entrenadores</h2>
 
           <p>
             Asignar clientes a entrenadores
           </p>
-        </button>
 
-
-        <button
-          class="dashboard-card"
-          (click)="proximamente('Anuncios')"
-        >
-          <div class="card-icon">📢</div>
-
-          <h2>
-            Anuncios
-          </h2>
-
-          <p>
-            Administrar anuncios del gimnasio
-          </p>
         </button>
 
       </section>
-
 
       <!-- CLIENTE -->
 
@@ -252,95 +247,91 @@
           class="dashboard-card"
           (click)="irPerfil()"
         >
+
           <div class="card-icon">👤</div>
 
-          <h2>
-            Mi Perfil
-          </h2>
+          <h2>Mi Perfil</h2>
 
           <p>
             Consulta tu información personal
           </p>
-        </button>
 
+        </button>
 
         <button
           class="dashboard-card"
           (click)="irMiCodigoAcceso()"
         >
+
           <div class="card-icon">🔐</div>
 
-          <h2>
-            Mi Código de Acceso
-          </h2>
+          <h2>Mi Código de Acceso</h2>
 
           <p>
-            Consulta tu código personal para registrar tu entrada
+            Consulta tu código personal
+            para registrar tu entrada
           </p>
-        </button>
 
+        </button>
 
         <button
           class="dashboard-card"
           (click)="irMisAsistencias()"
         >
+
           <div class="card-icon">📅</div>
 
-          <h2>
-            Mis Asistencias
-          </h2>
+          <h2>Mis Asistencias</h2>
 
           <p>
             Consulta tu historial de asistencias
           </p>
-        </button>
 
+        </button>
 
         <button
           class="dashboard-card"
           (click)="irMisPagos()"
         >
+
           <div class="card-icon">💳</div>
 
-          <h2>
-            Mis Pagos
-          </h2>
+          <h2>Mis Pagos</h2>
 
           <p>
             Consulta tu historial de pagos y renovaciones
           </p>
-        </button>
 
+        </button>
 
         <button
           class="dashboard-card"
-          (click)="proximamente('Membresía')"
+          (click)="irMiMembresia()"
         >
+
           <div class="card-icon">🎫</div>
 
-          <h2>
-            Membresía
-          </h2>
+          <h2>Membresía</h2>
 
           <p>
             Consulta tu membresía actual
           </p>
-        </button>
 
+        </button>
 
         <button
           class="dashboard-card"
           (click)="irRutinasCliente()"
         >
+
           <div class="card-icon">🏋️</div>
 
-          <h2>
-            Rutinas
-          </h2>
+          <h2>Rutinas</h2>
 
           <p>
             Consulta tu rutina de entrenamiento
           </p>
+
         </button>
 
         <button
@@ -348,37 +339,18 @@
           (click)="irMiProgreso()"
         >
 
-          <div class="card-icon">
-            📈
-          </div>
+          <div class="card-icon">📈</div>
 
-          <h2>
-            Mi Progreso
-          </h2>
+          <h2>Mi Progreso</h2>
 
           <p>
-            Registra y consulta tu progreso de entrenamiento
+            Registra y consulta tu progreso
+            de entrenamiento
           </p>
 
-        </button>
-
-        <button
-          class="dashboard-card"
-          (click)="proximamente('Anuncios')"
-        >
-          <div class="card-icon">📢</div>
-
-          <h2>
-            Anuncios
-          </h2>
-
-          <p>
-            Consulta anuncios y promociones
-          </p>
         </button>
 
       </section>
-
 
       <!-- ADMINISTRADOR -->
 
@@ -391,83 +363,116 @@
           class="dashboard-card"
           (click)="irPerfil()"
         >
+
           <div class="card-icon">👤</div>
 
-          <h2>
-            Mi Perfil
-          </h2>
+          <h2>Mi Perfil</h2>
 
           <p>
             Consulta tu información de administrador
           </p>
-        </button>
 
+        </button>
 
         <button
           class="dashboard-card"
-          (click)="proximamente('Administrar clientes')"
+          (click)="irDashboardAdministrador()"
         >
+
+          <div class="card-icon">📊</div>
+
+          <h2>Dashboard Administrativo</h2>
+
+          <p>
+            Consulta estadísticas, membresías,
+            asistencias e ingresos del gimnasio
+          </p>
+
+        </button>
+
+        <button
+          class="dashboard-card"
+          (click)="irClientesAdministrador()"
+        >
+
           <div class="card-icon">👥</div>
 
-          <h2>
-            Administrar Clientes
-          </h2>
+          <h2>Administrar Clientes</h2>
 
           <p>
-            Consultar y administrar clientes
+            Consultar información, estatus
+            y vigencia de membresías
           </p>
-        </button>
 
+        </button>
 
         <button
           class="dashboard-card"
-          (click)="proximamente('Administrar recepcionistas')"
+          (click)="irPersonalAdministrador()"
         >
-          <div class="card-icon">🧑‍💼</div>
 
-          <h2>
-            Administrar Recepcionistas
-          </h2>
+          <div class="card-icon">👥</div>
+
+          <h2>Administrar Personal</h2>
 
           <p>
-            Consultar y administrar recepcionistas
+            Gestionar entrenadores, recepcionistas,
+            salarios y nómina
           </p>
-        </button>
 
+        </button>
 
         <button
           class="dashboard-card"
-          (click)="proximamente('Administrar entrenadores')"
+          (click)="irHorariosAdministrador()"
         >
-          <div class="card-icon">🏋️</div>
 
-          <h2>
-            Administrar Entrenadores
-          </h2>
+          <div class="card-icon">📅</div>
+
+          <h2>Horarios y Asistencias</h2>
 
           <p>
-            Consultar y administrar entrenadores
+            Organizar horarios y controlar
+            la asistencia laboral del personal
           </p>
-        </button>
 
+        </button>
 
         <button
           class="dashboard-card"
-          (click)="proximamente('Ver administradores')"
+          (click)="irMembresiasAdministrador()"
         >
+
+          <div class="card-icon">🎫</div>
+
+          <h2>Administrar Membresías</h2>
+
+          <p>
+            Gestionar BasicFlow, precios
+            y nuevos planes
+          </p>
+
+        </button>
+
+        <!-- NUEVO MÓDULO -->
+
+        <button
+          class="dashboard-card"
+          (click)="irAdministradores()"
+        >
+
           <div class="card-icon">🛡️</div>
 
-          <h2>
-            Ver Administradores
-          </h2>
+          <h2>Administrar Administradores</h2>
 
           <p>
-            Consulta los administradores registrados
+            Consultar cuentas y preparar
+            el registro de administradores
           </p>
+
         </button>
 
       </section>
-
 
       <!-- ENTRENADOR -->
 
@@ -481,13 +486,9 @@
           (click)="irPerfil()"
         >
 
-          <div class="card-icon">
-            👤
-          </div>
+          <div class="card-icon">👤</div>
 
-          <h2>
-            Mi Perfil
-          </h2>
+          <h2>Mi Perfil</h2>
 
           <p>
             Consulta tu información de entrenador
@@ -495,19 +496,14 @@
 
         </button>
 
-
         <button
           class="dashboard-card"
           (click)="irMisClientesEntrenador()"
         >
 
-          <div class="card-icon">
-            👥
-          </div>
+          <div class="card-icon">👥</div>
 
-          <h2>
-            Administrar mis Clientes
-          </h2>
+          <h2>Administrar mis Clientes</h2>
 
           <p>
             Consulta los clientes que tienes asignados
@@ -515,19 +511,14 @@
 
         </button>
 
-
         <button
           class="dashboard-card"
           (click)="irEjerciciosEntrenador()"
         >
 
-          <div class="card-icon">
-            💪
-          </div>
+          <div class="card-icon">💪</div>
 
-          <h2>
-            Ejercicios
-          </h2>
+          <h2>Ejercicios</h2>
 
           <p>
             Crear y administrar ejercicios
@@ -536,22 +527,18 @@
 
         </button>
 
-
         <button
           class="dashboard-card"
           (click)="irRutinasEntrenador()"
         >
 
-          <div class="card-icon">
-            🏋️
-          </div>
+          <div class="card-icon">🏋️</div>
 
-          <h2>
-            Rutinas
-          </h2>
+          <h2>Rutinas</h2>
 
           <p>
-            Crear y administrar rutinas de entrenamiento
+            Crear y administrar rutinas
+            de entrenamiento
           </p>
 
         </button>
@@ -561,7 +548,6 @@
     </ng-container>
 
   </main>
-
 
   <footer>
     GymFlow · Gestión inteligente para gimnasios

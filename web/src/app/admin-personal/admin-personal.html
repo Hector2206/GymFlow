@@ -1,0 +1,654 @@
+
+<div class="personal-page">
+
+  <header class="personal-header">
+
+    <div class="header-content">
+
+      <div>
+
+        <span class="section-label">
+          GYMFLOW / ADMINISTRACIÓN
+        </span>
+
+        <h1>Administrar Empleados</h1>
+
+        <p>
+          Gestiona entrenadores y recepcionistas
+          del gimnasio.
+        </p>
+
+      </div>
+
+      <button
+        type="button"
+        class="back-button"
+        (click)="volverInicio()"
+      >
+        ← Volver al inicio
+      </button>
+
+    </div>
+
+  </header>
+
+  <main class="personal-content">
+
+    <section class="welcome-section">
+
+      <span class="section-label">
+        GESTIÓN DEL PERSONAL
+      </span>
+
+      <h2>Equipo de GymFlow</h2>
+
+      <p>
+        Consulta expedientes, puestos y estatus
+        de los empleados.
+      </p>
+
+    </section>
+
+    <!-- ACCIONES ADMINISTRATIVAS -->
+
+    <section class="management-section">
+
+      <span class="section-label">
+        ADMINISTRACIÓN LABORAL
+      </span>
+
+      <h2>Gestión del personal</h2>
+
+      <p class="management-description">
+        Selecciona una función para administrar
+        entrenadores y recepcionistas.
+      </p>
+
+      <div class="management-grid">
+
+        <!-- REGISTRAR -->
+
+        <button
+          type="button"
+          class="management-card management-action"
+          (click)="irRegistrarPersonal()"
+        >
+
+          <div class="management-icon">➕</div>
+
+          <h3>Registrar empleado</h3>
+
+          <p>
+            Dar de alta entrenadores y recepcionistas
+            con sus datos laborales.
+          </p>
+
+          <span class="management-link">
+            Abrir formulario
+          </span>
+
+        </button>
+
+        <!-- EDITAR -->
+
+        <button
+          type="button"
+          class="management-card management-action"
+          (click)="abrirSelectorEdicion()"
+        >
+
+          <div class="management-icon">📝</div>
+
+          <h3>Editar información</h3>
+
+          <p>
+            Selecciona un empleado para actualizar
+            sus datos personales y laborales.
+          </p>
+
+          <span class="management-link">
+            Seleccionar empleado
+          </span>
+
+        </button>
+
+        <!-- BAJAS -->
+
+        <button
+          type="button"
+          class="management-card management-action"
+          (click)="irBajasPersonal()"
+        >
+
+          <div class="management-icon">📁</div>
+
+          <h3>Bajas de empleados</h3>
+
+          <p>
+            Registrar bajas laborales conservando
+            el historial de los empleados.
+          </p>
+
+          <span class="management-link">
+            Abrir módulo de bajas
+          </span>
+
+        </button>
+
+        <!-- SALARIOS Y NOMINA -->
+
+        <button
+          type="button"
+          class="management-card management-action"
+          (click)="irNominaPersonal()"
+        >
+
+          <div class="management-icon">💰</div>
+
+          <h3>Salarios y nómina</h3>
+
+          <p>
+            Consultar sueldos, historial salarial
+            y pagos registrados.
+          </p>
+
+          <span class="management-link">
+            Abrir módulo de nómina
+          </span>
+
+        </button>
+
+      </div>
+
+    </section>
+
+    <!-- CONFIRMACION -->
+
+    @if (mensajeOperacion) {
+
+      <div class="personal-registro-exito" role="status">
+
+        <strong>
+          ✓ {{ tituloOperacion }}
+        </strong>
+
+        <p>
+          {{ mensajeOperacion }}
+        </p>
+
+      </div>
+
+    }
+
+    <!-- DIRECTORIO -->
+
+    <section class="directory-panel">
+
+      <div class="directory-heading">
+
+        <div>
+
+          <span class="section-label">
+            DIRECTORIO LABORAL
+          </span>
+
+          <h2>Personal registrado</h2>
+
+          <p>
+            Información obtenida del sistema GymFlow.
+          </p>
+
+        </div>
+
+        <div class="heading-icon">👥</div>
+
+      </div>
+
+      <!-- FILTROS -->
+
+      <div class="personal-filtros">
+
+        <label class="personal-filtro-campo">
+
+          <span>Filtrar por puesto</span>
+
+          <select
+            name="filtroPuesto"
+            [(ngModel)]="filtroPuesto"
+          >
+
+            <option value="">
+              Todos los empleados
+            </option>
+
+            <option value="Entrenador">
+              Entrenadores
+            </option>
+
+            <option value="Recepcionista">
+              Recepcionistas
+            </option>
+
+          </select>
+
+        </label>
+
+        <label class="personal-filtro-campo">
+
+          <span>Filtrar por estatus</span>
+
+          <select
+            name="filtroEstatus"
+            [(ngModel)]="filtroEstatus"
+          >
+
+            <option value="">
+              Todos los estatus
+            </option>
+
+            <option value="Activo">
+              Activos
+            </option>
+
+            <option value="Inactivo">
+              Inactivos
+            </option>
+
+          </select>
+
+        </label>
+
+        @if (hayFiltrosActivos) {
+
+          <button
+            type="button"
+            class="personal-limpiar-button"
+            (click)="limpiarFiltros()"
+          >
+            ✕ Limpiar filtros
+          </button>
+
+        }
+
+      </div>
+
+      <!-- CARGANDO -->
+
+      @if (cargando) {
+
+        <div class="directory-placeholder" role="status">
+
+          <div class="placeholder-icon">⏳</div>
+
+          <h3>Cargando empleados...</h3>
+
+          <p>
+            Consultando información del servidor.
+          </p>
+
+        </div>
+
+      } @else if (error) {
+
+        <!-- ERROR -->
+
+        <div class="directory-placeholder">
+
+          <div class="placeholder-icon">⚠️</div>
+
+          <h3>No fue posible cargar empleados</h3>
+
+          <p role="alert">
+            {{ error }}
+          </p>
+
+          <button
+            type="button"
+            class="personal-retry-button"
+            (click)="cargarPersonal()"
+          >
+            Reintentar
+          </button>
+
+        </div>
+
+      } @else if (
+        consultaRealizada &&
+        empleadosFiltrados.length === 0
+      ) {
+
+        <div class="directory-placeholder">
+
+          <div class="placeholder-icon">👥</div>
+
+          @if (empleados.length === 0) {
+
+            <h3>No hay empleados registrados</h3>
+
+            <p>
+              Actualmente no existen empleados para mostrar.
+            </p>
+
+          } @else {
+
+            <h3>No encontramos coincidencias</h3>
+
+            <p>
+              No hay empleados que coincidan con los filtros.
+            </p>
+
+            <button
+              type="button"
+              class="personal-limpiar-button"
+              (click)="limpiarFiltros()"
+            >
+              Mostrar todos
+            </button>
+
+          }
+
+        </div>
+
+      } @else if (empleadosFiltrados.length > 0) {
+
+        <div class="personal-summary">
+
+          <span>
+            👥 {{ empleadosFiltrados.length }}
+            de {{ empleados.length }} empleados
+          </span>
+
+        </div>
+
+        <div class="personal-table-container">
+
+          <table class="personal-table">
+
+            <thead>
+
+              <tr>
+                <th>Empleado</th>
+                <th>Puesto</th>
+                <th>Contacto</th>
+                <th>Sueldo mensual</th>
+                <th>Horario</th>
+                <th>Estatus</th>
+                <th>Contratación</th>
+                <th>Baja</th>
+              </tr>
+
+            </thead>
+
+            <tbody>
+
+              @for (
+                empleado of empleadosFiltrados;
+                track empleado.idPersonal
+              ) {
+
+                <tr>
+
+                  <td>
+
+                    <div class="empleado-info">
+
+                      <div class="empleado-avatar">
+                        👤
+                      </div>
+
+                      <div>
+
+                        <strong>
+                          {{ empleado.nombreCompleto }}
+                        </strong>
+
+                        <span class="empleado-id">
+                          ID: {{ empleado.idPersonal }}
+                        </span>
+
+                      </div>
+
+                    </div>
+
+                  </td>
+
+                  <td>
+
+                    <span
+                      class="puesto-badge"
+                      [class.puesto-entrenador]="empleado.puesto === 'Entrenador'"
+                      [class.puesto-recepcion]="empleado.puesto === 'Recepcionista'"
+                    >
+                      {{ empleado.puesto }}
+                    </span>
+
+                  </td>
+
+                  <td>
+
+                    <div class="empleado-contacto">
+
+                      <span>
+                        {{ empleado.correo }}
+                      </span>
+
+                      <small>
+                        {{ empleado.telefono }}
+                      </small>
+
+                    </div>
+
+                  </td>
+
+                  <td class="salario-cell">
+                    {{ mostrarSalario(empleado.salario) }}
+                  </td>
+
+                  <td class="horario-cell">
+                    {{ empleado.horario || 'Sin asignar' }}
+                  </td>
+
+                  <td>
+
+                    <span
+                      class="personal-estado"
+                      [class.personal-activo]="empleado.estatus === 'Activo'"
+                      [class.personal-inactivo]="empleado.estatus === 'Inactivo'"
+                    >
+                      {{ empleado.estatus }}
+                    </span>
+
+                  </td>
+
+                  <td class="fecha-cell">
+                    {{ mostrarFecha(empleado.fechaContratacion) }}
+                  </td>
+
+                  <td class="fecha-cell">
+                    {{ mostrarFecha(empleado.fechaBaja) }}
+                  </td>
+
+                </tr>
+
+              }
+
+            </tbody>
+
+          </table>
+
+        </div>
+
+      }
+
+    </section>
+
+  </main>
+
+  <!-- SELECTOR DE EDICION -->
+
+  @if (mostrarSelectorEdicion) {
+
+    <div class="selector-overlay">
+
+      <section
+        class="selector-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="selector-edicion-titulo"
+      >
+
+        <div class="selector-heading">
+
+          <div>
+
+            <span class="section-label">
+              EDICIÓN DE PERSONAL
+            </span>
+
+            <h2 id="selector-edicion-titulo">
+              Seleccionar empleado
+            </h2>
+
+            <p>
+              Elige el entrenador o recepcionista
+              que deseas editar.
+            </p>
+
+          </div>
+
+          <button
+            type="button"
+            class="selector-cerrar"
+            (click)="cerrarSelectorEdicion()"
+            aria-label="Cerrar"
+          >
+            ✕
+          </button>
+
+        </div>
+
+        @if (cargando) {
+
+          <p class="selector-mensaje" role="status">
+            Cargando empleados...
+          </p>
+
+        } @else if (error) {
+
+          <p class="selector-error" role="alert">
+            {{ error }}
+          </p>
+
+          <button
+            type="button"
+            class="selector-cancelar"
+            (click)="cargarPersonal()"
+          >
+            Reintentar
+          </button>
+
+        } @else if (empleadosDisponibles.length === 0) {
+
+          <p class="selector-mensaje">
+            No hay empleados activos disponibles.
+          </p>
+
+        } @else {
+
+          <label class="selector-campo">
+
+            <span>Empleado *</span>
+
+            <select
+              name="empleadoEditar"
+              [(ngModel)]="idPersonalSeleccionado"
+            >
+
+              <option [ngValue]="null">
+                Seleccionar empleado
+              </option>
+
+              @for (
+                empleado of empleadosDisponibles;
+                track empleado.idPersonal
+              ) {
+
+                <option [ngValue]="empleado.idPersonal">
+                  {{ empleado.nombreCompleto }}
+                  — {{ empleado.puesto }}
+                </option>
+
+              }
+
+            </select>
+
+          </label>
+
+          @if (idPersonalSeleccionado !== null) {
+
+            @for (
+              empleado of empleadosDisponibles;
+              track empleado.idPersonal
+            ) {
+
+              @if (
+                empleado.idPersonal === idPersonalSeleccionado
+              ) {
+
+                <div class="selector-detalle">
+
+                  <strong>
+                    {{ empleado.nombreCompleto }}
+                  </strong>
+
+                  <span>
+                    {{ empleado.correo }}
+                  </span>
+
+                  <small>
+                    {{ empleado.puesto }}
+                    · ID: {{ empleado.idPersonal }}
+                  </small>
+
+                </div>
+
+              }
+
+            }
+
+          }
+
+        }
+
+        <div class="selector-acciones">
+
+          <button
+            type="button"
+            class="selector-cancelar"
+            (click)="cerrarSelectorEdicion()"
+          >
+            Cancelar
+          </button>
+
+          <button
+            type="button"
+            class="selector-continuar"
+            (click)="continuarEdicion()"
+            [disabled]="idPersonalSeleccionado === null || cargando || !!error"
+          >
+            Continuar a edición
+          </button>
+
+        </div>
+
+      </section>
+
+    </div>
+
+  }
+
+  <footer class="personal-footer">
+    GymFlow · Administración de personal
+  </footer>
+
+</div>

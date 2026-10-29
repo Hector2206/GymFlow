@@ -1,462 +1,208 @@
+
 import {
   ChangeDetectorRef,
-  Component
+  Component,
+  OnInit
 } from '@angular/core';
-
-import {
-  CommonModule
-} from '@angular/common';
-
-import {
-  FormsModule
-} from '@angular/forms';
-
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import {
   HttpClient,
   HttpErrorResponse
 } from '@angular/common/http';
+import { Router } from '@angular/router';
 
+import { environment } from '../../environments/environment';
 import {
-  Router
-} from '@angular/router';
-
-import {
-  environment
-} from '../../environments/environment';
+  MembresiaService,
+  MembresiaActiva
+} from '../services/membresia.service';
 
 @Component({
   selector: 'app-registrar-cliente',
   standalone: true,
-  imports: [
-    CommonModule,
-    FormsModule
-  ],
+  imports: [CommonModule, FormsModule],
   templateUrl: './registrar-cliente.html',
   styleUrl: './registrar-cliente.css'
 })
-export class RegistrarCliente {
-
+export class RegistrarCliente implements OnInit {
   nombreCompleto = '';
-
   correo = '';
-
   password = '';
-
   telefono = '';
 
   idMembresia: number | null = null;
+  membresias: MembresiaActiva[] = [];
 
-  costoMensual: number | null = null;
-
-  costoAnual: number | null = null;
-
+  cargandoMembresias = true;
   cargando = false;
+  registroIncierto = false;
 
+  errorMembresias = '';
   error = '';
-
   exito = '';
 
   constructor(
     private http: HttpClient,
     private router: Router,
-    private changeDetector: ChangeDetectorRef
+    private membresiaService: MembresiaService,
+    private cd: ChangeDetectorRef
   ) {}
 
-
-  volver(): void {
-
-    this.router.navigate([
-      '/home'
-    ]);
-
+  ngOnInit(): void {
+    this.cargarMembresias();
   }
 
+  get membresiaSeleccionada(): MembresiaActiva | null {
+    return this.membresias.find(
+      m => m.idMembresia === this.idMembresia
+    ) ?? null;
+  }
+
+  cargarMembresias(): void {
+    this.cargandoMembresias = true;
+    this.errorMembresias = '';
+    this.membresias = [];
+    this.idMembresia = null;
+
+    this.membresiaService.obtenerActivas().subscribe({
+      next: (planes) => {
+        this.membresias = (planes ?? []).filter(
+          m =>
+            m.activo === true &&
+            m.idMembresia > 0 &&
+            m.costoMensual > 0 &&
+            m.costoAnualidad > 0
+        );
+        this.cargandoMembresias = false;
+        this.cd.detectChanges();
+      },
+      error: (err: HttpErrorResponse) => {
+        this.cargandoMembresias = false;
+        this.errorMembresias =
+          err.status === 403
+            ? 'No tienes permiso para consultar membresías.'
+            : err.status === 401
+              ? 'Tu sesión expiró. Vuelve a iniciar sesión.'
+              : err.status === 404
+                ? 'El endpoint de membresías no está disponible.'
+                : 'No fue posible cargar las membresías.';
+        this.cd.detectChanges();
+      }
+    });
+  }
+
+  volver(): void {
+    this.router.navigate(['/home']);
+  }
 
   registrarCliente(): void {
+    if (
+      this.cargando ||
+      this.cargandoMembresias ||
+      this.registroIncierto
+    ) {
+      return;
+    }
 
     this.error = '';
-
     this.exito = '';
 
-
-    /* =========================
-       NOMBRE COMPLETO
-    ========================= */
-
-    if (!this.nombreCompleto.trim()) {
-
-      this.error =
-        'El nombre completo es obligatorio.';
-
-      this.enfocarCampo(
-        'nombreCompleto'
-      );
-
-      return;
-
-    }
-
-
-    /* =========================
-       CORREO
-    ========================= */
-
-    if (!this.correo.trim()) {
-
-      this.error =
-        'El correo es obligatorio.';
-
-      this.enfocarCampo(
-        'correo'
-      );
-
-      return;
-
-    }
-
-
-    if (!this.correoValido(
-      this.correo
-    )) {
-
-      this.error =
-        'Ingresa un correo electrónico válido.';
-
-      this.enfocarCampo(
-        'correo'
-      );
-
-      return;
-
-    }
-
-
-    /* =========================
-       CONTRASEÑA
-    ========================= */
-
-    if (!this.password.trim()) {
-
-      this.error =
-        'La contraseña es obligatoria.';
-
-      this.enfocarCampo(
-        'password'
-      );
-
-      return;
-
-    }
-
-
-    if (this.password.length < 6) {
-
-      this.error =
-        'La contraseña debe tener al menos 6 caracteres.';
-
-      this.enfocarCampo(
-        'password'
-      );
-
-      return;
-
-    }
-
-
-    /* =========================
-       MEMBRESÍA
-    ========================= */
+    const nombre = this.nombreCompleto.trim();
+    const email = this.correo.trim().toLowerCase();
+    const telefono = this.telefono.trim();
+    const plan = this.membresiaSeleccionada;
 
     if (
-      this.idMembresia === null ||
-      this.idMembresia <= 0
+      nombre.length < 3 ||
+      nombre.length > 100 ||
+      /\d/.test(nombre)
     ) {
-
-      this.error =
-        'Selecciona una membresía válida.';
-
-      this.enfocarCampo(
-        'idMembresia'
-      );
-
+      this.error = 'Ingresa un nombre completo válido.';
       return;
-
     }
-
-
-    /* =========================
-       COSTO MENSUAL
-    ========================= */
 
     if (
-      this.costoMensual === null ||
-      this.costoMensual < 0
+      email.length > 150 ||
+      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
     ) {
-
-      this.error =
-        'Ingresa un costo mensual válido.';
-
-      this.enfocarCampo(
-        'costoMensual'
-      );
-
+      this.error = 'Ingresa un correo electrónico válido.';
       return;
-
     }
-
-
-    /* =========================
-       COSTO ANUAL
-    ========================= */
 
     if (
-      this.costoAnual === null ||
-      this.costoAnual < 0
+      this.password.trim().length < 6 ||
+      this.password.length > 72
     ) {
-
       this.error =
-        'Ingresa un costo anual válido.';
-
-      this.enfocarCampo(
-        'costoAnual'
-      );
-
+        'La contraseña debe tener entre 6 y 72 caracteres.';
       return;
-
     }
 
-
-    if (this.cargando) {
-
+    if (telefono && !/^\d{10}$/.test(telefono)) {
+      this.error = 'El teléfono debe tener 10 dígitos.';
       return;
-
     }
 
+    if (!plan) {
+      this.error = 'Selecciona una membresía activa.';
+      return;
+    }
 
     this.cargando = true;
 
-
+    // No enviamos precios: Backend los calcula desde PostgreSQL.
     const cliente = {
-
-      correo:
-        this.correo.trim(),
-
-      password:
-        this.password,
-
-      nombreCompleto:
-        this.nombreCompleto.trim(),
-
-      telefono:
-        this.telefono.trim() || null,
-
-      idMembresia:
-        this.idMembresia,
-
-      costoMensual:
-        this.costoMensual,
-
-      costoAnual:
-        this.costoAnual
-
+      correo: email,
+      password: this.password,
+      nombreCompleto: nombre,
+      telefono: telefono || null,
+      idMembresia: plan.idMembresia
     };
 
+    this.http.post<{ mensaje?: string }>(
+      `${environment.clienteAltaUrl}/api/clientes`,
+      cliente
+    ).subscribe({
+      next: (respuesta) => {
+        this.cargando = false;
+        this.exito =
+          respuesta?.mensaje ??
+          'Cliente registrado correctamente.';
 
-    this.http
-      .post(
-        `${environment.clienteAltaUrl}/api/clientes`,
-        cliente
-      )
-      .subscribe({
+        this.limpiarFormulario();
+        this.cd.detectChanges();
+      },
+      error: (err: HttpErrorResponse) => {
+        this.cargando = false;
 
-        next: (
-          response: any
-        ) => {
-
-          this.cargando = false;
-
-          this.exito =
-            response?.mensaje ||
-            'Cliente registrado correctamente.';
-
-          this.limpiarFormulario();
-
-          this.changeDetector
-            .detectChanges();
-
-          this.irAlInicio();
-
-        },
-
-        error: (
-          error: HttpErrorResponse
-        ) => {
-
-          console.error(
-            'Error al registrar cliente:',
-            error
-          );
-
-          this.cargando = false;
-
-
-          if (error.status === 401) {
-
-            this.error =
-              'Tu sesión no es válida. Inicia sesión nuevamente.';
-
-          } else if (
-            error.status === 403
-          ) {
-
-            this.error =
-              'No tienes permisos para registrar clientes.';
-
-          } else if (
-            error.status === 400
-          ) {
-
-            this.error =
-              error.error?.mensaje ||
-              error.error?.message ||
-              'Verifica los datos ingresados.';
-
-          } else if (
-            error.status === 0
-          ) {
-
-            this.error =
-              'No se pudo conectar con el servicio de registro.';
-
-          } else {
-
-            this.error =
-              'Ocurrió un error al registrar el cliente.';
-
-          }
-
-
-          this.changeDetector
-            .detectChanges();
-
-          this.irAlInicio();
-
+        if (err.status === 0 || err.status >= 500) {
+          this.registroIncierto = true;
+          this.error =
+            'No se pudo confirmar el resultado. ' +
+            'El cliente podría haberse registrado. ' +
+            'Consulta el directorio antes de intentar otra alta.';
+        } else if (err.status === 401) {
+          this.error = 'Tu sesión expiró.';
+        } else if (err.status === 403) {
+          this.error = 'No tienes permiso para registrar clientes.';
+        } else {
+          this.error =
+            err.error?.mensaje ??
+            err.error?.message ??
+            'No se pudo registrar el cliente.';
         }
 
-      });
-
+        this.cd.detectChanges();
+      }
+    });
   }
-
-
-  /* =========================
-     VALIDAR CORREO
-  ========================= */
-
-  correoValido(
-    correo: string
-  ): boolean {
-
-    const expresion =
-      /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-    return expresion.test(
-      correo.trim()
-    );
-
-  }
-
-
-  /* =========================
-     DIRIGIR AL CAMPO CON ERROR
-  ========================= */
-
-  private enfocarCampo(
-    idCampo: string
-  ): void {
-
-    this.changeDetector
-      .detectChanges();
-
-    setTimeout(
-      () => {
-
-        const campo =
-          document.getElementById(
-            idCampo
-          );
-
-        if (!campo) {
-
-          return;
-
-        }
-
-
-        campo.scrollIntoView({
-          behavior: 'smooth',
-          block: 'center'
-        });
-
-
-        setTimeout(
-          () => {
-
-            campo.focus({
-              preventScroll: true
-            });
-
-          },
-          350
-        );
-
-      },
-      0
-    );
-
-  }
-
-
-  /* =========================
-     MOSTRAR MENSAJE SUPERIOR
-  ========================= */
-
-  private irAlInicio(): void {
-
-    setTimeout(
-      () => {
-
-        window.scrollTo({
-          top: 0,
-          behavior: 'smooth'
-        });
-
-      },
-      0
-    );
-
-  }
-
-
-  /* =========================
-     LIMPIAR FORMULARIO
-  ========================= */
 
   limpiarFormulario(): void {
-
     this.nombreCompleto = '';
-
     this.correo = '';
-
     this.password = '';
-
     this.telefono = '';
-
     this.idMembresia = null;
-
-    this.costoMensual = null;
-
-    this.costoAnual = null;
-
   }
-
 }

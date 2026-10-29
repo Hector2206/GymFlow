@@ -471,3 +471,47 @@ footer {
   }
 
 }
+
+
+/* SPRINT 8 - CAMPANA DE NOTIFICACIONES */
+
+.notification-bell {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+  border: 1px solid #dfcfaa;
+  border-radius: 13px;
+  background: #fffdf8;
+  cursor: pointer;
+}
+
+.notification-bell:hover {
+  background: #f3ead8;
+}
+
+.bell-icon {
+  font-size: 24px;
+  line-height: 1;
+}
+
+.bell-count {
+  position: absolute;
+  top: -6px;
+  right: -7px;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 20px;
+  border: 2px solid white;
+  background: #a03930;
+  color: white;
+  font-size: 10px;
+  font-weight: 800;
+}

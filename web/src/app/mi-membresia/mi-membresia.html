@@ -1,0 +1,149 @@
+
+<div class="membresia-page">
+  <header class="topbar">
+    <div class="header-left">
+      <button
+        type="button"
+        class="back-button"
+        (click)="volverInicio()"
+        aria-label="Volver al inicio"
+      >
+        ←
+      </button>
+
+      <img
+        src="/Logo_GymFlow.png"
+        alt="GymFlow"
+        class="logo"
+      />
+    </div>
+
+    <button
+      type="button"
+      class="refresh-button"
+      (click)="cargar()"
+      [disabled]="cargando"
+    >
+      ↻ Actualizar
+    </button>
+  </header>
+
+  <main class="content">
+    <section class="page-header">
+      <p class="section-label">
+        GYMFLOW / CLIENTE
+      </p>
+
+      <h1>Tu membresía</h1>
+
+      <p>
+        Consulta la información y vigencia
+        de tu plan de gimnasio.
+      </p>
+    </section>
+
+    <div
+      class="estado-carga"
+      *ngIf="cargando"
+    >
+      Consultando tu membresía...
+    </div>
+
+    <div
+      class="estado-error"
+      *ngIf="error && !cargando"
+      role="alert"
+    >
+      <p>{{ error }}</p>
+
+      <button
+        type="button"
+        (click)="cargar()"
+      >
+        Reintentar
+      </button>
+    </div>
+
+    <ng-container *ngIf="datos as membresia">
+      <section class="membership-card">
+        <div class="plan-header">
+          <span class="plan-icon">🎫</span>
+
+          <h2>{{ membresia.nombrePlan }}</h2>
+        </div>
+
+        <span
+          class="estado"
+          [class.vigente]="membresia.estado === 'Vigente'"
+          [class.vencida]="membresia.estado === 'Vencida'"
+          [class.sin-pagos]="membresia.estado === 'SinPagos'"
+        >
+          {{ etiquetaEstado }}
+        </span>
+
+        <div class="detail-row">
+          <span>Precio mensual oficial</span>
+
+          <strong>
+            {{
+              membresia.costoMensual |
+              currency:'MXN':'symbol':'1.2-2'
+            }}
+          </strong>
+        </div>
+
+        <div class="detail-row">
+          <span>Precio anual oficial</span>
+
+          <strong>
+            {{
+              membresia.costoAnualidad |
+              currency:'MXN':'symbol':'1.2-2'
+            }}
+          </strong>
+        </div>
+
+        <div class="detail-row">
+          <span>Fecha de vencimiento</span>
+
+          <strong>
+            {{
+              formatearFecha(
+                membresia.fechaVencimiento
+              )
+            }}
+          </strong>
+        </div>
+
+        <p
+          class="info-sin-pagos"
+          *ngIf="membresia.estado === 'SinPagos'"
+        >
+          Todavía no existen pagos registrados para calcular
+          el vencimiento de tu membresía.
+        </p>
+
+        <div class="detail-row">
+          <span>Identificador del plan</span>
+
+          <strong>
+            #{{ membresia.idMembresia }}
+          </strong>
+        </div>
+
+        <p class="nota">
+          Los precios se consultan desde GymFlow
+          y son únicamente informativos.
+        </p>
+      </section>
+    </ng-container>
+
+    <button
+      type="button"
+      class="pagos-button"
+      (click)="irMisPagos()"
+    >
+      ▣ Consultar mis pagos
+    </button>
+  </main>
+</div>

@@ -1,3 +1,4 @@
+
 import {
   inject
 } from '@angular/core';
@@ -89,5 +90,14 @@ export const clienteGuard:
 
   return validarRol(
     'cliente'
+  );
+};
+
+
+export const administradorGuard:
+  CanActivateFn = () => {
+
+  return validarRol(
+    'Administrador'
   );
 };

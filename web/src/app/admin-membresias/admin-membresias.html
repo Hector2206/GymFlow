@@ -1,0 +1,444 @@
+
+<div class="membresias-page">
+
+  <header class="membresias-header">
+    <div class="header-content">
+      <div>
+        <span class="section-label">
+          GYMFLOW / ADMINISTRACIÓN
+        </span>
+
+        <h1>Administrar membresías</h1>
+
+        <p>
+          Gestiona los planes y precios oficiales del gimnasio.
+        </p>
+      </div>
+
+      <button
+        type="button"
+        class="back-button"
+        (click)="volverInicio()"
+      >
+        ← Volver al inicio
+      </button>
+    </div>
+  </header>
+
+  <main class="membresias-content">
+
+    <section class="aviso-integracion">
+      <span class="aviso-icon">🎫</span>
+
+      <div>
+        <strong>Membresías oficiales de GymFlow</strong>
+
+        <p>
+          Los planes se consultan directamente desde PostgreSQL.
+          Los cambios administrativos se registran en Backend
+          y los precios anteriores se conservan en el historial.
+        </p>
+      </div>
+    </section>
+
+    <div
+      *ngIf="error"
+      class="error"
+      role="alert"
+    >
+      {{ error }}
+    </div>
+
+    <div
+      *ngIf="exito"
+      class="nota"
+      role="status"
+      style="margin-bottom: 20px;"
+    >
+      ✓ {{ exito }}
+    </div>
+
+    <div
+      *ngIf="operacionIncierta"
+      class="nota"
+      style="margin-bottom: 20px;"
+    >
+      <strong>Operación pendiente de verificación</strong>
+
+      <p>
+        Primero consulta el catálogo actualizado y comprueba
+        si el cambio se guardó. No repitas una creación
+        ni modificación sin verificarlo.
+      </p>
+
+      <button
+        type="button"
+        class="boton-secundario"
+        [disabled]="cargando"
+        (click)="cargarCatalogo()"
+        style="margin-top: 12px;"
+      >
+        Actualizar y verificar
+      </button>
+    </div>
+
+    <section class="panel">
+
+      <div class="header-content">
+        <div>
+          <span class="section-label">
+            CATÁLOGO OFICIAL
+          </span>
+
+          <h2>Membresías registradas</h2>
+          <p class="descripcion-panel">
+            Consulta las membresías activas e inactivas.
+          </p>
+        </div>
+
+        <div class="acciones">
+          <button
+            type="button"
+            class="boton-secundario"
+            [disabled]="cargando || guardando"
+            (click)="cargarCatalogo()"
+          >
+            ↻ Actualizar
+          </button>
+
+          <button
+            type="button"
+            class="boton-primario"
+            [disabled]="guardando || operacionIncierta"
+            (click)="nuevoPlan()"
+          >
+            + Crear membresía
+          </button>
+        </div>
+      </div>
+
+      <div *ngIf="cargando" class="vacio">
+        <p>Consultando membresías...</p>
+      </div>
+
+      <div
+        *ngIf="!cargando && !membresias.length"
+        class="vacio"
+      >
+        <h3>No hay membresías disponibles</h3>
+        <p>
+          Actualiza el catálogo para comprobar los registros.
+        </p>
+      </div>
+
+      <div
+        *ngFor="let plan of membresias"
+        class="referencia-plan"
+      >
+        <div style="flex: 1; min-width: 0;">
+
+          <h3>{{ plan.nombrePlan }}</h3>
+
+          <p *ngIf="plan.descripcion">
+            {{ plan.descripcion }}
+          </p>
+
+          <small>
+            ID de membresía: {{ plan.idMembresia }}
+          </small>
+
+          <div class="resumen-precios">
+            <div class="precio-resumen">
+              <small>Mensualidad</small>
+              <strong>
+                {{
+                  plan.costoMensual |
+                  currency:'MXN':'symbol':'1.2-2'
+                }}
+              </strong>
+            </div>
+
+            <div class="precio-resumen">
+              <small>Anualidad</small>
+              <strong>
+                {{
+                  plan.costoAnualidad |
+                  currency:'MXN':'symbol':'1.2-2'
+                }}
+              </strong>
+            </div>
+          </div>
+
+          <div class="acciones" style="flex-wrap: wrap;">
+            <button
+              type="button"
+              class="boton-secundario"
+              [disabled]="guardando || operacionIncierta"
+              (click)="editar(plan)"
+            >
+              ✎ Editar
+            </button>
+
+            <button
+              type="button"
+              class="boton-secundario"
+              [disabled]="guardando || operacionIncierta"
+              (click)="cambiarEstado(plan)"
+            >
+              {{ plan.activo ? 'Desactivar' : 'Activar' }}
+            </button>
+
+            <button
+              type="button"
+              class="boton-secundario"
+              (click)="consultarHistorial(plan)"
+            >
+              ◷ Historial
+            </button>
+          </div>
+        </div>
+
+        <span
+          class="chip-pendiente"
+          [style.color]="plan.activo ? '#287447' : '#a03930'"
+        >
+          {{ plan.activo ? 'Activo' : 'Inactivo' }}
+        </span>
+      </div>
+    </section>
+
+    <!-- FORMULARIO DE CREACIÓN Y EDICIÓN -->
+
+    <section
+      class="panel"
+      *ngIf="mostrarFormulario"
+    >
+      <span class="section-label">
+        {{ idEditando === null ? 'NUEVO PLAN' : 'EDITAR PLAN' }}
+      </span>
+
+      <h2>
+        {{
+          idEditando === null
+            ? 'Crear membresía'
+            : 'Editar membresía'
+        }}
+      </h2>
+
+      <p class="descripcion-panel">
+        Los importes serán utilizados por Backend
+        como tarifas oficiales.
+      </p>
+
+      <form (ngSubmit)="guardar()" #formPlan="ngForm">
+
+        <div class="campo-completo">
+          <label for="nombrePlan">
+            Nombre del plan *
+          </label>
+
+          <input
+            id="nombrePlan"
+            type="text"
+            name="nombrePlan"
+            maxlength="100"
+            required
+            [(ngModel)]="formulario.nombrePlan"
+            [disabled]="guardando"
+            placeholder="Nombre de la membresía"
+          />
+        </div>
+
+        <div class="form-grid">
+          <div class="campo">
+            <label for="costoMensual">
+              Precio mensual (MXN) *
+            </label>
+
+            <input
+              id="costoMensual"
+              name="costoMensual"
+              type="number"
+              min="0.01"
+              step="0.01"
+              required
+              [(ngModel)]="formulario.costoMensual"
+              [disabled]="guardando"
+              placeholder="0.00"
+            />
+          </div>
+
+          <div class="campo">
+            <label for="costoAnualidad">
+              Precio anual (MXN) *
+            </label>
+
+            <input
+              id="costoAnualidad"
+              name="costoAnualidad"
+              type="number"
+              min="0.01"
+              step="0.01"
+              required
+              [(ngModel)]="formulario.costoAnualidad"
+              [disabled]="guardando"
+              placeholder="0.00"
+            />
+          </div>
+        </div>
+
+        <div class="campo-completo">
+          <label for="descripcion">
+            Descripción
+          </label>
+
+          <textarea
+            id="descripcion"
+            name="descripcion"
+            rows="3"
+            maxlength="500"
+            [(ngModel)]="formulario.descripcion"
+            [disabled]="guardando"
+            placeholder="Características del plan"
+          ></textarea>
+        </div>
+
+        <div class="nota" style="margin-top: 20px;">
+          <strong>Importante</strong>
+
+          <p>
+            Los cambios de precios no modifican los pagos
+            que ya se registraron. Las nuevas operaciones
+            utilizan los precios oficiales correspondientes.
+          </p>
+        </div>
+
+        <div class="acciones">
+          <button
+            type="button"
+            class="boton-secundario"
+            [disabled]="guardando"
+            (click)="cancelarFormulario()"
+          >
+            Cancelar
+          </button>
+
+          <button
+            type="submit"
+            class="boton-primario"
+            [disabled]="
+              guardando ||
+              operacionIncierta ||
+              formPlan.invalid
+            "
+          >
+            {{
+              guardando
+                ? 'Guardando...'
+                : idEditando === null
+                  ? 'Crear membresía'
+                  : 'Guardar cambios'
+            }}
+          </button>
+        </div>
+      </form>
+    </section>
+
+    <!-- HISTORIAL DE PRECIOS -->
+
+    <section
+      class="panel"
+      *ngIf="idHistorial !== null"
+    >
+      <span class="section-label">
+        AUDITORÍA DE PRECIOS
+      </span>
+
+      <h2>
+        Historial: {{ nombrePlanHistorial() }}
+      </h2>
+
+      <p class="descripcion-panel">
+        Consulta los importes registrados históricamente.
+      </p>
+
+      <div *ngIf="cargandoHistorial" class="vacio">
+        Consultando historial...
+      </div>
+
+      <p
+        *ngIf="errorHistorial"
+        class="error"
+      >
+        {{ errorHistorial }}
+      </p>
+
+      <div
+        *ngIf="
+          !cargandoHistorial &&
+          !errorHistorial &&
+          !historial.length
+        "
+        class="vacio"
+      >
+        No existen registros de historial para este plan.
+      </div>
+
+      <div
+        *ngFor="let registro of historial"
+        class="referencia-plan"
+      >
+        <div style="width: 100%;">
+          <strong>
+            {{ formatearFecha(registro.registradoEn) }}
+          </strong>
+
+          <p>
+            Origen: {{ registro.origen }}
+          </p>
+
+          <div class="resumen-precios">
+            <div class="precio-resumen">
+              <small>Precio mensual registrado</small>
+              <strong>
+                {{
+                  registro.costoMensual |
+                  currency:'MXN':'symbol':'1.2-2'
+                }}
+              </strong>
+            </div>
+
+            <div class="precio-resumen">
+              <small>Precio anual registrado</small>
+              <strong>
+                {{
+                  registro.costoAnualidad |
+                  currency:'MXN':'symbol':'1.2-2'
+                }}
+              </strong>
+            </div>
+          </div>
+
+          <small>
+            Registro #{{ registro.idHistorial }}
+          </small>
+        </div>
+      </div>
+
+      <div class="acciones">
+        <button
+          type="button"
+          class="boton-secundario"
+          (click)="cerrarHistorial()"
+        >
+          Cerrar historial
+        </button>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="membresias-footer">
+    GymFlow · Administración de membresías
+  </footer>
+</div>

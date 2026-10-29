@@ -1,0 +1,452 @@
+
+<div class="bajas-page">
+
+  <header class="bajas-header">
+
+    <div class="header-content">
+
+      <div>
+
+        <span class="section-label">
+          GYMFLOW / ADMINISTRACIÓN
+        </span>
+
+        <h1>Bajas de empleados</h1>
+
+        <p>
+          Gestiona las bajas laborales
+          de entrenadores y recepcionistas.
+        </p>
+
+      </div>
+
+      <button
+        type="button"
+        class="back-button"
+        (click)="volverDirectorio()"
+        [disabled]="guardando"
+      >
+        ← Volver al directorio
+      </button>
+
+    </div>
+
+  </header>
+
+  <main class="bajas-content">
+
+    <section class="bajas-panel">
+
+      <!-- ENCABEZADO -->
+
+      <div class="panel-heading">
+
+        <div class="panel-icon">📁</div>
+
+        <div>
+
+          <span class="section-label">
+            GESTIÓN LABORAL
+          </span>
+
+          <h2>Registrar baja laboral</h2>
+
+          <p>
+            Selecciona un empleado activo,
+            revisa su expediente y confirma
+            el motivo de su baja.
+          </p>
+
+        </div>
+
+      </div>
+
+      <!-- CARGANDO -->
+
+      @if (cargando) {
+
+        <div class="estado-consulta" role="status">
+
+          <div class="estado-icon">⏳</div>
+
+          <h3>Cargando empleados...</h3>
+
+          <p>
+            Consultando personal de GymFlow.
+          </p>
+
+        </div>
+
+      } @else if (error) {
+
+        <!-- ERROR DE CONSULTA -->
+
+        <div class="estado-consulta">
+
+          <div class="estado-icon">⚠️</div>
+
+          <h3>No fue posible cargar empleados</h3>
+
+          <p role="alert">
+            {{ error }}
+          </p>
+
+          <button
+            type="button"
+            class="back-button"
+            (click)="cargarEmpleados()"
+          >
+            Reintentar
+          </button>
+
+        </div>
+
+      } @else {
+
+        <!-- SELECCIONAR EMPLEADO -->
+
+        <label class="bajas-campo">
+
+          <span>Seleccionar empleado *</span>
+
+          <select
+            name="empleadoBaja"
+            [(ngModel)]="idPersonalSeleccionado"
+            (ngModelChange)="cambiarEmpleado()"
+            [disabled]="guardando || resultadoIncierto || mostrarConfirmacionFinal"
+          >
+
+            <option [ngValue]="null">
+              Seleccionar empleado
+            </option>
+
+            @for (
+              empleado of empleadosActivos;
+              track empleado.idPersonal
+            ) {
+
+              <option [ngValue]="empleado.idPersonal">
+                {{ empleado.nombreCompleto }}
+                — {{ empleado.puesto }}
+              </option>
+
+            }
+
+          </select>
+
+        </label>
+
+        @if (empleadosActivos.length === 0) {
+
+          <div class="estado-consulta">
+
+            <h3>No hay empleados activos</h3>
+
+            <p>
+              No hay empleados disponibles
+              para registrar una baja.
+            </p>
+
+          </div>
+
+        }
+
+        @if (empleadoSeleccionado; as empleado) {
+
+          <!-- EXPEDIENTE -->
+
+          <div class="expediente">
+
+            <div class="expediente-heading">
+
+              <div class="expediente-avatar">
+                👤
+              </div>
+
+              <div>
+
+                <span class="section-label">
+                  EXPEDIENTE LABORAL
+                </span>
+
+                <h3>
+                  {{ empleado.nombreCompleto }}
+                </h3>
+
+                <p>
+                  ID de personal:
+                  {{ empleado.idPersonal }}
+                </p>
+
+              </div>
+
+            </div>
+
+            <div class="expediente-grid">
+
+              <div class="dato">
+
+                <span>Puesto</span>
+
+                <strong>
+                  {{ empleado.puesto }}
+                </strong>
+
+              </div>
+
+              <div class="dato">
+
+                <span>Estado actual</span>
+
+                <strong class="estado-activo">
+                  Activo
+                </strong>
+
+              </div>
+
+              <div class="dato">
+
+                <span>Correo electrónico</span>
+
+                <strong>
+                  {{ empleado.correo }}
+                </strong>
+
+              </div>
+
+              <div class="dato">
+
+                <span>Teléfono</span>
+
+                <strong>
+                  {{ empleado.telefono }}
+                </strong>
+
+              </div>
+
+            </div>
+
+          </div>
+
+          <!-- ADVERTENCIA -->
+
+          <div class="advertencia-baja">
+
+            <strong>
+              ⚠️ Consecuencias de la baja
+            </strong>
+
+            <p>
+              El empleado perderá acceso
+              a GymFlow y se registrará
+              la fecha y el motivo de su baja.
+            </p>
+
+            @if (empleado.puesto === 'Entrenador') {
+
+              <p>
+                <strong>Atención:</strong>
+                los clientes que tenga asignados
+                quedarán sin entrenador.
+              </p>
+
+            }
+
+            <p>
+              Se conservará su historial laboral.
+            </p>
+
+          </div>
+
+          <!-- MOTIVO -->
+
+          <label class="bajas-campo motivo-campo">
+
+            <span>Motivo de baja *</span>
+
+            <textarea
+              name="motivoBaja"
+              [(ngModel)]="motivoBaja"
+              rows="4"
+              [maxlength]="maximoMotivo"
+              [disabled]="guardando || resultadoIncierto || mostrarConfirmacionFinal"
+              placeholder="Escribe el motivo de la baja laboral"
+            ></textarea>
+
+            <small class="contador-motivo">
+              {{ motivoBaja.length }}
+              / {{ maximoMotivo }} caracteres
+            </small>
+
+          </label>
+
+          <!-- CONFIRMACION INICIAL -->
+
+          <label class="confirmacion">
+
+            <input
+              type="checkbox"
+              name="confirmacionLeida"
+              [(ngModel)]="confirmacionLeida"
+              [disabled]="guardando || resultadoIncierto || mostrarConfirmacionFinal"
+            />
+
+            <span>
+              He revisado el expediente y comprendo
+              que esta baja desactivará la cuenta
+              del empleado.
+            </span>
+
+          </label>
+
+        }
+
+      }
+
+      <!-- ERRORES DEL REGISTRO DE BAJA -->
+
+      @if (errorBaja) {
+
+        <div class="baja-error" role="alert">
+
+          <strong>⚠️ No se pudo confirmar la baja</strong>
+
+          <p>
+            {{ errorBaja }}
+          </p>
+
+        </div>
+
+      }
+
+      <!-- PROCESANDO -->
+
+      @if (guardando) {
+
+        <div class="baja-procesando" role="status">
+          ⏳ Registrando la baja en GymFlow...
+        </div>
+
+      }
+
+      <!-- ACCIONES -->
+
+      <div class="bajas-acciones">
+
+        <button
+          type="button"
+          class="cancelar-button"
+          (click)="volverDirectorio()"
+          [disabled]="guardando"
+        >
+          Cancelar
+        </button>
+
+        <button
+          type="button"
+          class="confirmar-button"
+          (click)="prepararBaja()"
+          [disabled]="!puedeRegistrarBaja"
+        >
+          Revisar y confirmar baja
+        </button>
+
+      </div>
+
+    </section>
+
+  </main>
+
+  <!-- CONFIRMACION DEFINITIVA -->
+
+  @if (mostrarConfirmacionFinal) {
+
+    @if (empleadoSeleccionado; as empleado) {
+
+      <div class="baja-modal-overlay">
+
+        <section
+          class="baja-modal"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="titulo-confirmacion-baja"
+        >
+
+          <div class="baja-modal-icon">
+            ⚠️
+          </div>
+
+          <h2 id="titulo-confirmacion-baja">
+            Confirmar baja laboral
+          </h2>
+
+          <p>
+            Estás a punto de dar de baja a:
+          </p>
+
+          <div class="baja-modal-empleado">
+
+            <strong>
+              {{ empleado.nombreCompleto }}
+            </strong>
+
+            <span>
+              {{ empleado.puesto }}
+              · ID {{ empleado.idPersonal }}
+            </span>
+
+          </div>
+
+          <p class="baja-modal-motivo">
+            <strong>Motivo:</strong>
+            {{ motivoBaja.trim() }}
+          </p>
+
+          <p class="baja-modal-advertencia">
+            Esta operación desactivará su acceso
+            al sistema y registrará su baja laboral.
+          </p>
+
+          @if (empleado.puesto === 'Entrenador') {
+
+            <p class="baja-modal-advertencia">
+              Sus clientes asignados quedarán
+              sin entrenador.
+            </p>
+
+          }
+
+          <div class="baja-modal-acciones">
+
+            <button
+              type="button"
+              class="cancelar-button"
+              (click)="cancelarConfirmacionFinal()"
+            >
+              No, regresar
+            </button>
+
+            <button
+              type="button"
+              class="confirmar-button"
+              (click)="confirmarBaja()"
+              [disabled]="!puedeRegistrarBaja"
+            >
+              Sí, confirmar baja
+            </button>
+
+          </div>
+
+        </section>
+
+      </div>
+
+    }
+
+  }
+
+  <footer class="bajas-footer">
+    GymFlow · Administración de personal
+  </footer>
+
+</div>

@@ -1,0 +1,219 @@
+
+<div class="alta-page">
+
+  <header class="alta-header">
+
+    <div class="header-content">
+
+      <div>
+        <span class="section-label">
+          GYMFLOW / ADMINISTRACIÓN
+        </span>
+
+        <h1>Registrar nuevo empleado</h1>
+
+        <p>
+          Alta de entrenadores y recepcionistas.
+        </p>
+      </div>
+
+      
+    <button
+    type="button"
+    class="back-button"
+    (click)="volverDirectorio()"
+    [disabled]="guardandoAlta"
+    >
+    ← Volver al directorio
+    </button>
+
+
+    </div>
+
+  </header>
+
+  <main class="alta-content">
+
+    <section class="alta-panel">
+
+      <div class="alta-heading">
+
+        <div class="alta-icon">👤</div>
+
+        <div>
+          <span class="section-label">
+            EXPEDIENTE LABORAL
+          </span>
+
+          <h2>Información del empleado</h2>
+
+          <p>
+            Completa los datos necesarios
+            para registrar al nuevo integrante.
+          </p>
+        </div>
+
+      </div>
+
+      <div class="alta-form-grid">
+
+        <label class="alta-campo">
+
+          <span>Nombre completo *</span>
+
+          <input
+            type="text"
+            name="nombreCompleto"
+            [(ngModel)]="nuevoEmpleado.nombreCompleto"
+            maxlength="150"
+            placeholder="Nombre y apellidos"
+            autocomplete="off"
+          />
+
+        </label>
+
+        <label class="alta-campo">
+
+          <span>Correo electrónico *</span>
+
+          <input
+            type="email"
+            name="correo"
+            [(ngModel)]="nuevoEmpleado.correo"
+            maxlength="150"
+            placeholder="empleado@correo.com"
+            autocomplete="off"
+          />
+
+        </label>
+
+        <label class="alta-campo">
+
+          <span>Teléfono *</span>
+
+          <input
+            type="tel"
+            name="telefono"
+            [(ngModel)]="nuevoEmpleado.telefono"
+            maxlength="20"
+            placeholder="4421234567"
+            autocomplete="off"
+          />
+
+        </label>
+
+        <label class="alta-campo">
+
+          <span>Puesto *</span>
+
+          <select
+            name="puesto"
+            [(ngModel)]="nuevoEmpleado.puesto"
+          >
+
+            <option value="">
+              Seleccionar puesto
+            </option>
+
+            <option value="Entrenador">
+              Entrenador
+            </option>
+
+            <option value="Recepcionista">
+              Recepcionista
+            </option>
+
+          </select>
+
+        </label>
+
+        <label class="alta-campo">
+
+          <span>Fecha de contratación *</span>
+
+          <input
+            type="date"
+            name="fechaContratacion"
+            [(ngModel)]="nuevoEmpleado.fechaContratacion"
+            [max]="fechaMaxima"
+          />
+
+        </label>
+
+        <label class="alta-campo">
+
+          <span>Sueldo mensual (MXN) *</span>
+
+          <input
+            type="number"
+            name="sueldo"
+            [(ngModel)]="nuevoEmpleado.sueldo"
+            min="0"
+            max="99999999.99"
+            step="0.01"
+            placeholder="Ej. 8500.00"
+          />
+
+        </label>
+
+        <label class="alta-campo alta-completo">
+
+          <span>Contraseña inicial *</span>
+
+          <input
+            type="password"
+            name="password"
+            [(ngModel)]="nuevoEmpleado.password"
+            minlength="8"
+            autocomplete="new-password"
+            placeholder="Mínimo 8 caracteres"
+          />
+
+          <small>
+            El empleado utilizará esta contraseña
+            para iniciar sesión en GymFlow.
+          </small>
+
+        </label>
+
+      </div>
+
+      <div class="alta-acciones">
+
+        <p>
+          * Todos los campos son obligatorios.
+          El registro se conectará al backend
+          en el siguiente commit.
+        </p>
+
+        <div class="alta-botones">
+
+          <button
+            type="button"
+            class="cancelar-button"
+            (click)="volverDirectorio()"
+          >
+            Cancelar
+          </button>
+
+          <button
+            type="button"
+            class="guardar-button"
+            disabled
+          >
+            Guardar empleado
+          </button>
+
+        </div>
+
+      </div>
+
+    </section>
+
+  </main>
+
+  <footer class="alta-footer">
+    GymFlow · Administración de personal
+  </footer>
+
+</div>

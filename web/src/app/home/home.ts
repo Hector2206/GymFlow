@@ -1,16 +1,12 @@
+
 import {
   ChangeDetectorRef,
   Component,
   OnInit
 } from '@angular/core';
 
-import {
-  CommonModule
-} from '@angular/common';
-
-import {
-  Router
-} from '@angular/router';
+import { CommonModule } from '@angular/common';
+import { Router } from '@angular/router';
 
 import {
   UsuarioService
@@ -24,12 +20,14 @@ import {
   Usuario
 } from '../models/usuario.model';
 
+
+import { NotificacionesService } from '../services/notificaciones.service';
+
+
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [
-    CommonModule
-  ],
+  imports: [CommonModule],
   templateUrl: './home.html',
   styleUrl: './home.css'
 })
@@ -38,73 +36,91 @@ export class Home implements OnInit {
   usuario: Usuario | null = null;
 
   cargando = true;
-
   error = '';
-
   mensaje = '';
+  noLeidas: number | null = null;
+  cargandoNotificaciones = false;
+
 
   constructor(
     private usuarioService: UsuarioService,
     private authService: AuthService,
     private router: Router,
-    private changeDetector: ChangeDetectorRef
+    private changeDetector: ChangeDetectorRef,
+    private notificacionesService: NotificacionesService
+
   ) {}
 
-  ngOnInit(): void {
-
-    this.cargarUsuario();
+  
+cargarContadorNotificaciones(): void {
+  if (this.cargandoNotificaciones) {
+    return;
   }
 
+  this.cargandoNotificaciones = true;
+  this.noLeidas = null;
+
+  this.notificacionesService.obtenerNoLeidas().subscribe({
+    next: cantidad => {
+      this.noLeidas = cantidad;
+      this.cargandoNotificaciones = false;
+      this.changeDetector.detectChanges();
+    },
+
+    error: () => {
+      this.noLeidas = null;
+      this.cargandoNotificaciones = false;
+      this.changeDetector.detectChanges();
+    }
+  });
+}
+
+irNotificaciones(): void {
+  this.router.navigate(['/notificaciones']);
+}
+
+
+  ngOnInit(): void {
+    this.cargarUsuario();
+  }
 
   cargarUsuario(): void {
 
     this.cargando = true;
-
     this.error = '';
 
     this.usuarioService
       .obtenerUsuarioActual()
       .subscribe({
 
-        next: (
-          usuario
-        ) => {
+        next: (usuario) => {
 
-          this.usuario =
-            usuario;
+          this.usuario = usuario;
+          this.cargarContadorNotificaciones();
+
 
           localStorage.setItem(
             'usuario',
-            JSON.stringify(
-              usuario
-            )
+            JSON.stringify(usuario)
           );
 
-          this.cargando =
-            false;
+          this.cargando = false;
 
-          this.changeDetector
-            .detectChanges();
+          this.changeDetector.detectChanges();
         },
 
-        error: (
-          error
-        ) => {
+        error: (error) => {
 
           console.error(
             'Error al obtener usuario:',
             error
           );
 
-          this.cargando =
-            false;
+          this.cargando = false;
 
-          if (
-            error.status === 401
-          ) {
+          if (error.status === 401) {
 
-            this.authService
-              .cerrarSesion();
+            this.authService.cerrarSesion();
 
             this.router.navigate([
               '/login'
@@ -116,294 +132,331 @@ export class Home implements OnInit {
           this.error =
             'No se pudieron cargar los datos del usuario.';
 
-          this.changeDetector
-            .detectChanges();
+          this.changeDetector.detectChanges();
         }
       });
   }
 
+  // ROLES
 
   esRecepcionista(): boolean {
 
     return this.usuario?.role
-      ?.toLowerCase() ===
-      'recepcionista';
+      ?.toLowerCase() === 'recepcionista';
   }
-
 
   esCliente(): boolean {
 
     return this.usuario?.role
-      ?.toLowerCase() ===
-      'cliente';
+      ?.toLowerCase() === 'cliente';
   }
-
 
   esAdministrador(): boolean {
 
     return this.usuario?.role
-      ?.toLowerCase() ===
-      'administrador';
+      ?.toLowerCase() === 'administrador';
   }
-
 
   esEntrenador(): boolean {
 
     return this.usuario?.role
-      ?.toLowerCase() ===
-      'entrenador';
+      ?.toLowerCase() === 'entrenador';
   }
 
+  // PERFIL
 
   irPerfil(): void {
+    this.router.navigate(['/perfil']);
+  }
+
+  // ADMINISTRADOR
+
+  irDashboardAdministrador(): void {
+
+    if (!this.esAdministrador()) {
+
+      this.mensaje =
+        'Esta opción está disponible únicamente para administradores.';
+
+      this.changeDetector.detectChanges();
+      return;
+    }
+
+    this.router.navigate(['/admin/dashboard']);
+  }
+
+  irClientesAdministrador(): void {
+
+    if (!this.esAdministrador()) {
+
+      this.mensaje =
+        'Esta opción está disponible únicamente para administradores.';
+
+      this.changeDetector.detectChanges();
+      return;
+    }
+
+    this.router.navigate(['/admin/clientes']);
+  }
+
+  irPersonalAdministrador(): void {
+
+    if (!this.esAdministrador()) {
+
+      this.mensaje =
+        'Esta opción está disponible únicamente para administradores.';
+
+      this.changeDetector.detectChanges();
+      return;
+    }
+
+    this.router.navigate(['/admin/personal']);
+  }
+
+  irHorariosAdministrador(): void {
+
+    if (!this.esAdministrador()) {
+
+      this.mensaje =
+        'Solo los administradores pueden gestionar horarios y asistencias.';
+
+      this.changeDetector.detectChanges();
+      return;
+    }
 
     this.router.navigate([
-      '/perfil'
+      '/admin/personal/operaciones'
     ]);
   }
 
+  irMembresiasAdministrador(): void {
+
+    if (!this.esAdministrador()) {
+
+      this.mensaje =
+        'Solo los administradores pueden gestionar membresías.';
+
+      this.changeDetector.detectChanges();
+      return;
+    }
+
+    this.router.navigate(['/admin/membresias']);
+  }
+
+  // NUEVO: ADMINISTRAR ADMINISTRADORES
+
+  irAdministradores(): void {
+
+    if (!this.esAdministrador()) {
+
+      this.mensaje =
+        'Solo los administradores pueden gestionar otras cuentas administrativas.';
+
+      this.changeDetector.detectChanges();
+      return;
+    }
+
+    this.router.navigate([
+      '/admin/administradores'
+    ]);
+  }
+
+  // RECEPCIÓN
 
   irRegistrarCliente(): void {
 
-    if (
-      !this.esRecepcionista()
-    ) {
+    if (!this.esRecepcionista()) {
 
       this.mensaje =
         'No tienes permisos para registrar clientes.';
 
-      this.changeDetector
-        .detectChanges();
-
+      this.changeDetector.detectChanges();
       return;
     }
 
-    this.router.navigate([
-      '/registrar-cliente'
-    ]);
+    this.router.navigate(['/registrar-cliente']);
   }
-
 
   irControlAcceso(): void {
 
-    if (
-      !this.esRecepcionista()
-    ) {
+    if (!this.esRecepcionista()) {
 
       this.mensaje =
         'No tienes permisos para registrar asistencias.';
 
-      this.changeDetector
-        .detectChanges();
-
+      this.changeDetector.detectChanges();
       return;
     }
 
-    this.router.navigate([
-      '/control-acceso'
-    ]);
+    this.router.navigate(['/control-acceso']);
   }
+
+  
+irClientesRecepcion(): void {
+  if (!this.esRecepcionista()) {
+    this.mensaje =
+      'Solo Recepción puede consultar este directorio.';
+    this.changeDetector.detectChanges();
+    return;
+  }
+
+  this.router.navigate(['/recepcion/clientes']);
+}
 
 
   irHistorialAsistencias(): void {
 
-    if (
-      !this.esRecepcionista()
-    ) {
+    if (!this.esRecepcionista()) {
 
       this.mensaje =
         'No tienes permisos para consultar asistencias.';
 
-      this.changeDetector
-        .detectChanges();
-
+      this.changeDetector.detectChanges();
       return;
     }
 
-    this.router.navigate([
-      '/historial-asistencias'
-    ]);
+    this.router.navigate(['/historial-asistencias']);
   }
-
 
   irRegistrarPago(): void {
 
-    if (
-      !this.esRecepcionista()
-    ) {
+    if (!this.esRecepcionista()) {
 
       this.mensaje =
         'No tienes permisos para registrar pagos.';
 
-      this.changeDetector
-        .detectChanges();
-
+      this.changeDetector.detectChanges();
       return;
     }
 
-    this.router.navigate([
-      '/registrar-pago'
-    ]);
+    this.router.navigate(['/registrar-pago']);
   }
-
 
   irHistorialPagos(): void {
 
-    if (
-      !this.esRecepcionista()
-    ) {
+    if (!this.esRecepcionista()) {
 
       this.mensaje =
         'No tienes permisos para consultar pagos.';
 
-      this.changeDetector
-        .detectChanges();
-
+      this.changeDetector.detectChanges();
       return;
     }
 
-    this.router.navigate([
-      '/historial-pagos'
-    ]);
-  }
-
-
-  irMiCodigoAcceso(): void {
-
-    if (
-      !this.esCliente()
-    ) {
-
-      this.mensaje =
-        'Esta opción está disponible únicamente para clientes.';
-
-      this.changeDetector
-        .detectChanges();
-
-      return;
-    }
-
-    this.router.navigate([
-      '/mi-codigo-acceso'
-    ]);
+    this.router.navigate(['/historial-pagos']);
   }
 
   irAsignacionEntrenadores(): void {
 
-  if (
-    !this.esRecepcionista()
-  ) {
-
-    this.mensaje =
-      'Esta opción está disponible únicamente para recepción.';
-
-    this.changeDetector
-      .detectChanges();
-
-    return;
-  }
-
-  this.router.navigate([
-    '/asignacion-entrenadores'
-  ]);
-}
-
-
-  irMisAsistencias(): void {
-
-    if (
-      !this.esCliente()
-    ) {
+    if (!this.esRecepcionista()) {
 
       this.mensaje =
-        'Esta opción está disponible únicamente para clientes.';
+        'Esta opción está disponible únicamente para recepción.';
 
-      this.changeDetector
-        .detectChanges();
-
+      this.changeDetector.detectChanges();
       return;
     }
 
     this.router.navigate([
-      '/mis-asistencias'
+      '/asignacion-entrenadores'
     ]);
   }
+
+  // CLIENTE
+
+  irMiCodigoAcceso(): void {
+
+    if (!this.esCliente()) {
+
+      this.mensaje =
+        'Esta opción está disponible únicamente para clientes.';
+
+      this.changeDetector.detectChanges();
+      return;
+    }
+
+    this.router.navigate(['/mi-codigo-acceso']);
+  }
+
+  irMisAsistencias(): void {
+
+    if (!this.esCliente()) {
+
+      this.mensaje =
+        'Esta opción está disponible únicamente para clientes.';
+
+      this.changeDetector.detectChanges();
+      return;
+    }
+
+    this.router.navigate(['/mis-asistencias']);
+  }
+
+  
+irMiMembresia(): void {
+  if (!this.esCliente()) {
+    this.mensaje =
+      'Solo los clientes pueden consultar su membresía.';
+    this.changeDetector.detectChanges();
+    return;
+  }
+
+  this.router.navigate(['/mi-membresia']);
+}
 
 
   irMisPagos(): void {
 
-    if (
-      !this.esCliente()
-    ) {
+    if (!this.esCliente()) {
 
       this.mensaje =
         'Esta opción está disponible únicamente para clientes.';
 
-      this.changeDetector
-        .detectChanges();
-
+      this.changeDetector.detectChanges();
       return;
     }
 
-    this.router.navigate([
-      '/mis-pagos'
-    ]);
+    this.router.navigate(['/mis-pagos']);
   }
-
 
   irRutinasCliente(): void {
 
-    if (
-      !this.esCliente()
-    ) {
+    if (!this.esCliente()) {
 
       this.mensaje =
         'Esta opción está disponible únicamente para clientes.';
 
-      this.changeDetector
-        .detectChanges();
-
+      this.changeDetector.detectChanges();
       return;
     }
 
-    this.router.navigate([
-      '/rutinas'
-    ]);
+    this.router.navigate(['/rutinas']);
   }
 
   irMiProgreso(): void {
 
-  if (
-    !this.esCliente()
-  ) {
+    if (!this.esCliente()) {
 
-    this.mensaje =
-      'Esta opción está disponible únicamente para clientes.';
+      this.mensaje =
+        'Esta opción está disponible únicamente para clientes.';
 
-    this.changeDetector
-      .detectChanges();
+      this.changeDetector.detectChanges();
+      return;
+    }
 
-    return;
+    this.router.navigate(['/mi-progreso']);
   }
 
-  this.router.navigate([
-    '/mi-progreso'
-  ]);
-}
-
+  // ENTRENADOR
 
   irMisClientesEntrenador(): void {
 
-    if (
-      !this.esEntrenador()
-    ) {
+    if (!this.esEntrenador()) {
 
       this.mensaje =
         'Esta opción está disponible únicamente para entrenadores.';
 
-      this.changeDetector
-        .detectChanges();
-
+      this.changeDetector.detectChanges();
       return;
     }
 
@@ -412,19 +465,14 @@ export class Home implements OnInit {
     ]);
   }
 
-
   irEjerciciosEntrenador(): void {
 
-    if (
-      !this.esEntrenador()
-    ) {
+    if (!this.esEntrenador()) {
 
       this.mensaje =
         'Esta opción está disponible únicamente para entrenadores.';
 
-      this.changeDetector
-        .detectChanges();
-
+      this.changeDetector.detectChanges();
       return;
     }
 
@@ -433,19 +481,14 @@ export class Home implements OnInit {
     ]);
   }
 
-
   irRutinasEntrenador(): void {
 
-    if (
-      !this.esEntrenador()
-    ) {
+    if (!this.esEntrenador()) {
 
       this.mensaje =
         'Esta opción está disponible únicamente para entrenadores.';
 
-      this.changeDetector
-        .detectChanges();
-
+      this.changeDetector.detectChanges();
       return;
     }
 
@@ -454,38 +497,29 @@ export class Home implements OnInit {
     ]);
   }
 
+  // FUNCIONES PENDIENTES
 
-  proximamente(
-    opcion: string
-  ): void {
+  proximamente(opcion: string): void {
 
     this.mensaje =
       `${opcion} estará disponible próximamente.`;
 
-    this.changeDetector
-      .detectChanges();
+    this.changeDetector.detectChanges();
 
-    setTimeout(
-      () => {
+    setTimeout(() => {
 
-        this.mensaje = '';
+      this.mensaje = '';
+      this.changeDetector.detectChanges();
 
-        this.changeDetector
-          .detectChanges();
-
-      },
-      3000
-    );
+    }, 3000);
   }
 
+  // CERRAR SESIÓN
 
   cerrarSesion(): void {
 
-    this.authService
-      .cerrarSesion();
+    this.authService.cerrarSesion();
 
-    this.router.navigate([
-      '/login'
-    ]);
+    this.router.navigate(['/login']);
   }
 }

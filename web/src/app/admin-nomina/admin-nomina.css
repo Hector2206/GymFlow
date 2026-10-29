@@ -1,0 +1,404 @@
+
+:host {
+  display: block;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+.nomina-page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: linear-gradient(
+    180deg,
+    #f8f5ef,
+    #f2ede4
+  );
+  color: #2f2a24;
+}
+
+.nomina-header {
+  padding: 35px 40px;
+  background: #fffdf8;
+  border-bottom: 1px solid #e7dfd2;
+}
+
+.header-content {
+  max-width: 1150px;
+  margin: auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 24px;
+}
+
+.section-label {
+  color: #a47c27;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+}
+
+.nomina-header h1 {
+  margin: 12px 0;
+  font-size: clamp(26px, 3vw, 35px);
+}
+
+.nomina-header p {
+  color: #81776c;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.nomina-content {
+  width: 100%;
+  max-width: 1150px;
+  margin: 0 auto;
+  padding: 40px 25px 70px;
+  flex: 1;
+}
+
+.nomina-panel {
+  margin-bottom: 25px;
+  padding: 30px;
+  border: 1px solid #dfcfaa;
+  border-radius: 20px;
+  background: #fffdf8;
+  box-shadow:
+    0 8px 24px rgba(76, 62, 36, 0.05);
+}
+
+.panel-heading,
+.section-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 25px;
+}
+
+.panel-heading {
+  justify-content: flex-start;
+}
+
+.panel-icon,
+.section-icon,
+.inicio-icon {
+  width: 55px;
+  height: 55px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 16px;
+  background: #f4ead5;
+  font-size: 24px;
+}
+
+.panel-heading h2,
+.section-heading h2 {
+  margin: 10px 0;
+  font-size: 22px;
+}
+
+.panel-heading p,
+.section-heading p {
+  margin: 0;
+  color: #81776c;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.nomina-campo {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.nomina-campo span {
+  color: #756c60;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.nomina-campo select {
+  width: 100%;
+  padding: 15px;
+  border: 1px solid #dfcfaa;
+  border-radius: 12px;
+  background: #fffdf8;
+  color: #2f2a24;
+  font: inherit;
+  font-size: 14px;
+}
+
+.nomina-campo select:focus {
+  outline: none;
+  border-color: #b58a2a;
+  box-shadow:
+    0 0 0 3px rgba(181, 138, 42, 0.12);
+}
+
+.resumen-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.resumen-card {
+  min-width: 0;
+  padding: 20px;
+  border: 1px solid #e9dfcf;
+  border-radius: 15px;
+  background: #faf7f0;
+  display: flex;
+  flex-direction: column;
+  gap: 11px;
+}
+
+.resumen-card span {
+  color: #81776c;
+  font-size: 12px;
+}
+
+.resumen-card strong {
+  color: #87671d;
+  font-size: clamp(16px, 2vw, 23px);
+  overflow-wrap: anywhere;
+}
+
+.resumen-card strong.inactivo {
+  color: #b64741;
+}
+
+.resumen-card small {
+  color: #968c7d;
+  font-size: 11px;
+}
+
+.nomina-toolbar {
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid #eee7dc;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 15px;
+}
+
+.nomina-toolbar p {
+  margin: 0;
+  color: #81776c;
+  font-size: 12px;
+}
+
+.back-button,
+.secondary-button {
+  padding: 12px 19px;
+  border: 1px solid #dfcfaa;
+  border-radius: 12px;
+  background: #f4ead5;
+  color: #87671d;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.back-button:hover,
+.secondary-button:hover:not(:disabled) {
+  background: #e9d7ae;
+}
+
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+button:focus-visible {
+  outline: 3px solid #b58a2a;
+  outline-offset: 3px;
+}
+
+.nomina-destacado {
+  padding: 22px;
+  margin-bottom: 22px;
+  background: #f4ead5;
+  border: 1px solid #e1ce9f;
+  border-radius: 15px;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+
+.nomina-destacado span {
+  color: #87671d;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.nomina-destacado strong {
+  font-size: 26px;
+  color: #2f2a24;
+}
+
+.nomina-destacado small {
+  font-size: 12px;
+  color: #81776c;
+}
+
+.nomina-tabla-container {
+  overflow-x: auto;
+  border: 1px solid #e9e0d2;
+  border-radius: 14px;
+}
+
+.nomina-tabla {
+  width: 100%;
+  min-width: 780px;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.nomina-tabla thead {
+  background: #f7f0e3;
+}
+
+.nomina-tabla th,
+.nomina-tabla td {
+  padding: 16px;
+  font-size: 12px;
+  vertical-align: middle;
+}
+
+.nomina-tabla th {
+  color: #87671d;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.nomina-tabla td {
+  border-top: 1px solid #eee7dc;
+}
+
+.nomina-tabla tbody tr:hover {
+  background: #fdfaf4;
+}
+
+.monto-cell {
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.motivo-cell {
+  max-width: 240px;
+  overflow-wrap: anywhere;
+}
+
+.estado-chip {
+  display: inline-block;
+  padding: 7px 11px;
+  border-radius: 20px;
+  background: #ece7df;
+  color: #81776c;
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.chip-vigente {
+  background: #e7f5ec;
+  color: #247a45;
+}
+
+.chip-cancelado {
+  background: #fde8e8;
+  color: #b64741;
+}
+
+.nomina-contador {
+  margin-bottom: 15px;
+  color: #87671d;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.nomina-estado {
+  padding: 30px;
+  border: 1px dashed #dfcfaa;
+  border-radius: 15px;
+  background: #faf7f0;
+  color: #81776c;
+  text-align: center;
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+.nomina-estado p {
+  margin: 9px 0 0;
+}
+
+.nomina-error {
+  padding: 17px;
+  margin-bottom: 16px;
+  background: #fff0ef;
+  border: 1px solid #e7b2ad;
+  border-radius: 12px;
+  color: #a52f35;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.nomina-inicio {
+  text-align: center;
+  padding: 50px 25px;
+}
+
+.inicio-icon {
+  margin: auto;
+  font-size: 27px;
+}
+
+.nomina-inicio h2 {
+  margin-top: 18px;
+  font-size: 21px;
+}
+
+.nomina-inicio p {
+  color: #81776c;
+  font-size: 13px;
+}
+
+.nomina-footer {
+  padding: 25px;
+  border-top: 1px solid #e7dfd2;
+  text-align: center;
+  color: #938a7d;
+  font-size: 12px;
+}
+
+@media (max-width: 750px) {
+
+  .nomina-header {
+    padding: 25px 20px;
+  }
+
+  .header-content,
+  .nomina-toolbar {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .nomina-content {
+    padding: 25px 16px 45px;
+  }
+
+  .nomina-panel {
+    padding: 22px;
+  }
+
+  .resumen-grid {
+    grid-template-columns: 1fr;
+  }
+}

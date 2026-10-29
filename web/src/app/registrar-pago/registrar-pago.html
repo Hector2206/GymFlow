@@ -1,9 +1,7 @@
+
 <div class="pago-page">
-
   <header class="topbar">
-
     <div class="header-left">
-
       <button
         type="button"
         class="back-button"
@@ -17,49 +15,41 @@
         alt="GymFlow"
         class="logo"
       />
-
     </div>
-
   </header>
 
-
   <main class="content">
-
     <section class="page-header">
+      <p class="section-label">RECEPCIÓN / GYMFLOW</p>
 
-      <p class="section-label">
-        Recepción
-      </p>
-
-      <h1>
-        Registrar Pago
-      </h1>
+      <h1>Registrar Pago</h1>
 
       <p class="subtitle">
-        Registra pagos y renovaciones de los clientes.
+        El importe oficial se calcula automáticamente
+        desde PostgreSQL.
       </p>
-
     </section>
 
-
     <section class="payment-section">
-
-      <h2>
-        Datos del pago
-      </h2>
+      <h2>Datos del pago</h2>
 
       <p class="section-description">
-        Completa la información necesaria para registrar el pago.
+        Selecciona un cliente y el concepto del pago.
       </p>
 
+      <div
+        *ngIf="errorAlmacenamiento"
+        class="message error-message"
+      >
+        {{ errorAlmacenamiento }}
+      </div>
 
       <div
-        *ngIf="errorClientes"
+        *ngIf="errorClientes && !hayPendiente"
         class="message error-message"
       >
         {{ errorClientes }}
       </div>
-
 
       <div
         *ngIf="errorFormulario"
@@ -68,7 +58,6 @@
         {{ errorFormulario }}
       </div>
 
-
       <div
         *ngIf="exito"
         class="message success-message"
@@ -76,14 +65,44 @@
         {{ exito }}
       </div>
 
+      <div
+        *ngIf="hayPendiente"
+        class="renovacion-info"
+      >
+        <div class="renovacion-icon">!</div>
 
-      <div class="form-grid">
+        <div>
+          <strong>
+            Pago pendiente de confirmación
+          </strong>
 
+          <p>
+            Cliente: {{ nombreCliente }}
+          </p>
+
+          <p>
+            Concepto: {{ pendiente?.tipoPago }}
+          </p>
+
+          <p>
+            La operación está guardada. Si vuelves a
+            intentar el cobro, se reutilizará exactamente
+            el mismo UUID.
+          </p>
+
+          <p>
+            No se puede iniciar otro pago mientras
+            esta operación siga pendiente.
+          </p>
+        </div>
+      </div>
+
+      <div
+        class="form-grid"
+        *ngIf="!hayPendiente && !operacionTerminada"
+      >
         <div class="field full-width">
-
-          <label for="idCliente">
-            Cliente *
-          </label>
+          <label for="idCliente">Cliente *</label>
 
           <select
             id="idCliente"
@@ -91,10 +110,10 @@
             [(ngModel)]="idCliente"
             [disabled]="
               cargandoClientes ||
-              procesandoPago
+              procesandoPago ||
+              !!errorAlmacenamiento
             "
           >
-
             <option [ngValue]="null">
               {{
                 cargandoClientes
@@ -109,55 +128,10 @@
             >
               {{ cliente.nombreCompleto }}
             </option>
-
           </select>
-
-          <small>
-            Selecciona el cliente que realizará el pago.
-          </small>
-
         </div>
 
-
-        <div class="field">
-
-          <label for="monto">
-            Monto *
-          </label>
-
-          <input
-            id="monto"
-            name="monto"
-            type="number"
-            min="0.01"
-            max="100000"
-            step="0.01"
-            [(ngModel)]="monto"
-            (ngModelChange)="montoCambio()"
-            placeholder="Ejemplo: 500.00"
-            autocomplete="off"
-            [disabled]="procesandoPago"
-            [class.input-error]="errorMonto"
-          />
-
-          <small
-            *ngIf="!errorMonto"
-          >
-            Ingresa el monto pagado por el cliente.
-          </small>
-
-          <small
-            class="field-error"
-            *ngIf="errorMonto"
-          >
-            {{ errorMonto }}
-          </small>
-
-        </div>
-
-
-        <div class="field">
-
+        <div class="field full-width">
           <label for="tipoPago">
             Concepto del pago *
           </label>
@@ -166,9 +140,11 @@
             id="tipoPago"
             name="tipoPago"
             [(ngModel)]="tipoPago"
-            [disabled]="procesandoPago"
+            [disabled]="
+              procesandoPago ||
+              !!errorAlmacenamiento
+            "
           >
-
             <option value="">
               Selecciona una opción
             </option>
@@ -180,117 +156,99 @@
             <option value="Anualidad">
               Anualidad
             </option>
-
           </select>
-
-          <small>
-            Selecciona el tipo de pago realizado.
-          </small>
-
         </div>
-
       </div>
-
 
       <div
         class="renovacion-info"
-        *ngIf="tipoPago"
+        *ngIf="!operacionTerminada"
       >
-
-        <div class="renovacion-icon">
-          ↻
-        </div>
+        <div class="renovacion-icon">i</div>
 
         <div>
-
-          <strong>
-            Renovación automática
-          </strong>
+          <strong>Precios oficiales</strong>
 
           <p>
-            Si el cliente ya tiene un pago previo de
-            {{ tipoPago.toLowerCase() }},
-            el sistema lo registrará automáticamente como renovación.
+            No se captura ni envía ningún monto.
+            Backend obtiene la tarifa vigente de
+            la membresía contratada.
           </p>
 
+          <p>
+            Registra únicamente dinero recibido.
+          </p>
         </div>
-
       </div>
 
-
       <button
+        *ngIf="!operacionTerminada"
         type="button"
         class="submit-button"
-        [disabled]="procesandoPago"
+        [disabled]="
+          procesandoPago ||
+          !!errorAlmacenamiento ||
+          (!hayPendiente &&
+            (cargandoClientes ||
+             !!errorClientes ||
+             !clientes.length))
+        "
         (click)="registrarPago()"
       >
         {{
           procesandoPago
-            ? 'Registrando pago...'
-            : 'Registrar pago'
+            ? 'Confirmando pago...'
+            : hayPendiente
+              ? 'Reintentar el mismo pago'
+              : 'Revisar y registrar pago'
         }}
       </button>
 
+      <button
+        *ngIf="hayPendiente || operacionTerminada"
+        type="button"
+        class="submit-button"
+        style="background:#fffdf8;color:#8a6814;border:1px solid #d8c8a5"
+        (click)="consultarHistorial()"
+      >
+        Consultar historial de pagos
+      </button>
 
       <div
-        class="payment-result"
         *ngIf="respuestaPago"
+        class="payment-result"
       >
-
-        <h3>
-          Resumen del pago
-        </h3>
-
+        <h3>Pago confirmado</h3>
 
         <div class="result-row">
-
-          <span>
-            Tipo
-          </span>
-
-          <strong>
-            {{ respuestaPago.tipoPago }}
-          </strong>
-
+          <span>Folio</span>
+          <strong>#{{ respuestaPago.idPago }}</strong>
         </div>
 
-
         <div class="result-row">
-
-          <span>
-            Monto
-          </span>
-
-          <strong>
-            ${{ respuestaPago.monto }}
-          </strong>
-
+          <span>Tipo</span>
+          <strong>{{ respuestaPago.tipoPago }}</strong>
         </div>
 
-
         <div class="result-row">
-
-          <span>
-            Movimiento
-          </span>
-
+          <span>Importe oficial</span>
           <strong>
             {{
-              respuestaPago.esRenovacion
-                ? 'Renovación'
-                : 'Primer pago'
+              respuestaPago.monto |
+              currency:'MXN':'symbol':'1.2-2'
             }}
           </strong>
-
         </div>
 
+        <div class="result-row">
+          <span>Movimiento</span>
+          <strong>
+            {{ descripcionMovimiento(respuestaPago) }}
+          </strong>
+        </div>
 
         <div class="result-row">
-
-          <span>
-            Nueva vigencia
-          </span>
-
+          <span>Vencimiento</span>
           <strong>
             {{
               formatearFecha(
@@ -298,13 +256,16 @@
               )
             }}
           </strong>
-
         </div>
 
+        <button
+          type="button"
+          class="submit-button"
+          (click)="registrarNuevoPago()"
+        >
+          Registrar un pago nuevo
+        </button>
       </div>
-
     </section>
-
   </main>
-
 </div>

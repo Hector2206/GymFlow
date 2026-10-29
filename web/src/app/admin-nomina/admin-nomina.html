@@ -1,0 +1,1090 @@
+
+<div class="nomina-page">
+
+  <!-- ENCABEZADO -->
+
+  <header class="nomina-header">
+
+    <div class="header-content">
+
+      <div>
+        <span class="section-label">
+          GYMFLOW / ADMINISTRACIÓN
+        </span>
+
+        <h1>Salarios y nómina</h1>
+
+        <p>
+          Consulta sueldos, historiales
+          y pagos de los empleados.
+        </p>
+      </div>
+
+      <button
+        type="button"
+        class="back-button"
+        (click)="volverDirectorio()"
+        [disabled]="cambiandoSalario || cancelandoPago"
+      >
+        ← Volver al directorio
+      </button>
+
+    </div>
+
+  </header>
+
+  <main class="nomina-content">
+
+    <!-- SELECCIONAR EMPLEADO -->
+
+    <section class="nomina-panel">
+
+      <div class="panel-heading">
+
+        <div class="panel-icon">💰</div>
+
+        <div>
+
+          <span class="section-label">
+            ADMINISTRACIÓN LABORAL
+          </span>
+
+          <h2>Expediente de nómina</h2>
+
+          <p>
+            Selecciona al entrenador o recepcionista
+            que deseas consultar.
+          </p>
+
+        </div>
+
+      </div>
+
+      @if (cargandoEmpleados) {
+
+        <div class="nomina-estado" role="status">
+          ⏳ Cargando empleados...
+        </div>
+
+      } @else if (errorEmpleados) {
+
+        <div class="nomina-error" role="alert">
+          {{ errorEmpleados }}
+        </div>
+
+        <button
+          type="button"
+          class="secondary-button"
+          (click)="cargarEmpleados()"
+        >
+          Reintentar
+        </button>
+
+      } @else {
+
+        <label class="nomina-campo">
+
+          <span>Seleccionar empleado</span>
+
+          <select
+            name="empleadoNomina"
+            [(ngModel)]="idPersonalSeleccionado"
+            (ngModelChange)="cambiarEmpleado()"
+            [disabled]="
+              cambiandoSalario ||
+              cancelandoPago ||
+              !!pagoParaCancelar ||
+              mostrarConfirmacionFinal
+            "
+          >
+
+            <option [ngValue]="null">
+              Seleccionar entrenador o recepcionista
+            </option>
+
+            @for (e of empleados; track e.idPersonal) {
+
+              <option [ngValue]="e.idPersonal">
+                {{ e.nombreCompleto }}
+                — {{ e.puesto }}
+                — {{ e.estatus }}
+              </option>
+
+            }
+
+          </select>
+
+        </label>
+
+      }
+
+    </section>
+
+    @if (empleadoSeleccionado; as empleado) {
+
+      <!-- RESUMEN LABORAL -->
+
+      <section class="nomina-panel">
+
+        <div class="panel-heading">
+
+          <div class="panel-icon">👤</div>
+
+          <div>
+            <span class="section-label">
+              EXPEDIENTE LABORAL
+            </span>
+
+            <h2>{{ empleado.nombreCompleto }}</h2>
+
+            <p>
+              ID: {{ empleado.idPersonal }}
+              · {{ empleado.puesto }}
+            </p>
+          </div>
+
+        </div>
+
+        <div class="resumen-grid">
+
+          <div class="resumen-card">
+
+            <span>Sueldo mensual registrado</span>
+
+            <strong>
+              {{ mostrarMonto(empleado.salario) }}
+            </strong>
+
+            <small>Expediente laboral</small>
+
+          </div>
+
+          <div class="resumen-card">
+
+            <span>Estatus</span>
+
+            <strong
+              [class.inactivo]="empleado.estatus === 'Inactivo'"
+            >
+              {{ empleado.estatus }}
+            </strong>
+
+            <small>{{ empleado.puesto }}</small>
+
+          </div>
+
+          <div class="resumen-card">
+
+            <span>Contratación</span>
+
+            <strong>
+              {{ mostrarFecha(empleado.fechaContratacion) }}
+            </strong>
+
+            <small>Fecha de ingreso</small>
+
+          </div>
+
+        </div>
+
+        <div class="nomina-toolbar">
+
+          <p>Información obtenida de GymFlow.</p>
+
+          <button
+            type="button"
+            class="secondary-button"
+            (click)="cargarDetalles()"
+            [disabled]="
+              cargandoSalarios ||
+              cargandoPagos ||
+              cambiandoSalario ||
+              cancelandoPago ||
+              !!pagoParaCancelar
+            "
+          >
+            ↻ Actualizar consulta
+          </button>
+
+        </div>
+
+      </section>
+
+      <!-- CONFIRMACIONES -->
+
+      @if (mensajeRegistroPago) {
+
+        <section class="nomina-panel">
+
+          <div class="nomina-destacado" role="status">
+
+            <strong>✓ Pago registrado</strong>
+
+            <small>{{ mensajeRegistroPago }}</small>
+
+          </div>
+
+        </section>
+
+      }
+
+      @if (mensajeCambio) {
+
+        <section class="nomina-panel">
+
+          <div class="nomina-destacado" role="status">
+
+            <strong>✓ Cambio salarial registrado</strong>
+
+            <small>{{ mensajeCambio }}</small>
+
+          </div>
+
+        </section>
+
+      }
+
+      @if (mensajeCancelacion) {
+
+        <section class="nomina-panel">
+
+          <div class="nomina-destacado" role="status">
+
+            <strong>✓ Pago de nómina cancelado</strong>
+
+            <small>{{ mensajeCancelacion }}</small>
+
+          </div>
+
+        </section>
+
+      }
+
+      @if (resultadoCancelacionIncierto && errorCancelacion) {
+
+        <section class="nomina-panel">
+
+          <div class="nomina-error" role="alert">
+
+            {{ errorCancelacion }}
+
+          </div>
+
+        </section>
+
+      }
+
+      <!-- HISTORIAL SALARIAL -->
+
+      <section class="nomina-panel">
+
+        <div class="section-heading">
+
+          <div>
+
+            <span class="section-label">
+              HISTORIAL SALARIAL
+            </span>
+
+            <h2>Sueldos del empleado</h2>
+
+            <p>
+              Vigencias y cambios salariales.
+            </p>
+
+          </div>
+
+          <div class="section-icon">📈</div>
+
+        </div>
+
+        @if (cargandoSalarios) {
+
+          <div class="nomina-estado" role="status">
+            Consultando historial salarial...
+          </div>
+
+        } @else if (errorSalarios) {
+
+          <div class="nomina-error" role="alert">
+            {{ errorSalarios }}
+          </div>
+
+        } @else if (
+          consultaSalariosRealizada &&
+          salarios.length === 0
+        ) {
+
+          <div class="nomina-estado">
+            No hay historial salarial registrado.
+          </div>
+
+        } @else if (salarios.length > 0) {
+
+          <div class="nomina-destacado">
+
+            <span>Sueldo vigente en historial</span>
+
+            @if (salarioVigente; as vigente) {
+
+              <strong>
+                {{ mostrarMonto(vigente.monto) }}
+              </strong>
+
+              <small>
+                Desde {{ mostrarFecha(vigente.vigenteDesde) }}
+                · {{ vigente.periodicidad }}
+              </small>
+
+            } @else {
+
+              <strong>Sin salario vigente</strong>
+
+            }
+
+          </div>
+
+          <div class="nomina-tabla-container">
+
+            <table class="nomina-tabla">
+
+              <thead>
+                <tr>
+                  <th>Monto</th>
+                  <th>Periodicidad</th>
+                  <th>Desde</th>
+                  <th>Hasta</th>
+                  <th>Motivo</th>
+                  <th>Estado</th>
+                </tr>
+              </thead>
+
+              <tbody>
+
+                @for (s of salarios; track s.idSalario) {
+
+                  <tr>
+
+                    <td class="monto-cell">
+                      {{ mostrarMonto(s.monto) }}
+                    </td>
+
+                    <td>{{ s.periodicidad }}</td>
+
+                    <td>
+                      {{ mostrarFecha(s.vigenteDesde) }}
+                    </td>
+
+                    <td>
+                      {{ mostrarFecha(s.vigenteHasta) }}
+                    </td>
+
+                    <td class="motivo-cell">
+                      {{ s.motivo || 'Sin motivo' }}
+                    </td>
+
+                    <td>
+
+                      <span
+                        class="estado-chip"
+                        [class.chip-vigente]="s.vigenteHasta === null"
+                      >
+                        {{
+                          s.vigenteHasta === null
+                            ? 'Vigente'
+                            : 'Histórico'
+                        }}
+                      </span>
+
+                    </td>
+
+                  </tr>
+
+                }
+
+              </tbody>
+
+            </table>
+
+          </div>
+
+        }
+
+        <div class="nomina-toolbar">
+
+          <p>
+            Los cambios conservan el historial salarial.
+          </p>
+
+          <button
+            type="button"
+            class="secondary-button"
+            (click)="abrirCambioSalario()"
+            [disabled]="
+              !puedeAbrirCambio ||
+              mostrarFormularioCambio
+            "
+          >
+            Cambiar sueldo mensual
+          </button>
+
+        </div>
+
+        @if (empleado.estatus === 'Inactivo') {
+
+          <div class="nomina-estado">
+            Este empleado está inactivo.
+            No se puede cambiar su sueldo.
+          </div>
+
+        }
+
+        @if (resultadoIncierto) {
+
+          <div class="nomina-error" role="alert">
+            No se pudo confirmar el cambio salarial.
+            Revisa el historial antes de otro intento.
+          </div>
+
+        }
+
+      </section>
+
+      <!-- CAMBIO SALARIAL EXISTENTE -->
+
+      @if (mostrarFormularioCambio) {
+
+        <section class="nomina-panel">
+
+          <div class="section-heading">
+
+            <div>
+
+              <span class="section-label">
+                CAMBIO SALARIAL
+              </span>
+
+              <h2>Actualizar sueldo mensual</h2>
+
+              <p>
+                Captura el nuevo sueldo y el motivo.
+              </p>
+
+            </div>
+
+            <div class="section-icon">💵</div>
+
+          </div>
+
+          <div class="resumen-grid">
+
+            <div class="resumen-card">
+
+              <span>Empleado</span>
+
+              <strong>
+                {{ empleado.nombreCompleto }}
+              </strong>
+
+              <small>ID: {{ empleado.idPersonal }}</small>
+
+            </div>
+
+            <div class="resumen-card">
+
+              <span>Sueldo anterior</span>
+
+              <strong>
+                {{ mostrarMonto(empleado.salario) }}
+              </strong>
+
+              <small>Mensual</small>
+
+            </div>
+
+            <div class="resumen-card">
+
+              <span>Nueva vigencia</span>
+
+              <strong>
+                {{ mostrarFecha(fechaVigencia) }}
+              </strong>
+
+              <small>Validada por el backend</small>
+
+            </div>
+
+          </div>
+
+          <label
+            class="nomina-campo"
+            style="margin-top:24px"
+          >
+
+            <span>Nuevo sueldo mensual (MXN) *</span>
+
+            <input
+              type="number"
+              name="montoNuevo"
+              [(ngModel)]="montoNuevo"
+              min="0"
+              max="99999999.99"
+              step="0.01"
+              [disabled]="cambiandoSalario || mostrarConfirmacionFinal"
+              placeholder="Ej. 9500.00"
+              style="padding:15px;border:1px solid #dfcfaa;border-radius:12px;font:inherit"
+            />
+
+          </label>
+
+          <label
+            class="nomina-campo"
+            style="margin-top:20px"
+          >
+
+            <span>Motivo del cambio *</span>
+
+            <textarea
+              name="motivoCambio"
+              [(ngModel)]="motivoCambio"
+              rows="4"
+              maxlength="500"
+              [disabled]="cambiandoSalario || mostrarConfirmacionFinal"
+              placeholder="Ej. Ajuste salarial autorizado"
+              style="padding:15px;border:1px solid #dfcfaa;border-radius:12px;font:inherit;resize:vertical"
+            ></textarea>
+
+          </label>
+
+          <label
+            style="display:flex;gap:12px;margin-top:20px;font-size:13px"
+          >
+
+            <input
+              type="checkbox"
+              name="confirmacionSueldo"
+              [(ngModel)]="confirmacionLeida"
+              [disabled]="cambiandoSalario || mostrarConfirmacionFinal"
+            />
+
+            <span>
+              Confirmo que el nuevo sueldo está autorizado.
+            </span>
+
+          </label>
+
+          @if (errorCambio) {
+
+            <div
+              class="nomina-error"
+              role="alert"
+              style="margin-top:20px"
+            >
+              {{ errorCambio }}
+            </div>
+
+          }
+
+          @if (cambiandoSalario) {
+
+            <div class="nomina-estado" role="status">
+              Guardando cambio salarial...
+            </div>
+
+          }
+
+          <div class="nomina-toolbar">
+
+            <button
+              type="button"
+              class="secondary-button"
+              (click)="cancelarFormulario()"
+              [disabled]="cambiandoSalario"
+            >
+              Cancelar
+            </button>
+
+            <button
+              type="button"
+              class="secondary-button"
+              (click)="prepararCambio()"
+              [disabled]="
+                !puedeConfirmarCambio ||
+                mostrarConfirmacionFinal
+              "
+            >
+              Revisar cambio
+            </button>
+
+          </div>
+
+          @if (mostrarConfirmacionFinal) {
+
+            <div
+              class="nomina-destacado"
+              style="margin-top:24px"
+            >
+
+              <strong>Confirmar nuevo sueldo</strong>
+
+              <span>
+                {{ empleado.nombreCompleto }}
+              </span>
+
+              <span>
+                Anterior:
+                {{ mostrarMonto(empleado.salario) }}
+              </span>
+
+              <span>
+                Nuevo:
+                {{ mostrarMonto(montoNuevo!) }}
+              </span>
+
+              <span>
+                Motivo: {{ motivoCambio.trim() }}
+              </span>
+
+              <div class="nomina-toolbar">
+
+                <button
+                  type="button"
+                  class="secondary-button"
+                  (click)="cancelarConfirmacion()"
+                  [disabled]="cambiandoSalario"
+                >
+                  No, regresar
+                </button>
+
+                <button
+                  type="button"
+                  class="secondary-button"
+                  (click)="confirmarCambioSalario()"
+                  [disabled]="
+                    !puedeConfirmarCambio ||
+                    cambiandoSalario
+                  "
+                >
+                  Sí, guardar sueldo
+                </button>
+
+              </div>
+
+            </div>
+
+          }
+
+        </section>
+
+      }
+
+      <!-- HISTORIAL DE PAGOS -->
+
+      <section class="nomina-panel">
+
+        <div class="section-heading">
+
+          <div>
+
+            <span class="section-label">
+              HISTORIAL DE NÓMINA
+            </span>
+
+            <h2>Pagos registrados</h2>
+
+            <p>
+              Consulta y administra los registros
+              de pago del empleado.
+            </p>
+
+          </div>
+
+          <div class="section-icon">🧾</div>
+
+        </div>
+
+        @if (cargandoPagos) {
+
+          <div class="nomina-estado" role="status">
+            Consultando pagos...
+          </div>
+
+        } @else if (errorPagos) {
+
+          <div class="nomina-error" role="alert">
+            {{ errorPagos }}
+          </div>
+
+          <button
+            type="button"
+            class="secondary-button"
+            (click)="cargarDetalles()"
+          >
+            Reintentar consulta
+          </button>
+
+        } @else if (
+          consultaPagosRealizada &&
+          pagos.length === 0
+        ) {
+
+          <div class="nomina-estado">
+            Todavía no hay pagos registrados.
+          </div>
+
+        } @else if (pagos.length > 0) {
+
+          <div class="nomina-contador">
+            {{ pagos.length }} registros encontrados
+          </div>
+
+          <div class="nomina-tabla-container">
+
+            <table class="nomina-tabla">
+
+              <thead>
+
+                <tr>
+                  <th>Folio</th>
+                  <th>Periodo</th>
+                  <th>Fecha</th>
+                  <th>Monto</th>
+                  <th>Método</th>
+                  <th>Estado</th>
+                  <th>Acciones</th>
+                </tr>
+
+              </thead>
+
+              <tbody>
+
+                @for (p of pagos; track p.idPago) {
+
+                  <tr>
+
+                    <td>#{{ p.idPago }}</td>
+
+                    <td>
+                      {{ mostrarFecha(p.periodoInicio) }}
+                      —
+                      {{ mostrarFecha(p.periodoFin) }}
+                    </td>
+
+                    <td>
+                      {{ mostrarFecha(p.fechaPago) }}
+                    </td>
+
+                    <td class="monto-cell">
+                      {{ mostrarMonto(p.monto) }}
+                    </td>
+
+                    <td>{{ p.metodo }}</td>
+
+                    <td>
+
+                      <span
+                        class="estado-chip"
+                        [class.chip-cancelado]="p.estado.toLowerCase() === 'cancelado'"
+                        [class.chip-vigente]="p.estado.toLowerCase() !== 'cancelado'"
+                      >
+                        {{ p.estado }}
+                      </span>
+
+                    </td>
+
+                    <td>
+
+                      @if (p.estado === 'Pagado') {
+
+                        <button
+                          type="button"
+                          class="secondary-button"
+                          (click)="abrirCancelacion(p)"
+                          [disabled]="!puedeCancelarPago(p)"
+                          style="color:#a52f35;background:#fff0ef;border-color:#e7b2ad;white-space:nowrap"
+                        >
+                          Cancelar pago
+                        </button>
+
+                      } @else {
+
+                        <span class="estado-chip">
+                          Sin acciones
+                        </span>
+
+                      }
+
+                    </td>
+
+                  </tr>
+
+                  @if (
+                    p.estado === 'Cancelado' &&
+                    p.motivoCancelacion
+                  ) {
+
+                    <tr>
+
+                      <td colspan="7">
+
+                        <span style="font-size:12px;color:#a52f35">
+
+                          <strong>
+                            Motivo de cancelación del pago
+                            #{{ p.idPago }}:
+                          </strong>
+
+                          {{ p.motivoCancelacion }}
+
+                        </span>
+
+                      </td>
+
+                    </tr>
+
+                  }
+
+                }
+
+              </tbody>
+
+            </table>
+
+          </div>
+
+        }
+
+        <!-- REGISTRAR PAGO EN PANTALLA INDEPENDIENTE -->
+
+        <div class="nomina-toolbar">
+
+          <p>
+            Registra pagos previamente realizados.
+          </p>
+
+          <button
+            type="button"
+            class="secondary-button"
+            (click)="abrirRegistroPago()"
+            [disabled]="!puedeAbrirRegistroPago"
+          >
+            + Registrar pago de nómina
+          </button>
+
+        </div>
+
+      </section>
+
+    } @else if (
+      !cargandoEmpleados &&
+      !errorEmpleados
+    ) {
+
+      <section class="nomina-panel nomina-inicio">
+
+        <div class="inicio-icon">👥</div>
+
+        <h2>Selecciona un empleado</h2>
+
+        <p>
+          Consulta sus sueldos y pagos.
+        </p>
+
+      </section>
+
+    }
+
+  </main>
+
+  <!-- CONFIRMACIÓN DE CANCELACIÓN -->
+
+  @if (pagoParaCancelar; as pago) {
+
+    <div
+      style="position:fixed;inset:0;z-index:1200;display:flex;align-items:center;justify-content:center;padding:20px;background:rgba(35,29,22,.60)"
+    >
+
+      <section
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="tituloCancelarPago"
+        style="width:100%;max-width:530px;max-height:90vh;overflow-y:auto;padding:30px;border-radius:20px;border:1px solid #e7b2ad;background:#fffdf8;box-shadow:0 20px 55px rgba(35,29,22,.2)"
+      >
+
+        <div style="text-align:center">
+
+          <div style="font-size:34px">⚠️</div>
+
+          <h2
+            id="tituloCancelarPago"
+            style="margin:14px 0"
+          >
+            Cancelar pago de nómina
+          </h2>
+
+          <p style="font-size:13px;color:#81776c;line-height:1.6">
+            Revisa cuidadosamente el registro.
+            La cancelación quedará guardada
+            en el historial de GymFlow.
+          </p>
+
+        </div>
+
+        <!-- DETALLE DEL PAGO -->
+
+        <div
+          style="padding:20px;margin:22px 0;border:1px solid #dfcfaa;border-radius:14px;background:#faf7f0;display:flex;flex-direction:column;gap:11px"
+        >
+
+          <strong>Folio #{{ pago.idPago }}</strong>
+
+          <span>
+            Empleado:
+            {{ empleadoSeleccionado?.nombreCompleto }}
+          </span>
+
+          <span>
+            Periodo:
+            {{ mostrarFecha(pago.periodoInicio) }}
+            —
+            {{ mostrarFecha(pago.periodoFin) }}
+          </span>
+
+          <span>
+            Fecha de pago:
+            {{ mostrarFecha(pago.fechaPago) }}
+          </span>
+
+          <span>
+            Monto:
+            <strong>{{ mostrarMonto(pago.monto) }}</strong>
+          </span>
+
+          <span>
+            Método: {{ pago.metodo }}
+          </span>
+
+          <span>
+            Estado actual:
+            <strong>{{ pago.estado }}</strong>
+          </span>
+
+        </div>
+
+        <!-- MOTIVO -->
+
+        <label
+          class="nomina-campo"
+          style="margin-bottom:20px"
+        >
+
+          <span>
+            Motivo de cancelación *
+          </span>
+
+          <textarea
+            name="motivoCancelacion"
+            [(ngModel)]="motivoCancelacion"
+            rows="4"
+            placeholder="Explica por qué se cancela este registro"
+            [disabled]="cancelandoPago"
+            style="width:100%;padding:14px;border:1px solid #dfcfaa;border-radius:12px;background:#fffdf8;font:inherit;resize:vertical"
+          ></textarea>
+
+        </label>
+
+        <div
+          style="padding:16px;border-radius:12px;background:#fff0ef;color:#a52f35;font-size:13px;line-height:1.6"
+        >
+
+          <strong>Importante</strong>
+
+          <p>
+            El pago cambiará de Pagado a Cancelado,
+            pero no se borrará del historial.
+            Tampoco se devolverá dinero automáticamente.
+          </p>
+
+        </div>
+
+        <!-- CONFIRMACIÓN EXPLÍCITA -->
+
+        <label
+          style="display:flex;gap:12px;align-items:flex-start;margin-top:20px;color:#756c60;font-size:13px;line-height:1.6"
+        >
+
+          <input
+            type="checkbox"
+            name="confirmacionCancelacionLeida"
+            [(ngModel)]="confirmacionCancelacionLeida"
+            [disabled]="cancelandoPago"
+          />
+
+          <span>
+            Confirmo que he revisado el pago
+            y estoy autorizado para cancelar
+            este registro.
+          </span>
+
+        </label>
+
+        @if (errorCancelacion) {
+
+          <div
+            class="nomina-error"
+            role="alert"
+            style="margin-top:20px"
+          >
+            {{ errorCancelacion }}
+          </div>
+
+        }
+
+        @if (cancelandoPago) {
+
+          <div
+            class="nomina-estado"
+            role="status"
+            style="margin-top:20px"
+          >
+            ⏳ Registrando cancelación...
+          </div>
+
+        }
+
+        <div
+          style="display:flex;justify-content:flex-end;gap:12px;flex-wrap:wrap;margin-top:25px"
+        >
+
+          <button
+            type="button"
+            class="secondary-button"
+            (click)="cerrarCancelacion()"
+            [disabled]="cancelandoPago"
+          >
+            No, regresar
+          </button>
+
+          <button
+            type="button"
+            class="secondary-button"
+            (click)="confirmarCancelacion()"
+            [disabled]="!puedeConfirmarCancelacion"
+            style="background:#a52f35;color:#fff;border-color:#a52f35"
+          >
+            Sí, cancelar pago
+          </button>
+
+        </div>
+
+      </section>
+
+    </div>
+
+  }
+
+  <footer class="nomina-footer">
+    GymFlow · Administración de personal
+  </footer>
+
+</div>

@@ -1,0 +1,565 @@
+
+<div class="laboral-page">
+  <header class="laboral-header">
+    <div class="header-content">
+      <div>
+        <span class="section-label">
+          GYMFLOW / ADMINISTRACIÓN
+        </span>
+
+        <h1>Horarios y Asistencias</h1>
+
+        <p>
+          Consulta los horarios registrados y administra
+          las entradas y salidas del personal.
+        </p>
+      </div>
+
+      <button
+        type="button"
+        class="back-button"
+        (click)="volverPersonal()"
+      >
+        ← Volver a Personal
+      </button>
+    </div>
+  </header>
+
+  <main class="laboral-content">
+    <section class="estado-integracion">
+      <div class="integracion-icono">✅</div>
+
+      <div>
+        <strong>Asistencias conectadas a Backend</strong>
+
+        <p>
+          Las entradas, salidas e historial utilizan
+          los registros reales de GymFlow.
+        </p>
+      </div>
+    </section>
+
+    @if (errorOperacion) {
+      <div class="mensaje-error" role="alert">
+        {{ errorOperacion }}
+      </div>
+    }
+
+    @if (mensajeExito) {
+      <div class="resultado-revision" role="status">
+        <strong>✓ {{ mensajeExito }}</strong>
+      </div>
+    }
+
+    @if (revisionNecesaria) {
+      <div class="mensaje-aviso">
+        <strong>Verificación necesaria</strong>
+
+        <p>
+          Una operación tuvo un resultado incierto.
+          Consulta el historial y verifica con Backend
+          antes de efectuar otra escritura.
+        </p>
+      </div>
+    }
+
+    <div class="laboral-tabs">
+      <button
+        type="button"
+        [class.tab-activa]="seccion === 'asistencias'"
+        (click)="seccion = 'asistencias'"
+      >
+        ✅ Asistencias laborales
+      </button>
+
+      <button
+        type="button"
+        [class.tab-activa]="seccion === 'horarios'"
+        (click)="seccion = 'horarios'"
+      >
+        🕒 Horarios registrados
+      </button>
+    </div>
+
+    @if (seccion === 'horarios') {
+      <section class="laboral-panel">
+        <div class="section-heading">
+          <div>
+            <span class="section-label">CONSULTA DE PERSONAL</span>
+            <h2>Horarios del personal</h2>
+
+            <p>
+              Se muestran los horarios que ya figuran
+              en el expediente de cada empleado.
+            </p>
+          </div>
+        </div>
+
+        @if (cargandoEmpleados) {
+          <div class="estado-vacio">
+            Cargando empleados...
+          </div>
+        } @else if (errorEmpleados) {
+          <div class="mensaje-error">
+            {{ errorEmpleados }}
+          </div>
+        } @else {
+          @for (empleado of empleados; track empleado.idPersonal) {
+            <div class="empleado-resumen">
+              <div class="resumen-avatar">👤</div>
+
+              <div class="resumen-datos">
+                <strong>{{ empleado.nombreCompleto }}</strong>
+
+                <span>
+                  {{ empleado.puesto }}
+                  · ID {{ empleado.idPersonal }}
+                </span>
+
+                <small>
+                  Horario:
+                  {{ empleado.horario || 'Sin especificar' }}
+                </small>
+              </div>
+
+              <span
+                class="estatus-chip"
+                [class.estatus-inactivo]="
+                  empleado.estatus !== 'Activo'
+                "
+              >
+                {{ empleado.estatus }}
+              </span>
+            </div>
+          } @empty {
+            <div class="estado-vacio">
+              No hay empleados registrados.
+            </div>
+          }
+        }
+
+        <div class="mensaje-aviso">
+          La asignación estructurada de turnos aún no
+          tiene endpoints específicos. Esta sección
+          solo consulta los horarios existentes.
+        </div>
+      </section>
+    }
+
+    @if (seccion === 'asistencias') {
+
+      <!-- REGISTRAR ENTRADA -->
+
+      <section class="laboral-panel">
+        <div class="section-heading">
+          <div>
+            <span class="section-label">
+              CONTROL DE ASISTENCIA
+            </span>
+
+            <h2>Registrar entrada laboral</h2>
+
+            <p>
+              Solo se permite una asistencia
+              por empleado y fecha.
+            </p>
+          </div>
+
+          <div class="section-icon">🕘</div>
+        </div>
+
+        @if (errorEmpleados) {
+          <div class="mensaje-error">
+            {{ errorEmpleados }}
+          </div>
+        }
+
+        <div class="form-grid">
+          <label class="campo">
+            <span>Empleado activo *</span>
+
+            <select
+              name="personalEntrada"
+              [(ngModel)]="idPersonalEntrada"
+              [disabled]="
+                cargandoEmpleados ||
+                guardando ||
+                revisionNecesaria
+              "
+            >
+              <option [ngValue]="null">
+                Selecciona un empleado
+              </option>
+
+              @for (
+                empleado of empleadosActivos;
+                track empleado.idPersonal
+              ) {
+                <option [ngValue]="empleado.idPersonal">
+                  {{ empleado.nombreCompleto }}
+                  — {{ empleado.puesto }}
+                </option>
+              }
+            </select>
+          </label>
+
+          <label class="campo">
+            <span>Fecha *</span>
+
+            <input
+              type="date"
+              name="fechaEntrada"
+              [(ngModel)]="fechaEntrada"
+              [max]="fechaActual"
+              [disabled]="guardando || revisionNecesaria"
+            />
+          </label>
+
+          <label class="campo">
+            <span>Hora de entrada *</span>
+
+            <input
+              type="time"
+              name="horaEntrada"
+              [(ngModel)]="horaEntrada"
+              step="60"
+              [disabled]="guardando || revisionNecesaria"
+            />
+          </label>
+        </div>
+
+        <div class="form-actions">
+          <button
+            type="button"
+            class="boton-primario"
+            [disabled]="
+              guardando ||
+              cargandoEmpleados ||
+              !!errorEmpleados ||
+              revisionNecesaria ||
+              !idPersonalEntrada
+            "
+            (click)="registrarEntrada()"
+          >
+            {{
+              guardando
+                ? 'Procesando...'
+                : 'Registrar entrada'
+            }}
+          </button>
+        </div>
+      </section>
+
+      <!-- HISTORIAL Y FILTROS -->
+
+      <section class="laboral-panel">
+        <div class="section-heading">
+          <div>
+            <span class="section-label">
+              CONSULTA Y AUDITORÍA
+            </span>
+
+            <h2>Historial de asistencias</h2>
+
+            <p>
+              Filtra los registros por empleado
+              y rango de fechas.
+            </p>
+          </div>
+
+          <div class="section-icon">📋</div>
+        </div>
+
+        <div class="form-grid">
+          <label class="campo">
+            <span>Empleado</span>
+
+            <select
+              name="filtroPersonal"
+              [(ngModel)]="filtroIdPersonal"
+            >
+              <option [ngValue]="null">
+                Todos los empleados
+              </option>
+
+              @for (
+                empleado of empleados;
+                track empleado.idPersonal
+              ) {
+                <option [ngValue]="empleado.idPersonal">
+                  {{ empleado.nombreCompleto }}
+                </option>
+              }
+            </select>
+          </label>
+
+          <label class="campo">
+            <span>Desde</span>
+
+            <input
+              type="date"
+              name="fechaInicio"
+              [(ngModel)]="fechaInicio"
+            />
+          </label>
+
+          <label class="campo">
+            <span>Hasta</span>
+
+            <input
+              type="date"
+              name="fechaFin"
+              [(ngModel)]="fechaFin"
+            />
+          </label>
+        </div>
+
+        <div class="form-actions" style="gap: 12px;">
+          <button
+            type="button"
+            class="boton-secundario"
+            [disabled]="cargandoHistorial || guardando"
+            (click)="limpiarFiltros()"
+          >
+            Limpiar filtros
+          </button>
+
+          <button
+            type="button"
+            class="boton-primario"
+            [disabled]="cargandoHistorial || guardando"
+            (click)="cargarHistorial()"
+          >
+            Consultar historial
+          </button>
+        </div>
+
+        @if (cargandoHistorial) {
+          <div class="estado-vacio">
+            Consultando asistencias...
+          </div>
+        }
+
+        @if (errorHistorial) {
+          <div class="mensaje-error" role="alert">
+            {{ errorHistorial }}
+          </div>
+        }
+
+        @if (
+          !cargandoHistorial &&
+          !errorHistorial &&
+          asistencias.length === 0
+        ) {
+          <div class="estado-vacio">
+            No se encontraron asistencias
+            para los filtros seleccionados.
+          </div>
+        }
+
+        @if (!cargandoHistorial && !errorHistorial) {
+          <div class="dato-actual">
+            <span>Registros consultados</span>
+            <strong>{{ asistencias.length }}</strong>
+          </div>
+        }
+      </section>
+
+      <!-- ENTRADAS PENDIENTES DE SALIDA -->
+
+      <section class="laboral-panel">
+        <div class="section-heading">
+          <div>
+            <span class="section-label">
+              SALIDAS PENDIENTES
+            </span>
+
+            <h2>
+              Pendientes de salida: {{ pendientesSalida.length }}
+            </h2>
+
+            <p>
+              Se muestran las entradas sin salida
+              dentro del historial consultado.
+            </p>
+          </div>
+
+          <div class="section-icon">🚪</div>
+        </div>
+
+        @if (
+          !cargandoHistorial &&
+          !errorHistorial &&
+          pendientesSalida.length === 0
+        ) {
+          <div class="estado-vacio">
+            No hay salidas pendientes en esta consulta.
+          </div>
+        }
+
+        @for (
+          asistencia of pendientesSalida;
+          track asistencia.idAsistenciaPersonal
+        ) {
+          <div class="empleado-resumen">
+            <div class="resumen-avatar">🕘</div>
+
+            <div class="resumen-datos">
+              <strong>{{ asistencia.nombreCompleto }}</strong>
+
+              <span>
+                {{ mostrarFecha(asistencia.fecha) }}
+                · Entrada: {{ asistencia.horaEntrada }}
+              </span>
+
+              <small>
+                Asistencia #{{ asistencia.idAsistenciaPersonal }}
+              </small>
+            </div>
+
+            <button
+              type="button"
+              class="boton-secundario"
+              [disabled]="guardando || revisionNecesaria"
+              (click)="seleccionarSalida(asistencia)"
+            >
+              Registrar salida
+            </button>
+          </div>
+        }
+
+        @if (asistenciaSalida; as seleccionada) {
+          <div class="dato-actual">
+            <span>Asistencia seleccionada</span>
+
+            <strong>
+              {{ seleccionada.nombreCompleto }}
+            </strong>
+
+            <small>
+              Fecha: {{ mostrarFecha(seleccionada.fecha) }}
+              · Entrada: {{ seleccionada.horaEntrada }}
+            </small>
+          </div>
+
+          <label class="campo">
+            <span>Hora de salida *</span>
+
+            <input
+              type="time"
+              name="horaSalida"
+              [(ngModel)]="horaSalida"
+              step="60"
+              [disabled]="guardando || revisionNecesaria"
+            />
+          </label>
+
+          <div class="form-actions">
+            <button
+              type="button"
+              class="boton-primario"
+              [disabled]="guardando || revisionNecesaria"
+              (click)="registrarSalida()"
+            >
+              {{
+                guardando
+                  ? 'Procesando...'
+                  : 'Confirmar salida'
+              }}
+            </button>
+          </div>
+        }
+
+        <div class="mensaje-aviso">
+          No se permite sobrescribir una salida
+          ya registrada. Backend verifica
+          que la hora de salida no sea anterior
+          a la entrada.
+        </div>
+      </section>
+
+      <!-- REGISTROS CONSULTADOS -->
+
+      <section class="laboral-panel">
+        <div class="section-heading">
+          <div>
+            <span class="section-label">
+              HISTORIAL DETALLADO
+            </span>
+
+            <h2>Registros y responsables</h2>
+          </div>
+        </div>
+
+        @for (
+          asistencia of asistencias;
+          track asistencia.idAsistenciaPersonal
+        ) {
+          <div class="empleado-resumen">
+            <div class="resumen-avatar">📅</div>
+
+            <div class="resumen-datos">
+              <strong>
+                {{ asistencia.nombreCompleto }}
+              </strong>
+
+              <span>
+                Folio #{{ asistencia.idAsistenciaPersonal }}
+                · {{ mostrarFecha(asistencia.fecha) }}
+              </span>
+
+              <small>
+                Entrada: {{ asistencia.horaEntrada }}
+                · Salida: {{
+                  asistencia.horaSalida || 'Pendiente'
+                }}
+              </small>
+
+              <small>
+                Registró entrada: Administrador
+                #{{ asistencia.registradoPor }}
+              </small>
+
+              <small>
+                Registró salida:
+                @if (asistencia.salidaRegistradaPor !== null) {
+                  Administrador #{{ asistencia.salidaRegistradaPor }}
+                } @else {
+                  Pendiente
+                }
+              </small>
+            </div>
+
+            <span
+              class="estatus-chip"
+              [class.estatus-inactivo]="
+                asistencia.horaSalida === null
+              "
+            >
+              {{
+                asistencia.horaSalida === null
+                  ? 'Sin salida'
+                  : 'Completa'
+              }}
+            </span>
+          </div>
+        } @empty {
+          <div class="estado-vacio">
+            Sin registros para mostrar.
+          </div>
+        }
+
+        <div class="mensaje-aviso">
+          El historial muestra hasta 500 registros,
+          según el límite actual del Backend.
+          Utiliza los filtros para consultar
+          periodos específicos.
+        </div>
+      </section>
+    }
+  </main>
+
+  <footer class="laboral-footer">
+    GymFlow · Control de asistencia laboral
+  </footer>
+</div>

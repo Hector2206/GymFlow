@@ -1,0 +1,274 @@
+
+<div class="editar-page">
+
+  <header class="editar-header">
+
+    <div class="header-content">
+
+      <div>
+
+        <span class="section-label">
+          GYMFLOW / ADMINISTRACIÓN
+        </span>
+
+        <h1>Editar empleado</h1>
+
+        <p>
+          Actualiza la información laboral
+          del personal de GymFlow.
+        </p>
+
+      </div>
+
+      <button
+        type="button"
+        class="back-button"
+        (click)="volverDirectorio()"
+        [disabled]="guardando"
+      >
+        ← Volver al directorio
+      </button>
+
+    </div>
+
+  </header>
+
+  <main class="editar-content">
+
+    <!-- CARGANDO EXPEDIENTE -->
+
+    @if (cargando) {
+
+      <section class="editar-panel estado-panel" role="status">
+
+        <div class="estado-icon">⏳</div>
+
+        <h2>Cargando expediente...</h2>
+
+        <p>
+          Consultando la información del empleado.
+        </p>
+
+      </section>
+
+    } @else if (errorCarga) {
+
+      <!-- ERROR DE CONSULTA -->
+
+      <section class="editar-panel estado-panel">
+
+        <div class="estado-icon">⚠️</div>
+
+        <h2>No fue posible cargar el empleado</h2>
+
+        <p role="alert">
+          {{ errorCarga }}
+        </p>
+
+        @if (idPersonal > 0) {
+
+          <button
+            type="button"
+            class="cancelar-button"
+            (click)="cargarEmpleado()"
+          >
+            Reintentar
+          </button>
+
+        }
+
+      </section>
+
+    } @else if (empleado) {
+
+      <!-- FORMULARIO DE EDICION -->
+
+      <section class="editar-panel">
+
+        <div class="empleado-heading">
+
+          <div class="empleado-icon">👤</div>
+
+          <div>
+
+            <span class="section-label">
+              EXPEDIENTE LABORAL
+            </span>
+
+            <h2>
+              {{ empleado.nombreCompleto }}
+            </h2>
+
+            <p>
+              ID de personal: {{ empleado.idPersonal }}
+              · {{ empleado.puesto }}
+            </p>
+
+          </div>
+
+        </div>
+
+        <!-- EMPLEADO INACTIVO -->
+
+        @if (empleado.estatus === 'Inactivo') {
+
+          <div
+            class="empleado-advertencia"
+            role="status"
+          >
+            Este empleado está dado de baja.
+            Su expediente es de consulta
+            y no puede modificarse.
+          </div>
+
+        }
+
+        <!-- ERROR AL GUARDAR -->
+
+        @if (errorGuardado) {
+
+          <div
+            class="empleado-advertencia"
+            role="alert"
+          >
+            ⚠️ {{ errorGuardado }}
+          </div>
+
+        }
+
+        <!-- GUARDANDO -->
+
+        @if (guardando) {
+
+          <div class="editar-nota" role="status">
+            <strong>Guardando cambios...</strong>
+            <p>
+              Estamos actualizando el expediente
+              en GymFlow.
+            </p>
+          </div>
+
+        }
+
+        <!-- CAMPOS EDITABLES -->
+
+        <div class="editar-grid">
+
+          <label class="editar-campo">
+
+            <span>Nombre completo *</span>
+
+            <input
+              type="text"
+              name="nombreCompleto"
+              [(ngModel)]="formulario.nombreCompleto"
+              maxlength="150"
+              [disabled]="empleado.estatus !== 'Activo' || guardando || resultadoIncierto"
+            />
+
+          </label>
+
+          <label class="editar-campo">
+
+            <span>Correo electrónico *</span>
+
+            <input
+              type="email"
+              name="correo"
+              [(ngModel)]="formulario.correo"
+              maxlength="150"
+              [disabled]="empleado.estatus !== 'Activo' || guardando || resultadoIncierto"
+            />
+
+          </label>
+
+          <label class="editar-campo">
+
+            <span>Teléfono *</span>
+
+            <input
+              type="tel"
+              name="telefono"
+              [(ngModel)]="formulario.telefono"
+              maxlength="20"
+              [disabled]="empleado.estatus !== 'Activo' || guardando || resultadoIncierto"
+            />
+
+          </label>
+
+          <label class="editar-campo">
+
+            <span>Horario laboral *</span>
+
+            <input
+              type="text"
+              name="horario"
+              [(ngModel)]="formulario.horario"
+              maxlength="100"
+              placeholder="Ej. 08:00 - 16:00"
+              [disabled]="empleado.estatus !== 'Activo' || guardando || resultadoIncierto"
+            />
+
+          </label>
+
+        </div>
+
+        <!-- INFORMACION -->
+
+        <div class="editar-nota">
+
+          <strong>Información importante</strong>
+
+          <p>
+            Solo puedes actualizar nombre,
+            correo, teléfono y horario.
+            El puesto y el sueldo no cambian
+            desde este formulario.
+          </p>
+
+        </div>
+
+        <!-- BOTONES -->
+
+        <div class="editar-acciones">
+
+          <button
+            type="button"
+            class="cancelar-button"
+            (click)="volverDirectorio()"
+            [disabled]="guardando"
+          >
+            Cancelar
+          </button>
+
+          <button
+            type="button"
+            class="guardar-button"
+            (click)="guardarCambios()"
+            [disabled]="
+              empleado.estatus !== 'Activo' ||
+              guardando ||
+              resultadoIncierto ||
+              !hayCambios
+            "
+          >
+            {{
+              guardando
+                ? 'Guardando cambios...'
+                : 'Guardar cambios'
+            }}
+          </button>
+
+        </div>
+
+      </section>
+
+    }
+
+  </main>
+
+  <footer class="editar-footer">
+    GymFlow · Administración de personal
+  </footer>
+
+</div>

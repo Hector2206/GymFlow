@@ -1,0 +1,288 @@
+
+:host {
+  display: block;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+.notificaciones-page {
+  min-height: 100vh;
+  background: linear-gradient(180deg, #f8f5ef, #f2ede4);
+  color: #2f2a24;
+}
+
+.topbar {
+  min-height: 80px;
+  padding: 12px 35px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #fffdf8;
+  border-bottom: 1px solid #e7dfd2;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.logo {
+  width: 135px;
+  height: 52px;
+  object-fit: contain;
+}
+
+button {
+  font: inherit;
+  cursor: pointer;
+}
+
+button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.back-button,
+.refresh-button {
+  border: 1px solid #dfcfaa;
+  border-radius: 11px;
+  background: #fffdf8;
+  color: #8a6814;
+  padding: 11px 15px;
+}
+
+.content {
+  width: min(100%, 820px);
+  padding: 38px 20px 70px;
+  margin: auto;
+}
+
+.section-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  color: #9a7728;
+}
+
+.page-header h1 {
+  margin: 10px 0;
+  font-size: clamp(26px, 4vw, 36px);
+}
+
+.subtitle {
+  color: #777067;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 15px;
+  margin-top: 28px;
+}
+
+.stat {
+  padding: 20px;
+  border: 1px solid #e5ddcf;
+  border-radius: 16px;
+  background: #fffdf8;
+}
+
+.stat span {
+  display: block;
+  font-size: 12px;
+  color: #777067;
+}
+
+.stat strong {
+  display: block;
+  margin-top: 7px;
+  font-size: 27px;
+  color: #8a6814;
+}
+
+.filters {
+  display: flex;
+  gap: 10px;
+  margin: 24px 0;
+}
+
+.filters button {
+  padding: 11px 17px;
+  border: 1px solid #dfcfaa;
+  background: #fffdf8;
+  border-radius: 11px;
+  color: #8a6814;
+  font-weight: 700;
+}
+
+.filters button.active {
+  color: #fffdf8;
+  background: #b58a2a;
+  border-color: #b58a2a;
+}
+
+.notification-card {
+  padding: 23px;
+  margin-bottom: 15px;
+  border: 1px solid #e5ddcf;
+  border-radius: 17px;
+  background: #fffdf8;
+  box-shadow: 0 8px 24px rgba(76, 62, 36, 0.04);
+}
+
+.notification-card.unread {
+  border: 2px solid #d7bb78;
+}
+
+.notification-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 13px;
+}
+
+.notification-icon {
+  width: 45px;
+  height: 45px;
+  flex-shrink: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-radius: 12px;
+  background: #f3ead8;
+  font-size: 23px;
+}
+
+.notification-heading {
+  min-width: 0;
+  flex: 1;
+}
+
+.notification-heading h2 {
+  margin: 0;
+  font-size: 17px;
+  overflow-wrap: anywhere;
+}
+
+.notification-heading p {
+  margin: 6px 0;
+  color: #777067;
+  font-size: 12px;
+}
+
+.status {
+  padding: 7px 10px;
+  border-radius: 16px;
+  background: #f3ead8;
+  color: #8a6814;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.status.read {
+  background: #e7f3e8;
+  color: #287447;
+}
+
+.notification-message {
+  margin: 20px 0;
+  line-height: 1.6;
+  font-size: 14px;
+}
+
+.notification-details {
+  border-top: 1px solid #e5ddcf;
+  padding-top: 13px;
+}
+
+.notification-details p {
+  margin: 9px 0;
+  font-size: 12px;
+  color: #777067;
+}
+
+.notification-details strong {
+  color: #2f2a24;
+}
+
+.read-button {
+  width: 100%;
+  padding: 13px;
+  margin-top: 17px;
+  border-radius: 11px;
+  border: 1px solid #dfcfaa;
+  background: #faf3e5;
+  color: #8a6814;
+  font-weight: 700;
+}
+
+.read-button:hover,
+.refresh-button:hover,
+.back-button:hover {
+  background: #f3ead8;
+}
+
+.message,
+.loading,
+.empty {
+  padding: 24px;
+  margin-top: 20px;
+  border-radius: 14px;
+  background: #fffdf8;
+}
+
+.error-message {
+  border: 1px solid #edc5c1;
+  color: #a03930;
+}
+
+.success-message {
+  border: 1px solid #bfd8c5;
+  color: #287447;
+}
+
+.loading,
+.empty {
+  text-align: center;
+  border: 1px solid #e5ddcf;
+}
+
+.empty-icon {
+  font-size: 42px;
+}
+
+.empty h2 {
+  font-size: 17px;
+}
+
+.empty p {
+  font-size: 13px;
+  color: #777067;
+}
+
+@media (max-width: 600px) {
+  .topbar {
+    padding: 10px 15px;
+  }
+
+  .content {
+    padding: 25px 15px 45px;
+  }
+
+  .stats {
+    gap: 9px;
+  }
+
+  .stat,
+  .notification-card {
+    padding: 16px;
+  }
+
+  .notification-head {
+    flex-wrap: wrap;
+  }
+}

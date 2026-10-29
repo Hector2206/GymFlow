@@ -1,0 +1,351 @@
+
+<div class="admin-page">
+
+  <header class="admin-header">
+    <div class="header-content">
+
+      <div>
+        <span class="header-label">
+          GYMFLOW / ADMINISTRACIÓN
+        </span>
+
+        <h1>Panel de Administrador</h1>
+
+        <p>
+          Consulta los indicadores y la actividad
+          general de tu gimnasio.
+        </p>
+      </div>
+
+      <button
+        type="button"
+        class="back-button"
+        (click)="volverInicio()">
+        ← Volver al inicio
+      </button>
+
+    </div>
+  </header>
+
+  <main class="admin-content">
+
+    <section class="section-heading">
+      <div>
+        <span class="section-label">
+          RESUMEN GENERAL
+        </span>
+        <h2>Indicadores del gimnasio</h2>
+        <p>
+          Información administrativa actualizada
+          desde GymFlow.
+        </p>
+      </div>
+    </section>
+
+    <section class="stats-grid">
+
+      <article class="stat-card">
+        <div class="stat-icon">👥</div>
+        <span class="stat-title">
+          Total de clientes
+        </span>
+                
+        @if (cargandoClientes) {
+
+        <div class="stat-loading">
+            Cargando clientes...
+        </div>
+
+        } @else if (errorClientes) {
+
+        <div class="stat-error" role="alert">
+            {{ errorClientes }}
+        </div>
+
+        <button
+            type="button"
+            class="retry-button"
+            (click)="cargarTotalClientes()"
+        >
+            Reintentar
+        </button>
+
+        } @else {
+
+        <strong class="stat-value">
+            {{ totalClientes }}
+        </strong>
+
+        }
+
+        <p>Clientes registrados en el sistema</p>
+      </article>
+
+      
+        <article class="stat-card">
+
+        <div class="stat-icon">🎫</div>
+
+        <span class="stat-title">
+            Membresías activas
+        </span>
+
+        @if (cargandoMembresias) {
+
+            <div class="stat-loading">
+            Cargando membresías...
+            </div>
+
+        } @else if (errorMembresias) {
+
+            <div class="stat-error" role="alert">
+            {{ errorMembresias }}
+            </div>
+
+            <button
+            type="button"
+            class="retry-button"
+            (click)="cargarMembresiasActivas()"
+            >
+            Reintentar
+            </button>
+
+        } @else {
+
+            <strong class="stat-value">
+            {{ membresiasActivas ?? '—' }}
+            </strong>
+
+        }
+
+        <p>
+            Clientes activos con membresía vigente
+        </p>
+
+        </article>
+
+
+      
+<article class="stat-card">
+
+  <div class="stat-icon">📅</div>
+
+  <span class="stat-title">
+    Asistencias del día
+  </span>
+
+  @if (cargandoAsistencias) {
+
+    <div class="stat-loading">
+      Cargando asistencias...
+    </div>
+
+  } @else if (errorAsistencias) {
+
+    <div class="stat-error" role="alert">
+      {{ errorAsistencias }}
+    </div>
+
+    <button
+      type="button"
+      class="retry-button"
+      (click)="cargarAsistenciasDia()"
+    >
+      Reintentar
+    </button>
+
+  } @else {
+
+    <strong class="stat-value">
+      {{ asistenciasDia ?? '—' }}
+    </strong>
+
+  }
+
+  <p>
+    Accesos aprobados durante el día
+  </p>
+
+</article>
+
+
+      
+<article class="stat-card">
+
+  <div class="stat-icon">💳</div>
+
+  <span class="stat-title">
+    Pagos registrados
+  </span>
+
+  @if (cargandoPagos) {
+
+    <div class="stat-loading">
+      Cargando pagos...
+    </div>
+
+  } @else if (errorPagos) {
+
+    <div class="stat-error" role="alert">
+      {{ errorPagos }}
+    </div>
+
+    <button
+      type="button"
+      class="retry-button"
+      (click)="cargarPagosRegistrados()"
+    >
+      Reintentar
+    </button>
+
+  } @else {
+
+    <strong class="stat-value">
+      {{ pagosRegistrados ?? '—' }}
+    </strong>
+
+  }
+
+  <p>
+    Pagos de clientes registrados en el sistema
+  </p>
+
+</article>
+
+
+    </section>
+
+    <section class="finance-section">
+      <div class="finance-heading">
+        <div>
+          <span class="section-label">
+            INFORMACIÓN FINANCIERA
+          </span>
+          <h2>Ingresos por periodo</h2>
+          <p>
+            Consulta los ingresos brutos obtenidos
+            por pagos de clientes.
+          </p>
+        </div>
+      </div>
+
+      
+
+<div class="finance-placeholder">
+
+  <div class="finance-icon">📈</div>
+
+  <h3>Consultar ingresos</h3>
+
+  <p>
+    Selecciona las fechas para consultar los
+    ingresos brutos registrados del gimnasio.
+  </p>
+
+  <div class="periodo-form">
+
+    <label class="periodo-campo">
+      Fecha inicial
+
+      <input
+        type="date"
+        name="fechaDesde"
+        [(ngModel)]="fechaDesde"
+        (ngModelChange)="reiniciarValidacionPeriodo()"
+      />
+    </label>
+
+    <label class="periodo-campo">
+      Fecha final
+
+      <input
+        type="date"
+        name="fechaHasta"
+        [(ngModel)]="fechaHasta"
+        (ngModelChange)="reiniciarValidacionPeriodo()"
+      />
+    </label>
+
+    <button
+      type="button"
+      class="periodo-button"
+      [disabled]="cargandoIngresos"
+      (click)="consultarIngresos()"
+    >
+      {{ cargandoIngresos ? 'Consultando...' : 'Consultar ingresos' }}
+    </button>
+
+  </div>
+
+  @if (errorPeriodo) {
+
+    <div class="periodo-error" role="alert">
+      {{ errorPeriodo }}
+    </div>
+
+  }
+
+  @if (cargandoIngresos) {
+
+    <div class="stat-loading" role="status">
+      Consultando ingresos del periodo...
+    </div>
+
+  } @else if (errorIngresos) {
+
+    <div class="periodo-error" role="alert">
+      {{ errorIngresos }}
+    </div>
+
+    <button
+      type="button"
+      class="retry-button"
+      (click)="consultarIngresos()"
+    >
+      Reintentar consulta
+    </button>
+
+  } @else if (ingresosPeriodo !== null) {
+
+    <div class="ingresos-resultado">
+
+      <span class="ingresos-etiqueta">
+        INGRESOS BRUTOS DEL PERIODO
+      </span>
+
+      <strong class="ingresos-valor">
+        {{ ingresosFormateados }}
+      </strong>
+
+      <span class="ingresos-moneda">
+        Pesos mexicanos (MXN)
+      </span>
+
+      <div class="periodo-correcto">
+        Periodo consultado:
+        {{ periodoConsultadoDesde }}
+        al
+        {{ periodoConsultadoHasta }}
+      </div>
+
+      <p>
+        Corresponde a pagos registrados de clientes.
+        No se descuentan sueldos ni otros gastos.
+      </p>
+
+    </div>
+
+  }
+
+</div>
+
+
+    </section>
+
+  </main>
+
+  <footer class="admin-footer">
+    GymFlow · Panel administrativo
+  </footer>
+
+</div>

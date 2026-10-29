@@ -1,0 +1,217 @@
+
+:host {
+  display: block;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+.membresia-page {
+  min-height: 100vh;
+  background: linear-gradient(
+    180deg,
+    #f8f5ef,
+    #f2ede4
+  );
+  color: #2f2a24;
+}
+
+.topbar {
+  min-height: 76px;
+  padding: 12px 28px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #fffdf8;
+  border-bottom: 1px solid #e7dfd2;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.logo {
+  width: 125px;
+  height: 48px;
+  object-fit: contain;
+}
+
+button {
+  font: inherit;
+  cursor: pointer;
+}
+
+button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.back-button,
+.refresh-button {
+  border: 1px solid #dfcfaa;
+  background: #fffdf8;
+  color: #8a6814;
+  border-radius: 10px;
+  padding: 10px 15px;
+}
+
+.content {
+  width: min(100%, 680px);
+  margin: 0 auto;
+  padding: 35px 20px 65px;
+}
+
+.section-label {
+  color: #9a7728;
+  font-weight: 700;
+  letter-spacing: 1.4px;
+  font-size: 11px;
+}
+
+.page-header h1 {
+  margin: 12px 0 7px;
+  font-size: 30px;
+  font-weight: 800;
+}
+
+.page-header > p:last-child {
+  color: #777067;
+  font-size: 14px;
+}
+
+.membership-card {
+  margin-top: 25px;
+  padding: 24px;
+  border: 1px solid #e5ddcf;
+  border-radius: 19px;
+  background: #fffdf8;
+  box-shadow: 0 8px 24px rgba(76, 62, 36, 0.04);
+}
+
+.plan-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.plan-icon {
+  font-size: 28px;
+}
+
+.plan-header h2 {
+  margin: 0;
+  font-size: 23px;
+}
+
+.estado {
+  display: inline-block;
+  margin: 18px 0 12px;
+  padding: 8px 14px;
+  border: 1px solid #dfcfaa;
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.estado.vigente {
+  background: #e9f3eb;
+  border-color: #bfd8c5;
+  color: #287447;
+}
+
+.estado.vencida {
+  background: #fff0ef;
+  border-color: #edc5c1;
+  color: #a03930;
+}
+
+.estado.sin-pagos {
+  background: #f5ecd9;
+  color: #8a6814;
+}
+
+.detail-row {
+  padding: 16px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  border-top: 1px solid #e8dfd1;
+}
+
+.detail-row span {
+  color: #777067;
+  font-size: 13px;
+}
+
+.detail-row strong {
+  color: #2f2a24;
+  font-size: 16px;
+}
+
+.nota,
+.info-sin-pagos {
+  margin: 15px 0 0;
+  color: #777067;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.estado-carga,
+.estado-error {
+  margin-top: 22px;
+  padding: 22px;
+  background: #fffdf8;
+  border: 1px solid #e5ddcf;
+  border-radius: 15px;
+}
+
+.estado-error {
+  color: #a03930;
+}
+
+.estado-error button {
+  padding: 9px 15px;
+  border: 1px solid #dfcfaa;
+  border-radius: 10px;
+  color: #8a6814;
+  background: white;
+}
+
+.pagos-button {
+  display: block;
+  width: 100%;
+  margin-top: 18px;
+  padding: 15px;
+  background: #fffdf8;
+  color: #8a6814;
+  font-weight: 700;
+  border: 1px solid #dfcfaa;
+  border-radius: 13px;
+}
+
+.pagos-button:hover,
+.refresh-button:hover,
+.back-button:hover {
+  background: #f3ead8;
+}
+
+@media (max-width: 600px) {
+  .topbar {
+    padding: 10px 15px;
+  }
+
+  .content {
+    padding: 25px 15px 45px;
+  }
+
+  .membership-card {
+    padding: 18px;
+  }
+
+  .refresh-button {
+    padding: 9px;
+  }
+}

@@ -1,9 +1,13 @@
+
 export const environment = {
   authLocalUrl: 'https://gymflow-auth-local.onrender.com',
   authGoogleUrl: 'https://gymflow-auth-google.onrender.com',
   clienteAltaUrl: 'https://gymflow-cliente-alta.onrender.com',
   usuarioConsultaUrl: 'https://gymflow-usuario-consulta.onrender.com',
   rutinaServiceUrl: 'https://gymflow-rutina-service.onrender.com',
+
+  // Sprint 7: Administracion y Dashboard
+  adminApiUrl: 'https://projectgym-5hpt.onrender.com',
 
   googleClientId:
     '403800585371-gvse8f49bhq6gqh1tmvmk1t8sebg6rvs.apps.googleusercontent.com'

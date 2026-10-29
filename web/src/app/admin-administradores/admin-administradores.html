@@ -1,0 +1,260 @@
+
+<div class="administradores-page">
+  <header class="administradores-header">
+    <div class="header-content">
+      <div>
+        <span class="section-label">GYMFLOW / ADMINISTRACIÓN</span>
+        <h1>Administrar Administradores</h1>
+        <p>Consulta y gestiona las cuentas administrativas de GymFlow.</p>
+      </div>
+      <button type="button" class="back-button" (click)="volverInicio()">
+        ← Volver al inicio
+      </button>
+    </div>
+  </header>
+
+  <main class="administradores-content">
+    @if (exito) {
+      <div class="mensaje-exito" role="status" aria-live="polite">{{ exito }}</div>
+    }
+    @if (error) {
+      <div class="mensaje-error" role="alert">{{ error }}</div>
+    }
+
+    <nav class="administradores-tabs" aria-label="Secciones de administración">
+      <button type="button" [class.tab-activa]="vista !== 'nuevo'"
+        (click)="cambiarVista('listado')" [disabled]="guardando">
+        👥 Administradores
+      </button>
+      <button type="button" [class.tab-activa]="vista === 'nuevo'"
+        (click)="cambiarVista('nuevo')" [disabled]="guardando">
+        ➕ Agregar administrador
+      </button>
+    </nav>
+
+    @if (cargando) {
+      <div class="estado-vacio" role="status">⏳ Cargando información...</div>
+    }
+
+    @if (vista === 'listado') {
+      <section class="administradores-panel">
+        <div class="panel-heading">
+          <div>
+            <span class="section-label">DIRECTORIO ADMINISTRATIVO</span>
+            <h2>Administradores registrados</h2>
+            <p>Lista obtenida del Backend, sin datos simulados.</p>
+          </div>
+          <button class="boton-secundario" type="button" [disabled]="cargando"
+            (click)="cargarAdministradores()">↻ Actualizar</button>
+        </div>
+
+        @if (!cargando && !error && administradores.length === 0) {
+          <div class="estado-vacio">No se encontraron cuentas administrativas.</div>
+        }
+
+        @if (!cargando && administradores.length > 0) {
+          <div class="tabla-contenedor">
+            <table class="administradores-tabla">
+              <thead>
+                <tr>
+                  <th>Nombre</th>
+                  <th>Correo</th>
+                  <th>Teléfono</th>
+                  <th>Horario</th>
+                  <th>Estado</th>
+                  <th>Acciones</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (admin of administradores; track admin.idUsuario) {
+                  <tr>
+                    <td><strong>{{ admin.nombreCompleto }}</strong>
+                      <small>Usuario #{{ admin.idUsuario }}</small></td>
+                    <td>{{ admin.correo }}</td>
+                    <td>{{ admin.telefono || 'Sin teléfono' }}</td>
+                    <td>{{ admin.horario || 'Sin horario' }}</td>
+                    <td>
+                      <span class="estado-chip" [class.inactivo]="!estaActivo(admin)">
+                        {{ admin.estatus }}
+                      </span>
+                    </td>
+                    <td>
+                      <div class="acciones-fila">
+                        <button type="button" class="boton-secundario"
+                          (click)="abrirDetalle(admin, 'detalle')">Ver detalles</button>
+                        @if (estaActivo(admin)) {
+                          <button type="button" class="boton-secundario"
+                            (click)="abrirDetalle(admin, 'editar')">Editar</button>
+                          @if (puedoDarDeBaja(admin)) {
+                            <button type="button" class="boton-peligro"
+                              (click)="abrirDetalle(admin, 'baja')">Dar de baja</button>
+                          }
+                        }
+                      </div>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
+      </section>
+    }
+
+    @if (vista === 'nuevo') {
+      <section class="administradores-panel">
+        <div class="panel-heading">
+          <div>
+            <span class="section-label">ALTA ADMINISTRATIVA</span>
+            <h2>Registrar administrador</h2>
+            <p>El Backend asignará el rol Administrador y registrará la operación.</p>
+          </div>
+          <span class="panel-icon" aria-hidden="true">🛡️</span>
+        </div>
+        <form (ngSubmit)="guardarNuevo()" autocomplete="off">
+          <div class="form-grid">
+            <label class="campo">Nombre completo *
+              <input name="nombreNuevo" type="text" maxlength="150" required
+                [(ngModel)]="nuevo.nombreCompleto" placeholder="Nombre completo" />
+            </label>
+            <label class="campo">Correo electrónico *
+              <input name="correoNuevo" type="email" maxlength="150" required
+                [(ngModel)]="nuevo.correo" placeholder="correo@ejemplo.com" />
+            </label>
+            <label class="campo">Teléfono *
+              <input name="telefonoNuevo" type="tel" required
+                [(ngModel)]="nuevo.telefono" placeholder="4421234567" />
+            </label>
+            <label class="campo">Horario laboral *
+              <input name="horarioNuevo" type="text" required
+                [(ngModel)]="nuevo.horario" placeholder="09:00 - 17:00" />
+            </label>
+            <label class="campo">Fecha de contratación *
+              <input name="fechaContratacion" type="date" required
+                [(ngModel)]="nuevo.fechaContratacion" />
+            </label>
+            <label class="campo">Sueldo *
+              <input name="sueldoNuevo" type="number" step="0.01" min="0.01" required
+                [(ngModel)]="nuevo.sueldo" placeholder="15000" />
+            </label>
+            <label class="campo">Contraseña temporal *
+              <input name="passwordNuevo" type="password" required
+                minlength="8" maxlength="128" autocomplete="new-password"
+                [(ngModel)]="nuevo.password" />
+            </label>
+            <label class="campo">Confirmar contraseña *
+              <input name="confirmarPassword" type="password" required
+                autocomplete="new-password" [(ngModel)]="nuevo.confirmarPassword" />
+            </label>
+          </div>
+          <p class="nota">La contraseña se envía únicamente al registrar y no se conserva
+            en el listado ni en los formularios de edición.</p>
+          <div class="form-actions">
+            <button type="button" class="boton-secundario" [disabled]="guardando"
+              (click)="cambiarVista('listado')">Cancelar</button>
+            <button type="submit" class="boton-primario" [disabled]="guardando">
+              {{ guardando ? 'Registrando...' : 'Registrar administrador' }}
+            </button>
+          </div>
+        </form>
+      </section>
+    }
+
+    @if (vista === 'detalle') {
+      @if (seleccionado; as admin) {
+        <section class="administradores-panel">
+          <span class="section-label">DETALLES DE LA CUENTA</span>
+          <h2>{{ admin.nombreCompleto }}</h2>
+          <dl class="detalle-grid">
+            <div><dt>ID de usuario</dt><dd>{{ admin.idUsuario }}</dd></div>
+            <div><dt>ID de personal</dt><dd>{{ admin.idPersonal }}</dd></div>
+            <div><dt>Correo</dt><dd>{{ admin.correo }}</dd></div>
+            <div><dt>Teléfono</dt><dd>{{ admin.telefono }}</dd></div>
+            <div><dt>Horario</dt><dd>{{ admin.horario }}</dd></div>
+            <div><dt>Estado</dt><dd>{{ admin.estatus }}</dd></div>
+            <div><dt>Fecha de alta</dt><dd>{{ admin.fechaAlta || 'Sin información' }}</dd></div>
+            <div><dt>Fecha de baja</dt><dd>{{ admin.fechaBaja || 'No aplica' }}</dd></div>
+          </dl>
+          <div class="form-actions">
+            <button type="button" class="boton-secundario"
+              (click)="cambiarVista('listado')">Volver</button>
+            @if (estaActivo(admin)) {
+              <button type="button" class="boton-primario"
+                (click)="abrirDetalle(admin, 'editar')">Editar administrador</button>
+            }
+          </div>
+        </section>
+      }
+    }
+
+    @if (vista === 'editar') {
+      @if (seleccionado; as admin) {
+        <section class="administradores-panel">
+          <span class="section-label">EDITAR CUENTA</span>
+          <h2>{{ admin.nombreCompleto }}</h2>
+          <form (ngSubmit)="guardarEdicion()">
+            <div class="form-grid">
+              <label class="campo">Nombre completo *
+                <input name="nombreEditar" type="text" required maxlength="150"
+                  [(ngModel)]="edicion.nombreCompleto" />
+              </label>
+              <label class="campo">Correo electrónico *
+                <input name="correoEditar" type="email" required maxlength="150"
+                  [(ngModel)]="edicion.correo" />
+              </label>
+              <label class="campo">Teléfono *
+                <input name="telefonoEditar" type="tel" required
+                  [(ngModel)]="edicion.telefono" />
+              </label>
+              <label class="campo">Horario *
+                <input name="horarioEditar" type="text" required
+                  [(ngModel)]="edicion.horario" />
+              </label>
+            </div>
+            <p class="nota">Este formulario no modifica contraseña, sueldo ni rol.</p>
+            <div class="form-actions">
+              <button type="button" class="boton-secundario" [disabled]="guardando"
+                (click)="cambiarVista('listado')">Cancelar</button>
+              <button type="submit" class="boton-primario" [disabled]="guardando">
+                {{ guardando ? 'Guardando...' : 'Guardar cambios' }}
+              </button>
+            </div>
+          </form>
+        </section>
+      }
+    }
+
+    @if (vista === 'baja') {
+      @if (seleccionado; as admin) {
+        <section class="administradores-panel" role="dialog"
+          aria-label="Confirmar baja del administrador">
+          <span class="section-label">CONFIRMAR BAJA</span>
+          <h2>¿Dar de baja a {{ admin.nombreCompleto }}?</h2>
+          <p class="nota">La baja desactivará la cuenta, pero conservará el historial.
+            Esta acción requiere motivo y fecha.</p>
+          <form (ngSubmit)="confirmarBaja()">
+            <div class="form-grid">
+              <label class="campo">Motivo de la baja *
+                <input name="motivoBaja" type="text" minlength="5" required
+                  [(ngModel)]="baja.motivoBaja" placeholder="Finalización de relación laboral" />
+              </label>
+              <label class="campo">Fecha de baja *
+                <input name="fechaBaja" type="date" required
+                  [(ngModel)]="baja.fechaBaja" />
+              </label>
+            </div>
+            <div class="form-actions">
+              <button type="button" class="boton-secundario" [disabled]="guardando"
+                (click)="cambiarVista('listado')">Cancelar</button>
+              <button type="submit" class="boton-peligro" [disabled]="guardando">
+                {{ guardando ? 'Procesando...' : 'Confirmar baja' }}
+              </button>
+            </div>
+          </form>
+        </section>
+      }
+    }
+  </main>
+
+  <footer class="administradores-footer">GymFlow · Gestión de administradores</footer>
+</div>

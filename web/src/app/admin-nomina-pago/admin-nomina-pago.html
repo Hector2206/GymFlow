@@ -1,0 +1,479 @@
+
+<div class="pago-page">
+
+  <header class="pago-header">
+
+    <div class="header-content">
+
+      <div>
+
+        <span class="section-label">
+          GYMFLOW / ADMINISTRACIÓN
+        </span>
+
+        <h1>Registrar pago de nómina</h1>
+
+        <p>
+          Captura un pago que ya fue realizado
+          al personal del gimnasio.
+        </p>
+
+      </div>
+
+      <button
+        type="button"
+        class="btn-secundario"
+        (click)="volverNomina()"
+        [disabled]="guardando"
+      >
+        ← Volver a nómina
+      </button>
+
+    </div>
+
+  </header>
+
+  <main class="pago-content">
+
+    @if (cargando) {
+
+      <section class="pago-panel estado-panel" role="status">
+
+        <div class="estado-icon">⏳</div>
+
+        <h2>Cargando expediente...</h2>
+
+        <p>
+          Consultando el historial del empleado.
+        </p>
+
+      </section>
+
+    } @else if (errorCarga) {
+
+      <section class="pago-panel estado-panel">
+
+        <div class="estado-icon">⚠️</div>
+
+        <h2>No fue posible cargar los datos</h2>
+
+        <p role="alert">{{ errorCarga }}</p>
+
+        @if (idPersonal > 0) {
+
+          <button
+            type="button"
+            class="btn-secundario"
+            (click)="cargarExpediente()"
+          >
+            Reintentar
+          </button>
+
+        }
+
+      </section>
+
+    } @else if (empleado) {
+
+      <!-- INFORMACION DEL EMPLEADO -->
+
+      <section class="pago-panel">
+
+        <div class="panel-heading">
+
+          <div class="panel-icon">👤</div>
+
+          <div>
+
+            <span class="section-label">
+              EMPLEADO SELECCIONADO
+            </span>
+
+            <h2>{{ empleado.nombreCompleto }}</h2>
+
+            <p>
+              {{ empleado.puesto }}
+              · ID: {{ empleado.idPersonal }}
+              · {{ empleado.estatus }}
+            </p>
+
+          </div>
+
+        </div>
+
+        <div class="resumen-grid">
+
+          <div class="resumen-card">
+
+            <span>Sueldo mensual registrado</span>
+
+            <strong>
+              {{ mostrarMonto(empleado.salario) }}
+            </strong>
+
+          </div>
+
+          <div class="resumen-card">
+
+            <span>Fecha de contratación</span>
+
+            <strong>
+              {{ mostrarFecha(empleado.fechaContratacion) }}
+            </strong>
+
+          </div>
+
+          <div class="resumen-card">
+
+            <span>Fecha de baja</span>
+
+            <strong>
+              {{ mostrarFecha(empleado.fechaBaja) }}
+            </strong>
+
+          </div>
+
+        </div>
+
+      </section>
+
+      <!-- FORMULARIO -->
+
+      <section class="pago-panel">
+
+        <div class="panel-heading">
+
+          <div class="panel-icon">💳</div>
+
+          <div>
+
+            <span class="section-label">
+              REGISTRO MANUAL
+            </span>
+
+            <h2>Información del pago</h2>
+
+            <p>
+              Completa los campos obligatorios
+              y confirma los datos.
+            </p>
+
+          </div>
+
+        </div>
+
+        <div class="form-grid">
+
+          <label class="campo">
+
+            <span>Inicio del periodo *</span>
+
+            <input
+              type="date"
+              name="periodoInicio"
+              [(ngModel)]="periodoInicio"
+              [min]="empleado.fechaContratacion.slice(0,10)"
+              [max]="empleado.fechaBaja ? empleado.fechaBaja.slice(0,10) : null"
+              [disabled]="guardando || resultadoIncierto || mostrarConfirmacion"
+            />
+
+          </label>
+
+          <label class="campo">
+
+            <span>Fin del periodo *</span>
+
+            <input
+              type="date"
+              name="periodoFin"
+              [(ngModel)]="periodoFin"
+              [min]="periodoInicio || empleado.fechaContratacion.slice(0,10)"
+              [max]="empleado.fechaBaja ? empleado.fechaBaja.slice(0,10) : null"
+              [disabled]="guardando || resultadoIncierto || mostrarConfirmacion"
+            />
+
+          </label>
+
+          <label class="campo">
+
+            <span>Monto pagado (MXN) *</span>
+
+            <input
+              type="number"
+              name="monto"
+              [(ngModel)]="monto"
+              min="0.01"
+              max="9999999999.99"
+              step="0.01"
+              placeholder="Ej. 4500.00"
+              [disabled]="guardando || resultadoIncierto || mostrarConfirmacion"
+            />
+
+          </label>
+
+          <label class="campo">
+
+            <span>Fecha en que se pagó *</span>
+
+            <input
+              type="date"
+              name="fechaPago"
+              [(ngModel)]="fechaPago"
+              [max]="fechaActual"
+              [disabled]="guardando || resultadoIncierto || mostrarConfirmacion"
+            />
+
+          </label>
+
+          <label class="campo">
+
+            <span>Método de pago *</span>
+
+            <select
+              name="metodo"
+              [(ngModel)]="metodo"
+              [disabled]="guardando || resultadoIncierto || mostrarConfirmacion"
+            >
+
+              <option value="Efectivo">
+                Efectivo
+              </option>
+
+              <option value="Transferencia">
+                Transferencia bancaria
+              </option>
+
+            </select>
+
+          </label>
+
+          <label class="campo">
+
+            <span>
+              Referencia
+              {{
+                metodo === 'Transferencia'
+                  ? '*'
+                  : '(opcional)'
+              }}
+            </span>
+
+            <input
+              type="text"
+              name="referencia"
+              [(ngModel)]="referencia"
+              maxlength="100"
+              placeholder="Folio del comprobante"
+              [disabled]="guardando || resultadoIncierto || mostrarConfirmacion"
+            />
+
+          </label>
+
+        </div>
+
+        <label class="campo campo-completo">
+
+          <span>Observaciones (opcional)</span>
+
+          <textarea
+            name="observaciones"
+            [(ngModel)]="observaciones"
+            rows="3"
+            maxlength="500"
+            placeholder="Información adicional sobre el pago"
+            [disabled]="guardando || resultadoIncierto || mostrarConfirmacion"
+          ></textarea>
+
+        </label>
+
+        <!-- ADVERTENCIAS -->
+
+        <div class="advertencia">
+
+          <strong>Información importante</strong>
+
+          <p>
+            El periodo debe estar cubierto por
+            un único salario mensual y no debe
+            coincidir con otro pago registrado.
+          </p>
+
+          <p>
+            Registrar el pago no realiza una
+            transferencia bancaria.
+          </p>
+
+        </div>
+
+        <!-- ACEPTACION -->
+
+        <label class="aceptacion">
+
+          <input
+            type="checkbox"
+            name="aceptoConfirmacion"
+            [(ngModel)]="aceptoConfirmacion"
+            [disabled]="guardando || resultadoIncierto || mostrarConfirmacion"
+          />
+
+          <span>
+            Confirmo que el pago ya se realizó
+            y que los datos son correctos.
+          </span>
+
+        </label>
+
+        @if (errorRegistro) {
+
+          <div class="error-box" role="alert">
+            ⚠️ {{ errorRegistro }}
+          </div>
+
+        }
+
+        @if (guardando) {
+
+          <div class="estado-guardando" role="status">
+            ⏳ Registrando pago de nómina...
+          </div>
+
+        }
+
+        <!-- BOTONES -->
+
+        <div class="acciones">
+
+          <button
+            type="button"
+            class="btn-secundario"
+            (click)="volverNomina()"
+            [disabled]="guardando"
+          >
+            Cancelar
+          </button>
+
+          <button
+            type="button"
+            class="btn-principal"
+            (click)="prepararPago()"
+            [disabled]="
+              guardando ||
+              resultadoIncierto ||
+              mostrarConfirmacion
+            "
+          >
+            Revisar y confirmar pago
+          </button>
+
+        </div>
+
+      </section>
+
+    }
+
+  </main>
+
+  <!-- CONFIRMACION FINAL -->
+
+  @if (mostrarConfirmacion && empleado) {
+
+    <div class="modal-fondo">
+
+      <section
+        class="modal-confirmacion"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="tituloConfirmacionPago"
+      >
+
+        <div class="modal-icon">💳</div>
+
+        <h2 id="tituloConfirmacionPago">
+          Confirmar pago de nómina
+        </h2>
+
+        <p>
+          Revisa los datos antes de registrar
+          este movimiento.
+        </p>
+
+        <div class="modal-detalles">
+
+          <div>
+            <span>Empleado</span>
+            <strong>{{ empleado.nombreCompleto }}</strong>
+          </div>
+
+          <div>
+            <span>Periodo</span>
+            <strong>
+              {{ mostrarFecha(periodoInicio) }}
+              —
+              {{ mostrarFecha(periodoFin) }}
+            </strong>
+          </div>
+
+          <div>
+            <span>Monto</span>
+            <strong>{{ mostrarMonto(monto) }}</strong>
+          </div>
+
+          <div>
+            <span>Fecha de pago</span>
+            <strong>{{ mostrarFecha(fechaPago) }}</strong>
+          </div>
+
+          <div>
+            <span>Método</span>
+            <strong>{{ metodo }}</strong>
+          </div>
+
+          @if (referencia.trim()) {
+
+            <div>
+              <span>Referencia</span>
+              <strong>{{ referencia.trim() }}</strong>
+            </div>
+
+          }
+
+        </div>
+
+        <p class="modal-aviso">
+          Al confirmar, el pago se registrará
+          como Pagado en GymFlow.
+        </p>
+
+        <div class="modal-acciones">
+
+          <button
+            type="button"
+            class="btn-secundario"
+            (click)="cerrarConfirmacion()"
+            [disabled]="guardando"
+          >
+            No, regresar
+          </button>
+
+          <button
+            type="button"
+            class="btn-principal"
+            (click)="guardarPago()"
+            [disabled]="guardando"
+          >
+            Sí, registrar pago
+          </button>
+
+        </div>
+
+      </section>
+
+    </div>
+
+  }
+
+  <footer class="pago-footer">
+    GymFlow · Administración de personal
+  </footer>
+
+</div>
