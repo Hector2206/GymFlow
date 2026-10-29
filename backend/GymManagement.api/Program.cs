@@ -20,6 +20,7 @@ builder.Services.AddScoped<NotificacionService>();
 builder.Services.AddHostedService<NotificacionWorker>();
 builder.Services.AddScoped<MembresiaService>();
 builder.Services.AddScoped<AsistenciaPersonalService>();
+builder.Services.AddScoped<AdministradorService>();
 // ========================================
 // CORS
 // ========================================
@@ -1672,5 +1673,39 @@ app.MapPut("/api/admin/personal/{id:int}",
         }
     })
     .RequireAuthorization("SoloAdministrador");
+
+
+app.MapGet("/api/admin/administradores",
+    async (
+    HttpContext httpContext,
+    [Microsoft.AspNetCore.Mvc.FromServices]
+    AdministradorService administradorService) =>
+    {
+        var idTexto =
+            httpContext.User.FindFirst(
+                System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
+            ?? httpContext.User.FindFirst("sub")?.Value
+            ?? httpContext.User.FindFirst("id_usuario")?.Value;
+
+        if (!int.TryParse(idTexto, out var idAdministrador))
+        {
+            return Results.Unauthorized();
+        }
+
+        try
+        {
+            var administradores =
+                await administradorService.ObtenerAdministradores(
+                    idAdministrador);
+
+            return Results.Ok(administradores);
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return Results.Forbid();
+        }
+    })
+    .RequireAuthorization("SoloAdministrador");
+
 
 app.Run();
