@@ -2522,5 +2522,3 @@ ALTER TABLE ONLY public.personal_salarios_historial
 --
 
 \unrestrict a6gkNsHR9UdwgDbsohsQQbEQAFo7JU9t8WV7GUcHAs8oD0wArpuTgL9uYDMFkMC
-
-
