@@ -2,9 +2,9 @@
 -- PostgreSQL database dump
 --
 
-\restrict a6gkNsHR9UdwgDbsohsQQbEQAFo7JU9t8WV7GUcHAs8oD0wArpuTgL9uYDMFkMC
+\restrict h8RZJtUudWCpsQoG2kmVshdo91RtVBZdiIwcVv4ptmBqO0QsP24Retq0AckHDk5
 
--- Dumped from database version 18.4
+-- Dumped from database version 18.6 (Debian 18.6-1.pgdg12+2)
 -- Dumped by pg_dump version 18.4
 
 SET statement_timeout = 0;
@@ -18,6 +18,13 @@ SET check_function_bodies = false;
 SET xmloption = content;
 SET client_min_messages = warning;
 SET row_security = off;
+
+--
+-- Name: public; Type: SCHEMA; Schema: -; Owner: -
+--
+
+-- *not* creating schema, since initdb creates it
+
 
 --
 -- Name: pg_trgm; Type: EXTENSION; Schema: -; Owner: -
@@ -84,9 +91,9 @@ BEGIN
     SELECT
         c.id_usuario,
         'MembresiaPorVencer',
-        'Tu membresÃ­a estÃ¡ prÃ³xima a vencer',
+        'Tu membresía está próxima a vencer',
         FORMAT(
-            'Tu membresÃ­a vence el %s. Consulta en recepciÃ³n para renovarla.',
+            'Tu membresía vence el %s. Consulta en recepción para renovarla.',
             TO_CHAR(c.fecha_vencimiento, 'YYYY-MM-DD')
         ),
         c.fecha_vencimiento
@@ -127,20 +134,25 @@ CREATE FUNCTION public.fn_historial_precio_membresia() RETURNS trigger
     LANGUAGE plpgsql
     AS $$
 DECLARE
-    v_usuario integer;
+    v_usuario INTEGER;
 BEGIN
     IF TG_OP = 'UPDATE' THEN
-        IF NEW.costo_mensual IS NOT DISTINCT FROM OLD.costo_mensual
-           AND NEW.costo_anualidad IS NOT DISTINCT FROM OLD.costo_anualidad
+        IF NEW.costo_mensual
+               IS NOT DISTINCT FROM OLD.costo_mensual
+           AND NEW.costo_anualidad
+               IS NOT DISTINCT FROM OLD.costo_anualidad
         THEN
             RETURN NEW;
         END IF;
     END IF;
 
     v_usuario := NULLIF(
-        current_setting('gymflow.usuario_actual', true),
+        current_setting(
+            'gymflow.usuario_actual',
+            TRUE
+        ),
         ''
-    )::integer;
+    )::INTEGER;
 
     IF v_usuario IS NULL THEN
         RAISE EXCEPTION
@@ -149,30 +161,35 @@ BEGIN
 
     PERFORM 1
     FROM public.usuarios u
-    JOIN public.roles r ON r.id_rol = u.id_rol
+    JOIN public.roles r
+        ON r.id_rol = u.id_rol
     WHERE u.id_usuario = v_usuario
       AND u.estatus = 'Activo'
       AND r.nombre = 'Administrador'
     FOR SHARE OF u, r;
 
     IF NOT FOUND THEN
-        RAISE EXCEPTION 'El usuario no es un administrador activo';
+        RAISE EXCEPTION
+            'El usuario no es un administrador activo';
     END IF;
 
-    INSERT INTO public.membresias_precios_historial (
+    INSERT INTO public.membresias_precios_historial
+    (
         id_membresia,
         costo_mensual,
         costo_anualidad,
         id_usuario_app,
         origen
     )
-    VALUES (
+    VALUES
+    (
         NEW.id_membresia,
         NEW.costo_mensual,
         NEW.costo_anualidad,
         v_usuario,
         CASE
-            WHEN TG_OP = 'INSERT' THEN 'Creacion'
+            WHEN TG_OP = 'INSERT'
+                THEN 'Creacion'
             ELSE 'CambioPrecio'
         END
     );
@@ -192,7 +209,7 @@ CREATE FUNCTION public.fn_membresias_por_vencer(p_dias integer DEFAULT 7) RETURN
 BEGIN
     IF p_dias IS NULL OR p_dias < 0 OR p_dias > 365 THEN
         RAISE EXCEPTION
-            'Los dÃ­as de anticipaciÃ³n deben estar entre 0 y 365.'
+            'Los días de anticipación deben estar entre 0 y 365.'
             USING ERRCODE = '22023';
     END IF;
 
@@ -293,7 +310,7 @@ BEGIN
     CALL public.sp_alta_cliente(
         p_correo,
         p_contrasena_hash,
-        NULL::varchar,
+        NULL::VARCHAR,
         p_nombre_completo,
         p_telefono,
         p_id_membresia,
@@ -312,34 +329,47 @@ CREATE PROCEDURE public.sp_alta_cliente(IN p_correo character varying, IN p_cont
     LANGUAGE plpgsql
     AS $$
 DECLARE
-    v_id_usuario integer;
-    v_mensual numeric(10,2);
-    v_anual numeric(10,2);
-    v_activo boolean;
+    v_id_usuario INTEGER;
+    v_mensual NUMERIC(10,2);
+    v_anual NUMERIC(10,2);
+    v_activo BOOLEAN;
 BEGIN
-    SELECT costo_mensual, costo_anualidad, activo
-    INTO v_mensual, v_anual, v_activo
+    SELECT
+        costo_mensual,
+        costo_anualidad,
+        activo
+    INTO
+        v_mensual,
+        v_anual,
+        v_activo
     FROM public.membresias
     WHERE id_membresia = p_id_membresia
     FOR SHARE;
 
     IF NOT FOUND THEN
-        RAISE EXCEPTION 'La membresÃ­a no existe';
+        RAISE EXCEPTION 'La membresía no existe';
     END IF;
 
     IF NOT v_activo THEN
-        RAISE EXCEPTION 'La membresÃ­a estÃ¡ inactiva';
+        RAISE EXCEPTION 'La membresía está inactiva';
     END IF;
 
-    INSERT INTO public.usuarios (
-        correo, contrasena_hash, id_rol
+    INSERT INTO public.usuarios
+    (
+        correo,
+        contrasena_hash,
+        id_rol
     )
-    VALUES (
-        p_correo, p_contrasena_hash, 4
+    VALUES
+    (
+        p_correo,
+        p_contrasena_hash,
+        4
     )
     RETURNING id_usuario INTO v_id_usuario;
 
-    INSERT INTO public.clientes (
+    INSERT INTO public.clientes
+    (
         id_usuario,
         id_asistencia,
         nombre_completo,
@@ -348,7 +378,8 @@ BEGIN
         costo_mensual_acordado,
         costo_anual_acordado
     )
-    VALUES (
+    VALUES
+    (
         v_id_usuario,
         p_id_asistencia,
         p_nombre_completo,
@@ -369,10 +400,10 @@ CREATE PROCEDURE public.sp_alta_personal(IN p_correo character varying, IN p_con
     LANGUAGE plpgsql
     AS $$
 DECLARE
-    v_id_usuario INTEGER; -- AquÃ­ guardaremos el ID que se genera automÃ¡ticamente
+    v_id_usuario INTEGER; -- Aquí guardaremos el ID que se genera automáticamente
 BEGIN
-    -- 1. Creamos la cuenta de inicio de sesiÃ³n
-    -- Nota: google_id nace nulo. Si luego el empleado inicia con Google, el backend lo actualizarÃ¡.
+    -- 1. Creamos la cuenta de inicio de sesión
+    -- Nota: google_id nace nulo. Si luego el empleado inicia con Google, el backend lo actualizará.
     INSERT INTO usuarios (correo, contrasena_hash, id_rol)
     VALUES (p_correo, p_contrasena_hash, p_id_rol)
     RETURNING id_usuario INTO v_id_usuario;
@@ -408,7 +439,7 @@ CREATE PROCEDURE public.sp_baja_personal(IN p_id_personal integer)
     LANGUAGE plpgsql
     AS $$
 BEGIN
-    -- Apagamos la cuenta de inicio de sesiÃ³n vinculada a este empleado
+    -- Apagamos la cuenta de inicio de sesión vinculada a este empleado
     UPDATE usuarios
     SET estatus = 'Inactivo'
     WHERE id_usuario = (SELECT id_usuario FROM personal WHERE id_personal = p_id_personal);
@@ -423,50 +454,12 @@ $$;
 CREATE PROCEDURE public.sp_modificar_cliente(IN p_id_cliente integer, IN p_telefono character varying, IN p_id_membresia integer, IN p_costo_mensual numeric, IN p_costo_anual numeric, IN p_id_entrenador integer)
     LANGUAGE plpgsql
     AS $$
-DECLARE
-    v_cliente public.clientes%ROWTYPE;
-    v_mensual numeric(10,2);
-    v_anual numeric(10,2);
-    v_activo boolean;
 BEGIN
-    SELECT *
-    INTO v_cliente
-    FROM public.clientes
-    WHERE id_cliente = p_id_cliente
-    FOR UPDATE;
-
-    IF NOT FOUND THEN
-        RAISE EXCEPTION 'El cliente no existe';
-    END IF;
-
-    IF p_id_membresia IS NULL THEN
-        RAISE EXCEPTION 'La membresÃ­a es obligatoria';
-    END IF;
-
-    v_mensual := v_cliente.costo_mensual_acordado;
-    v_anual := v_cliente.costo_anual_acordado;
-
-    IF p_id_membresia <> v_cliente.id_membresia THEN
-        SELECT costo_mensual, costo_anualidad, activo
-        INTO v_mensual, v_anual, v_activo
-        FROM public.membresias
-        WHERE id_membresia = p_id_membresia
-        FOR SHARE;
-
-        IF NOT FOUND THEN
-            RAISE EXCEPTION 'La membresÃ­a no existe';
-        END IF;
-
-        IF NOT v_activo THEN
-            RAISE EXCEPTION 'La membresÃ­a estÃ¡ inactiva';
-        END IF;
-    END IF;
-
-    UPDATE public.clientes
+    UPDATE clientes
     SET telefono = p_telefono,
         id_membresia = p_id_membresia,
-        costo_mensual_acordado = v_mensual,
-        costo_anual_acordado = v_anual,
+        costo_mensual_acordado = p_costo_mensual,
+        costo_anual_acordado = p_costo_anual,
         id_entrenador = p_id_entrenador
     WHERE id_cliente = p_id_cliente;
 END;
@@ -481,20 +474,17 @@ CREATE PROCEDURE public.sp_modificar_cliente(IN p_id_usuario_app integer, IN p_i
     LANGUAGE plpgsql
     AS $$
 BEGIN
-    PERFORM set_config(
-        'gymflow.usuario_actual',
-        p_id_usuario_app::text,
-        true
-    );
+    -- 1. Le avisamos a la base de datos "Quién" está haciendo esto para el Trigger
+    PERFORM set_config('gymflow.usuario_actual', p_id_usuario_app::TEXT, true);
 
-    CALL public.sp_modificar_cliente(
-        p_id_cliente,
-        p_telefono,
-        p_id_membresia,
-        p_costo_mensual,
-        p_costo_anual,
-        p_id_entrenador
-    );
+    -- 2. Hacemos la actualización normal
+    UPDATE clientes
+    SET telefono = p_telefono,
+        id_membresia = p_id_membresia,
+        costo_mensual_acordado = p_costo_mensual,
+        costo_anual_acordado = p_costo_anual,
+        id_entrenador = p_id_entrenador
+    WHERE id_cliente = p_id_cliente;
 END;
 $$;
 
@@ -535,16 +525,16 @@ BEGIN
     INNER JOIN usuarios u ON c.id_usuario = u.id_usuario
     WHERE c.id_asistencia = p_clave_ingreso;
 
-    -- 2. Validaciones de seguridad (Esto le mandarÃ¡ un error a C# automÃ¡ticamente)
+    -- 2. Validaciones de seguridad (Esto le mandará un error a C# automáticamente)
     IF v_id_cliente IS NULL THEN
-        RAISE EXCEPTION 'Clave incorrecta. No se encontrÃ³ al cliente.';
+        RAISE EXCEPTION 'Clave incorrecta. No se encontró al cliente.';
     END IF;
 
     IF v_estatus = 'Inactivo' THEN
-        RAISE EXCEPTION 'Acceso denegado. El cliente estÃ¡ dado de baja.';
+        RAISE EXCEPTION 'Acceso denegado. El cliente está dado de baja.';
     END IF;
 
-    -- 3. Si todo estÃ¡ bien, registramos su entrada (la hora se pone sola)
+    -- 3. Si todo está bien, registramos su entrada (la hora se pone sola)
     INSERT INTO asistencias (id_cliente) VALUES (v_id_cliente);
 END;
 $$;
@@ -558,17 +548,17 @@ CREATE PROCEDURE public.sp_registrar_pago(IN p_id_cliente integer, IN p_id_recep
     LANGUAGE plpgsql
     AS $$
 DECLARE
-    v_id_membresia integer;
-    v_tarifa numeric(10,2);
-    v_activo boolean;
-    v_referencia_renovacion integer;
+    v_id_membresia INTEGER;
+    v_tarifa NUMERIC(10,2);
+    v_activo BOOLEAN;
+    v_referencia_renovacion INTEGER;
 BEGIN
     IF p_tipo IS NULL
-       OR p_tipo NOT IN ('Mensualidad', 'Anualidad') THEN
-        RAISE EXCEPTION 'Tipo de pago invÃ¡lido';
+       OR p_tipo NOT IN ('Mensualidad', 'Anualidad')
+    THEN
+        RAISE EXCEPTION 'Tipo de pago inválido';
     END IF;
 
-    -- Serializa los pagos del mismo cliente.
     SELECT id_membresia
     INTO v_id_membresia
     FROM public.clientes
@@ -579,10 +569,10 @@ BEGIN
         RAISE EXCEPTION 'El cliente no existe';
     END IF;
 
-    -- Mantiene estable la tarifa hasta finalizar la transacciÃ³n.
     SELECT
         CASE
-            WHEN p_tipo = 'Mensualidad' THEN costo_mensual
+            WHEN p_tipo = 'Mensualidad'
+                THEN costo_mensual
             ELSE costo_anualidad
         END,
         activo
@@ -592,11 +582,11 @@ BEGIN
     FOR SHARE;
 
     IF NOT FOUND THEN
-        RAISE EXCEPTION 'La membresÃ­a no existe';
+        RAISE EXCEPTION 'La membresía no existe';
     END IF;
 
     IF NOT v_activo THEN
-        RAISE EXCEPTION 'La membresÃ­a estÃ¡ inactiva';
+        RAISE EXCEPTION 'La membresía está inactiva';
     END IF;
 
     IF v_tarifa <= 0 THEN
@@ -618,7 +608,8 @@ BEGIN
     ORDER BY fecha_transaccion DESC, id_pago DESC
     LIMIT 1;
 
-    INSERT INTO public.historial_pagos (
+    INSERT INTO public.historial_pagos
+    (
         id_cliente,
         id_recepcionista,
         monto_pagado,
@@ -626,7 +617,8 @@ BEGIN
         concepto,
         referencia_renovacion
     )
-    VALUES (
+    VALUES
+    (
         p_id_cliente,
         p_id_recepcionista,
         v_tarifa,
@@ -690,13 +682,13 @@ BEGIN
        OR p_tipo IS NULL
        OR p_tipo NOT IN ('Mensualidad', 'Anualidad')
     THEN
-        RAISE EXCEPTION 'Datos del pago invÃ¡lidos';
+        RAISE EXCEPTION 'Datos del pago inválidos';
     END IF;
 
     p_id_pago := NULL;
     p_repetido := FALSE;
 
-    -- Reservar la operaciÃ³n de forma atÃ³mica.
+    -- Reservar la operación de forma atómica.
     INSERT INTO public.pagos_idempotencia (
         clave_idempotencia,
         id_cliente,
@@ -711,7 +703,7 @@ BEGIN
 
     GET DIAGNOSTICS v_filas = ROW_COUNT;
 
-    -- Si la clave existe, comprobar la operaciÃ³n original.
+    -- Si la clave existe, comprobar la operación original.
     IF v_filas = 0 THEN
         SELECT id_cliente, tipo_pago, id_pago
         INTO v_clave_cliente, v_clave_tipo, v_pago_existente
@@ -720,18 +712,18 @@ BEGIN
         FOR UPDATE;
 
         IF NOT FOUND THEN
-            RAISE EXCEPTION 'No se encontrÃ³ la operaciÃ³n reservada';
+            RAISE EXCEPTION 'No se encontró la operación reservada';
         END IF;
 
         IF v_clave_cliente IS DISTINCT FROM p_id_cliente
            OR v_clave_tipo IS DISTINCT FROM p_tipo
         THEN
             RAISE EXCEPTION
-                'La clave pertenece a una operaciÃ³n diferente';
+                'La clave pertenece a una operación diferente';
         END IF;
 
         IF v_pago_existente IS NULL THEN
-            RAISE EXCEPTION 'OperaciÃ³n incompleta';
+            RAISE EXCEPTION 'Operación incompleta';
         END IF;
 
         p_id_pago := v_pago_existente;
@@ -778,14 +770,14 @@ BEGIN
     FOR SHARE;
 
     IF NOT FOUND OR NOT COALESCE(v_activo, FALSE) THEN
-        RAISE EXCEPTION 'La membresÃ­a no existe o estÃ¡ inactiva';
+        RAISE EXCEPTION 'La membresía no existe o está inactiva';
     END IF;
 
     IF v_tarifa IS NULL OR v_tarifa <= 0 THEN
-        RAISE EXCEPTION 'La tarifa oficial no es vÃ¡lida';
+        RAISE EXCEPTION 'La tarifa oficial no es válida';
     END IF;
 
-    -- RelaciÃ³n con el pago anterior.
+    -- Relación con el pago anterior.
     SELECT h.id_pago
     INTO v_referencia
     FROM public.historial_pagos h
@@ -877,7 +869,7 @@ CREATE TABLE public.asistencias (
     fecha_hora timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
     estado_acceso character varying(20) DEFAULT 'Aprobado'::character varying NOT NULL,
     origen_registro character varying(30) DEFAULT 'LectorCodigo'::character varying NOT NULL,
-    CONSTRAINT asistencias_estado_acceso_check CHECK (((estado_acceso)::text = ANY (ARRAY[('Aprobado'::character varying)::text, ('Rechazado'::character varying)::text])))
+    CONSTRAINT asistencias_estado_acceso_check CHECK (((estado_acceso)::text = ANY ((ARRAY['Aprobado'::character varying, 'Rechazado'::character varying])::text[])))
 );
 
 
@@ -913,7 +905,7 @@ CREATE TABLE public.bitacora_auditoria (
     datos_viejos jsonb,
     datos_nuevos jsonb,
     fecha_auditoria timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    CONSTRAINT bitacora_auditoria_accion_realizada_check CHECK (((accion_realizada)::text = ANY (ARRAY[('INSERT'::character varying)::text, ('UPDATE'::character varying)::text, ('DELETE'::character varying)::text])))
+    CONSTRAINT bitacora_auditoria_accion_realizada_check CHECK (((accion_realizada)::text = ANY ((ARRAY['INSERT'::character varying, 'UPDATE'::character varying, 'DELETE'::character varying])::text[])))
 );
 
 
@@ -1094,7 +1086,7 @@ CREATE TABLE public.historial_pagos (
     concepto character varying(100),
     referencia_renovacion integer,
     CONSTRAINT historial_pagos_monto_pagado_check CHECK ((monto_pagado > (0)::numeric)),
-    CONSTRAINT historial_pagos_tipo_pago_check CHECK (((tipo_pago)::text = ANY (ARRAY[('Mensualidad'::character varying)::text, ('Anualidad'::character varying)::text])))
+    CONSTRAINT historial_pagos_tipo_pago_check CHECK (((tipo_pago)::text = ANY ((ARRAY['Mensualidad'::character varying, 'Anualidad'::character varying])::text[])))
 );
 
 
@@ -1165,9 +1157,9 @@ CREATE TABLE public.membresias_precios_historial (
     costo_anualidad numeric(10,2) NOT NULL,
     registrado_en timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
     id_usuario_app integer,
-    origen character varying(20) NOT NULL,
-    CONSTRAINT membresias_precios_historial_costo_anualidad_check CHECK ((costo_anualidad >= (0)::numeric)),
-    CONSTRAINT membresias_precios_historial_costo_mensual_check CHECK ((costo_mensual >= (0)::numeric)),
+    origen character varying(30) NOT NULL,
+    CONSTRAINT chk_historial_precio_anual CHECK ((costo_anualidad >= (0)::numeric)),
+    CONSTRAINT chk_historial_precio_mensual CHECK ((costo_mensual >= (0)::numeric)),
     CONSTRAINT membresias_precios_historial_origen_check CHECK (((origen)::text = ANY ((ARRAY['CapturaInicial'::character varying, 'Creacion'::character varying, 'CambioPrecio'::character varying])::text[])))
 );
 
@@ -1176,14 +1168,19 @@ CREATE TABLE public.membresias_precios_historial (
 -- Name: membresias_precios_historial_id_historial_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
-ALTER TABLE public.membresias_precios_historial ALTER COLUMN id_historial ADD GENERATED ALWAYS AS IDENTITY (
-    SEQUENCE NAME public.membresias_precios_historial_id_historial_seq
+CREATE SEQUENCE public.membresias_precios_historial_id_historial_seq
     START WITH 1
     INCREMENT BY 1
     NO MINVALUE
     NO MAXVALUE
-    CACHE 1
-);
+    CACHE 1;
+
+
+--
+-- Name: membresias_precios_historial_id_historial_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.membresias_precios_historial_id_historial_seq OWNED BY public.membresias_precios_historial.id_historial;
 
 
 --
@@ -1337,8 +1334,8 @@ CREATE TABLE public.personal_nomina_pagos (
     creado_en timestamp with time zone DEFAULT now() NOT NULL,
     CONSTRAINT chk_nomina_cancelacion CHECK ((((estado)::text <> 'Cancelado'::text) OR ((cancelado_por IS NOT NULL) AND (fecha_cancelacion IS NOT NULL) AND (NULLIF(TRIM(BOTH FROM motivo_cancelacion), ''::text) IS NOT NULL)))),
     CONSTRAINT chk_nomina_periodo CHECK ((periodo_fin >= periodo_inicio)),
-    CONSTRAINT personal_nomina_pagos_estado_check CHECK (((estado)::text = ANY (ARRAY[('Pagado'::character varying)::text, ('Cancelado'::character varying)::text]))),
-    CONSTRAINT personal_nomina_pagos_metodo_check CHECK (((metodo)::text = ANY (ARRAY[('Efectivo'::character varying)::text, ('Transferencia'::character varying)::text]))),
+    CONSTRAINT personal_nomina_pagos_estado_check CHECK (((estado)::text = ANY ((ARRAY['Pagado'::character varying, 'Cancelado'::character varying])::text[]))),
+    CONSTRAINT personal_nomina_pagos_metodo_check CHECK (((metodo)::text = ANY ((ARRAY['Efectivo'::character varying, 'Transferencia'::character varying])::text[]))),
     CONSTRAINT personal_nomina_pagos_monto_check CHECK ((monto > (0)::numeric))
 );
 
@@ -1373,7 +1370,7 @@ CREATE TABLE public.personal_salarios_historial (
     creado_en timestamp with time zone DEFAULT now() NOT NULL,
     CONSTRAINT chk_salario_fechas CHECK (((vigente_hasta IS NULL) OR (vigente_hasta >= vigente_desde))),
     CONSTRAINT personal_salarios_historial_monto_check CHECK ((monto >= (0)::numeric)),
-    CONSTRAINT personal_salarios_historial_periodicidad_check CHECK (((periodicidad)::text = ANY (ARRAY[('Semanal'::character varying)::text, ('Quincenal'::character varying)::text, ('Mensual'::character varying)::text])))
+    CONSTRAINT personal_salarios_historial_periodicidad_check CHECK (((periodicidad)::text = ANY ((ARRAY['Semanal'::character varying, 'Quincenal'::character varying, 'Mensual'::character varying])::text[])))
 );
 
 
@@ -1530,7 +1527,7 @@ CREATE TABLE public.usuarios (
     estatus character varying(20) DEFAULT 'Activo'::character varying NOT NULL,
     id_rol integer NOT NULL,
     google_id character varying(255),
-    CONSTRAINT usuarios_estatus_check CHECK (((estatus)::text = ANY (ARRAY[('Activo'::character varying)::text, ('Inactivo'::character varying)::text])))
+    CONSTRAINT usuarios_estatus_check CHECK (((estatus)::text = ANY ((ARRAY['Activo'::character varying, 'Inactivo'::character varying])::text[])))
 );
 
 
@@ -1818,6 +1815,13 @@ ALTER TABLE ONLY public.historial_pagos ALTER COLUMN id_pago SET DEFAULT nextval
 --
 
 ALTER TABLE ONLY public.membresias ALTER COLUMN id_membresia SET DEFAULT nextval('public.membresias_id_membresia_seq'::regclass);
+
+
+--
+-- Name: membresias_precios_historial id_historial; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.membresias_precios_historial ALTER COLUMN id_historial SET DEFAULT nextval('public.membresias_precios_historial_id_historial_seq'::regclass);
 
 
 --
@@ -2216,13 +2220,6 @@ CREATE INDEX idx_usuarios_correo_trgm ON public.usuarios USING gin (correo publi
 
 
 --
--- Name: ix_membresias_precios_historial_plan; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX ix_membresias_precios_historial_plan ON public.membresias_precios_historial USING btree (id_membresia, id_historial DESC);
-
-
---
 -- Name: ix_nomina_fecha; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -2334,11 +2331,27 @@ ALTER TABLE ONLY public.clientes
 
 
 --
+-- Name: membresias_precios_historial fk_historial_membresia; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.membresias_precios_historial
+    ADD CONSTRAINT fk_historial_membresia FOREIGN KEY (id_membresia) REFERENCES public.membresias(id_membresia) ON DELETE RESTRICT;
+
+
+--
 -- Name: historial_pagos fk_historial_pagos_renovacion; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.historial_pagos
     ADD CONSTRAINT fk_historial_pagos_renovacion FOREIGN KEY (referencia_renovacion) REFERENCES public.historial_pagos(id_pago);
+
+
+--
+-- Name: membresias_precios_historial fk_historial_usuario_app; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.membresias_precios_historial
+    ADD CONSTRAINT fk_historial_usuario_app FOREIGN KEY (id_usuario_app) REFERENCES public.usuarios(id_usuario) ON DELETE RESTRICT;
 
 
 --
@@ -2430,22 +2443,6 @@ ALTER TABLE ONLY public.personal
 
 
 --
--- Name: membresias_precios_historial membresias_precios_historial_id_membresia_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.membresias_precios_historial
-    ADD CONSTRAINT membresias_precios_historial_id_membresia_fkey FOREIGN KEY (id_membresia) REFERENCES public.membresias(id_membresia) ON DELETE RESTRICT;
-
-
---
--- Name: membresias_precios_historial membresias_precios_historial_id_usuario_app_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.membresias_precios_historial
-    ADD CONSTRAINT membresias_precios_historial_id_usuario_app_fkey FOREIGN KEY (id_usuario_app) REFERENCES public.usuarios(id_usuario) ON DELETE RESTRICT;
-
-
---
 -- Name: notificaciones notificaciones_id_usuario_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -2521,4 +2518,4 @@ ALTER TABLE ONLY public.personal_salarios_historial
 -- PostgreSQL database dump complete
 --
 
-\unrestrict a6gkNsHR9UdwgDbsohsQQbEQAFo7JU9t8WV7GUcHAs8oD0wArpuTgL9uYDMFkMC
+\unrestrict h8RZJtUudWCpsQoG2kmVshdo91RtVBZdiIwcVv4ptmBqO0QsP24Retq0AckHDk5
