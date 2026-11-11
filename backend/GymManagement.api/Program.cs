@@ -1908,4 +1908,119 @@ app.MapPatch("/api/admin/administradores/{id:int}/baja",
     .RequireAuthorization("SoloAdministrador");
 
 
+ // ==========================================
+ // ADMIN - DETALLE DE ASISTENCIAS DEL DIA
+ // ==========================================
+
+app.MapGet("/api/admin/asistencias",
+    async (
+        int? pagina,
+        int? limite,
+        DashboardService dashboardService,
+        ClaimsPrincipal usuario
+    ) =>
+    {
+        if (!int.TryParse(
+            usuario.FindFirst("sub")?.Value,
+            out var idAdministrador) || idAdministrador <= 0)
+        {
+            return Results.Unauthorized();
+        }
+
+        int paginaActual = pagina ?? 1;
+        int limiteActual = limite ?? 50;
+
+        if (paginaActual < 1 ||
+            limiteActual < 1 ||
+            limiteActual > 100 ||
+            ((long)paginaActual - 1) * limiteActual > int.MaxValue)
+        {
+            return Results.BadRequest(new
+            {
+                mensaje = "Paginación inválida. El límite máximo es 100."
+            });
+        }
+
+        try
+        {
+            var asistencias =
+                await dashboardService.ObtenerDetalleAsistenciasDia(
+                    idAdministrador,
+                    paginaActual,
+                    limiteActual);
+
+            return Results.Ok(asistencias);
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return Results.Forbid();
+        }
+        catch (Exception)
+        {
+            return Results.Problem(
+            statusCode: 500,
+            title: "Error al consultar asistencias",
+            detail: "No se pudo obtener el detalle de asistencias.");
+        }
+    })
+    .RequireAuthorization("SoloAdministrador");
+
+
+// ==========================================
+// ADMIN - HISTORIAL GENERAL DE PAGOS
+// ==========================================
+
+app.MapGet("/api/admin/pagos",
+    async (
+        int? pagina,
+        int? limite,
+        DashboardService dashboardService,
+        ClaimsPrincipal usuario
+    ) =>
+    {
+        if (!int.TryParse(
+            usuario.FindFirst("sub")?.Value,
+            out var idAdministrador) || idAdministrador <= 0)
+        {
+            return Results.Unauthorized();
+        }
+
+        int paginaActual = pagina ?? 1;
+        int limiteActual = limite ?? 50;
+
+        if (paginaActual < 1 ||
+            limiteActual < 1 ||
+            limiteActual > 100 ||
+            ((long)paginaActual - 1) * limiteActual > int.MaxValue)
+        {
+            return Results.BadRequest(new
+            {
+                mensaje = "Paginación inválida. El límite máximo es 100."
+            });
+        }
+
+        try
+        {
+            var pagos =
+                await dashboardService.ObtenerDetallePagos(
+                    idAdministrador,
+                    paginaActual,
+                    limiteActual);
+
+            return Results.Ok(pagos);
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return Results.Forbid();
+        }
+        catch (Exception)
+        {
+            return Results.Problem(
+                statusCode: 500,
+                title: "Error al consultar pagos",
+                detail: "No se pudo obtener el historial de pagos.");
+        }
+    })
+    .RequireAuthorization("SoloAdministrador");
+
 app.Run();
