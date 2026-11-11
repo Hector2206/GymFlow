@@ -142,3 +142,107 @@ img {
 
   background-clip: padding-box;
 }
+
+
+/* NAVEGACIÓN COMPARTIDA - ADMIN GYMFLOW */
+
+.admin-unified-nav {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+
+  min-height: 80px;
+  padding: 10px 40px;
+
+  display: flex;
+  align-items: center;
+
+  background: rgba(255, 253, 248, 0.96);
+  border-bottom: 1px solid #e7dfd2;
+
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+
+.admin-unified-nav-inner {
+  width: 100%;
+  max-width: 1200px;
+  margin: auto;
+
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.admin-unified-back {
+  width: 42px;
+  height: 42px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  flex-shrink: 0;
+
+  background: #fffdf8;
+  border: 1px solid #d8c8a5;
+  border-radius: 12px;
+
+  color: #8a6814;
+  font-size: 22px;
+  cursor: pointer;
+}
+
+.admin-unified-back:hover {
+  background: #f4ead5;
+}
+
+.admin-unified-back:focus-visible {
+  outline: 3px solid #b58a2a;
+  outline-offset: 3px;
+}
+
+.admin-unified-logo {
+  display: block;
+  width: 145px;
+  height: 54px;
+  object-fit: contain;
+}
+
+/* ENCABEZADOS MÁS COMPACTOS */
+
+body .admin-unified-nav + :is(
+  .clientes-header,
+  .laboral-header,
+  .membresias-header,
+  .administradores-header
+) {
+  padding: 22px 40px;
+}
+
+@media (max-width: 650px) {
+
+  .admin-unified-nav {
+    min-height: 72px;
+    padding: 8px 17px;
+  }
+
+  .admin-unified-logo {
+    width: 115px;
+    height: 46px;
+  }
+
+  .admin-unified-back {
+    width: 39px;
+    height: 39px;
+  }
+
+  body .admin-unified-nav + :is(
+    .clientes-header,
+    .laboral-header,
+    .membresias-header,
+    .administradores-header
+  ) {
+    padding: 20px 18px;
+  }
+}

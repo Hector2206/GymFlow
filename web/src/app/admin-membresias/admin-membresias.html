@@ -1,6 +1,35 @@
 
 <div class="membresias-page">
 
+<app-alerta-personal
+  [error]="error"
+  [exito]="exito"
+  tituloExito="Operación realizada"
+></app-alerta-personal>
+
+
+<nav class="admin-unified-nav" aria-label="Navegación">
+  <div class="admin-unified-nav-inner">
+
+    <button
+      type="button"
+      class="admin-unified-back"
+      (click)="volverInicio()"
+      aria-label="Volver al inicio"
+      title="Volver al inicio"
+    >
+      ←
+    </button>
+
+    <img
+      src="/Logo_GymFlow.png"
+      alt="GymFlow"
+      class="admin-unified-logo"
+    />
+
+  </div>
+</nav>
+
   <header class="membresias-header">
     <div class="header-content">
       <div>
@@ -15,31 +44,10 @@
         </p>
       </div>
 
-      <button
-        type="button"
-        class="back-button"
-        (click)="volverInicio()"
-      >
-        ← Volver al inicio
-      </button>
     </div>
   </header>
 
   <main class="membresias-content">
-
-    <section class="aviso-integracion">
-      <span class="aviso-icon">🎫</span>
-
-      <div>
-        <strong>Membresías oficiales de GymFlow</strong>
-
-        <p>
-          Los planes se consultan directamente desde PostgreSQL.
-          Los cambios administrativos se registran en Backend
-          y los precios anteriores se conservan en el historial.
-        </p>
-      </div>
-    </section>
 
     <div
       *ngIf="error"
@@ -92,8 +100,9 @@
 
           <h2>Membresías registradas</h2>
           <p class="descripcion-panel">
-            Consulta las membresías activas e inactivas.
-          </p>
+  Establece los precios oficiales que se aplicarán
+  a las nuevas operaciones de esta membresía.
+</p>
         </div>
 
         <div class="acciones">

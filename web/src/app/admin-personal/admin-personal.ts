@@ -22,13 +22,22 @@ import {
   EstatusPersonalAdmin
 } from '../models/admin-personal.model';
 
+import {
+  AlertaPersonal
+} from '../admin-personal-ui/alerta-personal';
+
+
 @Component({
   selector: 'app-admin-personal',
   standalone: true,
-  imports: [FormsModule],
+  imports: [
+    FormsModule,
+    AlertaPersonal
+  ],
   templateUrl: './admin-personal.html',
   styleUrl: './admin-personal.css'
 })
+
 export class AdminPersonal implements OnInit {
 
   empleados: PersonalAdmin[] = [];

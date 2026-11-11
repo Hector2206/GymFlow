@@ -1,11 +1,45 @@
 
 <div class="alta-page">
 
+
+<app-alerta-personal
+  [error]="errorAlta"
+/>
+
+
+  <!-- BARRA SUPERIOR -->
+  <header class="alta-topbar">
+
+    <div class="alta-topbar-contenido">   
+    <button
+      type="button"
+      class="alta-topbar-volver"
+      (click)="volverDirectorio()"
+      [disabled]="guardandoAlta"
+      aria-label="Volver a Administrar Empleados"
+      title="Volver a Administrar Empleados"
+    >
+      ←
+    </button>
+
+
+      <img
+        src="/Logo_GymFlow.png"
+        alt="GymFlow"
+        class="alta-topbar-logo"
+      />
+
+    </div>
+
+  </header>
+
+  <!-- ENCABEZADO -->
   <header class="alta-header">
 
     <div class="header-content">
 
       <div>
+
         <span class="section-label">
           GYMFLOW / ADMINISTRACIÓN
         </span>
@@ -15,23 +49,15 @@
         <p>
           Alta de entrenadores y recepcionistas.
         </p>
-      </div>
 
-      
-    <button
-    type="button"
-    class="back-button"
-    (click)="volverDirectorio()"
-    [disabled]="guardandoAlta"
-    >
-    ← Volver al directorio
-    </button>
+      </div>
 
 
     </div>
 
   </header>
 
+  <!-- CONTENIDO -->
   <main class="alta-content">
 
     <section class="alta-panel">
@@ -41,6 +67,7 @@
         <div class="alta-icon">👤</div>
 
         <div>
+
           <span class="section-label">
             EXPEDIENTE LABORAL
           </span>
@@ -51,10 +78,29 @@
             Completa los datos necesarios
             para registrar al nuevo integrante.
           </p>
+
         </div>
 
       </div>
 
+      <!-- MENSAJES -->
+      @if (errorAlta) {
+
+        <div class="alta-error" role="alert">
+          {{ errorAlta }}
+        </div>
+
+      }
+
+      @if (guardandoAlta) {
+
+        <div class="alta-cargando" role="status">
+          Guardando empleado...
+        </div>
+
+      }
+
+      <!-- FORMULARIO -->
       <div class="alta-form-grid">
 
         <label class="alta-campo">
@@ -178,12 +224,11 @@
 
       </div>
 
+      <!-- ACCIONES -->
       <div class="alta-acciones">
 
         <p>
           * Todos los campos son obligatorios.
-          El registro se conectará al backend
-          en el siguiente commit.
         </p>
 
         <div class="alta-botones">
@@ -192,6 +237,7 @@
             type="button"
             class="cancelar-button"
             (click)="volverDirectorio()"
+            [disabled]="guardandoAlta"
           >
             Cancelar
           </button>
@@ -199,9 +245,10 @@
           <button
             type="button"
             class="guardar-button"
-            disabled
+            [disabled]="guardandoAlta || resultadoIncierto"
+            (click)="guardarEmpleado()"
           >
-            Guardar empleado
+            {{ guardandoAlta ? 'Guardando...' : 'Guardar empleado' }}
           </button>
 
         </div>

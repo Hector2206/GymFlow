@@ -31,13 +31,19 @@ import {
   CancelarPagoNominaAdminRequest
 } from '../models/admin-nomina.model';
 
+import {
+  AlertaPersonal
+} from '../admin-personal-ui/alerta-personal';
+
+
 @Component({
   selector: 'app-admin-nomina',
   standalone: true,
-  imports: [FormsModule],
+  imports: [FormsModule, AlertaPersonal],
   templateUrl: './admin-nomina.html',
   styleUrl: './admin-nomina.css'
 })
+
 export class AdminNomina implements OnInit {
 
   empleados: PersonalAdmin[] = [];

@@ -1,0 +1,340 @@
+
+<div class="admin-detalles-page">
+
+  <!-- ALERTAS -->
+  <app-alerta-personal
+    [error]="error"
+  ></app-alerta-personal>
+
+  <!-- NAVEGACIÓN -->
+  <nav
+    class="admin-unified-nav"
+    aria-label="Navegación"
+  >
+    <div class="admin-unified-nav-inner">
+
+      <button
+        type="button"
+        class="admin-unified-back"
+        (click)="volverDashboard()"
+        aria-label="Volver al Dashboard"
+        title="Volver al Dashboard"
+      >
+        ←
+      </button>
+
+      <img
+        src="/Logo_GymFlow.png"
+        alt="GymFlow"
+        class="admin-unified-logo"
+      />
+
+    </div>
+  </nav>
+
+  <!-- ENCABEZADO -->
+  <header class="detalles-header">
+    <div class="detalles-header-inner">
+
+      <span class="detalles-label">
+        GYMFLOW / ADMINISTRACIÓN
+      </span>
+
+      <h1>{{ titulo }}</h1>
+
+      <p>{{ descripcion }}</p>
+
+    </div>
+  </header>
+
+  <main class="detalles-content">
+
+    <section class="detalles-panel">
+
+      <div class="detalles-panel-heading">
+
+        <div>
+          <span class="detalles-label">
+            CONSULTA DE REGISTROS
+          </span>
+
+          <h2>
+            {{
+              tipo === 'asistencias'
+                ? 'Accesos registrados hoy'
+                : 'Pagos de clientes'
+            }}
+          </h2>
+
+          <p>
+            {{
+              tipo === 'asistencias'
+                ? 'Consulta los accesos aprobados del día actual.'
+                : 'Consulta el historial general de pagos.'
+            }}
+          </p>
+        </div>
+
+        <button
+          type="button"
+          class="detalles-actualizar"
+          [disabled]="cargando"
+          (click)="cargar()"
+        >
+          ↻ Actualizar
+        </button>
+
+      </div>
+
+      <!-- CARGA -->
+      @if (cargando) {
+
+        <div class="detalles-estado" role="status">
+          <span class="detalles-spinner"></span>
+          <p>Consultando registros...</p>
+        </div>
+
+      } @else if (error) {
+
+        <div class="detalles-estado">
+
+          <div class="detalles-estado-icono">
+            ⚠️
+          </div>
+
+          <h3>No se pudo completar la consulta</h3>
+
+          <p>{{ error }}</p>
+
+          <button
+            type="button"
+            class="detalles-actualizar"
+            (click)="cargar()"
+          >
+            Reintentar
+          </button>
+
+        </div>
+
+      } @else if (cantidadRegistros === 0) {
+
+        <div class="detalles-estado">
+
+          <div class="detalles-estado-icono">
+            {{
+              tipo === 'asistencias'
+                ? '📅'
+                : '💳'
+            }}
+          </div>
+
+          <h3>No hay registros para mostrar</h3>
+
+          <p>
+            {{
+              pagina > 1
+                ? 'No hay más registros en esta página.'
+                : tipo === 'asistencias'
+                  ? 'Aún no hay accesos aprobados hoy.'
+                  : 'Todavía no hay pagos registrados.'
+            }}
+          </p>
+
+        </div>
+
+      } @else if (tipo === 'asistencias') {
+
+        <!-- TABLA DE ASISTENCIAS -->
+        <div class="detalles-tabla-contenedor">
+
+          <table class="detalles-tabla">
+
+            <thead>
+              <tr>
+                <th>Registro</th>
+                <th>Cliente</th>
+                <th>Fecha y hora</th>
+                <th>Estado</th>
+                <th>Origen</th>
+              </tr>
+            </thead>
+
+            <tbody>
+
+              @for (
+                asistencia of asistencias;
+                track asistencia.idAsistencia
+              ) {
+
+                <tr>
+
+                  <td data-label="Registro">
+                    #{{ asistencia.idAsistencia }}
+                  </td>
+
+                  <td data-label="Cliente">
+                    <strong>
+                      {{ asistencia.nombreCliente }}
+                    </strong>
+
+                    <small>
+                      ID: {{ asistencia.idCliente }}
+                    </small>
+                  </td>
+
+                  <td data-label="Fecha y hora">
+                    {{
+                      asistencia.fechaHora |
+                      date:'dd/MM/yyyy, HH:mm'
+                    }}
+                  </td>
+
+                  <td data-label="Estado">
+                    <span class="detalles-chip">
+                      {{ asistencia.estadoAcceso }}
+                    </span>
+                  </td>
+
+                  <td data-label="Origen">
+                    {{ asistencia.origenRegistro }}
+                  </td>
+
+                </tr>
+
+              }
+
+            </tbody>
+
+          </table>
+
+        </div>
+
+      } @else {
+
+        <!-- TABLA DE PAGOS -->
+        <div class="detalles-tabla-contenedor">
+
+          <table class="detalles-tabla">
+
+            <thead>
+              <tr>
+                <th>Folio</th>
+                <th>Cliente</th>
+                <th>Monto</th>
+                <th>Tipo de pago</th>
+                <th>Fecha</th>
+                <th>Concepto</th>
+              </tr>
+            </thead>
+
+            <tbody>
+
+              @for (pago of pagos; track pago.idPago) {
+
+                <tr>
+
+                  <td data-label="Folio">
+                    #{{ pago.idPago }}
+                  </td>
+
+                  <td data-label="Cliente">
+
+                    <strong>
+                      {{ pago.nombreCliente }}
+                    </strong>
+
+                    <small>
+                      ID: {{ pago.idCliente }}
+                    </small>
+
+                  </td>
+
+                  <td data-label="Monto">
+                    <strong class="detalles-monto">
+                      {{
+                        pago.monto |
+                        currency:'MXN':'symbol':'1.2-2'
+                      }}
+                    </strong>
+                  </td>
+
+                  <td data-label="Tipo de pago">
+                    {{ pago.tipoPago }}
+                  </td>
+
+                  <td data-label="Fecha">
+                    {{
+                      pago.fechaTransaccion |
+                      date:'dd/MM/yyyy, HH:mm'
+                    }}
+                  </td>
+
+                  <td data-label="Concepto">
+                    {{ pago.concepto || 'Sin concepto' }}
+                  </td>
+
+                </tr>
+
+              }
+
+            </tbody>
+
+          </table>
+
+        </div>
+
+      }
+
+      <!-- PAGINACIÓN -->
+      @if (!cargando && !error) {
+
+        <div class="detalles-paginacion">
+
+          <div class="detalles-pagina-info">
+
+            <strong>
+              Página {{ pagina }}
+            </strong>
+
+            <span>
+              {{ cantidadRegistros }}
+              registros en esta página
+            </span>
+
+          </div>
+
+          <div class="detalles-pagina-acciones">
+
+            <button
+              type="button"
+              class="detalles-boton"
+              [disabled]="pagina === 1"
+              (click)="paginaAnterior()"
+            >
+              ← Anterior
+            </button>
+
+            <button
+              type="button"
+              class="detalles-boton"
+              [disabled]="!haySiguiente"
+              (click)="paginaSiguiente()"
+            >
+              Siguiente →
+            </button>
+
+          </div>
+
+        </div>
+
+      }
+
+    </section>
+
+  </main>
+
+  <footer class="detalles-footer">
+    GymFlow · Consulta administrativa
+  </footer>
+
+</div>

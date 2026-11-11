@@ -1,36 +1,64 @@
 
 <div class="personal-page">
 
-  <header class="personal-header">
 
-    <div class="header-content">
+<app-alerta-personal
+  [error]="error"
+  [exito]="mensajeOperacion"
+  [tituloExito]="tituloOperacion || 'Operación realizada'"
+></app-alerta-personal>
 
-      <div>
 
-        <span class="section-label">
-          GYMFLOW / ADMINISTRACIÓN
-        </span>
 
-        <h1>Administrar Empleados</h1>
+<!-- BARRA DE NAVEGACIÓN -->
+<header class="personal-nav">
 
-        <p>
-          Gestiona entrenadores y recepcionistas
-          del gimnasio.
-        </p>
+  <div class="personal-nav-inner">
 
-      </div>
+    <button
+      type="button"
+      class="personal-nav-back"
+      (click)="volverInicio()"
+      aria-label="Volver al inicio"
+      title="Volver al inicio"
+    >
+      ←
+    </button>
 
-      <button
-        type="button"
-        class="back-button"
-        (click)="volverInicio()"
-      >
-        ← Volver al inicio
-      </button>
+    <img
+      src="/Logo_GymFlow.png"
+      alt="GymFlow"
+      class="personal-nav-logo"
+    />
+
+  </div>
+
+</header>
+
+<!-- ENCABEZADO PRINCIPAL -->
+<header class="personal-header">
+
+  <div class="header-content">
+
+    <div>
+
+      <span class="section-label">
+        GYMFLOW / ADMINISTRACIÓN
+      </span>
+
+      <h1>Administrar Empleados</h1>
+
+      <p>
+        Gestiona entrenadores y recepcionistas
+        del gimnasio.
+      </p>
 
     </div>
 
-  </header>
+  </div>
+
+</header>
+
 
   <main class="personal-content">
 

@@ -12,6 +12,8 @@ import {
 } from '../models/admin-administrador.model';
 import { AdminAdministradoresService } from '../services/admin-administradores.service';
 
+import { AlertaPersonal } from '../admin-personal-ui/alerta-personal';
+
 type VistaAdministradores = 'listado' | 'nuevo' | 'detalle' | 'editar' | 'baja';
 
 type FormularioAlta = Omit<CrearAdministradorRequest, 'sueldo'> & {
@@ -22,7 +24,7 @@ type FormularioAlta = Omit<CrearAdministradorRequest, 'sueldo'> & {
 @Component({
   selector: 'app-admin-administradores',
   standalone: true,
-  imports: [FormsModule],
+  imports: [FormsModule, AlertaPersonal],
   templateUrl: './admin-administradores.html',
   styleUrl: './admin-administradores.css'
 })

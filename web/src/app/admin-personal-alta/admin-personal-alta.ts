@@ -19,13 +19,19 @@ import {
   PuestoPersonalAdmin
 } from '../models/admin-personal.model';
 
+import {
+  AlertaPersonal
+} from '../admin-personal-ui/alerta-personal';
+
+
 @Component({
   selector: 'app-admin-personal-alta',
   standalone: true,
-  imports: [FormsModule],
+  imports: [FormsModule, AlertaPersonal],
   templateUrl: './admin-personal-alta.html',
   styleUrl: './admin-personal-alta.css'
 })
+
 export class AdminPersonalAlta {
 
   nuevoEmpleado = {
@@ -69,6 +75,22 @@ export class AdminPersonalAlta {
 
     return `${anio}-${mes}-${dia}`;
   }
+
+
+  // REGRESAR A LA PÁGINA PRINCIPAL
+
+  volverInicio(): void {
+
+    if (this.guardandoAlta) {
+      return;
+    }
+
+    // No conservar la contraseña al salir.
+    this.nuevoEmpleado.password = '';
+
+    this.router.navigate(['/home']);
+  }
+
 
   // REGRESAR SIN GUARDAR
 

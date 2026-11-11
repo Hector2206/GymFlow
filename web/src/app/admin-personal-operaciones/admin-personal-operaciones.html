@@ -1,5 +1,40 @@
 
 <div class="laboral-page">
+
+
+<nav class="admin-unified-nav" aria-label="Navegación">
+  <div class="admin-unified-nav-inner">
+
+<button
+  type="button"
+  class="admin-unified-back"
+  (click)="volverInicio()"
+  aria-label="Volver al inicio"
+  title="Volver al inicio"
+>
+  ←
+</button>
+
+    <img
+      src="/Logo_GymFlow.png"
+      alt="GymFlow"
+      class="admin-unified-logo"
+    />
+
+  </div>
+</nav>
+
+
+<app-alerta-personal
+  [error]="
+    errorOperacion ||
+    errorEmpleados ||
+    errorHistorial
+  "
+  [exito]="mensajeExito"
+  tituloExito="Operación registrada"
+/>
+
   <header class="laboral-header">
     <div class="header-content">
       <div>
@@ -15,13 +50,6 @@
         </p>
       </div>
 
-      <button
-        type="button"
-        class="back-button"
-        (click)="volverPersonal()"
-      >
-        ← Volver a Personal
-      </button>
     </div>
   </header>
 

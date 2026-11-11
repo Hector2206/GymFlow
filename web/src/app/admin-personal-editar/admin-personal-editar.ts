@@ -27,13 +27,19 @@ import {
   EditarPersonalAdminRequest
 } from '../models/admin-personal.model';
 
+import {
+  AlertaPersonal
+} from '../admin-personal-ui/alerta-personal';
+
+
 @Component({
   selector: 'app-admin-personal-editar',
   standalone: true,
-  imports: [FormsModule],
+  imports: [FormsModule, AlertaPersonal],
   templateUrl: './admin-personal-editar.html',
   styleUrl: './admin-personal-editar.css'
 })
+
 export class AdminPersonalEditar implements OnInit {
 
   idPersonal = 0;

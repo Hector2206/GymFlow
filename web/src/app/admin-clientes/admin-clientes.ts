@@ -7,7 +7,7 @@ import {
 } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Subject, Subscription, debounceTime } from 'rxjs';
 
@@ -52,6 +52,7 @@ export class AdminClientes implements OnInit {
 
   constructor(
     private readonly router: Router,
+    private readonly route: ActivatedRoute,
     private readonly adminClienteService: AdminClienteService,
     private readonly membresiaService: MembresiaService,
     private readonly cambioMembresiaService: CambioMembresiaService,
@@ -59,13 +60,38 @@ export class AdminClientes implements OnInit {
     private readonly destroyRef: DestroyRef
   ) {}
 
-  ngOnInit(): void {
-    this.cambiosBusqueda.pipe(
-      debounceTime(350),
-      takeUntilDestroyed(this.destroyRef)
-    ).subscribe(() => this.cargarClientes());
-    this.cargarClientes();
-  }
+
+ngOnInit(): void {
+
+  const parametros = this.route.snapshot.queryParamMap;
+
+  const estatus = parametros.get('estatus');
+  const vigencia = parametros.get('vigencia');
+
+  // Aplicar filtros recibidos desde el Dashboard
+
+  this.estatusBusqueda =
+    estatus === 'Activo' || estatus === 'Inactivo'
+      ? estatus
+      : '';
+
+  this.vigenciaBusqueda =
+    vigencia === 'Vigente' ||
+    vigencia === 'Vencida' ||
+    vigencia === 'SinPagos'
+      ? vigencia
+      : '';
+
+  // Mantener la búsqueda automática existente
+
+  this.cambiosBusqueda.pipe(
+    debounceTime(350),
+    takeUntilDestroyed(this.destroyRef)
+  ).subscribe(() => this.cargarClientes());
+
+  this.cargarClientes();
+}
+
 
   get hayFiltrosActivos(): boolean {
     return this.nombreBusqueda.trim().length > 0
@@ -252,9 +278,18 @@ export class AdminClientes implements OnInit {
     const partes = fecha.split('-');
     if (partes.length !== 3) return fecha;
     return `${partes[2]}/${partes[1]}/${partes[0]}`;
-  }
+  } 
+volverInicio(): void {
 
-  volverInicio(): void {
+  const vieneDelDashboard =
+    this.route.snapshot.queryParamMap.get('origen') === 'dashboard';
+
+  if (vieneDelDashboard) {
+    this.router.navigate(['/admin/dashboard']);
+  } else {
     this.router.navigate(['/home']);
   }
+
+}
+
 }

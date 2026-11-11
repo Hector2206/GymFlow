@@ -1,5 +1,28 @@
 
 <div class="clientes-page">
+
+<nav class="admin-unified-nav" aria-label="Navegación">
+  <div class="admin-unified-nav-inner">
+
+    <button
+      type="button"
+      class="admin-unified-back"
+      (click)="volverInicio()"
+      aria-label="Volver al inicio"
+      title="Volver al inicio"
+    >
+      ←
+    </button>
+
+    <img
+      src="/Logo_GymFlow.png"
+      alt="GymFlow"
+      class="admin-unified-logo"
+    />
+
+  </div>
+</nav>
+
   <header class="clientes-header">
     <div class="header-content">
       <div class="header-info">
@@ -7,9 +30,6 @@
         <h1>Administrar Clientes</h1>
         <p>Consulta clientes, membresías y el estado de sus cuentas.</p>
       </div>
-      <button type="button" class="back-button" (click)="volverInicio()">
-        ← Volver al inicio
-      </button>
     </div>
   </header>
 

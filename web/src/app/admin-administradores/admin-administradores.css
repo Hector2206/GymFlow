@@ -156,3 +156,89 @@ button:focus-visible, input:focus-visible, select:focus-visible {
   .form-actions { flex-direction: column; }
   .form-actions button { width: 100%; }
 }
+
+
+/* ==================================
+   MEJORAS VISUALES ADMINISTRADORES
+================================== */
+
+/* Encabezado más compacto */
+
+.administradores-header {
+  padding: 25px 40px;
+}
+
+/* Tarjetas */
+
+.administradores-panel {
+  border-radius: 20px;
+  padding: 28px;
+}
+
+/* Pestañas */
+
+.administradores-tabs button {
+  min-height: 54px;
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.administradores-tabs button:hover:not(:disabled) {
+  border-color: #b58a2a;
+}
+
+.administradores-tabs button.tab-activa {
+  box-shadow:
+    0 5px 15px rgba(181, 138, 42, 0.15);
+}
+
+/* Formulario */
+
+.campo input:focus {
+  border-color: #b58a2a;
+  outline: 2px solid rgba(181, 138, 42, 0.15);
+}
+
+.form-grid {
+  row-gap: 22px;
+}
+
+/* Tabla */
+
+.administradores-tabla tbody tr:hover {
+  background: #fcf8f0;
+}
+
+.tabla-contenedor {
+  scrollbar-width: thin;
+}
+
+/* Dispositivos móviles */
+
+@media (max-width: 650px) {
+
+  .administradores-header {
+    padding: 20px 18px;
+  }
+
+  .administradores-panel {
+    padding: 20px;
+  }
+
+  .administradores-tabs {
+    gap: 10px;
+  }
+
+  .administradores-tabs button {
+    min-height: 50px;
+    padding: 12px;
+  }
+
+  .form-grid {
+    grid-template-columns: 1fr;
+    gap: 18px;
+  }
+
+}

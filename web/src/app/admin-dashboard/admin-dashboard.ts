@@ -16,13 +16,20 @@ import {
   AdminDashboardService
 } from '../services/admin-dashboard.service';
 
+import { AlertaPersonal } from '../admin-personal-ui/alerta-personal';
+
+
 @Component({
   selector: 'app-admin-dashboard',
   standalone: true,
-  imports: [FormsModule],
+  imports: [
+    FormsModule,
+    AlertaPersonal
+  ],
   templateUrl: './admin-dashboard.html',
   styleUrl: './admin-dashboard.css'
 })
+
 export class AdminDashboard implements OnInit {
 
   // Total de clientes
@@ -381,4 +388,35 @@ export class AdminDashboard implements OnInit {
   volverInicio(): void {
     this.router.navigate(['/home']);
   }
+
+
+
+irDirectorioClientes(): void {
+  this.router.navigate(['/admin/clientes'], {
+    queryParams: {
+      origen: 'dashboard'
+    }
+  });
+}
+
+irClientesConMembresiaVigente(): void {
+  this.router.navigate(['/admin/clientes'], {
+    queryParams: {
+      origen: 'dashboard',
+      estatus: 'Activo',
+      vigencia: 'Vigente'
+    }
+  });
+}
+
+irDetalleAsistencias(): void {
+  this.router.navigate(['/admin/asistencias']);
+}
+
+irDetallePagos(): void {
+  this.router.navigate(['/admin/pagos']);
+}
+
+
+
 }
