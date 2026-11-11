@@ -123,6 +123,7 @@ import { RecepcionClientes } from './recepcion-clientes/recepcion-clientes';
 
 import { Notificaciones } from './notificaciones/notificaciones';
 
+import { AdminDetalles } from './admin-detalles/admin-detalles';
 
 import {
   recepcionistaGuard,
@@ -170,6 +171,32 @@ export const routes: Routes = [
     component: AdminDashboard,
     canActivate: [authGuard, administradorGuard]
   },
+
+
+{
+  path: 'admin/asistencias',
+  component: AdminDetalles,
+  data: {
+    tipo: 'asistencias'
+  },
+  canActivate: [
+    authGuard,
+    administradorGuard
+  ]
+},
+
+{
+  path: 'admin/pagos',
+  component: AdminDetalles,
+  data: {
+    tipo: 'pagos'
+  },
+  canActivate: [
+    authGuard,
+    administradorGuard
+  ]
+},
+
 
   {
     path: 'admin/clientes',

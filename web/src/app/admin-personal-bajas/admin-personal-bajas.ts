@@ -19,13 +19,19 @@ import {
   PersonalAdmin
 } from '../models/admin-personal.model';
 
+import {
+  AlertaPersonal
+} from '../admin-personal-ui/alerta-personal';
+
+
 @Component({
   selector: 'app-admin-personal-bajas',
   standalone: true,
-  imports: [FormsModule],
+  imports: [FormsModule, AlertaPersonal],
   templateUrl: './admin-personal-bajas.html',
   styleUrl: './admin-personal-bajas.css'
 })
+
 export class AdminPersonalBajas implements OnInit {
 
   empleados: PersonalAdmin[] = [];

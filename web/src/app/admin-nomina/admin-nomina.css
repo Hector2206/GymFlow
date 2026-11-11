@@ -402,3 +402,123 @@ button:focus-visible {
     grid-template-columns: 1fr;
   }
 }
+
+
+/* ==================================
+   BARRA DE NAVEGACIÓN NÓMINA
+================================== */
+
+.nomina-nav {
+  min-height: 88px;
+  display: flex;
+  align-items: center;
+
+  padding: 10px 42px;
+
+  position: sticky;
+  top: 0;
+  z-index: 20;
+
+  background: rgba(255, 253, 248, 0.94);
+
+  border-bottom: 1px solid #e7dfd2;
+
+  box-shadow:
+    0 5px 24px rgba(76, 62, 36, 0.06);
+
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+}
+
+/* CONTENEDOR */
+
+.nomina-nav-inner {
+  width: 100%;
+  max-width: 1150px;
+
+  margin: 0 auto;
+
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+/* LOGO GYMFLOW */
+
+.nomina-nav-logo {
+  display: block;
+
+  width: 145px;
+  height: 58px;
+
+  object-fit: contain;
+}
+
+/* FLECHA DE REGRESO */
+
+.nomina-nav-back {
+  width: 42px;
+  height: 42px;
+  flex-shrink: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border: 1px solid #d8c8a5;
+  border-radius: 12px;
+
+  background: #fffdf8;
+  color: #8a6814;
+
+  font-size: 21px;
+  cursor: pointer;
+
+  transition:
+    background 0.18s ease,
+    border-color 0.18s ease,
+    transform 0.18s ease,
+    box-shadow 0.18s ease;
+}
+
+.nomina-nav-back:hover:not(:disabled) {
+  background: #f3ead8;
+  border-color: #b58a2a;
+
+  transform: translateX(-2px);
+
+  box-shadow:
+    0 5px 14px rgba(181, 138, 42, 0.12);
+}
+
+.nomina-nav-back:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.nomina-nav-back:focus-visible {
+  outline: 3px solid #b58a2a;
+  outline-offset: 3px;
+}
+
+/* RESPONSIVE */
+
+@media (max-width: 600px) {
+
+  .nomina-nav {
+    min-height: 74px;
+    padding: 8px 17px;
+  }
+
+  .nomina-nav-logo {
+    width: 115px;
+    height: 48px;
+  }
+
+  .nomina-nav-back {
+    width: 39px;
+    height: 39px;
+    font-size: 19px;
+  }
+
+}

@@ -31,13 +31,19 @@ import {
   RegistrarPagoNominaAdminRequest
 } from '../models/admin-nomina.model';
 
+import {
+  AlertaPersonal
+} from '../admin-personal-ui/alerta-personal';
+
+
 @Component({
   selector: 'app-admin-nomina-pago',
   standalone: true,
-  imports: [FormsModule],
+  imports: [FormsModule, AlertaPersonal],
   templateUrl: './admin-nomina-pago.html',
   styleUrl: './admin-nomina-pago.css'
 })
+
 export class AdminNominaPago implements OnInit {
 
   idPersonal = 0;

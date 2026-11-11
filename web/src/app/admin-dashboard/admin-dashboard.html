@@ -1,6 +1,46 @@
 
+
 <div class="admin-page">
 
+  <!-- ALERTAS FLOTANTES -->
+  <app-alerta-personal
+    [error]="
+      errorPeriodo ||
+      errorIngresos ||
+      errorClientes ||
+      errorMembresias ||
+      errorAsistencias ||
+      errorPagos
+    "
+  ></app-alerta-personal>
+
+  <!-- BARRA DE NAVEGACIÓN -->
+  <nav
+    class="admin-unified-nav"
+    aria-label="Navegación"
+  >
+    <div class="admin-unified-nav-inner">
+
+      <button
+        type="button"
+        class="admin-unified-back"
+        (click)="volverInicio()"
+        aria-label="Volver al inicio"
+        title="Volver al inicio"
+      >
+        ←
+      </button>
+
+      <img
+        src="/Logo_GymFlow.png"
+        alt="GymFlow"
+        class="admin-unified-logo"
+      />
+
+    </div>
+  </nav>
+
+  <!-- ENCABEZADO -->
   <header class="admin-header">
     <div class="header-content">
 
@@ -9,23 +49,17 @@
           GYMFLOW / ADMINISTRACIÓN
         </span>
 
-        <h1>Panel de Administrador</h1>
+        <h1>Dashboard administrativo</h1>
 
         <p>
-          Consulta los indicadores y la actividad
-          general de tu gimnasio.
+          Visualiza los indicadores principales
+          y el rendimiento de tu gimnasio.
         </p>
       </div>
 
-      <button
-        type="button"
-        class="back-button"
-        (click)="volverInicio()">
-        ← Volver al inicio
-      </button>
-
     </div>
   </header>
+
 
   <main class="admin-content">
 
@@ -79,6 +113,16 @@
         }
 
         <p>Clientes registrados en el sistema</p>
+
+<button
+  type="button"
+  class="stat-action"
+  (click)="irDirectorioClientes()"
+>
+  <span>Ver clientes</span>
+  <span aria-hidden="true">→</span>
+</button>
+
       </article>
 
       
@@ -121,6 +165,16 @@
         <p>
             Clientes activos con membresía vigente
         </p>
+
+<button
+  type="button"
+  class="stat-action"
+  (click)="irClientesConMembresiaVigente()"
+>
+  <span>Ver membresías vigentes</span>
+  <span aria-hidden="true">→</span>
+</button>
+
 
         </article>
 
@@ -166,6 +220,16 @@
     Accesos aprobados durante el día
   </p>
 
+<button
+  type="button"
+  class="stat-action"
+  (click)="irDetalleAsistencias()"
+>
+  <span>Ver asistencias</span>
+  <span aria-hidden="true">→</span>
+</button>
+
+
 </article>
 
 
@@ -209,6 +273,16 @@
   <p>
     Pagos de clientes registrados en el sistema
   </p>
+
+<button
+  type="button"
+  class="stat-action"
+  (click)="irDetallePagos()"
+>
+  <span>Ver pagos</span>
+  <span aria-hidden="true">→</span>
+</button>
+
 
 </article>
 

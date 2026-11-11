@@ -17,6 +17,8 @@ import {
   HistorialPrecio
 } from '../services/admin-membresia.service';
 
+import { AlertaPersonal } from '../admin-personal-ui/alerta-personal';
+
 interface FormularioMembresia {
   nombrePlan: string;
   descripcion: string;
@@ -27,7 +29,7 @@ interface FormularioMembresia {
 @Component({
   selector: 'app-admin-membresias',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+ imports: [CommonModule, FormsModule, AlertaPersonal],
   templateUrl: './admin-membresias.html',
   styleUrl: './admin-membresias.css'
 })

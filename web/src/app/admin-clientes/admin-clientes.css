@@ -490,3 +490,103 @@ button:disabled {
     width: fit-content;
   }
 }
+
+
+/* ACCESOS DIRECTOS DEL DASHBOARD */
+
+.stat-action {
+  width: 100%;
+  min-height: 42px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 10px;
+  margin-top: 16px;
+  padding: 11px 13px;
+
+  border: 1px solid #dfcfaa;
+  border-radius: 11px;
+
+  background: #f4ead5;
+  color: #87671d;
+
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+
+  cursor: pointer;
+
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease;
+}
+
+/* =====================================
+   ENLACES DE TARJETAS DEL DASHBOARD
+===================================== */
+
+.stats-grid .stat-card .stat-action {
+  appearance: none;
+  -webkit-appearance: none;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  align-self: flex-start;
+  width: fit-content;
+  min-height: 36px;
+
+  gap: 10px;
+  margin-top: 12px;
+  padding: 9px 15px;
+
+  background: #f4ead5;
+  color: #87671d;
+
+  border: 1px solid #dfcfaa;
+  border-radius: 999px;
+
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.2;
+
+  cursor: pointer;
+
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    transform 0.2s ease;
+}
+
+.stats-grid .stat-card .stat-action:hover {
+  background: #ead7ae;
+  border-color: #b58a2a;
+  transform: translateX(2px);
+}
+
+.stats-grid .stat-card .stat-action:focus-visible {
+  outline: 3px solid #b58a2a;
+  outline-offset: 3px;
+}
+
+.stats-grid .stat-card .stat-action span:last-child {
+  font-size: 16px;
+  line-height: 1;
+}
+
+/* ESPACIADO DE LAS TARJETAS */
+
+.stats-grid .stat-card {
+  display: flex;
+  flex-direction: column;
+}
+
+.stats-grid .stat-card p {
+  margin-top: auto;
+  margin-bottom: 0;
+  padding-top: 14px;
+}

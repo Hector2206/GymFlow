@@ -1,17 +1,58 @@
 
 <div class="administradores-page">
+
+<app-alerta-personal
+  [error]="error"
+  [exito]="exito"
+  tituloExito="Operación realizada"
+></app-alerta-personal>
+
+  <!-- BARRA DE NAVEGACIÓN -->
+  <nav
+    class="admin-unified-nav"
+    aria-label="Navegación"
+  >
+    <div class="admin-unified-nav-inner">
+
+      <button
+        type="button"
+        class="admin-unified-back"
+        (click)="volverInicio()"
+        aria-label="Volver al inicio"
+        title="Volver al inicio"
+      >
+        ←
+      </button>
+
+      <img
+        src="/Logo_GymFlow.png"
+        alt="GymFlow"
+        class="admin-unified-logo"
+      />
+
+    </div>
+  </nav>
+
+  <!-- ENCABEZADO -->
   <header class="administradores-header">
     <div class="header-content">
+
       <div>
-        <span class="section-label">GYMFLOW / ADMINISTRACIÓN</span>
+        <span class="section-label">
+          GYMFLOW / ADMINISTRACIÓN
+        </span>
+
         <h1>Administrar Administradores</h1>
-        <p>Consulta y gestiona las cuentas administrativas de GymFlow.</p>
+
+        <p>
+          Gestiona las cuentas y los permisos
+          administrativos del gimnasio.
+        </p>
       </div>
-      <button type="button" class="back-button" (click)="volverInicio()">
-        ← Volver al inicio
-      </button>
+
     </div>
   </header>
+
 
   <main class="administradores-content">
     @if (exito) {
@@ -42,7 +83,10 @@
           <div>
             <span class="section-label">DIRECTORIO ADMINISTRATIVO</span>
             <h2>Administradores registrados</h2>
-            <p>Lista obtenida del Backend, sin datos simulados.</p>
+            <p>
+  Consulta las cuentas administrativas
+  y administra su información.
+</p>
           </div>
           <button class="boton-secundario" type="button" [disabled]="cargando"
             (click)="cargarAdministradores()">↻ Actualizar</button>
@@ -107,7 +151,10 @@
           <div>
             <span class="section-label">ALTA ADMINISTRATIVA</span>
             <h2>Registrar administrador</h2>
-            <p>El Backend asignará el rol Administrador y registrará la operación.</p>
+            <p>
+  Completa los siguientes datos para
+  registrar un nuevo administrador.
+</p>
           </div>
           <span class="panel-icon" aria-hidden="true">🛡️</span>
         </div>

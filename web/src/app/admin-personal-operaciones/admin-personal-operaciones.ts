@@ -28,13 +28,23 @@ import {
   AsistenciaPersonal
 } from '../models/asistencia-personal.model';
 
+import {
+  AlertaPersonal
+} from '../admin-personal-ui/alerta-personal';
+
+
 @Component({
   selector: 'app-admin-personal-operaciones',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [
+    CommonModule,
+    FormsModule,
+    AlertaPersonal
+  ],
   templateUrl: './admin-personal-operaciones.html',
   styleUrl: './admin-personal-operaciones.css'
 })
+
 export class AdminPersonalOperaciones implements OnInit {
   empleados: PersonalAdmin[] = [];
   asistencias: AsistenciaPersonal[] = [];
@@ -428,7 +438,7 @@ export class AdminPersonalOperaciones implements OnInit {
       : fecha;
   }
 
-  volverPersonal(): void {
-    this.router.navigate(['/admin/personal']);
-  }
+  volverInicio(): void {
+  this.router.navigate(['/home']);
+}
 }

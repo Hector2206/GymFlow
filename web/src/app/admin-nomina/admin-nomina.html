@@ -1,13 +1,63 @@
 
 <div class="nomina-page">
 
-  <!-- ENCABEZADO -->
 
+<app-alerta-personal
+  [error]="
+    errorCambio ||
+    errorCancelacion ||
+    errorEmpleados ||
+    errorSalarios ||
+    errorPagos
+  "
+  [exito]="
+    mensajeRegistroPago ||
+    mensajeCambio ||
+    mensajeCancelacion
+  "
+  [tituloExito]="
+    mensajeRegistroPago
+      ? 'Pago registrado'
+      : mensajeCambio
+        ? 'Cambio salarial registrado'
+        : 'Pago cancelado'
+  "
+/>
+
+
+  <!-- BARRA DE NAVEGACIÓN -->
+  <header class="nomina-nav">
+
+    <div class="nomina-nav-inner">
+
+      <button
+        type="button"
+        class="nomina-nav-back"
+        (click)="volverDirectorio()"
+        [disabled]="cambiandoSalario || cancelandoPago"
+        aria-label="Volver a Administrar Empleados"
+        title="Volver a Administrar Empleados"
+      >
+        ←
+      </button>
+
+      <img
+        src="/Logo_GymFlow.png"
+        alt="GymFlow"
+        class="nomina-nav-logo"
+      />
+
+    </div>
+
+  </header>
+
+  <!-- ENCABEZADO PRINCIPAL -->
   <header class="nomina-header">
 
     <div class="header-content">
 
       <div>
+
         <span class="section-label">
           GYMFLOW / ADMINISTRACIÓN
         </span>
@@ -18,20 +68,13 @@
           Consulta sueldos, historiales
           y pagos de los empleados.
         </p>
-      </div>
 
-      <button
-        type="button"
-        class="back-button"
-        (click)="volverDirectorio()"
-        [disabled]="cambiandoSalario || cancelandoPago"
-      >
-        ← Volver al directorio
-      </button>
+      </div>
 
     </div>
 
   </header>
+
 
   <main class="nomina-content">
 
